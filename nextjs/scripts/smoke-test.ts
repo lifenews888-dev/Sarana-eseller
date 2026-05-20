@@ -3,7 +3,12 @@
  * Usage: npx tsx scripts/smoke-test.ts
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+import jwt from 'jsonwebtoken';
+
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
+const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
 
 interface Result {
   url: string;
@@ -11,6 +16,15 @@ interface Result {
   ok: boolean;
   label: string;
 }
+
+const SELLER_BFF_ROUTES = [
+  '/api/seller/me',
+  '/api/seller/dashboard',
+  '/api/seller/wallet-summary',
+  '/api/seller/referral-summary',
+  '/api/seller/lead-summary',
+  '/api/seller/commission-summary',
+];
 
 const ROUTES = [
   // Нийтийн хуудас
@@ -52,9 +66,158 @@ async function testRoute(route: typeof ROUTES[0]): Promise<Result> {
       headers: { 'User-Agent': 'eseller-smoke-test' },
     });
     return { url: route.url, status: res.status, ok: res.status < 400, label: route.label };
-  } catch (e) {
+  } catch {
     return { url: route.url, status: 0, ok: false, label: route.label };
   }
+}
+
+async function readJson(res: Response): Promise<unknown> {
+  try {
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+function isLocalBaseUrl(): boolean {
+  try {
+    const url = new URL(BASE);
+    return ['localhost', '127.0.0.1', '::1'].includes(url.hostname);
+  } catch {
+    return false;
+  }
+}
+
+function getSellerSmokeToken(): string | null {
+  if (process.env.SELLER_SMOKE_TOKEN) return process.env.SELLER_SMOKE_TOKEN;
+  if (!isLocalBaseUrl()) return null;
+
+  return jwt.sign(
+    {
+      id: '000000000000000000000001',
+      role: 'seller',
+      email: 'seller-smoke@example.invalid',
+      name: 'Seller Smoke',
+    },
+    JWT_SECRET,
+    { expiresIn: '10m' }
+  );
+}
+
+function validateSellerSuccessEnvelope(route: string, body: unknown): string | null {
+  if (!body || typeof body !== 'object') return `${route} returned a non-object body`;
+  const envelope = body as Record<string, unknown>;
+  if (envelope.success === true) return `${route} returned legacy { success: true }`;
+  if (envelope.ok !== true) return `${route} did not return ok: true`;
+  if (!('data' in envelope)) return `${route} is missing data`;
+  if (!envelope.correlationId) return `${route} is missing correlationId`;
+  if (envelope.responseVersion !== 'seller-dashboard.v1') return `${route} has wrong responseVersion`;
+  if (envelope.bff !== 'sarana-eseller') return `${route} has wrong bff`;
+  if (!envelope.upstream) return `${route} is missing upstream`;
+  return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object';
+}
+
+async function testMobileConfigRoute(): Promise<number> {
+  console.log(`\nMOBILE CONFIG smoke:`);
+  const route = '/api/config/mobile';
+  const res = await fetch(`${BASE}${route}`, {
+    headers: { 'User-Agent': 'eseller-smoke-test' },
+  });
+  const body = await readJson(res);
+  const envelope = isRecord(body) ? body : {};
+  const data = isRecord(envelope.data) ? envelope.data : {};
+  const sellerNetwork = isRecord(data.sellerNetwork) ? data.sellerNetwork : {};
+  const serialized = JSON.stringify(body);
+  const ok =
+    res.status === 200 &&
+    envelope.success === true &&
+    isRecord(data.malchnaas) &&
+    typeof sellerNetwork.enabled === 'boolean' &&
+    !serialized.includes('ESELLER_S2S_INTEGRATION_KEY') &&
+    !serialized.includes('NEGD_INTERNAL_BASE_URL');
+
+  console.log(
+    `  ${ok ? 'ok' : 'FAIL'} ${String(res.status).padStart(3)} ${route} sellerNetwork.enabled=${String(sellerNetwork.enabled)}`
+  );
+  return ok ? 0 : 1;
+}
+
+function findForbiddenSellerMutationRoutes(): string[] {
+  const sellerApiDir = path.join(process.cwd(), 'src', 'app', 'api', 'seller');
+  if (!fs.existsSync(sellerApiDir)) return [];
+
+  const forbidden: string[] = [];
+  const visit = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        visit(fullPath);
+        continue;
+      }
+      if (entry.name !== 'route.ts') continue;
+
+      const relative = path.relative(sellerApiDir, fullPath);
+      const segments = relative.split(path.sep).slice(0, -1);
+      if (segments.some(segment => ['payout', 'withdraw', 'wallet', 'ledger'].includes(segment))) {
+        forbidden.push(path.join('src', 'app', 'api', 'seller', relative));
+      }
+    }
+  };
+
+  visit(sellerApiDir);
+  return forbidden;
+}
+
+async function testSellerBffRoutes(): Promise<number> {
+  let failures = 0;
+
+  console.log(`\nSELLER BFF smoke:`);
+  for (const route of SELLER_BFF_ROUTES) {
+    const res = await fetch(`${BASE}${route}`, {
+      headers: { 'User-Agent': 'eseller-smoke-test' },
+    });
+    const body = await readJson(res);
+    const legacySuccess = !!(body && typeof body === 'object' && (body as Record<string, unknown>).success === true);
+    const ok = res.status === 401 && !legacySuccess;
+    if (!ok) failures += 1;
+    console.log(`  ${ok ? 'ok' : 'FAIL'} unauth ${String(res.status).padStart(3)} ${route}`);
+  }
+
+  const token = getSellerSmokeToken();
+  if (!token) {
+    console.log('  skip authenticated seller BFF checks (set SELLER_SMOKE_TOKEN or use localhost BASE_URL)');
+  } else {
+    for (const route of SELLER_BFF_ROUTES) {
+      const res = await fetch(`${BASE}${route}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'User-Agent': 'eseller-smoke-test',
+        },
+      });
+      const body = await readJson(res);
+      const envelopeError = res.status === 200 ? validateSellerSuccessEnvelope(route, body) : `${route} returned ${res.status}`;
+      const ok = !envelopeError;
+      if (!ok) failures += 1;
+      console.log(
+        `  ${ok ? 'ok' : 'FAIL'} auth   ${String(res.status).padStart(3)} ${route}${envelopeError ? ` - ${envelopeError}` : ''}`
+      );
+    }
+  }
+
+  const forbiddenRoutes = findForbiddenSellerMutationRoutes();
+  if (forbiddenRoutes.length > 0) {
+    failures += forbiddenRoutes.length;
+    console.log('  FAIL forbidden seller mutation routes found:');
+    forbiddenRoutes.forEach(route => console.log(`    ${route}`));
+  } else {
+    console.log('  ok no seller payout/withdraw/wallet/ledger mutation routes found');
+  }
+
+  return failures;
 }
 
 async function main() {
@@ -92,6 +255,9 @@ async function main() {
     console.log(`  ❌ /api/stats хандаж чадсангүй`);
   }
 
+  const mobileConfigFailures = await testMobileConfigRoute();
+  const sellerBffFailures = await testSellerBffRoutes();
+
   // Failed routes
   const failed = results.filter(r => !r.ok);
   if (failed.length > 0) {
@@ -102,7 +268,7 @@ async function main() {
   }
 
   console.log(`\n══════════════════════════════\n`);
-  process.exit(failed.length > 0 ? 1 : 0);
+  process.exit(failed.length > 0 || mobileConfigFailures > 0 || sellerBffFailures > 0 ? 1 : 0);
 }
 
 main();

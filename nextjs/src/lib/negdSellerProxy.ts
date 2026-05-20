@@ -8,9 +8,13 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthUser } from './api-auth';
+import {
+  SELLER_BFF_NAME,
+  SELLER_LOCAL_UPSTREAM,
+  SELLER_RESPONSE_VERSION,
+  sellerHeaders,
+} from './sellerBffEnvelope';
 
-const NEGD_BASE = (process.env.NEGD_INTERNAL_BASE_URL || '').replace(/\/+$/, '');
-const S2S_KEY_PRESENT = Boolean(process.env.ESELLER_S2S_INTEGRATION_KEY);
 const TIMEOUT_MS = 8_000;
 
 export type NegdSellerEndpoint =
@@ -25,12 +29,32 @@ export interface NegdProxyResult {
   status: number;
   body: unknown;
   correlationId: string;
-  /** True when the helper produced the local-dev empty-success stub
-   *  because NEGD_INTERNAL_BASE_URL / ESELLER_S2S_INTEGRATION_KEY are
-   *  unset. Routes that have a richer fallback (e.g. /api/seller/dashboard
-   *  → Prisma) check this and fall through; routes with no fallback just
-   *  return the stub. */
+  /** True when local/dev/preview has no Negd S2S env and routes may
+   *  substitute a seller-dashboard bff_local fallback payload. */
   isDevStub?: boolean;
+  isConfigError?: boolean;
+}
+
+function getNegdSellerConfig() {
+  return {
+    negdBase: (process.env.NEGD_INTERNAL_BASE_URL || '').replace(/\/+$/, ''),
+    s2sKey: process.env.ESELLER_S2S_INTEGRATION_KEY || '',
+  };
+}
+
+function isPreviewRuntime(): boolean {
+  return process.env.VERCEL_ENV === 'preview';
+}
+
+function isStrictProductionRuntime(): boolean {
+  return process.env.NODE_ENV === 'production' && !isPreviewRuntime();
+}
+
+export function shouldUseSellerLocalFallback(result: NegdProxyResult): boolean {
+  if (result.isDevStub) return true;
+  if (result.isConfigError) return false;
+
+  return result.status >= 500 && process.env.BFF_SELLER_ALLOW_PROD_FALLBACK === '1';
 }
 
 /** Resolve the inbound correlation id, or generate one. */
@@ -48,6 +72,9 @@ export function unauthenticatedEnvelope(correlationId: string) {
     ok: false,
     error: { code: 'UNAUTHENTICATED', message: 'Authentication required' },
     correlationId,
+    responseVersion: SELLER_RESPONSE_VERSION,
+    bff: SELLER_BFF_NAME,
+    upstream: SELLER_LOCAL_UPSTREAM,
   };
 }
 
@@ -60,23 +87,24 @@ export function upstreamUnavailableEnvelope(correlationId: string, message?: str
       message: message || 'Upstream Negd service is unavailable',
     },
     correlationId,
-    bff: 'sarana-eseller',
+    responseVersion: SELLER_RESPONSE_VERSION,
+    bff: SELLER_BFF_NAME,
     upstream: 'negd',
   };
 }
 
 /**
- * Empty-success envelope returned in development when Negd S2S env vars
- * aren't set. Lets `npm run dev` boot without spamming 503s on every
- * seller-tab fetch — production still gets the 503 so ops sees a real
- * config gap. Mobile reads `data: null` and renders empty state.
+ * Empty-success marker returned outside strict production when Negd S2S env
+ * vars are unset. Routes with local payloads use isDevStub to substitute the
+ * shaped bff_local fallback; strict production keeps the 503 config error.
  */
 export function devNegdMissingEnvelope(correlationId: string) {
   return {
     ok: true,
     data: null,
     correlationId,
-    bff: 'sarana-eseller',
+    responseVersion: SELLER_RESPONSE_VERSION,
+    bff: SELLER_BFF_NAME,
     upstream: 'negd-not-configured',
     devNote: 'Negd S2S env vars are unset; this is a local-dev empty stub',
   };
@@ -88,7 +116,8 @@ export function internalErrorEnvelope(correlationId: string) {
     ok: false,
     error: { code: 'INTERNAL_ERROR', message: 'Internal error' },
     correlationId,
-    bff: 'sarana-eseller',
+    responseVersion: SELLER_RESPONSE_VERSION,
+    bff: SELLER_BFF_NAME,
     upstream: 'negd',
   };
 }
@@ -104,19 +133,21 @@ export async function callNegdSellerEndpoint(
   opts: { eSellerUserId: string; correlationId: string }
 ): Promise<NegdProxyResult> {
   const { eSellerUserId, correlationId } = opts;
+  const { negdBase, s2sKey } = getNegdSellerConfig();
 
-  if (!NEGD_BASE || !S2S_KEY_PRESENT) {
+  if (!negdBase || !s2sKey) {
     // In production a missing env is a real ops gap → keep the 503 so
     // monitoring fires. In development (npm run dev / EAS preview), there
     // is no Negd to talk to anyway, so 503 just clutters logs and turns
     // every mobile seller tab into an error toast. Return an empty 200
     // stub instead — mobile will render an empty state.
-    if (process.env.NODE_ENV === 'production') {
+    if (isStrictProductionRuntime()) {
       console.error('[negdSellerProxy] Missing NEGD_INTERNAL_BASE_URL or ESELLER_S2S_INTEGRATION_KEY');
       return {
         status: 503,
         body: upstreamUnavailableEnvelope(correlationId, 'Negd S2S not configured'),
         correlationId,
+        isConfigError: true,
       };
     }
     console.warn('[negdSellerProxy] dev mode — Negd env unset, returning empty 200 stub');
@@ -128,7 +159,7 @@ export async function callNegdSellerEndpoint(
     };
   }
 
-  const url = `${NEGD_BASE}/api/internal/eseller/seller/${endpoint}`;
+  const url = `${negdBase}/api/internal/eseller/seller/${endpoint}`;
   const requestId = crypto.randomUUID();
   const timestamp = new Date().toISOString();
 
@@ -140,7 +171,7 @@ export async function callNegdSellerEndpoint(
       method: 'GET',
       headers: {
         // Server secret. Never forwarded to mobile, never logged.
-        Authorization: `Bearer ${process.env.ESELLER_S2S_INTEGRATION_KEY}`,
+        Authorization: `Bearer ${s2sKey}`,
         'X-ESELLER-USER-ID': eSellerUserId,
         'X-ESELLER-PROVIDER': 'ESELLER_MOBILE',
         'X-ESELLER-TIMESTAMP': timestamp,
@@ -197,11 +228,19 @@ export function decorateBff(body: unknown, correlationId: string): unknown {
     return {
       ...obj,
       correlationId: obj.correlationId ?? correlationId,
-      bff: 'sarana-eseller',
-      upstream: 'negd',
+      responseVersion: obj.responseVersion ?? SELLER_RESPONSE_VERSION,
+      bff: obj.bff ?? SELLER_BFF_NAME,
+      upstream: obj.upstream ?? 'negd',
     };
   }
   return upstreamUnavailableEnvelope(correlationId, 'Malformed upstream response');
+}
+
+export function sellerProxyResponse(result: NegdProxyResult): NextResponse {
+  return NextResponse.json(decorateBff(result.body, result.correlationId), {
+    status: result.status,
+    headers: sellerHeaders(result.correlationId),
+  });
 }
 
 /**
@@ -222,7 +261,7 @@ export async function handleSellerProxyGet(
   if (!user) {
     return NextResponse.json(unauthenticatedEnvelope(correlationId), {
       status: 401,
-      headers: { 'X-Correlation-ID': correlationId },
+      headers: sellerHeaders(correlationId),
     });
   }
 
@@ -231,10 +270,7 @@ export async function handleSellerProxyGet(
       eSellerUserId: user.id,
       correlationId,
     });
-    return NextResponse.json(decorateBff(result.body, result.correlationId), {
-      status: result.status,
-      headers: { 'X-Correlation-ID': correlationId },
-    });
+    return sellerProxyResponse(result);
   } catch (err) {
     console.error(
       '[negdSellerProxy] handler error',
@@ -242,7 +278,7 @@ export async function handleSellerProxyGet(
     );
     return NextResponse.json(internalErrorEnvelope(correlationId), {
       status: 500,
-      headers: { 'X-Correlation-ID': correlationId },
+      headers: sellerHeaders(correlationId),
     });
   }
 }

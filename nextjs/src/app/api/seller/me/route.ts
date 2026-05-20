@@ -1,17 +1,17 @@
 // Sarana eSeller BFF — GET /api/seller/me
 //
-// Read-only proxy to Negd `/api/internal/eseller/seller/me`. When Negd is
-// unconfigured (local dev / preview without S2S env) the proxy short-circuits
-// with isDevStub; we substitute a route-specific empty payload so mobile
-// renders an empty state instead of an upstream-unavailable error.
+// Read-only proxy to Negd `/api/internal/eseller/seller/me`. Local/dev/preview
+// without Negd env returns a seller-dashboard envelope with a bff_local payload.
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireSeller } from '@/lib/api-auth';
-import { ok } from '@/lib/api-envelope';
+import { NextRequest } from 'next/server';
+import { getAuthUser } from '@/lib/api-auth';
+import { sellerFail, sellerOk } from '@/lib/sellerBffEnvelope';
+import { buildSellerMeFallback } from '@/lib/sellerDashboardFallbacks';
 import {
   callNegdSellerEndpoint,
-  decorateBff,
   resolveCorrelationId,
+  sellerProxyResponse,
+  shouldUseSellerLocalFallback,
 } from '@/lib/negdSellerProxy';
 
 export const dynamic = 'force-dynamic';
@@ -19,8 +19,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const correlationId = resolveCorrelationId(req);
 
-  const auth = requireSeller(req);
-  if (auth instanceof Response) return auth;
+  const auth = getAuthUser(req);
+  if (!auth) {
+    return sellerFail('UNAUTHENTICATED', 'Authentication required', correlationId, 401);
+  }
 
   try {
     const result = await callNegdSellerEndpoint('me', {
@@ -28,22 +30,24 @@ export async function GET(req: NextRequest) {
       correlationId,
     });
     if (result.status >= 200 && result.status < 300 && !result.isDevStub) {
-      return NextResponse.json(decorateBff(result.body, result.correlationId), {
-        status: result.status,
-        headers: { 'X-Correlation-ID': correlationId },
-      });
+      return sellerProxyResponse(result);
     }
+    if (!shouldUseSellerLocalFallback(result)) return sellerProxyResponse(result);
   } catch (e: unknown) {
     console.warn('[seller/me] Negd call threw, returning local fallback', {
       message: (e as Error)?.message,
       correlationId,
     });
+    if (process.env.NODE_ENV === 'production' && process.env.BFF_SELLER_ALLOW_PROD_FALLBACK !== '1') {
+      return sellerFail(
+        'BFF_UPSTREAM_UNAVAILABLE',
+        'Upstream Negd service is unavailable',
+        correlationId,
+        503,
+        true
+      );
+    }
   }
 
-  return ok({
-    profile: null,
-    identityLink: null,
-    verification: { isVerified: false, kycStatus: 'pending' },
-    source: 'bff_local',
-  });
+  return sellerOk(buildSellerMeFallback(auth), correlationId);
 }

@@ -18,6 +18,9 @@
 //       pilotAimags:    string[];                      // uppercase aimag codes
 //       aimagDelivery:  Record<string, string>;        // code → "7-10"
 //     }
+//     sellerNetwork: {
+//       enabled:        boolean;
+//     }
 //   }
 //
 // Mobile's response interceptor unwraps the api-envelope { success, data }
@@ -37,6 +40,7 @@ export const dynamic = 'force-dynamic';
 // same effective values as a clean install.
 const DEFAULT_MALCHNAAS_ENABLED = true;
 const DEFAULT_PILOT_AIMAGS = ['AKH', 'TOV', 'SEL'] as const;
+const DEFAULT_SELLER_NETWORK_ENABLED = process.env.NODE_ENV !== 'production';
 
 function readBool(value: string | undefined, fallback: boolean): boolean {
   if (value == null || value === '') return fallback;
@@ -78,7 +82,14 @@ export async function GET() {
     aimagDelivery: readAimagDelivery(process.env.BFF_MALCHNAAS_AIMAG_DELIVERY),
   };
 
-  const res: NextResponse = ok({ malchnaas });
+  const sellerNetwork = {
+    enabled: readBool(
+      process.env.BFF_SELLER_NETWORK_ENABLED,
+      DEFAULT_SELLER_NETWORK_ENABLED
+    ),
+  };
+
+  const res: NextResponse = ok({ malchnaas, sellerNetwork });
   // Edge cache for one minute — mobile already has a 15-minute client cache,
   // so this just smooths spikes when the entire user base reopens after a
   // push notification. Public data, safe to share across users.
