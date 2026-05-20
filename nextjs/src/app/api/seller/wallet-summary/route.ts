@@ -5,13 +5,15 @@
 // On dev (Negd unconfigured) we return a zeroed read-only fallback so the
 // seller tabs render — no fake balances, just nulls/zeros.
 
-import { NextRequest, NextResponse } from 'next/server';
-import { requireSeller } from '@/lib/api-auth';
-import { ok } from '@/lib/api-envelope';
+import { NextRequest } from 'next/server';
+import { getAuthUser } from '@/lib/api-auth';
+import { sellerFail, sellerOk } from '@/lib/sellerBffEnvelope';
+import { buildSellerWalletSummaryFallback } from '@/lib/sellerDashboardFallbacks';
 import {
   callNegdSellerEndpoint,
-  decorateBff,
   resolveCorrelationId,
+  sellerProxyResponse,
+  shouldUseSellerLocalFallback,
 } from '@/lib/negdSellerProxy';
 
 export const dynamic = 'force-dynamic';
@@ -19,8 +21,10 @@ export const dynamic = 'force-dynamic';
 export async function GET(req: NextRequest) {
   const correlationId = resolveCorrelationId(req);
 
-  const auth = requireSeller(req);
-  if (auth instanceof Response) return auth;
+  const auth = getAuthUser(req);
+  if (!auth) {
+    return sellerFail('UNAUTHENTICATED', 'Authentication required', correlationId, 401);
+  }
 
   try {
     const result = await callNegdSellerEndpoint('wallet-summary', {
@@ -28,24 +32,24 @@ export async function GET(req: NextRequest) {
       correlationId,
     });
     if (result.status >= 200 && result.status < 300 && !result.isDevStub) {
-      return NextResponse.json(decorateBff(result.body, result.correlationId), {
-        status: result.status,
-        headers: { 'X-Correlation-ID': correlationId },
-      });
+      return sellerProxyResponse(result);
     }
+    if (!shouldUseSellerLocalFallback(result)) return sellerProxyResponse(result);
   } catch (e: unknown) {
     console.warn('[seller/wallet-summary] Negd call threw, returning local fallback', {
       message: (e as Error)?.message,
       correlationId,
     });
+    if (process.env.NODE_ENV === 'production' && process.env.BFF_SELLER_ALLOW_PROD_FALLBACK !== '1') {
+      return sellerFail(
+        'BFF_UPSTREAM_UNAVAILABLE',
+        'Upstream Negd service is unavailable',
+        correlationId,
+        503,
+        true
+      );
+    }
   }
 
-  return ok({
-    balanceMnt: 0,
-    pendingMnt: 0,
-    paidOutMnt: 0,
-    availableMnt: 0,
-    currency: 'MNT',
-    source: 'bff_local',
-  });
+  return sellerOk(buildSellerWalletSummaryFallback(), correlationId);
 }
