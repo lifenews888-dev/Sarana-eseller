@@ -10,6 +10,7 @@ import {
 import {
   HERDER_PROVINCES, HERDER_CATEGORIES, getDeliveryEstimate, getProvince,
 } from '@/lib/herder-delivery';
+import SafeImage from '@/components/ui/SafeImage';
 
 /* ═══ Types ═══ */
 interface HerderProduct {
@@ -194,7 +195,7 @@ export default function HerderProvincePage(
                   {/* Image */}
                   <div className="aspect-square bg-stone-100 relative">
                     {product.images?.[0] ? (
-                      <img
+                      <SafeImage
                         src={product.images[0]}
                         alt={product.name}
                         className="w-full h-full object-cover"

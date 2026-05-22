@@ -2,6 +2,7 @@ import { getShopConfig, type ShopConfig } from '@/lib/shop-cache';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
+import SafeImage from '@/components/ui/SafeImage';
 
 export default async function ShopLayout({
   children,
@@ -41,7 +42,7 @@ export default async function ShopLayout({
       >
         <Link href={`/shop-sub/${config.slug}`} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           {config.logoUrl ? (
-            <img src={config.logoUrl} style={{ height: 36, borderRadius: 4 }} alt={config.name} />
+            <SafeImage src={config.logoUrl} style={{ height: 36, borderRadius: 4 }} alt={config.name} />
           ) : null}
           <span style={{ color: '#fff', fontSize: 20, fontWeight: 700 }}>
             {config.name}

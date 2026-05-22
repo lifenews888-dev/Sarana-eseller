@@ -13,6 +13,7 @@ import {
   Pin,
 } from "lucide-react";
 import { getEmbedUrl } from "@/lib/live-embed";
+import SafeImage from "@/components/ui/SafeImage";
 
 interface Product {
   id: string;
@@ -260,7 +261,7 @@ export default function LiveDetailPage() {
                   >
                     <div className="h-32 bg-gray-700 flex items-center justify-center relative">
                       {lp.product.images?.[0] ? (
-                        <img
+                        <SafeImage
                           src={lp.product.images[0]}
                           alt={lp.product.name}
                           className="w-full h-full object-cover"

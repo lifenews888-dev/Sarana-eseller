@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Star, ThumbsUp, Send, CheckCircle, Loader2 } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface Review { id: string; buyerName?: string; rating: number; title?: string; comment?: string; images?: string[]; isVerified: boolean; helpfulCount: number; createdAt: string; }
 interface Stats { avg: number; count: number; }
@@ -116,7 +117,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
               {r.title && <p className="text-sm font-semibold mb-1" style={{ color: 'var(--esl-text-primary)' }}>{r.title}</p>}
               {r.comment && <p className="text-sm" style={{ color: 'var(--esl-text-secondary)' }}>{r.comment}</p>}
               {r.images && r.images.length > 0 && (
-                <div className="flex gap-2 mt-2">{r.images.map((img, i) => <img key={i} src={img} alt="" className="w-16 h-16 rounded-lg object-cover" />)}</div>
+                <div className="flex gap-2 mt-2">{r.images.map((img, i) => <SafeImage key={i} src={img} alt="" className="w-16 h-16 rounded-lg object-cover" />)}</div>
               )}
               <div className="flex items-center gap-3 mt-2">
                 <button className="flex items-center gap-1 text-[11px] border-none bg-transparent cursor-pointer" style={{ color: 'var(--esl-text-muted)' }}>

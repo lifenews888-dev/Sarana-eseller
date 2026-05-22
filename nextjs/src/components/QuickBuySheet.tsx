@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface Props {
   product: { id: string; name: string; price: number; images: string[]; stock: number | null };
@@ -69,7 +70,7 @@ export function QuickBuySheet({ product, isOpen, onClose }: Props) {
           borderBottom: '.5px solid #f0f0f0',
         }}>
           {product.images?.[0] && (
-            <img
+            <SafeImage
               src={product.images[0]}
               alt={product.name}
               style={{ width: 72, height: 72, borderRadius: 12, objectFit: 'cover' }}

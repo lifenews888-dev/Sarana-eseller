@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import jwt from 'jsonwebtoken';
+import SafeImage from '@/components/ui/SafeImage';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
 
@@ -75,7 +76,7 @@ export default async function OrdersPage() {
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
                   {first.image ? (
-                    <img
+                    <SafeImage
                       src={first.image}
                       alt={first.name || ''}
                       style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover' }}

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { useToast } from '../shared/Toast';
 import { X, Minus, Plus, Trash2, ShoppingBag, Package } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface CartDrawerProps {
   open: boolean;
@@ -81,7 +82,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
                 <div key={`${item._id}-${idx}`} className="flex gap-3 items-start group">
                   <div className="w-16 h-16 rounded-xl bg-[var(--esl-bg-section)] border border-[#F1F5F9] flex items-center justify-center text-2xl shrink-0 overflow-hidden">
                     {item.images?.[0] ? (
-                      <img loading="lazy" src={item.images[0]} alt="" className="w-full h-full object-cover" />
+                      <SafeImage src={item.images[0]} alt="" className="w-full h-full object-cover" />
                     ) : (
                       item.emoji || <Package className="w-7 h-7 text-[#CBD5E1]" />
                     )}

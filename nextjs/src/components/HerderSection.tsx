@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import SafeImage from '@/components/ui/SafeImage';
 
 export async function HerderSection() {
   let herders;
@@ -69,7 +70,7 @@ export async function HerderSection() {
               }}>
                 <div style={{ height: 52, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 6 }}>
                   {product.images?.[0] ? (
-                    <img src={product.images[0]} alt={product.name}
+                    <SafeImage src={product.images[0]} alt={product.name}
                       style={{ width: 48, height: 48, borderRadius: 8, objectFit: 'cover' }} />
                   ) : (
                     <span style={{ fontSize: 30 }}>🌿</span>

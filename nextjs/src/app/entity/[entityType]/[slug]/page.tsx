@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { ENTITY_LABELS, type EntityType } from '@/lib/types/entity';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
+import SafeImage from '@/components/ui/SafeImage';
 import {
   MapPin, Phone, Star, Shield,
   Calendar, MessageCircle, Clock, Award, Heart,
@@ -194,7 +195,7 @@ function HeroCarousel({ images, children }: { images: string[]; children?: React
   return (
     <div className="relative h-[340px] md:h-[420px] overflow-hidden">
       {images.map((img, i) => (
-        <img
+        <SafeImage
           key={i}
           src={img}
           alt=""
@@ -229,7 +230,7 @@ function VehicleCard({ v, onClick }: { v: DemoVehicle; onClick: () => void }) {
       v.sold && 'opacity-60'
     )}>
       <div className="relative h-48 overflow-hidden">
-        <img loading="lazy" src={v.image} alt={v.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+        <SafeImage src={v.image} alt={v.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
         {v.badge && (
           <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black bg-[#E8242C] text-white uppercase tracking-wider">
             {v.badge}
@@ -261,7 +262,7 @@ function ProjectCard({ p }: { p: DemoProject }) {
   return (
     <div className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer">
       <div className="relative h-52 overflow-hidden">
-        <img loading="lazy" src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        <SafeImage src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--esl-bg-section)] via-transparent to-transparent" />
         <div className={cn('absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider', statusColor, 'bg-black/60')}>
           {p.status}
@@ -304,7 +305,7 @@ function ListingCard({ l, onClick }: { l: DemoListing; onClick: () => void }) {
   return (
     <div onClick={onClick} className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer">
       <div className="relative h-44 overflow-hidden">
-        <img loading="lazy" src={l.image} alt={l.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        <SafeImage src={l.image} alt={l.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         {l.badge && (
           <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black bg-[#D4AF37] text-black uppercase tracking-wider">
             {l.badge}
@@ -406,7 +407,7 @@ export default function EntityProfilePage() {
             {/* Avatar */}
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-3 border-white/20 shadow-2xl shrink-0 bg-[var(--esl-bg-card-hover)]">
               {entity.logo ? (
-                <img loading="lazy" src={entity.logo} alt="" className="w-full h-full object-cover" />
+                <SafeImage src={entity.logo} alt="" className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-[#E8242C] to-[#FF6B6B]">
                   {entity.name.charAt(0)}
@@ -519,7 +520,7 @@ export default function EntityProfilePage() {
                   <button onClick={() => setSelectedVehicle(null)} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white cursor-pointer border-none">
                     <X className="w-4 h-4" />
                   </button>
-                  <img loading="lazy" src={selectedVehicle.image} alt="" className="w-full h-64 object-cover" />
+                  <SafeImage src={selectedVehicle.image} alt="" className="w-full h-64 object-cover" />
                   <div className="p-6">
                     <h2 className="text-xl font-black text-[var(--esl-text-primary)] mb-2">{selectedVehicle.title}</h2>
                     <p className="text-2xl font-black text-[#E8242C] mb-4">{formatPrice(selectedVehicle.price)}₮</p>
@@ -561,7 +562,7 @@ export default function EntityProfilePage() {
                   <button onClick={() => setSelectedListing(null)} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white cursor-pointer border-none">
                     <X className="w-4 h-4" />
                   </button>
-                  <img loading="lazy" src={selectedListing.image} alt="" className="w-full h-64 object-cover" />
+                  <SafeImage src={selectedListing.image} alt="" className="w-full h-64 object-cover" />
                   <div className="p-5">
                     <h2 className="text-xl font-black text-[var(--esl-text-primary)] mb-2">{selectedListing.title}</h2>
                     <p className="text-2xl font-black text-[#E8242C] mb-4">{formatPrice(selectedListing.price)}₮</p>
@@ -615,7 +616,7 @@ export default function EntityProfilePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {entity.gallery.map((img, i) => (
               <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer">
-                <img loading="lazy" src={img} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <SafeImage src={img} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               </div>
             ))}
           </div>

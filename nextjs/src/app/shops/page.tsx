@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
+import SafeImage from '@/components/ui/SafeImage';
 import {
   Search, MapPin, Star, Clock, ChevronRight, Package, Scissors,
   ShoppingBag, Filter, ArrowRight, Verified, Store, BellRing,
@@ -242,7 +243,7 @@ export default function ShopsPage() {
                       : 'bg-gradient-to-br from-gray-50 to-gray-100'
                   )}>
                     {shop.logo ? (
-                      <img src={shop.logo} alt={shop.name} className="w-16 h-16 rounded-xl object-cover group-hover:scale-110 transition-transform duration-300" />
+                      <SafeImage src={shop.logo} alt={shop.name} className="w-16 h-16 rounded-xl object-cover group-hover:scale-110 transition-transform duration-300" />
                     ) : (
                       <Store className="w-12 h-12 text-[var(--esl-text-disabled)] group-hover:scale-110 transition-transform duration-300" />
                     )}

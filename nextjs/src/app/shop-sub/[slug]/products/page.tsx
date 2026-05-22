@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma';
 import { getShopConfig } from '@/lib/shop-cache';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -94,7 +95,7 @@ export default async function ShopProductsPage({ params, searchParams }: Props) 
             >
               <div className="aspect-square bg-gray-100 overflow-hidden">
                 {product.images?.[0] ? (
-                  <img src={product.images[0]} alt={product.name}
+                  <SafeImage src={product.images[0]} alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-4xl">

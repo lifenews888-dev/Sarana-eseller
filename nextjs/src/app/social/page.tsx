@@ -19,6 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { QuickBuySheet } from "@/components/QuickBuySheet";
+import SafeImage from "@/components/ui/SafeImage";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -285,7 +286,7 @@ export default function SocialPage() {
                 >
                   <div className={`w-14 h-14 rounded-full p-0.5 border-2 relative ${story.product ? "border-orange-500" : "border-blue-900"}`}>
                     {story.user.avatar ? (
-                      <img src={story.user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
+                      <SafeImage src={story.user.avatar} alt="" className="w-full h-full rounded-full object-cover" />
                     ) : (
                       <div className="w-full h-full rounded-full bg-blue-900 text-white flex items-center justify-center text-sm font-bold">
                         {story.user.name?.[0] || "?"}
@@ -398,7 +399,7 @@ export default function SocialPage() {
                   if (!prod) return null;
                   return (
                     <div key={p.id} className="flex items-center gap-2">
-                      <img src={prod.images?.[0] || ""} alt="" className="w-10 h-10 rounded object-cover bg-gray-100" />
+                      <SafeImage src={prod.images?.[0] || ""} alt="" className="w-10 h-10 rounded object-cover bg-gray-100" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{prod.name}</p>
                         <p className="text-xs text-blue-600 font-bold">
@@ -518,7 +519,7 @@ function GroupBuyCardWeb({ groupBuy }: { groupBuy: GroupBuy }) {
         👥 Хамтарч авах — {Math.round(groupBuy.discount * 100)}% хямд
       </div>
       <div className="p-4 flex gap-3">
-        <img src={groupBuy.product.images?.[0] || ""} alt="" className="w-20 h-20 rounded-xl object-cover bg-gray-100" />
+        <SafeImage src={groupBuy.product.images?.[0] || ""} alt="" className="w-20 h-20 rounded-xl object-cover bg-gray-100" />
         <div className="flex-1">
           <p className="text-sm font-semibold line-clamp-2">{groupBuy.product.name}</p>
           <div className="flex items-baseline gap-2 mt-1">
@@ -585,7 +586,7 @@ function StoryViewer({
         </div>
         <span className="text-white text-sm font-semibold">{story.user.name}</span>
       </div>
-      <img src={story.imageUrl} alt="" className="max-w-full max-h-full object-contain" />
+      <SafeImage src={story.imageUrl} alt="" className="max-w-full max-h-full object-contain" />
       {story.caption && (
         <div className={`absolute left-4 right-4 bg-black/50 rounded-lg p-3 ${story.product ? "bottom-32" : "bottom-6"}`}>
           <p className="text-white text-sm">{story.caption}</p>
@@ -593,7 +594,7 @@ function StoryViewer({
       )}
       {story.product && (
         <div className="absolute bottom-6 left-4 right-4 bg-white rounded-2xl p-3 flex items-center gap-3">
-          <img src={story.product.images?.[0] || ""} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-100" />
+          <SafeImage src={story.product.images?.[0] || ""} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-100" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate">{story.product.name}</p>
             <p className="text-base font-bold text-blue-900">{story.product.price.toLocaleString()}₮</p>
@@ -630,7 +631,7 @@ function PostCard({
       {/* User header */}
       <div className="flex items-center gap-3 p-4 pb-2">
         {post.user.avatar ? (
-          <img
+          <SafeImage
             src={post.user.avatar}
             alt={post.user.name}
             className="w-10 h-10 rounded-full object-cover"
@@ -677,7 +678,7 @@ function PostCard({
                   : ""
               }`}
             >
-              <img
+              <SafeImage
                 src={img}
                 alt=""
                 className="w-full h-full object-cover"
@@ -707,7 +708,7 @@ function PostCard({
                 className="flex-shrink-0 w-40 border border-gray-200 rounded-lg overflow-hidden"
               >
                 {pp.product.images.length > 0 && (
-                  <img
+                  <SafeImage
                     src={pp.product.images[0]}
                     alt={pp.product.name}
                     className="w-full h-24 object-cover"
@@ -861,7 +862,7 @@ function CommentsSection({ postId }: { postId: string }) {
           {comments.map((c) => (
             <div key={c.id} className="flex gap-2">
               {c.user.avatar ? (
-                <img
+                <SafeImage
                   src={c.user.avatar}
                   alt=""
                   className="w-7 h-7 rounded-full object-cover flex-shrink-0"
@@ -1063,7 +1064,7 @@ function CreatePostModal({
               <div className="flex gap-2 mt-2 flex-wrap">
                 {images.map((img, i) => (
                   <div key={i} className="relative w-16 h-16">
-                    <img
+                    <SafeImage
                       src={img}
                       alt=""
                       className="w-full h-full object-cover rounded-lg"
@@ -1105,7 +1106,7 @@ function CreatePostModal({
                       className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center gap-2"
                     >
                       {p.images[0] && (
-                        <img
+                        <SafeImage
                           src={p.images[0]}
                           alt=""
                           className="w-8 h-8 object-cover rounded"

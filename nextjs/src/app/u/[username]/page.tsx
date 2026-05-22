@@ -13,6 +13,7 @@ import MobileNav from '@/components/shared/MobileNav';
 import { useToast } from '@/components/shared/Toast';
 import Toast from '@/components/shared/Toast';
 import { ShoppingCart, Star, Shield, Truck, Clock, Package } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
 export default function MicroStorefront() {
   const params = useParams();
@@ -122,7 +123,7 @@ export default function MicroStorefront() {
           >
             <div className="relative h-64 sm:h-80 bg-gradient-to-br from-[#F8FAFC] to-[#EEF2FF] flex items-center justify-center">
               {heroProduct.images?.[0] ? (
-                <img loading="lazy" src={heroProduct.images[0]} alt={heroProduct.name} className="w-full h-full object-cover" />
+                <SafeImage src={heroProduct.images[0]} alt={heroProduct.name} className="w-full h-full object-cover" />
               ) : (
                 <Package className="w-20 h-20" style={{ color: 'var(--esl-text-muted)' }} />
               )}
@@ -203,7 +204,7 @@ export default function MicroStorefront() {
                   <div key={p._id} className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] overflow-hidden hover:shadow-md hover:-translate-y-0.5 transition-all group">
                     <div className="relative h-32 bg-[var(--esl-bg-section)] flex items-center justify-center overflow-hidden">
                       {p.images?.[0] ? (
-                        <img loading="lazy" src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <SafeImage src={p.images[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                       ) : (
                         <Package className="w-8 h-8 group-hover:scale-110 transition-transform" style={{ color: 'var(--esl-text-muted)' }} />
                       )}

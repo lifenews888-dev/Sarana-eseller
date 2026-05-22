@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Radio, Users, Clock, Video } from "lucide-react";
 import { parseYouTubeId, getStreamThumbnail } from "@/lib/live-embed";
+import SafeImage from "@/components/ui/SafeImage";
 
 interface LiveStreamCard {
   id: string;
@@ -131,7 +132,7 @@ function StreamCard({ stream }: { stream: LiveStreamCard }) {
         {/* Thumbnail area */}
         <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
           {hasRealThumbnail ? (
-            <img
+            <SafeImage
               src={thumbnail}
               alt={stream.title}
               className="w-full h-full object-cover"

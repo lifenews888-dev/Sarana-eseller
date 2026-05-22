@@ -6,6 +6,7 @@ import { ShoppingCart, Trash2, Zap, Lock, Shield } from 'lucide-react';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
 import { useCartStore } from '@/lib/cart';
+import SafeImage from '@/components/ui/SafeImage';
 
 export default function CartPage() {
   const { items, remove, updateQty, total, clear } = useCartStore();
@@ -40,7 +41,7 @@ export default function CartPage() {
                   <div key={idx} style={{ display: 'flex', gap: 16, background: 'var(--esl-bg-card)', borderRadius: 16, padding: 16, border: '1px solid var(--esl-border)' }}>
                     <div style={{ width: 90, height: 90, borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: 'var(--esl-bg-section)' }}>
                       {item.images?.[0] && (
-                        <img src={item.images[0]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <SafeImage src={item.images[0]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       )}
                     </div>
                     <div style={{ flex: 1 }}>
