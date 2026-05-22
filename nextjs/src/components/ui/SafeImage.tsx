@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, MouseEventHandler } from 'react';
-import { ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const UNRELIABLE_PLACEHOLDER_HOSTS = new Set([
@@ -20,6 +19,15 @@ type SafeImageProps = {
   style?: CSSProperties;
 };
 
+const FALLBACK_PALETTES = {
+  auto: 'linear-gradient(135deg, #16181f 0%, #2f3443 42%, #991b1b 100%)',
+  property: 'linear-gradient(135deg, #111827 0%, #1f3b57 45%, #0f766e 100%)',
+  tech: 'linear-gradient(135deg, #111827 0%, #312e81 48%, #0891b2 100%)',
+  food: 'linear-gradient(135deg, #1f1308 0%, #7c2d12 48%, #dc2626 100%)',
+  fashion: 'linear-gradient(135deg, #1f1021 0%, #831843 48%, #e11d48 100%)',
+  service: 'linear-gradient(135deg, #111827 0%, #374151 48%, #b91c1c 100%)',
+};
+
 function isPublicImageUrl(src?: string | null) {
   if (!src) return false;
   if (src.startsWith('/')) return true;
@@ -32,6 +40,36 @@ function isPublicImageUrl(src?: string | null) {
   } catch {
     return false;
   }
+}
+
+function fallbackPalette(alt: string) {
+  const value = alt.toLowerCase();
+  if (/(toyota|bmw|hyundai|kia|honda|mercedes|land cruiser|prius|tucson|autocity)/.test(value)) {
+    return FALLBACK_PALETTES.auto;
+  }
+  if (/(zaisan|garden|residence|heights|valley|river|tower|office|property|properties|realty|agent)/.test(value)) {
+    return FALLBACK_PALETTES.property;
+  }
+  if (/(iphone|samsung|macbook|airpods|tech|wireless|bluetooth)/.test(value)) {
+    return FALLBACK_PALETTES.tech;
+  }
+  if (/(burger|pizza|fries|food|coffee)/.test(value)) {
+    return FALLBACK_PALETTES.food;
+  }
+  if (/(fashion|cashmere|nike|zara|shirt|dress|leather|bag|jeans)/.test(value)) {
+    return FALLBACK_PALETTES.fashion;
+  }
+  return FALLBACK_PALETTES.service;
+}
+
+function fallbackInitials(alt: string) {
+  const words = alt.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return '';
+  return words
+    .slice(0, 2)
+    .map((word) => word[0])
+    .join('')
+    .toUpperCase();
 }
 
 export default function SafeImage({
@@ -91,17 +129,31 @@ export default function SafeImage({
   }, [src]);
 
   if (failed || !src) {
+    const label = fallbackInitials(alt);
     return (
       <div
         aria-label={alt}
         className={cn(
-          'flex items-center justify-center bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]',
+          'relative isolate flex items-center justify-center overflow-hidden bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]',
           className,
           fallbackClassName,
         )}
-        style={style}
+        style={{ ...style, background: fallbackPalette(alt) }}
       >
-        <ImageOff className="h-8 w-8 opacity-60" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(255,255,255,.18),transparent_30%),radial-gradient(circle_at_78%_12%,rgba(255,255,255,.10),transparent_24%)]" />
+        <div className="absolute -right-[16%] top-[18%] h-[58%] w-[58%] rounded-full bg-white/10" />
+        <div className="absolute -left-[14%] bottom-[8%] h-[44%] w-[70%] rounded-full bg-black/20" />
+        <div className="absolute inset-x-[12%] bottom-[15%] h-px bg-white/20" />
+        <div className="absolute bottom-[18%] left-[16%] h-[22%] w-[18%] rounded-t-lg border border-white/20 bg-white/10" />
+        <div className="absolute bottom-[18%] left-[38%] h-[34%] w-[28%] rounded-t-xl border border-white/20 bg-white/10" />
+        <div className="absolute bottom-[18%] right-[13%] h-[27%] w-[18%] rounded-t-lg border border-white/20 bg-white/10" />
+        {label ? (
+          <span className="relative z-10 rounded-xl bg-black/25 px-3 py-2 text-sm font-black text-white/90 shadow-lg backdrop-blur-sm">
+            {label}
+          </span>
+        ) : (
+          <span className="sr-only">Image unavailable</span>
+        )}
       </div>
     );
   }

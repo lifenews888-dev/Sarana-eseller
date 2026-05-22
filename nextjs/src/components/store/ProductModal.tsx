@@ -539,7 +539,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   className="shrink-0 w-[130px] cursor-pointer group">
                   <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5">
                     {p.images?.[0] ? (
-                      <SafeImage src={p.images[0]} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                      <SafeImage src={p.images[0]} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-2xl">{p.emoji || <Package className="w-6 h-6 text-[#CBD5E1]" />}</div>
                     )}
@@ -552,7 +552,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
               {FEATURED_ADS.slice(0, 3).map(ad => (
                 <a key={ad.id} href={ad.link} className="shrink-0 w-[130px] no-underline group">
                   <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5 relative">
-                    <SafeImage src={ad.image} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    <SafeImage src={ad.image} alt={ad.title} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                     <span className="absolute top-1 left-1 text-[8px] font-bold bg-black/60 text-white px-1.5 py-0.5 rounded">{ad.badge}</span>
                   </div>
                   <p className="text-[11px] font-semibold text-[var(--esl-text-primary)] line-clamp-1 group-hover:text-[#E24B4A] transition-colors">{ad.title}</p>
