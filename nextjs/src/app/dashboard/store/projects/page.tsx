@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Building2, Image as ImageIcon, Plus } from 'lucide-react';
+import { Building2, Eye, Image as ImageIcon, Pencil, Plus } from 'lucide-react';
 
 interface FeedProject {
   id: string;
@@ -76,10 +76,9 @@ export default function ProjectsPage() {
             const sold = Number(meta.soldUnits) || 0;
             const progress = total > 0 ? Math.min(100, Math.round((sold / total) * 100)) : 0;
             return (
-              <Link
+              <div
                 key={project.id}
-                href={`/feed/${project.id}`}
-                className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] no-underline transition hover:border-[#E8242C]/40"
+                className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] transition hover:border-[#E8242C]/40"
               >
                 <div className="aspect-[16/9] bg-[var(--esl-bg-section)]">
                   {project.images?.[0] ? (
@@ -112,8 +111,16 @@ export default function ProjectsPage() {
                       <div className="h-full rounded-full bg-[#E8242C]" style={{ width: `${progress}%` }} />
                     </div>
                   )}
+                  <div className="flex gap-2 pt-1">
+                    <Link href={`/feed/${project.id}`} target="_blank" className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2 text-xs font-bold text-[var(--esl-text-secondary)] no-underline hover:text-white">
+                      <Eye className="h-3.5 w-3.5" /> Харах
+                    </Link>
+                    <Link href={`/dashboard/store/listings/new?entityType=company&edit=${project.id}`} className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2 text-xs font-bold text-[var(--esl-text-secondary)] no-underline hover:text-white">
+                      <Pencil className="h-3.5 w-3.5" /> Засах
+                    </Link>
+                  </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Car, Gauge, Image as ImageIcon, Plus } from 'lucide-react';
+import { Car, Eye, Gauge, Image as ImageIcon, Pencil, Plus } from 'lucide-react';
 
 interface FeedVehicle {
   id: string;
@@ -74,10 +74,9 @@ export default function VehiclesPage() {
             const meta = vehicle.metadata || {};
             const title = [meta.brand, meta.model, meta.year].filter(Boolean).join(' ') || vehicle.title;
             return (
-              <Link
+              <div
                 key={vehicle.id}
-                href={`/feed/${vehicle.id}`}
-                className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] no-underline transition hover:border-[#E8242C]/40"
+                className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] transition hover:border-[#E8242C]/40"
               >
                 <div className="aspect-[4/3] bg-[var(--esl-bg-section)]">
                   {vehicle.images?.[0] ? (
@@ -102,8 +101,16 @@ export default function VehiclesPage() {
                     {meta.fuelType && <span className="rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">{String(meta.fuelType)}</span>}
                     {vehicle.district && <span className="rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">{vehicle.district}</span>}
                   </div>
+                  <div className="flex gap-2 pt-2">
+                    <Link href={`/feed/${vehicle.id}`} target="_blank" className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2 text-xs font-bold text-[var(--esl-text-secondary)] no-underline hover:text-white">
+                      <Eye className="h-3.5 w-3.5" /> Харах
+                    </Link>
+                    <Link href={`/dashboard/store/listings/new?entityType=auto_dealer&edit=${vehicle.id}`} className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2 text-xs font-bold text-[var(--esl-text-secondary)] no-underline hover:text-white">
+                      <Pencil className="h-3.5 w-3.5" /> Засах
+                    </Link>
+                  </div>
                 </div>
-              </Link>
+              </div>
             );
           })}
         </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Eye, Trash2, MapPin, Package, Loader2 } from 'lucide-react';
+import { Plus, Eye, Trash2, MapPin, Package, Loader2, Pencil } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 interface Listing {
@@ -11,6 +11,7 @@ interface Listing {
   price: number | null;
   images: string[];
   district: string | null;
+  entityType?: string | null;
   status: string;
   tier: string;
   viewCount: number;
@@ -105,6 +106,10 @@ export default function ListingsPage() {
                 <Link href={`/feed/${item.id}`} target="_blank"
                   className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
                   <Eye className="w-4 h-4" />
+                </Link>
+                <Link href={`/dashboard/store/listings/new?entityType=${item.entityType || entityType}&edit=${item.id}`}
+                  className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
+                  <Pencil className="w-4 h-4" />
                 </Link>
                 <button onClick={() => deleteListing(item.id)}
                   className="w-8 h-8 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-500 cursor-pointer hover:bg-red-100">

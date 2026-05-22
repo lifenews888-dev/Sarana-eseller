@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Building2, Car, Home, Loader2, MapPin, Send, Tag } from 'lucide-react';
@@ -25,6 +25,29 @@ type EntityFieldConfig = {
   mediaType: CardEntityType;
   icon: typeof Tag;
   fields: FieldDef[];
+};
+
+type FeedMedia = { type: string; url: string };
+type FeedListItem = {
+  id: string;
+  title: string;
+  description?: string | null;
+  price?: number | null;
+  originalPrice?: number | null;
+  images?: string[];
+  category?: string | null;
+  entityType?: string | null;
+  district?: string | null;
+  tier?: string | null;
+  metadata?: Record<string, unknown> | null;
+  media?: FeedMedia[];
+};
+
+type FeedBuckets = {
+  vip?: FeedListItem[];
+  featured?: FeedListItem[];
+  discounted?: FeedListItem[];
+  normal?: FeedListItem[];
 };
 
 const REAL_ESTATE_FIELDS: FieldDef[] = [
@@ -177,6 +200,27 @@ function parseNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function flattenFeed(data: (FeedBuckets & { data?: FeedBuckets }) | null): FeedListItem[] {
+  const d = data?.data || data || {};
+  return [
+    ...(d.vip || []),
+    ...(d.featured || []),
+    ...(d.discounted || []),
+    ...(d.normal || []),
+  ];
+}
+
+function metadataToForm(value?: Record<string, unknown> | null): Record<string, string> {
+  if (!value) return {};
+  const form: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(value)) {
+    if (Array.isArray(raw)) form[key] = raw.map(String).join(', ');
+    else if (typeof raw === 'boolean') form[key] = raw ? 'true' : 'false';
+    else if (raw !== null && raw !== undefined) form[key] = String(raw);
+  }
+  return form;
+}
+
 function normalizeMetadata(
   fields: FieldDef[],
   values: Record<string, string>,
@@ -226,6 +270,10 @@ export default function NewListingPage() {
   const [queryEntityType] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('entityType')
   );
+  const [editId] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('edit')
+  );
+  const [editEntityType, setEditEntityType] = useState<string | null>(null);
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -241,9 +289,10 @@ export default function NewListingPage() {
   const [floorPlanUrl, setFloorPlanUrl] = useState('');
   const [metadata, setMetadata] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
+  const [prefillLoading, setPrefillLoading] = useState(Boolean(editId));
   const [error, setError] = useState('');
 
-  const entityType = normalizeEntityType(queryEntityType || user?.entityType);
+  const entityType = normalizeEntityType(editEntityType || queryEntityType || user?.entityType);
   const config = ENTITY_FIELDS[entityType] || ENTITY_FIELDS.store;
   const mediaConfig = ENTITY_CARD_CONFIG[config.mediaType];
   const maxImages = mediaConfig.maxImages;
@@ -256,6 +305,51 @@ export default function NewListingPage() {
     if (entityType === 'agent') return '3 өрөө байр, Ривер Гарден';
     return 'Зарын гарчиг';
   }, [entityType]);
+
+  useEffect(() => {
+    if (!editId) return;
+
+    const token = localStorage.getItem('token');
+    const controller = new AbortController();
+    fetch('/api/feed?mine=1&limit=100', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      signal: controller.signal,
+    })
+      .then((res) => res.json())
+      .then((payload) => {
+        const item = flattenFeed(payload).find((entry) => entry.id === editId);
+        if (!item) {
+          setError('Засах зар олдсонгүй эсвэл эрх хүрэхгүй байна');
+          return;
+        }
+
+        setEditEntityType(item.entityType || null);
+        setForm({
+          title: item.title || '',
+          description: item.description || '',
+          price: item.price ? String(item.price) : '',
+          originalPrice: item.originalPrice ? String(item.originalPrice) : '',
+          category: item.category || '',
+          district: item.district || '',
+          tier: item.tier || 'normal',
+        });
+        setImages(item.images || []);
+        setMetadata(metadataToForm(item.metadata));
+        setVideoUrl(item.media?.find((media) => media.type === 'VIDEO')?.url || '');
+        setVirtualTourUrl(item.media?.find((media) => media.type === 'VIRTUAL_TOUR')?.url || '');
+        setFloorPlanUrl(item.media?.find((media) => media.type === 'FLOOR_PLAN')?.url || '');
+      })
+      .catch((err) => {
+        if ((err as { name?: string })?.name !== 'AbortError') {
+          setError('Зарын мэдээлэл татахад алдаа гарлаа');
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setPrefillLoading(false);
+      });
+
+    return () => controller.abort();
+  }, [editId]);
 
   const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
   const updateMeta = (key: string, value: string) => setMetadata((prev) => ({ ...prev, [key]: value }));
@@ -282,8 +376,8 @@ export default function NewListingPage() {
     const category = form.category.trim() || defaultCategory(entityType, cleanMetadata);
     const token = localStorage.getItem('token');
 
-    const res = await fetch('/api/feed', {
-      method: 'POST',
+    const res = await fetch(editId ? `/api/feed/${editId}` : '/api/feed', {
+      method: editId ? 'PATCH' : 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({
         ...form,
@@ -318,13 +412,19 @@ export default function NewListingPage() {
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>
-          <h1 className="text-xl font-extrabold text-[var(--esl-text-primary)]">Зар нэмэх</h1>
+          <h1 className="text-xl font-extrabold text-[var(--esl-text-primary)]">{editId ? 'Зар засах' : 'Зар нэмэх'}</h1>
           <p className="text-xs text-[var(--esl-text-secondary)]">{config.label}</p>
         </div>
       </div>
 
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-4 py-3">{error}</div>
+      )}
+
+      {prefillLoading && (
+        <div className="flex items-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-4 py-3 text-sm text-[var(--esl-text-muted)]">
+          <Loader2 className="h-4 w-4 animate-spin" /> Засах зарын мэдээлэл татаж байна...
+        </div>
       )}
 
       <div className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] p-6 space-y-4">
@@ -427,11 +527,11 @@ export default function NewListingPage() {
 
       <button
         onClick={handleSubmit}
-        disabled={loading}
+        disabled={loading || prefillLoading}
         className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#E8242C] text-white rounded-xl font-bold text-sm border-none cursor-pointer hover:bg-red-700 transition disabled:opacity-50"
       >
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-        {loading ? 'Илгээж байна...' : 'Зар нэмэх'}
+        {loading ? 'Илгээж байна...' : editId ? 'Зар хадгалах' : 'Зар нэмэх'}
       </button>
     </div>
   );
