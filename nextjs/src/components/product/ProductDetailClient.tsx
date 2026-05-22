@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Star, Truck, Shield, Clock, Phone, MapPin,
@@ -19,6 +18,7 @@ import AddToCartButton from './AddToCartButton';
 import StartSellingButton from './StartSellingButton';
 import ShareWishlistBar from './ShareWishlistBar';
 import ReviewSection from './ReviewSection';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface ProductDetailClientProps {
   product: Product & {
@@ -142,7 +142,11 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
               {relatedProducts.slice(0, 4).map(rp => (
                 <Link key={rp._id} href={`/product/${rp._id}`} className="group">
                   <div className="aspect-square rounded-xl overflow-hidden bg-[var(--esl-bg-card)] relative">
-                    {rp.images?.[0] && <Image src={rp.images[0]} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform" sizes="25vw" />}
+                    <SafeImage
+                      src={rp.images?.[0]}
+                      alt={rp.name}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
                   </div>
                   <p className="mt-2 text-sm font-medium truncate">{rp.name}</p>
                   <p className="text-sm font-bold text-[#E8242C]">{formatPrice(rp.salePrice || rp.price)}</p>

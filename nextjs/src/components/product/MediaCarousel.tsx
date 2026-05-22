@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, Play, X, Maximize2, Package, Globe, Ruler } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import SafeImage from '@/components/ui/SafeImage';
 
 export interface MediaItem {
   id?: string;
@@ -28,16 +28,18 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
   const [showAll, setShowAll] = useState(false);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
 
-  const images = media.filter(m => m.type === 'IMAGE');
-  const videos = media.filter(m => m.type === 'VIDEO');
-  const tours = media.filter(m => m.type === 'VIRTUAL_TOUR');
-  const floorPlans = media.filter(m => m.type === 'FLOOR_PLAN');
-  const allVisual = [...images, ...videos];
+  const images = useMemo(() => media.filter(m => m.type === 'IMAGE'), [media]);
+  const videos = useMemo(() => media.filter(m => m.type === 'VIDEO'), [media]);
+  const tours = useMemo(() => media.filter(m => m.type === 'VIRTUAL_TOUR'), [media]);
+  const floorPlans = useMemo(() => media.filter(m => m.type === 'FLOOR_PLAN'), [media]);
+  const allVisual = useMemo(() => [...images, ...videos], [images, videos]);
+  const visualCount = allVisual.length;
 
   const go = useCallback((dir: 1 | -1) => {
-    setActive(i => (i + dir + allVisual.length) % allVisual.length);
+    if (visualCount <= 0) return;
+    setActive(i => (i + dir + visualCount) % visualCount);
     setPlayingVideo(null);
-  }, [allVisual.length]);
+  }, [visualCount]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -81,11 +83,19 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
             className="col-span-2 row-span-2 relative cursor-pointer group"
             onClick={() => setZoomed(gridImages[0].url)}
           >
-            <Image src={gridImages[0].url} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="50vw" />
+            <SafeImage
+              src={gridImages[0].url}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
           </div>
           {gridImages.slice(1).map((img, i) => (
             <div key={i} className="relative cursor-pointer group" onClick={() => setZoomed(img.url)}>
-              <Image src={img.url} alt="" fill className="object-cover group-hover:scale-105 transition-transform duration-300" sizes="25vw" />
+              <SafeImage
+                src={img.url}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
               {i === 2 && remaining > 0 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setShowAll(true); }}
@@ -136,7 +146,12 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
             <iframe src={playingVideo || current.url} className="w-full h-full" allowFullScreen allow="autoplay" />
           </div>
         ) : (
-          <Image src={current.url} alt="" fill className="object-cover" sizes="(max-width:768px)100vw,50vw" priority={active === 0} />
+          <SafeImage
+            src={current.url}
+            alt=""
+            loading={active === 0 ? 'eager' : 'lazy'}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
         )}
 
         {/* Arrows */}
@@ -183,7 +198,7 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
             <button key={i} onClick={() => { setActive(i); setPlayingVideo(null); }}
               className={cn('w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors', i === active ? 'border-[#E8242C]' : 'border-transparent')}
             >
-              <Image src={m.thumbnail || m.url} alt="" width={56} height={56} className="object-cover w-full h-full" />
+              <SafeImage src={m.thumbnail || m.url} alt="" className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
@@ -216,7 +231,9 @@ function ZoomModal({ src, onClose }: { src: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" onClick={onClose}>
       <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"><X size={24} /></button>
-      <Image src={src} alt="" width={1200} height={900} className="max-w-[90vw] max-h-[90vh] object-contain" onClick={e => e.stopPropagation()} />
+      <div className="h-[80vh] w-[90vw] max-w-[1200px]" onClick={e => e.stopPropagation()}>
+        <SafeImage src={src} alt="" className="h-full w-full object-contain" />
+      </div>
     </div>
   );
 }
@@ -241,7 +258,7 @@ function GalleryModal({ images, onClose }: { images: MediaItem[]; onClose: () =>
       <div className="max-w-5xl mx-auto pt-16 grid grid-cols-2 md:grid-cols-3 gap-2" onClick={e => e.stopPropagation()}>
         {images.map((img, i) => (
           <div key={i} className="relative aspect-square rounded-lg overflow-hidden">
-            <Image src={img.url} alt="" fill className="object-cover" sizes="33vw" />
+            <SafeImage src={img.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
           </div>
         ))}
       </div>
