@@ -1,5 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+function parseAEPrice(raw: unknown): number {
+  if (typeof raw === 'number' && raw > 0) return raw;
+  if (!raw) return 0;
+  // Strip currency symbols e.g. "US$12.99", "$5.00", "¥199"
+  const cleaned = String(raw).replace(/[^0-9.]/g, '');
+  const n = parseFloat(cleaned);
+  return isFinite(n) && n > 0 ? n : 0;
+}
+
 async function searchAliExpress(keyword: string, page = 1) {
   const res = await fetch(
     `https://aliexpress-datahub.p.rapidapi.com/item_search_3?q=${encodeURIComponent(keyword)}&page=${page}`,
@@ -72,19 +81,22 @@ export async function GET(req: NextRequest) {
       products = items.map((entry: any) => {
         const item = entry.item || entry
         const delivery = entry.delivery || {}
+        const supplierPrice = parseAEPrice(
+          item.sku?.def?.promotionPrice ??
+          item.sku?.def?.price ??
+          item.salePrice ??
+          item.originalPrice ??
+          item.price
+        )
         return {
           supplierId: String(item.itemId || ''),
           supplierName: 'aliexpress',
           name: item.title || item.subject || '',
-          supplierPrice: parseFloat(
-            item.sku?.def?.promotionPrice ||
-            item.sku?.def?.price ||
-            item.price || 0
-          ),
+          supplierPrice,
           supplierCurrency: 'USD',
           images: item.image
             ? [`https:${item.image}`]
-            : [],
+            : item.productImages?.map((u: string) => u.startsWith('http') ? u : `https:${u}`) || [],
           supplierUrl: item.itemUrl
             ? `https:${item.itemUrl}`
             : `https://www.aliexpress.com/item/${item.itemId}.html`,
@@ -93,7 +105,7 @@ export async function GET(req: NextRequest) {
           orders: item.sales || item.totalOrders || 0,
           shipping: delivery.deliveryDays || '15-30 хоног',
         }
-      })
+      }).filter((p: any) => p.supplierPrice > 0)
 
     } else if (source === 'cj') {
       const data = await searchCJDropshipping(q)

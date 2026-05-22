@@ -195,9 +195,17 @@ export default function ProductCard({
 
         {/* Price */}
         <div className="flex items-baseline gap-1.5 mb-2">
-          <span className="text-[15px] font-medium" style={{ color: 'var(--esl-text-primary)' }}>{formatPrice(px)}</span>
-          {disc > 0 && (
-            <span className="text-xs line-through" style={{ color: 'var(--esl-text-disabled)' }}>{formatPrice(p.price)}</span>
+          {px > 0 ? (
+            <>
+              <span className="text-[15px] font-medium" style={{ color: 'var(--esl-text-primary)' }}>{formatPrice(px)}</span>
+              {disc > 0 && (
+                <span className="text-xs line-through" style={{ color: 'var(--esl-text-disabled)' }}>{formatPrice(p.price)}</span>
+              )}
+            </>
+          ) : (
+            <span className="text-[12px] font-medium px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 border border-amber-200">
+              Үнэ тохируулаагүй
+            </span>
           )}
         </div>
 

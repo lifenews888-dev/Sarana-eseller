@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
           id: true, name: true, price: true, salePrice: true,
           images: true, emoji: true, rating: true, reviewCount: true,
           entityType: true, district: true, category: true, createdAt: true,
+          description: true, stock: true,
         },
       }),
       prisma.product.count({ where }),

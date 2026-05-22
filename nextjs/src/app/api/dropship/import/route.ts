@@ -37,6 +37,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Мэдээлэл дутуу' }, { status: 400 })
   }
 
+  if (!supplierPrice || supplierPrice <= 0) {
+    return NextResponse.json({ error: 'Нийлүүлэгчийн үнэ тодорхойгүй байна. Бараагаа гараар нэмнэ үү.' }, { status: 400 })
+  }
+
   const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
   if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
