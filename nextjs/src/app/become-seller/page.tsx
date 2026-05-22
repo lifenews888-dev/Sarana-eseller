@@ -10,8 +10,8 @@ import EsellerLogo from '@/components/shared/EsellerLogo';
 import ImageUpload from '@/components/shared/ImageUpload';
 import {
   Store, Building2, Car, Scissors, Users, Clock, Download,
-  ChevronRight, ChevronLeft, Check, Upload, MapPin, Globe, Phone, Mail,
-  Camera, FileText, Shield, Sparkles, ArrowRight, Crown, Zap, Star,
+  ChevronRight, Check, Upload, MapPin, Globe, Phone, Mail,
+  FileText, Shield, Sparkles, ArrowRight, Crown, Zap, Star,
 } from 'lucide-react';
 
 /* ═══ Entity Type Definitions ═══ */
@@ -84,10 +84,11 @@ const PLANS: Record<string, { name: string; price: string; priceNum: number; fea
 
 /* ═══ Main Page ═══ */
 export default function BecomeSellerPage() {
-  const { user, isLoggedIn } = useAuth();
+  const { user, isLoggedIn, login } = useAuth();
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [entityType, setEntityType] = useState<EntityType | null>(null);
   const [selectedPlan, setSelectedPlan] = useState('free');
@@ -126,15 +127,24 @@ export default function BecomeSellerPage() {
   const handleSubmit = async () => {
     if (!entityType) return;
     setSubmitting(true);
+    setSubmitError('');
     try {
       const token = localStorage.getItem('token');
-      await fetch('/api/entities/register', {
+      const res = await fetch('/api/entities/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ entityType, plan: selectedPlan, ...form }),
       });
+      const payload = await res.json().catch(() => null);
+      const data = payload?.data || payload;
+      if (!res.ok || payload?.success === false) {
+        throw new Error(payload?.error || data?.error || 'Бүртгэл амжилтгүй боллоо');
+      }
+      if (data?.token && data?.user) login(data.token, data.user);
       setSubmitted(true);
-    } catch {}
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Бүртгэл амжилтгүй боллоо');
+    }
     finally { setSubmitting(false); }
   };
 
@@ -152,7 +162,7 @@ export default function BecomeSellerPage() {
           <div className="bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)] rounded-xl p-3 mb-6">
             <p className="text-xs text-[#F59E0B]"><Shield className="w-3.5 h-3.5 inline mr-1" /> Баталгаажуулалт 1-3 ажлын өдөрт хийгдэнэ</p>
           </div>
-          <Link href="/dashboard" className="inline-flex items-center gap-2 bg-[#E8242C] text-white px-6 py-3 rounded-xl text-sm font-bold no-underline hover:bg-[#CC0000] transition">
+          <Link href="/dashboard/store" className="inline-flex items-center gap-2 bg-[#E8242C] text-white px-6 py-3 rounded-xl text-sm font-bold no-underline hover:bg-[#CC0000] transition">
             Dashboard руу очих <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
@@ -469,6 +479,12 @@ export default function BecomeSellerPage() {
         </AnimatePresence>
 
         {/* Navigation */}
+        {submitError && (
+          <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {submitError}
+          </div>
+        )}
+
         <div className="flex items-center justify-between mt-8">
           {step > 0 ? (
             <button onClick={() => setStep(s => s - 1)}

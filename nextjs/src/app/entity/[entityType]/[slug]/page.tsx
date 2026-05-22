@@ -182,12 +182,6 @@ function formatPrice(n: number) {
   return n.toLocaleString();
 }
 
-function handleCardKeyDown(event: React.KeyboardEvent<HTMLDivElement>, onClick: () => void) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  event.preventDefault();
-  onClick();
-}
-
 /* ═══ Hero Carousel ═══ */
 function HeroCarousel({ images, label, children }: { images: string[]; label: string; children?: React.ReactNode }) {
   const [idx, setIdx] = useState(0);
@@ -229,16 +223,13 @@ function HeroCarousel({ images, label, children }: { images: string[]; label: st
 }
 
 /* ═══ Vehicle Card ═══ */
-function VehicleCard({ v, onClick }: { v: DemoVehicle; onClick: () => void }) {
+function VehicleCard({ v }: { v: DemoVehicle }) {
   return (
-    <div
-      onClick={onClick}
-      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
-      role="button"
-      tabIndex={0}
+    <Link
+      href={`/feed/${v.id}`}
       aria-label={`${v.title} дэлгэрэнгүй`}
       className={cn(
-      'group min-w-[280px] max-w-[320px] rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] snap-start cursor-pointer transition-all hover:border-[#E8242C]/50 hover:shadow-[0_0_30px_rgba(232,36,44,0.15)]',
+      'group block no-underline min-w-[280px] max-w-[320px] rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] snap-start cursor-pointer transition-all hover:border-[#E8242C]/50 hover:shadow-[0_0_30px_rgba(232,36,44,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]',
       v.sold && 'opacity-60'
     )}>
       <div className="relative h-48 overflow-hidden">
@@ -264,21 +255,18 @@ function VehicleCard({ v, onClick }: { v: DemoVehicle; onClick: () => void }) {
         </div>
         <p className="text-lg font-black text-[#E8242C]">{formatPrice(v.price)}₮</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
 /* ═══ Project Card ═══ */
-function ProjectCard({ p, onClick }: { p: DemoProject; onClick: () => void }) {
+function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
   return (
-    <div
-      onClick={onClick}
-      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
-      role="button"
-      tabIndex={0}
+    <Link
+      href={`/feed/${p.id}`}
       aria-label={`${p.title} дэлгэрэнгүй`}
-      className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+      className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
     >
       <div className="relative h-52 overflow-hidden">
         <SafeImage src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -315,20 +303,17 @@ function ProjectCard({ p, onClick }: { p: DemoProject; onClick: () => void }) {
           </div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
 /* ═══ Listing Card (Agent) ═══ */
-function ListingCard({ l, onClick }: { l: DemoListing; onClick: () => void }) {
+function ListingCard({ l }: { l: DemoListing }) {
   return (
-    <div
-      onClick={onClick}
-      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
-      role="button"
-      tabIndex={0}
+    <Link
+      href={`/feed/${l.id}`}
       aria-label={`${l.title} дэлгэрэнгүй`}
-      className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+      className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
     >
       <div className="relative h-44 overflow-hidden">
         <SafeImage src={l.image} alt={l.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -348,7 +333,7 @@ function ListingCard({ l, onClick }: { l: DemoListing; onClick: () => void }) {
         </div>
         <p className="text-base font-black text-[#E8242C]">{formatPrice(l.price)}₮</p>
       </div>
-    </div>
+    </Link>
   );
 }
 
@@ -533,9 +518,7 @@ export default function EntityProfilePage() {
             )}
             {/* Scrollable vehicle cards */}
             <div ref={scrollRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-              {entity.vehicles.map(v => (
-                <VehicleCard key={v.id} v={v} onClick={() => setSelectedVehicle(v)} />
-              ))}
+                {entity.vehicles.map(v => <VehicleCard key={v.id} v={v} />)}
             </div>
             <p className="text-xs text-[var(--esl-text-secondary)] mt-2 text-center">← Гулсуулж бүх машиныг харна уу →</p>
 
@@ -627,14 +610,14 @@ export default function EntityProfilePage() {
         {/* === COMPANY: Projects === */}
         {entityType === 'company' && activeTab === 0 && entity.projects && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {entity.projects.map(p => <ProjectCard key={p.id} p={p} onClick={() => setSelectedProject(p)} />)}
+            {entity.projects.map(p => <ProjectCard key={p.id} p={p} />)}
           </div>
         )}
 
         {/* === AGENT: Listings === */}
         {entityType === 'agent' && activeTab === 0 && entity.listings && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {entity.listings.map(l => <ListingCard key={l.id} l={l} onClick={() => setSelectedListing(l)} />)}
+            {entity.listings.map(l => <ListingCard key={l.id} l={l} />)}
           </div>
         )}
 

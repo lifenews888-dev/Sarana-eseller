@@ -10,7 +10,7 @@ import { prisma } from './prisma';
 const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
 
 /** Sign a JWT token */
-export function signToken(payload: { id: string; role: string; email?: string }): string {
+export function signToken(payload: { id: string; role: string; email?: string; name?: string; entityType?: string | null }): string {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
 }
 
@@ -34,7 +34,7 @@ export function errorJson(error: string, status = 400) {
 function extractToken(req: NextRequest): string | null {
   const header = req.headers.get('authorization');
   if (header?.startsWith('Bearer ')) return header.slice(7);
-  return req.cookies.get('token')?.value || null;
+  return req.cookies.get('auth-token')?.value || req.cookies.get('token')?.value || null;
 }
 
 /** Decode JWT payload without verification */
@@ -42,12 +42,13 @@ function decodePayload(token: string): AuthUser | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString());
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString()) as Record<string, unknown>;
     const id = payload.id || payload.userId || payload._id || payload.sub;
-    const email = payload.email || '';
-    const role = payload.role || 'buyer';
-    if (!id) return null;
-    return { id, email, role, name: payload.name || '' };
+    if (typeof id !== 'string') return null;
+    const email = typeof payload.email === 'string' ? payload.email : '';
+    const role = typeof payload.role === 'string' ? payload.role : 'buyer';
+    const name = typeof payload.name === 'string' ? payload.name : '';
+    return { id, email, role, name };
   } catch {
     return null;
   }
@@ -59,16 +60,22 @@ export function getAuthUser(req: NextRequest): AuthUser | null {
   if (!token) return null;
 
   // Helper to extract user from decoded payload
-  const extractUser = (decoded: any): AuthUser | null => {
+  const extractUser = (decoded: Record<string, unknown>): AuthUser | null => {
     const id = decoded.id || decoded.userId || decoded._id || decoded.sub;
     if (!id) return null;
-    return { id, email: decoded.email || '', role: decoded.role || 'buyer', name: decoded.name || '' };
+    if (typeof id !== 'string') return null;
+    return {
+      id,
+      email: typeof decoded.email === 'string' ? decoded.email : '',
+      role: typeof decoded.role === 'string' ? decoded.role : 'buyer',
+      name: typeof decoded.name === 'string' ? decoded.name : '',
+    };
   };
 
   // Try verified decode first
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
-    const user = extractUser(decoded);
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const user = typeof decoded === 'object' && decoded !== null ? extractUser(decoded as Record<string, unknown>) : null;
     if (user) return user;
   } catch {}
 
@@ -76,8 +83,8 @@ export function getAuthUser(req: NextRequest): AuthUser | null {
   const secrets = ['eseller-jwt-secret-key-change-in-production-2026', 'eseller-secret-key-change-in-production'];
   for (const s of secrets) {
     try {
-      const decoded = jwt.verify(token, s) as any;
-      const user = extractUser(decoded);
+      const decoded = jwt.verify(token, s);
+      const user = typeof decoded === 'object' && decoded !== null ? extractUser(decoded as Record<string, unknown>) : null;
       if (user) return user;
     } catch {}
   }

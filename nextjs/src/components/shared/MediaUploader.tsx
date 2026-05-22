@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, Video, Globe, FileImage } from 'lucide-react';
+import { Upload, X, Loader2, Video, Globe, FileImage } from 'lucide-react';
 import { ENTITY_CARD_CONFIG, type EntityType } from '@/lib/cards/entityCardConfig';
 
 interface Props {
@@ -45,7 +45,7 @@ export function MediaUploader({ context, value, onChange, maxFiles = 5, label, e
   }, [context]);
 
   const handleFiles = useCallback(async (files: FileList) => {
-    const remaining = maxFiles - value.length;
+    const remaining = effectiveMax - value.length;
     if (remaining <= 0) return;
 
     const toUpload = Array.from(files).slice(0, remaining);
@@ -56,7 +56,7 @@ export function MediaUploader({ context, value, onChange, maxFiles = 5, label, e
       onChange([...value, ...urls.filter(Boolean)]);
     } catch {}
     finally { setUploading(false); }
-  }, [value, maxFiles, onChange, uploadFile]);
+  }, [value, effectiveMax, onChange, uploadFile]);
 
   const removeFile = (index: number) => {
     onChange(value.filter((_, i) => i !== index));
@@ -96,7 +96,7 @@ export function MediaUploader({ context, value, onChange, maxFiles = 5, label, e
       )}
 
       {/* Upload area */}
-      {value.length < maxFiles && (
+      {value.length < effectiveMax && (
         <div
           onClick={() => inputRef.current?.click()}
           onDragOver={e => { e.preventDefault(); setDragOver(true); }}

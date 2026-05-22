@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Eye, Trash2, MapPin, Package, Loader2, Clock } from 'lucide-react';
+import { Plus, Eye, Trash2, MapPin, Package, Loader2 } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 
 interface Listing {
   id: string;
@@ -17,12 +18,15 @@ interface Listing {
 }
 
 export default function ListingsPage() {
+  const { user } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const entityType = user?.entityType || 'store';
+  const createHref = `/dashboard/store/listings/new?entityType=${entityType}`;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch('/api/feed?limit=50', {
+    fetch('/api/feed?mine=1&limit=50', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then(r => r.json())
@@ -51,7 +55,7 @@ export default function ListingsPage() {
           <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)]">Зарууд</h1>
           <p className="text-sm text-[var(--esl-text-secondary)]">{listings.length} зар</p>
         </div>
-        <Link href="/dashboard/store/listings/new"
+        <Link href={createHref}
           className="flex items-center gap-2 px-5 py-2.5 bg-[#E8242C] text-white rounded-xl font-bold text-sm no-underline hover:bg-red-700 transition">
           <Plus className="w-4 h-4" /> Зар нэмэх
         </Link>
@@ -66,7 +70,7 @@ export default function ListingsPage() {
           <Package className="w-12 h-12 mx-auto text-[var(--esl-text-muted)] opacity-20 mb-4" />
           <h3 className="text-lg font-bold text-[var(--esl-text-primary)] mb-2">Зар байхгүй байна</h3>
           <p className="text-sm text-[var(--esl-text-muted)] mb-6">Эхний зараа нэмэцгээе</p>
-          <Link href="/dashboard/store/listings/new"
+          <Link href={createHref}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8242C] text-white rounded-xl font-bold text-sm no-underline">
             <Plus className="w-4 h-4" /> Зар нэмэх
           </Link>

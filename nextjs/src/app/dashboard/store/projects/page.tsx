@@ -1,70 +1,121 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { Building2, Image as ImageIcon, Plus } from 'lucide-react';
 
-interface Project {
-  _id: string;
+interface FeedProject {
+  id: string;
   title: string;
-  location: string;
-  status: 'planning' | 'in_progress' | 'completed';
-  budget: number;
-  completionDate: string;
+  price: number | null;
   images: string[];
+  metadata?: Record<string, string | number>;
+  status: string;
+  district?: string | null;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  planning: 'Төлөвлөлт',
-  in_progress: 'Явагдаж байна',
-  completed: 'Дууссан',
+type FeedBuckets = {
+  vip?: FeedProject[];
+  featured?: FeedProject[];
+  discounted?: FeedProject[];
+  normal?: FeedProject[];
 };
 
-const STATUS_CLASS: Record<string, string> = {
-  planning: 'bg-yellow-100 text-yellow-700',
-  in_progress: 'bg-blue-100 text-blue-700',
-  completed: 'bg-green-100 text-green-700',
-};
+function flattenFeed(data: (FeedBuckets & { data?: FeedBuckets }) | null): FeedProject[] {
+  const d = data?.data || data || {};
+  return [
+    ...(d.vip || []),
+    ...(d.featured || []),
+    ...(d.discounted || []),
+    ...(d.normal || []),
+  ];
+}
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<FeedProject[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/seller/projects')
-      .then((r) => r.json())
-      .then((d) => setProjects(d.projects || []))
+    const token = localStorage.getItem('token');
+    fetch('/api/feed?mine=1&entityType=company&limit=50', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => res.json())
+      .then((payload) => setProjects(flattenFeed(payload)))
       .catch(() => setProjects([]))
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Төслүүд</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)]">Төслүүд</h1>
+          <p className="text-sm text-[var(--esl-text-secondary)]">{projects.length} төсөл</p>
+        </div>
         <Link
-          href="/dashboard/store/projects/new"
-          className="px-4 py-2 bg-black text-white rounded-xl text-sm"
+          href="/dashboard/store/listings/new?entityType=company"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#E8242C] px-5 py-2.5 text-sm font-bold text-white no-underline transition hover:bg-red-700"
         >
-          + Төсөл нэмэх
+          <Plus className="h-4 w-4" /> Төсөл нэмэх
         </Link>
       </div>
+
       {loading ? (
-        <div className="animate-pulse h-40 bg-gray-100 rounded-xl" />
+        <div className="h-40 animate-pulse rounded-2xl bg-[var(--esl-bg-card)]" />
       ) : projects.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">Одоогоор төсөл байхгүй</div>
+        <div className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] py-20 text-center">
+          <Building2 className="mx-auto mb-4 h-12 w-12 text-[var(--esl-text-muted)] opacity-30" />
+          <p className="text-sm text-[var(--esl-text-muted)]">Одоогоор төсөл байхгүй байна</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {projects.map((p) => (
-            <div key={p._id} className="bg-white rounded-xl border p-4">
-              <div className="flex justify-between mb-2">
-                <h3 className="font-semibold">{p.title}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full ${STATUS_CLASS[p.status]}`}>
-                  {STATUS_LABEL[p.status]}
-                </span>
-              </div>
-              <p className="text-sm text-gray-500">📍 {p.location}</p>
-              <p className="text-sm text-gray-500">💰 {p.budget?.toLocaleString()}₮</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          {projects.map((project) => {
+            const meta = project.metadata || {};
+            const total = Number(meta.totalUnits) || 0;
+            const sold = Number(meta.soldUnits) || 0;
+            const progress = total > 0 ? Math.min(100, Math.round((sold / total) * 100)) : 0;
+            return (
+              <Link
+                key={project.id}
+                href={`/feed/${project.id}`}
+                className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] no-underline transition hover:border-[#E8242C]/40"
+              >
+                <div className="aspect-[16/9] bg-[var(--esl-bg-section)]">
+                  {project.images?.[0] ? (
+                    <img src={project.images[0]} alt={project.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <ImageIcon className="h-8 w-8 text-[var(--esl-text-disabled)]" />
+                    </div>
+                  )}
+                </div>
+                <div className="space-y-3 p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="line-clamp-2 text-sm font-bold text-[var(--esl-text-primary)]">{project.title}</h3>
+                      <p className="mt-1 text-xs text-[var(--esl-text-muted)]">{project.district || meta.location || 'Байршил оруулаагүй'}</p>
+                    </div>
+                    {meta.projectStatus && (
+                      <span className="shrink-0 rounded-full bg-[#E8242C]/10 px-2 py-1 text-[10px] font-bold text-[#E8242C]">
+                        {String(meta.projectStatus)}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2 text-xs text-[var(--esl-text-muted)]">
+                    {meta.pricePerSqm && <span className="rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">{Number(meta.pricePerSqm).toLocaleString()}₮/м²</span>}
+                    {meta.completionDate && <span className="rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">{String(meta.completionDate)}</span>}
+                    {total > 0 && <span className="rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">{sold}/{total} айл</span>}
+                  </div>
+                  {total > 0 && (
+                    <div className="h-2 overflow-hidden rounded-full bg-[var(--esl-bg-section)]">
+                      <div className="h-full rounded-full bg-[#E8242C]" style={{ width: `${progress}%` }} />
+                    </div>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
     </div>

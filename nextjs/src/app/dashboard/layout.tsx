@@ -140,7 +140,7 @@ const AGENT_MANAGEMENT: SidebarSection = {
   title: 'Агентын удирдлага',
   items: [
     { href: '/dashboard/store/listings', icon: '🏠', label: 'Зарууд' },
-    { href: '/dashboard/store/listings/new', icon: '➕', label: 'Зар нэмэх' },
+    { href: '/dashboard/store/listings/new?entityType=agent', icon: '➕', label: 'Зар нэмэх' },
     { href: '/dashboard/store/map', icon: '🗺️', label: 'Байршлын зураг' },
     { href: '/dashboard/store/inquiries', icon: '📩', label: 'Хариу хүсэлт' },
     { href: '/dashboard/store/profile', icon: '👤', label: 'Профайл' },
@@ -151,6 +151,7 @@ const COMPANY_MANAGEMENT: SidebarSection = {
   title: 'Компанийн удирдлага',
   items: [
     { href: '/dashboard/store/projects', icon: '🏗️', label: 'Төслүүд' },
+    { href: '/dashboard/store/listings/new?entityType=company', icon: '➕', label: 'Төсөл нэмэх' },
     { href: '/dashboard/store/gallery', icon: '🖼️', label: 'Бүтээгдэхүүний галерей' },
     { href: '/dashboard/store/documents', icon: '📄', label: 'Баримт бичиг' },
     { href: '/dashboard/store/inquiries', icon: '📩', label: 'Хүсэлт / Inquiry' },
@@ -162,6 +163,7 @@ const AUTO_DEALER_MANAGEMENT: SidebarSection = {
   title: 'Авто удирдлага',
   items: [
     { href: '/dashboard/store/vehicles', icon: '🚗', label: 'Машины жагсаалт' },
+    { href: '/dashboard/store/listings/new?entityType=auto_dealer', icon: '➕', label: 'Машин нэмэх' },
     { href: '/dashboard/store/test-drives', icon: '📅', label: 'Тест драйв захиалга' },
     { href: '/dashboard/store/specs', icon: '📄', label: 'Техник үзүүлэлт' },
     { href: '/dashboard/store/pricing', icon: '📊', label: 'Үнийн харьцуулалт' },
@@ -337,7 +339,7 @@ const OTHER_ROLE_SECTIONS: Record<string, SidebarSection[]> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const router = useRouter();
-  const [ready, setReady] = useState(false);
+  const [ready] = useState(() => (typeof window !== 'undefined' ? !!localStorage.getItem('token') : false));
 
   const shopType = useShopTypeStore((s) => s.shopType);
   const loadShopType = useShopTypeStore((s) => s.load);
@@ -348,7 +350,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!token) {
         router.replace('/login');
       } else {
-        setReady(true);
         loadShopType();
       }
     }
@@ -365,7 +366,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const role = user?.role || 'buyer';
-  const userEntityType = (user as any)?.entityType || undefined;
+  const userEntityType = user?.entityType || undefined;
   const isSellerRole = ['seller', 'agent', 'company', 'auto_dealer', 'service'].includes(role);
   const sections = isSellerRole
     ? getSellerSections(shopType, userEntityType)

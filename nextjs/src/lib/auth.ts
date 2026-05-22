@@ -12,6 +12,7 @@ export interface AuthContextType {
   token: string | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  refreshUser: () => Promise<User | null>;
   isLoggedIn: boolean;
 }
 
@@ -20,6 +21,7 @@ export const AuthContext = createContext<AuthContextType>({
   token: null,
   login: () => {},
   logout: () => {},
+  refreshUser: async () => null,
   isLoggedIn: false,
 });
 

@@ -22,6 +22,13 @@ export async function POST(req: NextRequest) {
           ...(phone ? [{ phone }] : []),
         ],
       },
+      include: {
+        shop: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        agent: { select: { name: true, slug: true, profilePhoto: true, phone: true, address: true } },
+        company: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        autoDealer: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        serviceProvider: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+      },
     });
 
     if (!user) {
@@ -34,10 +41,20 @@ export async function POST(req: NextRequest) {
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, name: user.name },
+      { id: user.id, email: user.email, role: user.role, name: user.name, entityType: user.entityType },
       JWT_SECRET,
       { expiresIn: '30d' }
     );
+
+    const entityStore =
+      user.shop ||
+      (user.agent
+        ? { name: user.agent.name, slug: user.agent.slug, logo: user.agent.profilePhoto, phone: user.agent.phone, address: user.agent.address }
+        : null) ||
+      user.company ||
+      user.autoDealer ||
+      user.serviceProvider ||
+      user.store;
 
     const res = ok({
       token,
@@ -47,8 +64,10 @@ export async function POST(req: NextRequest) {
         name: user.name,
         email: user.email,
         role: user.role,
+        username: user.username,
         avatar: user.avatar,
-        store: user.store,
+        entityType: user.entityType,
+        store: entityStore,
       },
     });
 

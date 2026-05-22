@@ -16,8 +16,53 @@ import VatStatusWidget from '@/components/store/VatStatusWidget';
 import {
   Wallet, ClipboardList, Package, TrendingUp, BarChart3,
   CheckCircle, Trophy, Link as LinkIcon, FolderOpen, Palette,
-  LineChart, Globe, Settings, Zap,
+  LineChart, Globe, Settings, Zap, Building2, Car, Home,
 } from 'lucide-react';
+
+type AnalyticsData = {
+  daily?: Array<{ revenue: number }>;
+};
+
+function getEntityActions(entityType?: string) {
+  if (entityType === 'agent') {
+    return {
+      primaryLabel: 'Зар нэмэх',
+      primaryHref: '/dashboard/store/listings/new?entityType=agent',
+      links: [
+        { icon: <Home className="w-6 h-6" />, label: 'Зар нэмэх', href: '/dashboard/store/listings/new?entityType=agent' },
+        { icon: <FolderOpen className="w-6 h-6" />, label: 'Миний зарууд', href: '/dashboard/store/listings' },
+      ],
+    };
+  }
+  if (entityType === 'company') {
+    return {
+      primaryLabel: 'Төсөл нэмэх',
+      primaryHref: '/dashboard/store/listings/new?entityType=company',
+      links: [
+        { icon: <Building2 className="w-6 h-6" />, label: 'Төсөл нэмэх', href: '/dashboard/store/listings/new?entityType=company' },
+        { icon: <FolderOpen className="w-6 h-6" />, label: 'Төслүүд', href: '/dashboard/store/projects' },
+      ],
+    };
+  }
+  if (entityType === 'auto_dealer') {
+    return {
+      primaryLabel: 'Машин нэмэх',
+      primaryHref: '/dashboard/store/listings/new?entityType=auto_dealer',
+      links: [
+        { icon: <Car className="w-6 h-6" />, label: 'Машин нэмэх', href: '/dashboard/store/listings/new?entityType=auto_dealer' },
+        { icon: <FolderOpen className="w-6 h-6" />, label: 'Машины жагсаалт', href: '/dashboard/store/vehicles' },
+      ],
+    };
+  }
+  return {
+    primaryLabel: 'Бараа нэмэх',
+    primaryHref: '/dashboard/store/products',
+    links: [
+      { icon: <Package className="w-6 h-6" />, label: 'Бараа нэмэх', href: '/dashboard/store/products' },
+      { icon: <FolderOpen className="w-6 h-6" />, label: 'Ангилал', href: '/dashboard/store/categories' },
+    ],
+  };
+}
 
 const WEEK_DAYS = ['Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя', 'Ня'];
 
@@ -35,8 +80,8 @@ export default function SellerDashboardPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [analytics, setAnalytics] = useState<any>(null);
-  const [analyticsPeriod, setAnalyticsPeriod] = useState('7d');
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsPeriod] = useState('7d');
 
   useEffect(() => {
     let mounted = true;
@@ -52,7 +97,7 @@ export default function SellerDashboardPage() {
         if (!mounted) return;
         if (prodRes.status === 'fulfilled') setProducts(prodRes.value.products || []);
         if (ordRes.status === 'fulfilled') setOrders(ordRes.value.orders || []);
-        if (analyticsRes.status === 'fulfilled' && analyticsRes.value?.data) setAnalytics(analyticsRes.value.data);
+        if (analyticsRes.status === 'fulfilled' && analyticsRes.value?.data) setAnalytics(analyticsRes.value.data as AnalyticsData);
       } catch {}
       finally { if (mounted) setLoading(false); }
     }
@@ -109,7 +154,8 @@ export default function SellerDashboardPage() {
   });
 
   const storeName = user?.store?.name || 'Миний дэлгүүр';
-  const storeSlug = user?.username || 'mystore';
+  const storeSlug = user?.store?.slug || user?.username || 'mystore';
+  const entityActions = getEntityActions(user?.entityType);
 
   // Usage bars
   const usages = [
@@ -119,14 +165,13 @@ export default function SellerDashboardPage() {
     { label: 'AI кредит', pct: getUsagePercent('aiCredits'), color: 'bg-[#D97706]' },
   ];
 
-  const weeklySales: number[] = analytics?.daily?.map((d: any) => d.revenue) || [48000, 72000, 35000, 91000, 64000, 110000, 85000];
+  const weeklySales: number[] = analytics?.daily?.map((d) => d.revenue) || [48000, 72000, 35000, 91000, 64000, 110000, 85000];
   const weeklyTotal = weeklySales.reduce((a: number, b: number) => a + b, 0);
   const maxWeekly = Math.max(...weeklySales, 1);
 
   // Quick links
   const quickLinks = [
-    { icon: <Package className="w-6 h-6" />, label: 'Бараа нэмэх', href: '/dashboard/store/products' },
-    { icon: <FolderOpen className="w-6 h-6" />, label: 'Ангилал', href: '/dashboard/store/categories' },
+    ...entityActions.links,
     { icon: <Palette className="w-6 h-6" />, label: 'AI Постер', href: '/dashboard/store/ai-poster' },
     { icon: <LineChart className="w-6 h-6" />, label: 'Аналитик', href: '/dashboard/store/analytics' },
     { icon: <Globe className="w-6 h-6" />, label: 'Домайн', href: '/dashboard/store/domain' },
@@ -188,10 +233,10 @@ export default function SellerDashboardPage() {
           </div>
           <div className="flex items-center gap-3">
             <Link
-              href="/dashboard/store/products"
+              href={entityActions.primaryHref}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#E8242C] text-white text-sm font-medium rounded-xl hover:bg-[#C41E25] transition-colors shadow-sm"
             >
-              <span>+</span> Бараа нэмэх
+              <span>+</span> {entityActions.primaryLabel}
             </Link>
             <Link
               href="/dashboard/store/analytics"

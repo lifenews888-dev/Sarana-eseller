@@ -44,13 +44,30 @@ export async function GET(req: NextRequest) {
         email: true,
         phone: true,
         name: true,
+        username: true,
         role: true,
         avatar: true,
         store: true,
+        entityType: true,
+        shop: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        agent: { select: { name: true, slug: true, profilePhoto: true, phone: true, address: true } },
+        company: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        autoDealer: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        serviceProvider: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
       },
     });
 
     if (!user) return fail('Хэрэглэгч олдсонгүй', 404);
+
+    const entityStore =
+      user.shop ||
+      (user.agent
+        ? { name: user.agent.name, slug: user.agent.slug, logo: user.agent.profilePhoto, phone: user.agent.phone, address: user.agent.address }
+        : null) ||
+      user.company ||
+      user.autoDealer ||
+      user.serviceProvider ||
+      user.store;
 
     return ok({
       user: {
@@ -60,8 +77,10 @@ export async function GET(req: NextRequest) {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        username: user.username,
         avatar: user.avatar,
-        store: user.store,
+        entityType: user.entityType,
+        store: entityStore,
       },
     });
   } catch (e: unknown) {
