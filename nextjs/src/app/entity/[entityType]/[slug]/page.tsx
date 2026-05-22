@@ -77,6 +77,7 @@ interface ApiFeedItem {
   title: string;
   price?: number | null;
   images?: string[] | null;
+  media?: { type?: string | null; url?: string | null; thumbnail?: string | null }[] | null;
   metadata?: Record<string, unknown> | null;
   district?: string | null;
   tier?: string | null;
@@ -234,7 +235,12 @@ function stringFrom(value: unknown, fallback = ''): string {
 }
 
 function firstImage(item: ApiFeedItem, seed: string): string {
-  return item.images?.find((url) => typeof url === 'string' && url.trim()) || `https://picsum.photos/seed/${seed}/600/600`;
+  return (
+    item.images?.find((url) => typeof url === 'string' && url.trim()) ||
+    item.media?.find((media) => media.type === 'IMAGE' && media.url)?.url ||
+    item.media?.find((media) => media.thumbnail)?.thumbnail ||
+    `https://picsum.photos/seed/${seed}/600/600`
+  );
 }
 
 function badgeFromTier(tier?: string | null): string | undefined {
