@@ -3,22 +3,105 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Loader2, MapPin, Send, Tag } from 'lucide-react';
+import { ArrowLeft, Building2, Car, Home, Loader2, MapPin, Send, Tag } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { MediaUploader } from '@/components/shared/MediaUploader';
 import { ENTITY_CARD_CONFIG, type EntityType as CardEntityType } from '@/lib/cards/entityCardConfig';
 
-type FieldDef = { key: string; label: string; type: string; ph: string };
+type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'list';
+type MetadataValue = string | number | boolean | string[];
 
-const ENTITY_FIELDS: Record<string, { label: string; mediaType: CardEntityType; fields: FieldDef[] }> = {
-  store: {
-    label: 'Дэлгүүрийн зар',
-    mediaType: 'STORE',
-    fields: [],
-  },
+type FieldDef = {
+  key: string;
+  label: string;
+  type: FieldType;
+  ph?: string;
+  options?: string[];
+  hint?: string;
+};
+
+type EntityFieldConfig = {
+  label: string;
+  mediaType: CardEntityType;
+  icon: typeof Tag;
+  fields: FieldDef[];
+};
+
+const REAL_ESTATE_FIELDS: FieldDef[] = [
+  { key: 'propertyType', label: 'Төрөл', type: 'select', options: ['Орон сууц', 'Оффис', 'Газар', 'Хаус', 'Пентхаус'], ph: 'Орон сууц' },
+  { key: 'listingType', label: 'Зарын төрөл', type: 'select', options: ['Худалдах', 'Түрээс', 'Захиалга'], ph: 'Худалдах' },
+  { key: 'buildingName', label: 'Хотхон / байр', type: 'text', ph: 'River Garden' },
+  { key: 'address', label: 'Байршлын дэлгэрэнгүй', type: 'text', ph: 'СБД, Туул голын эрэг' },
+  { key: 'microDistrict', label: 'Хороолол', type: 'text', ph: 'River Garden хотхон' },
+  { key: 'landmark', label: 'Ойролцоо тэмдэглэгээ', type: 'text', ph: 'Clubhouse ойролцоо' },
+  { key: 'sqm', label: 'Талбай (м²)', type: 'number', ph: '98' },
+  { key: 'rooms', label: 'Өрөөний тоо', type: 'number', ph: '3' },
+  { key: 'bedrooms', label: 'Унтлагын өрөө', type: 'number', ph: '2' },
+  { key: 'bathrooms', label: 'Ариун цэврийн өрөө', type: 'number', ph: '2' },
+  { key: 'floor', label: 'Давхар', type: 'number', ph: '12' },
+  { key: 'totalFloors', label: 'Нийт давхар', type: 'number', ph: '24' },
+  { key: 'builtYear', label: 'Барилгын он', type: 'number', ph: '2021' },
+  { key: 'buildingType', label: 'Барилгын хийц', type: 'text', ph: 'Бүрэн цутгамал' },
+  { key: 'condition', label: 'Засвар', type: 'text', ph: 'Шинэ засвар' },
+  { key: 'furnishing', label: 'Тавилга', type: 'text', ph: 'Хагас тавилгатай' },
+  { key: 'orientation', label: 'Цонхны харц', type: 'text', ph: 'Урагшаа, баруун' },
+  { key: 'balcony', label: 'Тагт', type: 'text', ph: '2 тагт' },
+  { key: 'windowCount', label: 'Цонхны тоо', type: 'number', ph: '5' },
+  { key: 'heating', label: 'Халаалт', type: 'text', ph: 'Төвийн халаалт' },
+  { key: 'parking', label: 'Зогсоол', type: 'text', ph: 'Дулаан зогсоол тусдаа тохиролцоно' },
+  { key: 'garage', label: 'Гараж', type: 'text', ph: 'Байгаа' },
+  { key: 'ownershipType', label: 'Өмчлөлийн хэлбэр', type: 'text', ph: 'Хувийн өмч' },
+  { key: 'certificateReady', label: 'Үл хөдлөхийн гэрчилгээ', type: 'boolean' },
+  { key: 'mortgageAvailable', label: 'Ипотекийн боломж', type: 'boolean' },
+  { key: 'maintenanceFeeMnt', label: 'СӨХ төлбөр', type: 'number', ph: '220000' },
+  { key: 'moveInDate', label: 'Нүүж орох боломж', type: 'text', ph: 'Шууд нүүж орно' },
+  { key: 'highlights', label: 'Давуу тал', type: 'list', ph: 'Голын эрэгтэй ойр, Хаалттай хотхон, 24/7 хамгаалалт' },
+  { key: 'nearby', label: 'Ойр орчим', type: 'list', ph: 'Сургууль 5 минут, Цэцэрлэг 3 минут, Автобусны буудал' },
+  { key: 'documents', label: 'Баримт бичиг', type: 'list', ph: 'Үл хөдлөхийн гэрчилгээ, Кадастрын зураг' },
+];
+
+const CONSTRUCTION_FIELDS: FieldDef[] = [
+  { key: 'projectStatus', label: 'Төслийн төлөв', type: 'select', options: ['Төлөвлөж байна', 'Барьж байна', 'Борлуулж байна', 'Ашиглалтад орсон'] },
+  { key: 'address', label: 'Байршил', type: 'text', ph: 'ХУД, Зайсан' },
+  { key: 'totalUnits', label: 'Нийт айл', type: 'number', ph: '240' },
+  { key: 'soldUnits', label: 'Борлуулагдсан айл', type: 'number', ph: '96' },
+  { key: 'availableUnits', label: 'Боломжит үлдэгдэл', type: 'number', ph: '144' },
+  { key: 'pricePerSqm', label: 'Үнэ / м²', type: 'number', ph: '3200000' },
+  { key: 'completionDate', label: 'Ашиглалтад орох', type: 'text', ph: '2027 он' },
+  { key: 'floors', label: 'Давхар', type: 'number', ph: '24' },
+  { key: 'parking', label: 'Зогсоол', type: 'text', ph: 'Дулаан зогсоол' },
+  { key: 'roomChoices', label: 'Өрөөний сонголт', type: 'list', ph: '2 өрөө 58м², 3 өрөө 92м², 4 өрөө 128м²' },
+  { key: 'amenities', label: 'Давуу тал', type: 'list', ph: 'Хүүхдийн талбай, Фитнес, Хаалттай хотхон' },
+  { key: 'paymentTerms', label: 'Төлбөрийн нөхцөл', type: 'list', ph: 'Урьдчилгаа 30%, Банкны зээл, Хувааж төлөх' },
+];
+
+const AUTO_FIELDS: FieldDef[] = [
+  { key: 'brand', label: 'Брэнд', type: 'text', ph: 'Toyota' },
+  { key: 'model', label: 'Модель', type: 'text', ph: 'Land Cruiser 300' },
+  { key: 'year', label: 'Он', type: 'number', ph: '2024' },
+  { key: 'mileage', label: 'Гүйлт (км)', type: 'number', ph: '45000' },
+  { key: 'engine', label: 'Хөдөлгүүр', type: 'text', ph: '3.3 Twin Turbo' },
+  { key: 'fuelType', label: 'Түлш', type: 'select', options: ['Бензин', 'Дизель', 'Hybrid', 'Цахилгаан', 'Gas'] },
+  { key: 'transmission', label: 'Кроп', type: 'select', options: ['Автомат', 'Механик'] },
+  { key: 'drivetrain', label: 'Хөтлөгч', type: 'select', options: ['FWD', 'RWD', 'AWD', '4WD'] },
+  { key: 'color', label: 'Өнгө', type: 'text', ph: 'Хар' },
+  { key: 'importedFrom', label: 'Орж ирсэн улс', type: 'text', ph: 'Япон' },
+  { key: 'condition', label: 'Нөхцөл', type: 'text', ph: 'Маш сайн' },
+  { key: 'registrationStatus', label: 'Бүртгэл', type: 'text', ph: 'Монгол дугаартай' },
+  { key: 'inspectionValidUntil', label: 'Үзлэг хүчинтэй', type: 'text', ph: '2027-04' },
+  { key: 'ownersCount', label: 'Эзэмшигчийн тоо', type: 'number', ph: '1' },
+  { key: 'vinLast4', label: 'VIN сүүлийн 4', type: 'text', ph: '8F21' },
+  { key: 'warranty', label: 'Баталгаа', type: 'text', ph: '12 сар' },
+  { key: 'features', label: 'Тоноглол', type: 'list', ph: '360 камер, Суудал халаалт, Adaptive cruise' },
+  { key: 'documents', label: 'Бичиг баримт', type: 'list', ph: 'Гаалийн бичиг, Оношилгоо, Үйлдвэрийн баталгаа' },
+];
+
+const ENTITY_FIELDS: Record<string, EntityFieldConfig> = {
+  store: { label: 'Дэлгүүрийн зар', mediaType: 'STORE', icon: Tag, fields: [] },
   pre_order: {
     label: 'Захиалгын бараа',
     mediaType: 'PRE_ORDER',
+    icon: Tag,
     fields: [
       { key: 'minBatch', label: 'Минимум захиалга', type: 'number', ph: '10' },
       { key: 'currentBatch', label: 'Одоогийн захиалга', type: 'number', ph: '4' },
@@ -26,51 +109,24 @@ const ENTITY_FIELDS: Record<string, { label: string; mediaType: CardEntityType; 
       { key: 'deliveryEstimate', label: 'Хүргэлтийн хугацаа', type: 'text', ph: '14 хоног' },
     ],
   },
-  agent: {
-    label: 'Үл хөдлөхийн зар',
-    mediaType: 'REAL_ESTATE',
-    fields: [
-      { key: 'propertyType', label: 'Төрөл', type: 'text', ph: 'Орон сууц / Оффис / Газар' },
-      { key: 'sqm', label: 'Талбай (м²)', type: 'number', ph: '78' },
-      { key: 'rooms', label: 'Өрөөний тоо', type: 'number', ph: '3' },
-      { key: 'floor', label: 'Давхар', type: 'number', ph: '5' },
-      { key: 'totalFloors', label: 'Нийт давхар', type: 'number', ph: '16' },
-    ],
-  },
-  company: {
-    label: 'Барилгын төсөл',
-    mediaType: 'CONSTRUCTION',
-    fields: [
-      { key: 'projectStatus', label: 'Төслийн төлөв', type: 'text', ph: 'Борлуулж байна' },
-      { key: 'totalUnits', label: 'Нийт айл', type: 'number', ph: '240' },
-      { key: 'soldUnits', label: 'Зарагдсан айл', type: 'number', ph: '96' },
-      { key: 'pricePerSqm', label: 'Үнэ / м²', type: 'number', ph: '3200000' },
-      { key: 'completionDate', label: 'Ашиглалтын хугацаа', type: 'text', ph: '2027 он' },
-    ],
-  },
-  auto_dealer: {
-    label: 'Авто зар',
-    mediaType: 'AUTO',
-    fields: [
-      { key: 'brand', label: 'Брэнд', type: 'text', ph: 'Toyota' },
-      { key: 'model', label: 'Модель', type: 'text', ph: 'Land Cruiser 300' },
-      { key: 'year', label: 'Он', type: 'number', ph: '2024' },
-      { key: 'mileage', label: 'Гүйлт (км)', type: 'number', ph: '45000' },
-      { key: 'fuelType', label: 'Түлш', type: 'text', ph: 'Бензин / Hybrid' },
-      { key: 'transmission', label: 'Хроп', type: 'text', ph: 'Автомат' },
-    ],
-  },
+  agent: { label: 'Үл хөдлөхийн зар', mediaType: 'REAL_ESTATE', icon: Home, fields: REAL_ESTATE_FIELDS },
+  company: { label: 'Барилгын төсөл', mediaType: 'CONSTRUCTION', icon: Building2, fields: CONSTRUCTION_FIELDS },
+  auto_dealer: { label: 'Авто зар', mediaType: 'AUTO', icon: Car, fields: AUTO_FIELDS },
   service: {
     label: 'Үйлчилгээний зар',
     mediaType: 'SERVICE',
+    icon: Tag,
     fields: [
       { key: 'duration', label: 'Үргэлжлэх хугацаа', type: 'text', ph: '60 минут' },
       { key: 'availableSlots', label: 'Сул цаг', type: 'number', ph: '8' },
+      { key: 'address', label: 'Байршил', type: 'text', ph: 'СБД, 1-р хороо' },
+      { key: 'packageName', label: 'Багц', type: 'text', ph: 'Стандарт үйлчилгээ' },
     ],
   },
   digital: {
     label: 'Дижитал бараа',
     mediaType: 'DIGITAL',
+    icon: Tag,
     fields: [
       { key: 'fileType', label: 'Файлын төрөл', type: 'text', ph: 'PDF / ZIP / Video' },
       { key: 'fileSize', label: 'Файлын хэмжээ', type: 'text', ph: '24MB' },
@@ -78,8 +134,9 @@ const ENTITY_FIELDS: Record<string, { label: string; mediaType: CardEntityType; 
   },
 };
 
-const DISTRICTS = ['СБД', 'ХУД', 'БЗД', 'ЧД', 'БГД', 'СХД', 'НД', 'БНД', 'Багануур', 'Налайх'];
+const DISTRICTS = ['СБД', 'ХУД', 'БЗД', 'ЧД', 'БГД', 'СХД', 'НД', 'БНД', 'Багахангай', 'Налайх'];
 const VALID_ENTITY_TYPES = new Set(Object.keys(ENTITY_FIELDS));
+const SPECIAL_ENTITY_TYPES = new Set(['agent', 'company', 'auto_dealer']);
 
 function normalizeEntityType(value?: string | null): string {
   if (!value) return 'store';
@@ -93,6 +150,74 @@ function redirectFor(entityType: string): string {
   if (entityType === 'auto_dealer') return '/dashboard/store/vehicles';
   if (entityType === 'company') return '/dashboard/store/projects';
   return '/dashboard/store/listings';
+}
+
+function defaultCategory(entityType: string, metadata: Record<string, MetadataValue>): string {
+  if (entityType === 'company') return 'new_building';
+  if (entityType === 'auto_dealer') return 'vehicle';
+  if (entityType === 'service') return 'service';
+  if (entityType !== 'agent') return '';
+
+  const type = String(metadata.propertyType || '').toLowerCase();
+  if (type.includes('газар')) return 'land';
+  if (type.includes('оффис')) return 'office';
+  if (type.includes('хаус')) return 'house';
+  return 'apartment';
+}
+
+function splitList(value: string): string[] {
+  return value
+    .split(/[\n,]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseNumber(value: string): number | null {
+  const n = Number(value.replace(/[,\s₮]/g, ''));
+  return Number.isFinite(n) ? n : null;
+}
+
+function normalizeMetadata(
+  fields: FieldDef[],
+  values: Record<string, string>,
+  entityType: string,
+  district: string,
+  price?: number,
+): Record<string, MetadataValue> {
+  const clean: Record<string, MetadataValue> = {};
+
+  for (const field of fields) {
+    const raw = values[field.key]?.trim();
+    if (!raw) continue;
+
+    if (field.type === 'number') {
+      const n = parseNumber(raw);
+      if (n !== null) clean[field.key] = n;
+    } else if (field.type === 'boolean') {
+      clean[field.key] = raw === 'true';
+    } else if (field.type === 'list') {
+      const list = splitList(raw);
+      if (list.length > 0) clean[field.key] = list;
+    } else {
+      clean[field.key] = raw;
+    }
+  }
+
+  if (district && !clean.district) clean.district = district;
+  if (clean.sqm && !clean.area) clean.area = clean.sqm;
+
+  const sqm = typeof clean.sqm === 'number' ? clean.sqm : null;
+  if (entityType === 'agent' && price && sqm && !clean.pricePerSqm) {
+    clean.pricePerSqm = Math.round(price / sqm);
+  }
+
+  const totalUnits = typeof clean.totalUnits === 'number' ? clean.totalUnits : null;
+  const soldUnits = typeof clean.soldUnits === 'number' ? clean.soldUnits : null;
+  if (entityType === 'company' && totalUnits !== null && soldUnits !== null && !clean.availableUnits) {
+    clean.availableUnits = Math.max(0, totalUnits - soldUnits);
+  }
+
+  return clean;
 }
 
 export default function NewListingPage() {
@@ -122,11 +247,13 @@ export default function NewListingPage() {
   const config = ENTITY_FIELDS[entityType] || ENTITY_FIELDS.store;
   const mediaConfig = ENTITY_CARD_CONFIG[config.mediaType];
   const maxImages = mediaConfig.maxImages;
+  const isSpecialListing = SPECIAL_ENTITY_TYPES.has(entityType);
+  const SectionIcon = config.icon;
 
   const titlePlaceholder = useMemo(() => {
     if (entityType === 'auto_dealer') return 'Toyota Land Cruiser 300, 2024';
     if (entityType === 'company') return 'Zaisan Heights шинэ төсөл';
-    if (entityType === 'agent') return '3 өрөө байр, 13-р хороолол';
+    if (entityType === 'agent') return '3 өрөө байр, Ривер Гарден';
     return 'Зарын гарчиг';
   }, [entityType]);
 
@@ -138,20 +265,30 @@ export default function NewListingPage() {
       setError('Гарчиг оруулна уу');
       return;
     }
+    if (isSpecialListing && form.description.trim().length < 30) {
+      setError('Онцгой зар дээр худалдан авагч ойлгохуйц дэлгэрэнгүй тайлбар оруулна уу');
+      return;
+    }
+    if (isSpecialListing && images.length < 3) {
+      setError('Машин, байр, төсөл зэрэг тусгай зар дээр хамгийн багадаа 3 зураг оруулна уу');
+      return;
+    }
 
     setLoading(true);
     setError('');
 
-    const cleanMetadata = Object.fromEntries(Object.entries(metadata).filter(([, value]) => value));
-    if (cleanMetadata.sqm && !cleanMetadata.area) cleanMetadata.area = cleanMetadata.sqm;
-
+    const price = form.price ? Number(form.price) : undefined;
+    const cleanMetadata = normalizeMetadata(config.fields, metadata, entityType, form.district, price);
+    const category = form.category.trim() || defaultCategory(entityType, cleanMetadata);
     const token = localStorage.getItem('token');
+
     const res = await fetch('/api/feed', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({
         ...form,
-        price: form.price ? Number(form.price) : undefined,
+        category,
+        price,
         originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
         images,
         videoUrl,
@@ -175,7 +312,7 @@ export default function NewListingPage() {
   const labelCls = 'text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block';
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
         <Link href={redirectFor(entityType)} className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
           <ArrowLeft className="w-4 h-4" />
@@ -191,19 +328,22 @@ export default function NewListingPage() {
       )}
 
       <div className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] p-6 space-y-4">
-        <h3 className="font-bold text-[var(--esl-text-primary)] flex items-center gap-2"><Tag className="w-4 h-4" /> Үндсэн мэдээлэл</h3>
+        <h3 className="font-bold text-[var(--esl-text-primary)] flex items-center gap-2">
+          <Tag className="w-4 h-4" /> Үндсэн мэдээлэл
+        </h3>
         <div>
           <label className={labelCls}>Гарчиг *</label>
           <input value={form.title} onChange={(e) => update('title', e.target.value)} placeholder={titlePlaceholder} className={inputCls} />
         </div>
         <div>
-          <label className={labelCls}>Тайлбар</label>
-          <textarea value={form.description} onChange={(e) => update('description', e.target.value)} rows={4} placeholder="Дэлгэрэнгүй тайлбар..." className={inputCls + ' resize-y'} />
+          <label className={labelCls}>Тайлбар {isSpecialListing ? '*' : ''}</label>
+          <textarea value={form.description} onChange={(e) => update('description', e.target.value)} rows={5} placeholder="Дэлгэрэнгүй тайлбар..." className={`${inputCls} resize-y`} />
+          {isSpecialListing ? <p className="mt-1 text-[11px] text-[var(--esl-text-muted)]">Худалдан авагч шийдвэр гаргах хэмжээний бодит мэдээлэл оруулна.</p> : null}
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label className={labelCls}>Үнэ (₮)</label>
-            <input type="number" value={form.price} onChange={(e) => update('price', e.target.value)} placeholder="280000000" className={inputCls} />
+            <input type="number" value={form.price} onChange={(e) => update('price', e.target.value)} placeholder="450000000" className={inputCls} />
           </div>
           <div>
             <label className={labelCls}>Хуучин үнэ (₮)</label>
@@ -237,7 +377,7 @@ export default function NewListingPage() {
           value={images}
           onChange={setImages}
           maxFiles={maxImages}
-          label={`Зурагнууд (${images.length}/${maxImages})`}
+          label={`Зурагнууд (${images.length}/${maxImages})${isSpecialListing ? ' · хамгийн багадаа 3' : ''}`}
           entityType={config.mediaType}
           videoUrl={videoUrl}
           onVideoChange={setVideoUrl}
@@ -249,7 +389,9 @@ export default function NewListingPage() {
       </div>
 
       <div className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] p-6 space-y-4">
-        <h3 className="font-bold text-[var(--esl-text-primary)] flex items-center gap-2"><MapPin className="w-4 h-4" /> Байршил ба ангилал</h3>
+        <h3 className="font-bold text-[var(--esl-text-primary)] flex items-center gap-2">
+          <MapPin className="w-4 h-4" /> Байршил ба ангилал
+        </h3>
         <div>
           <label className={labelCls}>Дүүрэг</label>
           <select value={form.district} onChange={(e) => update('district', e.target.value)} className={inputCls}>
@@ -259,19 +401,25 @@ export default function NewListingPage() {
         </div>
         <div>
           <label className={labelCls}>Ангилал</label>
-          <input value={form.category} onChange={(e) => update('category', e.target.value)} placeholder="apartment, suv, new_building..." className={inputCls} />
+          <input value={form.category} onChange={(e) => update('category', e.target.value)} placeholder="Хоосон үлдээвэл төрлөөс автоматаар онооно" className={inputCls} />
         </div>
       </div>
 
       {config.fields.length > 0 && (
         <div className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] p-6 space-y-4">
-          <h3 className="font-bold text-[var(--esl-text-primary)]">{config.label} мэдээлэл</h3>
-          <div className="grid grid-cols-2 gap-4">
+          <h3 className="font-bold text-[var(--esl-text-primary)] flex items-center gap-2">
+            <SectionIcon className="w-4 h-4" /> {config.label} мэдээлэл
+          </h3>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {config.fields.map((field) => (
-              <div key={field.key}>
-                <label className={labelCls}>{field.label}</label>
-                <input type={field.type} value={metadata[field.key] || ''} onChange={(e) => updateMeta(field.key, e.target.value)} placeholder={field.ph} className={inputCls} />
-              </div>
+              <FieldInput
+                key={field.key}
+                field={field}
+                value={metadata[field.key] || ''}
+                onChange={(value) => updateMeta(field.key, value)}
+                inputCls={inputCls}
+                labelCls={labelCls}
+              />
             ))}
           </div>
         </div>
@@ -285,6 +433,44 @@ export default function NewListingPage() {
         {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         {loading ? 'Илгээж байна...' : 'Зар нэмэх'}
       </button>
+    </div>
+  );
+}
+
+function FieldInput({
+  field,
+  value,
+  onChange,
+  inputCls,
+  labelCls,
+}: {
+  field: FieldDef;
+  value: string;
+  onChange: (value: string) => void;
+  inputCls: string;
+  labelCls: string;
+}) {
+  return (
+    <div className={field.type === 'textarea' || field.type === 'list' ? 'sm:col-span-2' : undefined}>
+      <label className={labelCls}>{field.label}</label>
+      {field.type === 'select' ? (
+        <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls}>
+          <option value="">Сонгох...</option>
+          {field.options?.map((option) => <option key={option} value={option}>{option}</option>)}
+        </select>
+      ) : field.type === 'boolean' ? (
+        <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls}>
+          <option value="">Сонгох...</option>
+          <option value="true">Тийм</option>
+          <option value="false">Үгүй</option>
+        </select>
+      ) : field.type === 'textarea' || field.type === 'list' ? (
+        <textarea value={value} onChange={(e) => onChange(e.target.value)} rows={field.type === 'list' ? 3 : 4} placeholder={field.ph} className={`${inputCls} resize-y`} />
+      ) : (
+        <input type={field.type} value={value} onChange={(e) => onChange(e.target.value)} placeholder={field.ph} className={inputCls} />
+      )}
+      {field.hint ? <p className="mt-1 text-[11px] text-[var(--esl-text-muted)]">{field.hint}</p> : null}
+      {field.type === 'list' ? <p className="mt-1 text-[11px] text-[var(--esl-text-muted)]">Таслалаар эсвэл мөр мөрөөр тусгаарлаж оруулна.</p> : null}
     </div>
   );
 }
