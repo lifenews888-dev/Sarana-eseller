@@ -183,7 +183,7 @@ function formatPrice(n: number) {
 }
 
 /* ═══ Hero Carousel ═══ */
-function HeroCarousel({ images, children }: { images: string[]; children?: React.ReactNode }) {
+function HeroCarousel({ images, label, children }: { images: string[]; label: string; children?: React.ReactNode }) {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
@@ -198,7 +198,7 @@ function HeroCarousel({ images, children }: { images: string[]; children?: React
         <SafeImage
           key={i}
           src={img}
-          alt=""
+          alt={label}
           className={cn(
             'absolute inset-0 w-full h-full object-cover transition-opacity duration-1000',
             i === idx ? 'opacity-100' : 'opacity-0'
@@ -335,7 +335,7 @@ function TestimonialCard({ t }: { t: { name: string; text: string; rating: numbe
           <Star key={i} className={cn('w-3.5 h-3.5', i < t.rating ? 'text-amber-400 fill-amber-400' : 'text-[#333]')} />
         ))}
       </div>
-      <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed mb-3">"{t.text}"</p>
+      <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed mb-3">&quot;{t.text}&quot;</p>
       <p className="text-xs font-bold text-[var(--esl-text-muted)]">— {t.name}</p>
     </div>
   );
@@ -401,13 +401,13 @@ export default function EntityProfilePage() {
       </nav>
 
       {/* ── Hero ── */}
-      <HeroCarousel images={coverImages}>
+      <HeroCarousel images={coverImages} label={entity.name}>
         <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 z-10">
           <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-end sm:items-end gap-5">
             {/* Avatar */}
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl overflow-hidden border-3 border-white/20 shadow-2xl shrink-0 bg-[var(--esl-bg-card-hover)]">
               {entity.logo ? (
-                <SafeImage src={entity.logo} alt="" className="w-full h-full object-cover" />
+                <SafeImage src={entity.logo} alt={entity.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-3xl font-black text-white bg-gradient-to-br from-[#E8242C] to-[#FF6B6B]">
                   {entity.name.charAt(0)}
@@ -520,7 +520,7 @@ export default function EntityProfilePage() {
                   <button onClick={() => setSelectedVehicle(null)} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white cursor-pointer border-none">
                     <X className="w-4 h-4" />
                   </button>
-                  <SafeImage src={selectedVehicle.image} alt="" className="w-full h-64 object-cover" />
+                  <SafeImage src={selectedVehicle.image} alt={selectedVehicle.title} className="w-full h-64 object-cover" />
                   <div className="p-6">
                     <h2 className="text-xl font-black text-[var(--esl-text-primary)] mb-2">{selectedVehicle.title}</h2>
                     <p className="text-2xl font-black text-[#E8242C] mb-4">{formatPrice(selectedVehicle.price)}₮</p>
@@ -562,7 +562,7 @@ export default function EntityProfilePage() {
                   <button onClick={() => setSelectedListing(null)} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white cursor-pointer border-none">
                     <X className="w-4 h-4" />
                   </button>
-                  <SafeImage src={selectedListing.image} alt="" className="w-full h-64 object-cover" />
+                  <SafeImage src={selectedListing.image} alt={selectedListing.title} className="w-full h-64 object-cover" />
                   <div className="p-5">
                     <h2 className="text-xl font-black text-[var(--esl-text-primary)] mb-2">{selectedListing.title}</h2>
                     <p className="text-2xl font-black text-[#E8242C] mb-4">{formatPrice(selectedListing.price)}₮</p>
@@ -616,7 +616,7 @@ export default function EntityProfilePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {entity.gallery.map((img, i) => (
               <div key={i} className="aspect-[4/3] rounded-xl overflow-hidden group cursor-pointer">
-                <SafeImage src={img} alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                <SafeImage src={img} alt={`${entity.name} gallery ${i + 1}`} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               </div>
             ))}
           </div>
