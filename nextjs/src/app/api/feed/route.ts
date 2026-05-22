@@ -7,6 +7,199 @@ import { buildOwnedFeedWhere, normalizeListingEntityType } from '@/lib/feedOwner
 
 const mediaInclude = { media: { orderBy: { sortOrder: 'asc' as const } } };
 
+type MetadataValue = string | number | boolean | string[];
+type MetadataRecord = Record<string, MetadataValue>;
+
+const SPECIAL_ENTITY_TYPES = new Set(['agent', 'company', 'auto_dealer']);
+const VALID_TIERS = new Set(['normal', 'featured', 'vip', 'discounted']);
+
+const REQUIRED_SPECIAL_METADATA_KEYS: Record<string, string[]> = {
+  agent: ['propertyType', 'sqm', 'rooms'],
+  company: ['projectStatus', 'totalUnits', 'pricePerSqm', 'completionDate'],
+  auto_dealer: ['brand', 'model', 'year', 'mileage'],
+};
+
+const NUMBER_METADATA_KEYS = new Set([
+  'sqm',
+  'area',
+  'rooms',
+  'bedrooms',
+  'bathrooms',
+  'floor',
+  'totalFloors',
+  'builtYear',
+  'windowCount',
+  'maintenanceFeeMnt',
+  'pricePerSqm',
+  'totalUnits',
+  'soldUnits',
+  'availableUnits',
+  'floors',
+  'year',
+  'mileage',
+  'ownersCount',
+  'minBatch',
+  'currentBatch',
+  'advancePercent',
+  'availableSlots',
+]);
+
+const BOOLEAN_METADATA_KEYS = new Set(['certificateReady', 'mortgageAvailable']);
+
+const LIST_METADATA_KEYS = new Set([
+  'highlights',
+  'nearby',
+  'documents',
+  'roomChoices',
+  'amenities',
+  'paymentTerms',
+  'features',
+]);
+
+function cleanString(value: unknown): string {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function normalizeStringList(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[\n,]/) : [];
+  return values
+    .map((item) => (typeof item === 'string' ? item.trim() : String(item).trim()))
+    .filter(Boolean);
+}
+
+function toOptionalNumber(value: unknown): number | null {
+  if (typeof value === 'number') return Number.isFinite(value) ? value : null;
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.replace(/[,\s₮]/g, '');
+  if (!normalized) return null;
+
+  const n = Number(normalized);
+  return Number.isFinite(n) ? n : null;
+}
+
+function toOptionalBoolean(value: unknown): boolean | null {
+  if (typeof value === 'boolean') return value;
+  if (typeof value !== 'string') return null;
+
+  const normalized = value.trim().toLowerCase();
+  if (['true', '1', 'yes', 'y', 'тийм'].includes(normalized)) return true;
+  if (['false', '0', 'no', 'n', 'үгүй'].includes(normalized)) return false;
+  return null;
+}
+
+function normalizeMediaUrls(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.map(cleanString).filter(Boolean);
+}
+
+function defaultCategory(entityType: string, metadata: MetadataRecord): string {
+  if (entityType === 'company') return 'new_building';
+  if (entityType === 'auto_dealer') return 'vehicle';
+  if (entityType === 'service') return 'service';
+  if (entityType !== 'agent') return '';
+
+  const propertyType = String(metadata.propertyType || '').toLowerCase();
+  if (propertyType.includes('газар') || propertyType.includes('land')) return 'land';
+  if (propertyType.includes('оффис') || propertyType.includes('office')) return 'office';
+  if (propertyType.includes('хаус') || propertyType.includes('house')) return 'house';
+  return 'apartment';
+}
+
+function normalizeMetadata(
+  value: unknown,
+  entityType: string,
+  district: string,
+  price: number | null
+): MetadataRecord {
+  const clean: MetadataRecord = {};
+  const source =
+    value && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, unknown>)
+      : {};
+
+  for (const [key, raw] of Object.entries(source)) {
+    if (NUMBER_METADATA_KEYS.has(key)) {
+      const n = toOptionalNumber(raw);
+      if (n !== null) clean[key] = n;
+      continue;
+    }
+
+    if (BOOLEAN_METADATA_KEYS.has(key)) {
+      const b = toOptionalBoolean(raw);
+      if (b !== null) clean[key] = b;
+      continue;
+    }
+
+    if (LIST_METADATA_KEYS.has(key)) {
+      const list = normalizeStringList(raw);
+      if (list.length > 0) clean[key] = list;
+      continue;
+    }
+
+    if (typeof raw === 'string') {
+      const str = raw.trim();
+      if (str) clean[key] = str;
+    } else if (typeof raw === 'number' && Number.isFinite(raw)) {
+      clean[key] = raw;
+    } else if (typeof raw === 'boolean') {
+      clean[key] = raw;
+    } else if (Array.isArray(raw)) {
+      const list = normalizeStringList(raw);
+      if (list.length > 0) clean[key] = list;
+    }
+  }
+
+  if (district && !clean.district) clean.district = district;
+  if (typeof clean.sqm === 'number' && !clean.area) clean.area = clean.sqm;
+
+  const sqm = typeof clean.sqm === 'number' ? clean.sqm : null;
+  if (entityType === 'agent' && price && sqm && !clean.pricePerSqm) {
+    clean.pricePerSqm = Math.round(price / sqm);
+  }
+
+  const totalUnits = typeof clean.totalUnits === 'number' ? clean.totalUnits : null;
+  const soldUnits = typeof clean.soldUnits === 'number' ? clean.soldUnits : null;
+  if (entityType === 'company' && totalUnits !== null && soldUnits !== null && !clean.availableUnits) {
+    clean.availableUnits = Math.max(0, totalUnits - soldUnits);
+  }
+
+  return clean;
+}
+
+function hasMetadataValue(metadata: MetadataRecord, key: string): boolean {
+  const value = metadata[key];
+  if (Array.isArray(value)) return value.length > 0;
+  return value !== undefined && value !== '';
+}
+
+function validateSpecialListing(
+  entityType: string,
+  description: string,
+  imageUrls: string[],
+  metadata: MetadataRecord
+): string | null {
+  if (!SPECIAL_ENTITY_TYPES.has(entityType)) return null;
+
+  if (description.length < 30) {
+    return 'Онцгой зар дээр худалдан авагч ойлгохуйц дэлгэрэнгүй тайлбар оруулна уу';
+  }
+
+  if (imageUrls.length < 3) {
+    return 'Машин, байр, төсөл зэрэг тусгай зар дээр хамгийн багадаа 3 зураг оруулна уу';
+  }
+
+  const missing = (REQUIRED_SPECIAL_METADATA_KEYS[entityType] || []).filter(
+    (key) => !hasMetadataValue(metadata, key)
+  );
+
+  if (missing.length > 0) {
+    return `Тусгай зарын заавал бөглөх мэдээлэл дутуу байна: ${missing.join(', ')}`;
+  }
+
+  return null;
+}
+
 // GET /api/feed?category=agent&tier=vip&page=1&limit=20&sort=newest&search=...&mine=1&entityType=auto_dealer
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
@@ -137,7 +330,38 @@ export async function POST(req: NextRequest) {
     } = body;
 
     const normalizedEntityType = normalizeListingEntityType(entityType) || 'store';
+    const normalizedTitle = cleanString(title);
+    const normalizedDescription = cleanString(description);
+    const normalizedDistrict = cleanString(district);
+    const normalizedProvince = cleanString(province);
+    const normalizedSubcategory = cleanString(subcategory);
+    const normalizedTier = VALID_TIERS.has(cleanString(tier)) ? cleanString(tier) : 'normal';
+    const normalizedPrice = toOptionalNumber(price);
+    const normalizedOriginalPrice = toOptionalNumber(originalPrice);
+    const normalizedLat = toOptionalNumber(lat);
+    const normalizedLng = toOptionalNumber(lng);
+    const imageUrls = normalizeMediaUrls(images);
+    const normalizedVideoUrl = cleanString(videoUrl);
+    const normalizedVirtualTourUrl = cleanString(virtualTourUrl);
+    const normalizedFloorPlanUrl = cleanString(floorPlanUrl);
+    const normalizedMetadata = normalizeMetadata(
+      metadata,
+      normalizedEntityType,
+      normalizedDistrict,
+      normalizedPrice
+    );
+    const normalizedCategory = cleanString(category) || defaultCategory(normalizedEntityType, normalizedMetadata);
     if (!title || !normalizedEntityType) return errorJson('title, entityType шаардлагатай');
+
+    if (!normalizedTitle) return errorJson('Гарчиг шаардлагатай');
+
+    const validationError = validateSpecialListing(
+      normalizedEntityType,
+      normalizedDescription,
+      imageUrls,
+      normalizedMetadata
+    );
+    if (validationError) return errorJson(validationError);
 
     const prefixMap: Record<string, string> = {
       agent: 'AGT',
@@ -171,26 +395,25 @@ export async function POST(req: NextRequest) {
       entityId = provider.id;
     }
 
-    const imageUrls = Array.isArray(images) ? images.filter((url) => typeof url === 'string' && url.trim()) : [];
     const item = await prisma.feedItem.create({
       data: {
         refId,
-        title,
-        description: description || null,
-        price: price ? Number(price) : null,
-        originalPrice: originalPrice ? Number(originalPrice) : null,
+        title: normalizedTitle,
+        description: normalizedDescription || null,
+        price: normalizedPrice,
+        originalPrice: normalizedOriginalPrice,
         images: imageUrls,
-        category: category || null,
-        subcategory: subcategory || null,
+        category: normalizedCategory || null,
+        subcategory: normalizedSubcategory || null,
         entityType: normalizedEntityType,
         entityId,
-        tier: tier || 'normal',
+        tier: normalizedTier,
         status: 'active',
-        district: district || null,
-        province: province || null,
-        lat: lat ? Number(lat) : null,
-        lng: lng ? Number(lng) : null,
-        metadata: metadata || {},
+        district: normalizedDistrict || null,
+        province: normalizedProvince || null,
+        lat: normalizedLat,
+        lng: normalizedLng,
+        metadata: normalizedMetadata as Prisma.InputJsonValue,
         ...(normalizedEntityType === 'agent' ? { agentId: entityId } : {}),
         ...(normalizedEntityType === 'company' ? { companyId: entityId } : {}),
         ...(normalizedEntityType === 'auto_dealer' ? { autoDealerId: entityId } : {}),
@@ -200,9 +423,9 @@ export async function POST(req: NextRequest) {
 
     const mediaRows = [
       ...imageUrls.map((url, sortOrder) => ({ feedItemId: item.id, type: 'IMAGE', url, sortOrder })),
-      ...(videoUrl ? [{ feedItemId: item.id, type: 'VIDEO', url: String(videoUrl), sortOrder: imageUrls.length }] : []),
-      ...(virtualTourUrl ? [{ feedItemId: item.id, type: 'VIRTUAL_TOUR', url: String(virtualTourUrl), sortOrder: imageUrls.length + 1 }] : []),
-      ...(floorPlanUrl ? [{ feedItemId: item.id, type: 'FLOOR_PLAN', url: String(floorPlanUrl), sortOrder: imageUrls.length + 2 }] : []),
+      ...(normalizedVideoUrl ? [{ feedItemId: item.id, type: 'VIDEO', url: normalizedVideoUrl, sortOrder: imageUrls.length }] : []),
+      ...(normalizedVirtualTourUrl ? [{ feedItemId: item.id, type: 'VIRTUAL_TOUR', url: normalizedVirtualTourUrl, sortOrder: imageUrls.length + 1 }] : []),
+      ...(normalizedFloorPlanUrl ? [{ feedItemId: item.id, type: 'FLOOR_PLAN', url: normalizedFloorPlanUrl, sortOrder: imageUrls.length + 2 }] : []),
     ].filter((row) => row.url.trim());
 
     if (mediaRows.length > 0) {
