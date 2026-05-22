@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
@@ -110,6 +111,7 @@ interface ReviewData {
 }
 
 export default function ProductModal({ product, onClose, isAffiliate, onShare, onPrev, onNext, hasPrev, hasNext, allProducts, onProductClick }: ProductModalProps) {
+  const router = useRouter();
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
@@ -122,6 +124,14 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   const [reviewBreakdown, setReviewBreakdown] = useState<{ rating: number; count: number }[]>([]);
   const cart = useCartStore();
   const toast = useToast();
+
+  const openRecommendedProduct = (id: string) => {
+    if (onProductClick) {
+      onProductClick(id);
+      return;
+    }
+    router.push(`/product/${id}`);
+  };
 
   useEffect(() => {
     setQty(1); setActiveImg(0); setSelectedSize(''); setSelectedColor('');
@@ -535,7 +545,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
               {/* Other products */}
               {allProducts?.filter(p => p._id !== product._id).slice(0, 4).map(p => (
-                <div key={p._id} onClick={() => onProductClick?.(p._id)}
+                <div key={p._id} onClick={() => openRecommendedProduct(p._id)}
                   className="shrink-0 w-[130px] cursor-pointer group">
                   <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5">
                     {p.images?.[0] ? (
