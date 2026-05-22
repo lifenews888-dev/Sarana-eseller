@@ -49,6 +49,44 @@ interface DemoEntity {
   website?: string; email?: string; social?: { ig?: string; fb?: string };
 }
 
+interface ApiEntityProfile {
+  id?: string;
+  type?: EntityType | string;
+  name?: string;
+  slug?: string;
+  logo?: string | null;
+  profilePhoto?: string | null;
+  coverImage?: string | null;
+  description?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  district?: string | null;
+  isVerified?: boolean | null;
+  rating?: number | null;
+  reviewCount?: number | null;
+  brands?: string[] | null;
+  specialties?: string[] | null;
+  experience?: number | null;
+  website?: string | null;
+  email?: string | null;
+}
+
+interface ApiFeedItem {
+  id: string;
+  title: string;
+  price?: number | null;
+  images?: string[] | null;
+  metadata?: Record<string, unknown> | null;
+  district?: string | null;
+  tier?: string | null;
+}
+
+interface ApiEntityResponse {
+  entity?: ApiEntityProfile | null;
+  feedItems?: ApiFeedItem[] | null;
+}
+
 const DEMO: Record<string, Record<string, DemoEntity>> = {
   auto_dealer: {
     autocity: {
@@ -180,6 +218,124 @@ function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая';
   return n.toLocaleString();
+}
+
+function numberFrom(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(/[,\s₮]/g, ''));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function stringFrom(value: unknown, fallback = ''): string {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+}
+
+function firstImage(item: ApiFeedItem, seed: string): string {
+  return item.images?.find((url) => typeof url === 'string' && url.trim()) || `https://picsum.photos/seed/${seed}/600/600`;
+}
+
+function badgeFromTier(tier?: string | null): string | undefined {
+  if (tier === 'vip') return 'VIP';
+  if (tier === 'featured') return 'Premium';
+  return undefined;
+}
+
+function mapVehicle(item: ApiFeedItem): DemoVehicle {
+  const meta = item.metadata || {};
+  return {
+    id: item.id,
+    title: item.title,
+    price: numberFrom(item.price),
+    year: numberFrom(meta.year),
+    mileage: numberFrom(meta.mileage),
+    fuel: stringFrom(meta.fuelType, stringFrom(meta.fuel, '')),
+    image: firstImage(item, `vehicle-${item.id}`),
+    badge: badgeFromTier(item.tier),
+  };
+}
+
+function mapProject(item: ApiFeedItem): DemoProject {
+  const meta = item.metadata || {};
+  const totalUnits = numberFrom(meta.totalUnits, numberFrom(meta.units));
+  const soldUnits = numberFrom(meta.soldUnits);
+  const progress = totalUnits > 0 ? Math.min(100, Math.round((soldUnits / totalUnits) * 100)) : 0;
+  return {
+    id: item.id,
+    title: item.title,
+    status: stringFrom(meta.projectStatus, 'Идэвхтэй'),
+    progress,
+    image: firstImage(item, `project-${item.id}`),
+    units: totalUnits,
+    priceFrom: numberFrom(item.price, numberFrom(meta.pricePerSqm)),
+    location: stringFrom(meta.address, item.district || ''),
+    year: stringFrom(meta.completionDate, ''),
+  };
+}
+
+function mapListing(item: ApiFeedItem): DemoListing {
+  const meta = item.metadata || {};
+  return {
+    id: item.id,
+    title: item.title,
+    price: numberFrom(item.price),
+    image: firstImage(item, `listing-${item.id}`),
+    sqm: numberFrom(meta.sqm, numberFrom(meta.area)),
+    rooms: numberFrom(meta.rooms),
+    district: item.district || stringFrom(meta.district, ''),
+    badge: badgeFromTier(item.tier),
+  };
+}
+
+function buildLiveStats(entityType: string, count: number, base?: DemoEntity): DemoEntity['stats'] {
+  if (base?.stats?.length) return base.stats;
+  if (entityType === 'auto_dealer') {
+    return [{ label: 'Одоо байгаа', value: `${count}` }, { label: 'Баталгаатай', value: '✓' }];
+  }
+  if (entityType === 'company') {
+    return [{ label: 'Төсөл', value: `${count}` }, { label: 'Баталгаатай', value: '✓' }];
+  }
+  return [{ label: 'Идэвхтэй зар', value: `${count}` }, { label: 'Баталгаатай', value: '✓' }];
+}
+
+function mergeLiveEntity(entityType: string, slug: string, payload: ApiEntityResponse, base?: DemoEntity): DemoEntity | null {
+  if (!payload.entity) return base || null;
+  const api = payload.entity;
+  const feedItems = payload.feedItems || [];
+  const fallbackCover = feedItems[0] ? firstImage(feedItems[0], `entity-${slug}`) : 'https://picsum.photos/seed/eseller-1400/1400';
+  const mapped: DemoEntity = {
+    name: api.name || base?.name || slug,
+    slug: api.slug || base?.slug || slug,
+    type: (api.type as EntityType) || (entityType as EntityType),
+    logo: api.profilePhoto || api.logo || base?.logo,
+    coverImage: api.coverImage || base?.coverImage || fallbackCover,
+    coverImages: base?.coverImages || [api.coverImage || fallbackCover],
+    description: api.description || api.bio || base?.description || '',
+    phone: api.phone || base?.phone || '',
+    district: api.district || base?.district || '',
+    isVerified: Boolean(api.isVerified ?? base?.isVerified),
+    rating: api.rating ?? base?.rating ?? 0,
+    reviewCount: api.reviewCount ?? base?.reviewCount ?? 0,
+    stats: buildLiveStats(entityType, feedItems.length, base),
+    brands: api.brands || base?.brands,
+    specialties: api.specialties || base?.specialties,
+    experience: api.experience ?? base?.experience,
+    gallery: base?.gallery,
+    milestones: base?.milestones,
+    testimonials: base?.testimonials,
+    services: base?.services,
+    awards: base?.awards,
+    website: api.website || base?.website,
+    email: api.email || base?.email,
+    social: base?.social,
+  };
+
+  if (entityType === 'auto_dealer') mapped.vehicles = feedItems.length ? feedItems.map(mapVehicle) : base?.vehicles;
+  if (entityType === 'company') mapped.projects = feedItems.length ? feedItems.map(mapProject) : base?.projects;
+  if (entityType === 'agent') mapped.listings = feedItems.length ? feedItems.map(mapListing) : base?.listings;
+  return mapped;
 }
 
 /* ═══ Hero Carousel ═══ */
@@ -365,16 +521,55 @@ function StatCard({ label, value }: { label: string; value: string }) {
 /* ═══ MAIN PAGE ═══ */
 export default function EntityProfilePage() {
   const params = useParams();
-  const entityType = params.entityType as string;
-  const slug = params.slug as string;
+  const entityType = Array.isArray(params.entityType) ? params.entityType[0] : params.entityType as string;
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug as string;
+  const demoEntity = DEMO[entityType]?.[slug];
   const [activeTab, setActiveTab] = useState(0);
   const [showPhone, setShowPhone] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<DemoVehicle | null>(null);
   const [selectedProject, setSelectedProject] = useState<DemoProject | null>(null);
   const [selectedListing, setSelectedListing] = useState<DemoListing | null>(null);
+  const [liveEntity, setLiveEntity] = useState<DemoEntity | null>(null);
+  const [loadingEntity, setLoadingEntity] = useState(() => !demoEntity);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const entity = DEMO[entityType]?.[slug];
+  const entity = liveEntity || demoEntity;
+
+  useEffect(() => {
+    if (!entityType || !slug) return;
+    let cancelled = false;
+    fetch(`/api/entity/${encodeURIComponent(entityType)}/${encodeURIComponent(slug)}`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return await res.json() as ApiEntityResponse;
+      })
+      .then((payload) => {
+        if (!cancelled && payload?.entity) {
+          setLiveEntity(mergeLiveEntity(entityType, slug, payload, demoEntity));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLiveEntity(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingEntity(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [entityType, slug, demoEntity]);
+
+  if (!entity && loadingEntity) {
+    return (
+      <div className="min-h-screen bg-[var(--esl-bg-page)] flex items-center justify-center">
+        <div className="text-center">
+          <Search className="w-16 h-16 mb-4 mx-auto animate-pulse" style={{ color: 'var(--esl-text-muted)' }} />
+          <h2 className="text-xl font-black text-white mb-2">Уншиж байна</h2>
+          <p className="text-sm text-[var(--esl-text-muted)]">Дэлгүүрийн мэдээлэл болон заруудыг ачаалж байна</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!entity) {
     return (
