@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Car, Eye, Gauge, Image as ImageIcon, Pencil, Plus } from 'lucide-react';
 
@@ -78,9 +79,9 @@ export default function VehiclesPage() {
                 key={vehicle.id}
                 className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] transition hover:border-[#E8242C]/40"
               >
-                <div className="aspect-[4/3] bg-[var(--esl-bg-section)]">
+                <div className="relative aspect-[4/3] bg-[var(--esl-bg-section)]">
                   {vehicle.images?.[0] ? (
-                    <img src={vehicle.images[0]} alt={vehicle.title} className="h-full w-full object-cover" />
+                    <Image src={vehicle.images[0]} alt={vehicle.title} fill sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" className="object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <ImageIcon className="h-8 w-8 text-[var(--esl-text-disabled)]" />

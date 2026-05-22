@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Plus, Eye, Trash2, MapPin, Package, Loader2, Pencil } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -80,9 +81,9 @@ export default function ListingsPage() {
         <div className="space-y-3">
           {listings.map(item => (
             <div key={item.id} className="flex items-center gap-4 bg-[var(--esl-bg-card)] rounded-xl p-4 border border-[var(--esl-border)]">
-              <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[var(--esl-bg-section)]">
+              <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[var(--esl-bg-section)]">
                 {item.images?.[0] ? (
-                  <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
+                  <Image src={item.images[0]} alt="" fill sizes="64px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"><Package className="w-6 h-6 text-[var(--esl-text-disabled)]" /></div>
                 )}

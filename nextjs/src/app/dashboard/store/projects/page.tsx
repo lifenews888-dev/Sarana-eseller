@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Building2, Eye, Image as ImageIcon, Pencil, Plus } from 'lucide-react';
 
@@ -80,9 +81,9 @@ export default function ProjectsPage() {
                 key={project.id}
                 className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] transition hover:border-[#E8242C]/40"
               >
-                <div className="aspect-[16/9] bg-[var(--esl-bg-section)]">
+                <div className="relative aspect-[16/9] bg-[var(--esl-bg-section)]">
                   {project.images?.[0] ? (
-                    <img src={project.images[0]} alt={project.title} className="h-full w-full object-cover" />
+                    <Image src={project.images[0]} alt={project.title} fill sizes="(min-width: 768px) 50vw, 100vw" className="object-cover" />
                   ) : (
                     <div className="flex h-full items-center justify-center">
                       <ImageIcon className="h-8 w-8 text-[var(--esl-text-disabled)]" />
