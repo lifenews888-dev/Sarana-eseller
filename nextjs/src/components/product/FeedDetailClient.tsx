@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Phone, MapPin, Star, Calendar, Gauge, Fuel, Settings2,
@@ -28,7 +29,7 @@ interface FeedPost {
   allowAffiliate?: boolean;
   affiliateCommission?: number;
   media: MediaItem[];
-  owner?: { name: string; phone?: string } | null;
+  owner?: { name: string; phone?: string; href?: string } | null;
   createdAt?: string;
 }
 
@@ -42,6 +43,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const et = resolveEntityType(post.entityType);
   const config = ENTITY_CARD_CONFIG[et];
   const meta = post.metadata || {};
+  const ownerHref = post.owner?.href;
 
   const media: MediaItem[] = post.media.length > 0
     ? post.media
@@ -92,13 +94,32 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
 
         {post.owner ? (
           <div className="flex items-center gap-4 p-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)]">
-            <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white" style={{ background: config.color }}>
-              {post.owner.name?.[0] || '?'}
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-sm">{post.owner.name}</p>
-              <p className="text-xs text-[var(--esl-text-muted)]">Зарын эзэн</p>
-            </div>
+            {ownerHref ? (
+              <Link href={ownerHref} className="flex flex-1 min-w-0 items-center gap-4 no-underline">
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0" style={{ background: config.color }}>
+                  {post.owner.name?.[0] || '?'}
+                </div>
+                <div className="min-w-0">
+                  <p className="font-semibold text-sm text-[var(--esl-text)] truncate">{post.owner.name}</p>
+                  <p className="text-xs text-[var(--esl-text-muted)]">Зарын эзэн · Профайл харах</p>
+                </div>
+              </Link>
+            ) : (
+              <>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0" style={{ background: config.color }}>
+                  {post.owner.name?.[0] || '?'}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-sm truncate">{post.owner.name}</p>
+                  <p className="text-xs text-[var(--esl-text-muted)]">Зарын эзэн</p>
+                </div>
+              </>
+            )}
+            {ownerHref ? (
+              <Link href={ownerHref} className="hidden sm:inline-flex h-10 items-center rounded-full border border-[var(--esl-border)] px-3 text-xs font-semibold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg-muted)]">
+                Профайл
+              </Link>
+            ) : null}
             {post.owner.phone ? (
               <a href={`tel:${post.owner.phone}`} className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ background: config.color }} aria-label="Залгах">
                 <Phone size={18} />

@@ -225,6 +225,24 @@ function metadataString(metadata: FeedItemData['metadata'], key: string): string
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
 
+function entityProfileHref(entityType: string, slug?: string | null): string | undefined {
+  if (!slug) return undefined;
+  return ['agent', 'company', 'auto_dealer', 'service'].includes(entityType)
+    ? `/entity/${entityType}/${slug}`
+    : undefined;
+}
+
+const DEMO_ENTITY_SLUGS: Record<string, Record<string, string>> = {
+  agent: { a1: 'erdenbat', erdenbat: 'erdenbat' },
+  company: { c1: 'mongolian-properties', 'mongolian-properties': 'mongolian-properties' },
+  auto_dealer: { ad1: 'autocity', autocity: 'autocity' },
+};
+
+function demoEntityProfileHref(entityType: string, entityId?: string | null): string | undefined {
+  const slug = entityId ? DEMO_ENTITY_SLUGS[entityType]?.[entityId] : undefined;
+  return entityProfileHref(entityType, slug);
+}
+
 function toClientPost(item: FeedItemData) {
   const images = item.images.length > 0 ? item.images : [DETAIL_IMAGE];
   return {
@@ -237,7 +255,13 @@ function toClientPost(item: FeedItemData) {
       url,
       sortOrder,
     })),
-    owner: item.entityName ? { name: item.entityName, phone: metadataString(item.metadata, 'ownerPhone') } : null,
+    owner: item.entityName
+      ? {
+          name: item.entityName,
+          phone: metadataString(item.metadata, 'ownerPhone'),
+          href: demoEntityProfileHref(item.entityType, item.entityId),
+        }
+      : null,
   };
 }
 
@@ -279,10 +303,10 @@ export default async function FeedDetailPage({ params }: Props) {
       where: { id },
       include: {
         media: { orderBy: { sortOrder: 'asc' } },
-        agent: { select: { id: true, name: true, phone: true } },
-        company: { select: { id: true, name: true, phone: true } },
-        autoDealer: { select: { id: true, name: true, phone: true } },
-        serviceProvider: { select: { id: true, name: true, phone: true } },
+        agent: { select: { id: true, name: true, phone: true, slug: true } },
+        company: { select: { id: true, name: true, phone: true, slug: true } },
+        autoDealer: { select: { id: true, name: true, phone: true, slug: true } },
+        serviceProvider: { select: { id: true, name: true, phone: true, slug: true } },
       },
     });
   } catch { notFound(); }
@@ -314,7 +338,13 @@ export default async function FeedDetailPage({ params }: Props) {
       caption: m.caption || undefined,
       sortOrder: m.sortOrder,
     })),
-    owner: owner ? { name: owner.name, phone: owner.phone || undefined } : null,
+    owner: owner
+      ? {
+          name: owner.name,
+          phone: owner.phone || undefined,
+          href: entityProfileHref(post.entityType, owner.slug),
+        }
+      : null,
     createdAt: post.createdAt.toISOString(),
   };
 
