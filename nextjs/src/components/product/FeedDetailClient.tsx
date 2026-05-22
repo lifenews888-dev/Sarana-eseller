@@ -44,6 +44,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const config = ENTITY_CARD_CONFIG[et];
   const meta = post.metadata || {};
   const ownerHref = post.owner?.href;
+  const ownerPhoneHref = phoneHref(post.owner?.phone);
 
   const media: MediaItem[] = post.media.length > 0
     ? post.media
@@ -120,17 +121,23 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
                 Профайл
               </Link>
             ) : null}
-            {post.owner.phone ? (
-              <a href={`tel:${post.owner.phone}`} className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ background: config.color }} aria-label="Залгах">
+            {ownerPhoneHref ? (
+              <a href={ownerPhoneHref} className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ background: config.color }} aria-label="Залгах">
                 <Phone size={18} />
               </a>
             ) : null}
           </div>
         ) : null}
 
-        <button className="w-full h-12 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2" style={{ background: config.color }}>
-          <Phone size={18} /> {config.primaryCta}
-        </button>
+        {ownerPhoneHref ? (
+          <a href={ownerPhoneHref} className="w-full h-12 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2 no-underline" style={{ background: config.color }}>
+            <Phone size={18} /> {config.primaryCta}
+          </a>
+        ) : (
+          <button disabled className="w-full h-12 rounded-xl font-semibold text-white/60 text-sm flex items-center justify-center gap-2 cursor-not-allowed" style={{ background: config.color, opacity: 0.55 }}>
+            <Phone size={18} /> Холбогдох утас алга
+          </button>
+        )}
 
         <ShareWishlistBar title={post.title} />
 
@@ -140,6 +147,12 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
       </div>
     </div>
   );
+}
+
+function phoneHref(phone?: string): string | null {
+  if (!phone) return null;
+  const normalized = phone.replace(/[^\d+]/g, '');
+  return normalized ? `tel:${normalized}` : null;
 }
 
 function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post: FeedPost }) {
