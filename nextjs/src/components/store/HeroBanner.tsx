@@ -51,17 +51,27 @@ const DEMO_BANNERS = [
   },
 ];
 
+type ApiBanner = {
+  id: string;
+  title?: string | null;
+  altText?: string | null;
+  bgColor?: string | null;
+  linkUrl?: string | null;
+  imageUrl?: string | null;
+};
+
 export default function HeroBanner({ onSearch }: { onSearch: () => void }) {
   const [banners, setBanners] = useState(DEMO_BANNERS);
   const [active, setActive] = useState(0);
 
   // Try fetch from API, fallback to demo
   useEffect(() => {
-    fetch('/api/banners/HERO')
+    fetch('/api/banners/slot/HERO')
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setBanners(data.map((b: any) => ({
+        const rows = Array.isArray(data) ? data : data?.data;
+        if (Array.isArray(rows) && rows.length > 0) {
+          setBanners(rows.map((b: ApiBanner) => ({
             id: b.id,
             title: b.title || b.altText || 'eseller.mn',
             subtitle: b.altText || '',

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface BannerData {
   id: string;
@@ -24,35 +25,30 @@ const FALLBACK_SLIDES: BannerData[] = [
     subtitle: '70% хүртэл хөнгөлөлт · 10,000+ бараа',
     buttonText: 'Бараа үзэх', buttonLink: '/store',
     color: '#E8242C', gradient: 'from-[#0d1b2e] to-[#1a3a5c]',
-    videoUrl: '/videos/hero-1.mp4',
   },
   {
     id: 'f2', badge: 'Gold гишүүнчлэл', title: 'Gold болж давуу эрх эдлэ',
     subtitle: 'Үнэгүй хүргэлт · 2x оноо · Flash sale',
     buttonText: 'Gold авах', buttonLink: '/gold',
     color: '#C0953C', gradient: 'from-[#1a1200] to-[#3d2e00]',
-    videoUrl: '/videos/hero-2.mp4',
   },
   {
     id: 'f3', badge: 'Борлуулагч', title: 'Share хийж орлого ол',
     subtitle: '10-20% комисс · QR код + богино линк',
     buttonText: 'Эхлэх', buttonLink: '/become-seller',
     color: '#534AB7', gradient: 'from-[#1a0d2e] to-[#2d1a5c]',
-    videoUrl: '/videos/hero-3.mp4',
   },
   {
     id: 'f4', badge: 'Жолооч', title: 'Жолоочоор ажиллаж орлоготой бол',
     subtitle: 'GPS навигаци · Хүргэлт бүрт орлого',
     buttonText: 'Бүртгүүлэх', buttonLink: '/become-driver',
     color: '#D85A30', gradient: 'from-[#1a0a00] to-[#3d1a00]',
-    videoUrl: '/videos/hero-4.mp4',
   },
   {
     id: 'f5', badge: 'Дэлгүүрийн эзэн', title: 'Дэлгүүрээ нээж онлайн борлуул',
     subtitle: 'Эхний 3 сар 0% комисс · Бүрэн dashboard',
     buttonText: 'Дэлгүүр нээх', buttonLink: '/open-shop',
     color: '#1D9E75', gradient: 'from-[#0a1a10] to-[#0d3a20]',
-    videoUrl: '/videos/hero-5.mp4',
   },
 ];
 
@@ -66,7 +62,7 @@ export default function HeroVideoSlider({ banners }: { banners?: BannerData[] })
   const [videoError, setVideoError] = useState<Record<number, boolean>>({});
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const startRef = useRef(Date.now());
+  const startRef = useRef(0);
 
   const goTo = useCallback((idx: number) => {
     setCurrent(idx);
@@ -112,7 +108,6 @@ export default function HeroVideoSlider({ banners }: { banners?: BannerData[] })
 
   const slide = slides[current];
   const slideColor = slide.color || '#E8242C';
-  const slideGradient = slide.gradient || 'from-[#0d1b2e] to-[#1a3a5c]';
 
   return (
     <section className="relative h-[480px] md:h-[560px] overflow-hidden bg-black">
@@ -142,7 +137,7 @@ export default function HeroVideoSlider({ banners }: { banners?: BannerData[] })
 
           {/* Image fallback (when no video or video error) */}
           {(!s.videoUrl || videoError[i]) && s.imageUrl && (
-            <img src={s.imageUrl} alt={s.title} className="absolute inset-0 w-full h-full object-cover" />
+            <SafeImage src={s.imageUrl} alt={s.title} className="absolute inset-0 w-full h-full object-cover" />
           )}
 
           {/* Dark overlay */}

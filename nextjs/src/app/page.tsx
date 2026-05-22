@@ -16,6 +16,28 @@ import LiveSection from '@/components/LiveSection';
 import { SocialFeedSection } from '@/components/SocialFeedSection';
 import { HerderSection } from '@/components/HerderSection';
 
+const KNOWN_BAD_IMAGE_REPLACEMENTS: Record<string, string> = {
+  'https://images.unsplash.com/photo-1696446702183-cbd29e23b9c0?w=800':
+    'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800',
+  'https://images.unsplash.com/photo-1695048133142-1a20484429be?w=800':
+    'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
+};
+
+function publicImageUrl(url?: string | null) {
+  if (!url) return null;
+  const value = url.trim();
+  const replacement = KNOWN_BAD_IMAGE_REPLACEMENTS[value];
+  if (replacement) return replacement;
+  if (value.startsWith('/')) return value;
+
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 async function getHomeData() {
   try {
     const [
@@ -71,20 +93,23 @@ async function getHomeData() {
     const mappedShops = shops.map((s) => ({
       id: s.id,
       name: s.name,
-      logoUrl: s.logo,
+      logoUrl: publicImageUrl(s.logo),
       storefrontSlug: s.storefrontSlug || s.slug,
       rating: null,
       _count: { products: 0 },
     }));
 
     // Map products
-    const mappedProducts = products.map((p) => ({
-      id: p.id,
-      name: p.name,
-      price: p.salePrice || p.price,
-      media: p.images?.[0] ? [{ url: p.images[0] }] : [],
-      entity: null,
-    }));
+    const mappedProducts = products.map((p) => {
+      const imageUrl = publicImageUrl(p.images?.[0]);
+      return {
+        id: p.id,
+        name: p.name,
+        price: p.salePrice || p.price,
+        media: imageUrl ? [{ url: imageUrl }] : [],
+        entity: null,
+      };
+    });
 
     // Resolve featured products
     const fpIds = featuredProductRows.map((f) => f.productId);
@@ -99,15 +124,16 @@ async function getHomeData() {
       .map((f) => {
         const p = fpMap.get(f.productId);
         if (!p) return null;
+        const imageUrl = publicImageUrl(p.images?.[0]);
         return {
           id: p.id,
           name: p.name,
           price: p.salePrice || p.price,
-          media: p.images?.[0] ? [{ url: p.images[0] }] : [],
+          media: imageUrl ? [{ url: imageUrl }] : [],
           entity: null,
         };
       })
-      .filter(Boolean);
+      .filter((p): p is NonNullable<typeof p> => p !== null);
 
     // Resolve featured shops
     const fsIds = featuredShopRows.map((f) => f.shopId);
@@ -125,13 +151,13 @@ async function getHomeData() {
         return {
           id: s.id,
           name: s.name,
-          logoUrl: s.logo,
+          logoUrl: publicImageUrl(s.logo),
           storefrontSlug: s.storefrontSlug || s.slug,
           rating: null,
           _count: { products: 0 },
         };
       })
-      .filter(Boolean);
+      .filter((s): s is NonNullable<typeof s> => s !== null);
 
     // Stats config
     const configMap = new Map(configs.map((c) => [c.key, c.value]));
@@ -183,6 +209,7 @@ export default async function HomePage() {
     heroBanners, sections, sectionMap,
     featuredProducts, featuredShopsMapped, stats,
   } = await getHomeData();
+  const hasDatabaseConfig = Boolean(process.env.DATABASE_URL);
 
   // Helper to check if section is active
   const isActive = (key: string) => {
@@ -237,7 +264,7 @@ export default async function HomePage() {
           <>
             {/* Fallback: original static order */}
             <HeroVideoSlider banners={heroBanners} />
-            <LiveSection />
+            {hasDatabaseConfig ? <LiveSection /> : null}
             <HeroSearch />
             <TrustBadges />
             <CategoryIcons />

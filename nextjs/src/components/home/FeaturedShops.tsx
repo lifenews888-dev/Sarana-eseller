@@ -1,7 +1,18 @@
 'use client';
-import Link from 'next/link';
 
-export default function FeaturedShops({ entities }: { entities: any[] }) {
+import Link from 'next/link';
+import SafeImage from '@/components/ui/SafeImage';
+
+type FeaturedShop = {
+  id: string;
+  name?: string | null;
+  logoUrl?: string | null;
+  storefrontSlug?: string | null;
+  rating?: number | null;
+  _count?: { products?: number | null } | null;
+};
+
+export default function FeaturedShops({ entities }: { entities: FeaturedShop[] }) {
   if (entities.length === 0) return null;
 
   return (
@@ -19,10 +30,12 @@ export default function FeaturedShops({ entities }: { entities: any[] }) {
         {entities.map((e) => (
           <Link key={e.id} href={`/${e.storefrontSlug}`} className="no-underline">
             <div className="bg-[var(--esl-bg-card)] rounded-2xl p-5 border border-[var(--esl-border)] text-center min-w-[150px] hover:border-[#E8242C] hover:-translate-y-0.5 transition-all cursor-pointer">
-              <div className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden flex items-center justify-center"
-                style={{ background: e.logoUrl ? 'transparent' : '#E8242C' }}>
+              <div
+                className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden flex items-center justify-center"
+                style={{ background: e.logoUrl ? 'transparent' : '#E8242C' }}
+              >
                 {e.logoUrl ? (
-                  <img src={e.logoUrl} alt={e.name} className="w-full h-full object-cover" />
+                  <SafeImage src={e.logoUrl} alt={e.name || 'Дэлгүүр'} className="w-full h-full object-cover rounded-full" />
                 ) : (
                   <span className="text-white text-2xl font-bold">{e.name?.[0]}</span>
                 )}

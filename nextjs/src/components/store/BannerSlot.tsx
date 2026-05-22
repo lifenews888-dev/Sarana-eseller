@@ -40,10 +40,11 @@ export default function BannerSlot({ slot, className }: { slot: string; classNam
   const [banners, setBanners] = useState<BannerData[]>(DEMO_BANNERS[slot] || []);
 
   useEffect(() => {
-    fetch(`/api/banners/${slot}`)
+    fetch(`/api/banners/slot/${slot}`)
       .then(r => r.json())
       .then(data => {
-        if (Array.isArray(data) && data.length > 0) setBanners(data);
+        const rows = Array.isArray(data) ? data : data?.data;
+        if (Array.isArray(rows) && rows.length > 0) setBanners(rows);
       })
       .catch(() => {});
   }, [slot]);
