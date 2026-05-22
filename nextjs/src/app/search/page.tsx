@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, SlidersHorizontal, Grid3X3, List, Loader2, X, Store, Home, Car, BellRing, Star, Package } from 'lucide-react';
 import SearchBar from '@/components/search/SearchBar';
+import SafeImage from '@/components/ui/SafeImage';
 
 const DISTRICTS = ['СБД', 'БЗД', 'ЧД', 'ХУД', 'СХД', 'БГД', 'НД', 'БНД', 'ХНД'];
 const ENTITY_TYPES = [
@@ -170,7 +171,7 @@ function SearchPage() {
                   <Link key={p._id} href={`/product/${p._id}`} className="group no-underline block rounded-xl overflow-hidden border transition-all hover:-translate-y-1 hover:shadow-lg"
                     style={{ background: 'var(--esl-bg-card)', borderColor: 'var(--esl-border)' }}>
                     <div className="relative aspect-square" style={{ background: 'var(--esl-bg-section)' }}>
-                      {p.images?.[0] ? <img src={p.images[0]} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" /> :
+                      {p.images?.[0] ? <SafeImage src={p.images[0]} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" /> :
                         <div className="w-full h-full flex items-center justify-center"><Package className="w-10 h-10 text-[var(--esl-text-muted)]" /></div>}
                       {disc > 0 && <span className="absolute top-2 left-2 bg-[#E8242C] text-white text-[10px] font-bold px-2 py-0.5 rounded">-{disc}%</span>}
                     </div>

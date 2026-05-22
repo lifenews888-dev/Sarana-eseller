@@ -7,6 +7,7 @@ import MobileNav from '@/components/shared/MobileNav';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import LocationBar from '@/components/location/LocationBar';
 import CategoryBar from '@/components/shared/CategoryBar';
+import SafeImage from '@/components/ui/SafeImage';
 import {
   Search, MapPin, Eye, Clock, Plus,
   X, Heart, Phone, MessageCircle, Share2, ChevronLeft, ChevronRight,
@@ -158,7 +159,7 @@ function MediaCarousel({ media, title, category, isVip, tier, disc }: {
         current.type === 'video' ? (
           <video src={current.url} controls className="w-full h-full object-contain bg-black" poster={current.thumb} />
         ) : (
-          <img loading="lazy" src={current.url} alt={title} className="w-full h-full object-cover" />
+          <SafeImage src={current.url} alt={title} className="w-full h-full object-cover" />
         )
       ) : (
         <div className="w-full h-full flex items-center justify-center">
@@ -192,11 +193,11 @@ function MediaCarousel({ media, title, category, isVip, tier, disc }: {
               >
                 {m.type === 'video' ? (
                   <div className="w-full h-full bg-black/80 flex items-center justify-center relative">
-                    {m.thumb && <img loading="lazy" src={m.thumb} alt="" className="w-full h-full object-cover absolute inset-0" />}
+                    {m.thumb && <SafeImage src={m.thumb} alt="" className="w-full h-full object-cover absolute inset-0" />}
                     <Play className="w-3 h-3 text-white relative z-10" fill="white" />
                   </div>
                 ) : (
-                  <img loading="lazy" src={m.url} alt="" className="w-full h-full object-cover" />
+                  <SafeImage src={m.url} alt="" className="w-full h-full object-cover" />
                 )}
               </button>
             ))}
@@ -418,7 +419,7 @@ function FeedCard({ item, onClick }: { item: typeof DEMO_FEED[0]; onClick: () =>
         {/* Image */}
         <div className={`relative h-48 sm:h-auto sm:w-56 shrink-0 overflow-hidden ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`}>
           {item.media.length > 0 ? (
-            <img
+            <SafeImage
               src={item.media[0].type === 'video' && 'thumb' in item.media[0] ? item.media[0].thumb! : item.media[0].url}
               alt={item.title}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
@@ -642,7 +643,7 @@ export default function FeedPage() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Auto Dealer */}
             <Link href="/entity/auto_dealer/autocity" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
-              <img loading="lazy" src="https://picsum.photos/seed/eseller-600/600" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-2 mb-1">
@@ -656,7 +657,7 @@ export default function FeedPage() {
 
             {/* Construction Company */}
             <Link href="/entity/company/mongolian-properties" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
-              <img loading="lazy" src="https://picsum.photos/seed/eseller-600/600" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-2 mb-1">
@@ -670,7 +671,7 @@ export default function FeedPage() {
 
             {/* Agent */}
             <Link href="/entity/agent/erdenbat" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
-              <img loading="lazy" src="https://picsum.photos/seed/eseller-600/600" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-2 mb-1">

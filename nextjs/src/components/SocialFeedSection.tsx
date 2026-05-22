@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
+import SafeImage from '@/components/ui/SafeImage';
 
 export async function SocialFeedSection() {
   let posts;
@@ -48,7 +49,7 @@ export async function SocialFeedSection() {
             }}>
               <div style={{ height: 100, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {product.images?.[0] ? (
-                  <img src={product.images[0]} alt={product.name}
+                  <SafeImage src={product.images[0]} alt={product.name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <span style={{ fontSize: 32 }}>📦</span>

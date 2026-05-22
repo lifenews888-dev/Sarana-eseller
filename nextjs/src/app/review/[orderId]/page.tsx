@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Star, Camera, X, Loader2, CheckCircle } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
+import SafeImage from '@/components/ui/SafeImage';
 
 function authHeaders(): Record<string, string> {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -157,7 +158,7 @@ export default function ReviewPage() {
           <div className="flex gap-2 flex-wrap">
             {images.map((img, i) => (
               <div key={i} className="relative w-20 h-20">
-                <img src={img} alt="" className="w-full h-full object-cover rounded-lg" />
+                <SafeImage src={img} alt="" className="w-full h-full object-cover rounded-lg" />
                 <button
                   onClick={() => setImages((prev) => prev.filter((_, j) => j !== i))}
                   className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center"

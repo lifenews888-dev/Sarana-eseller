@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface BannerData {
   id: string;
@@ -75,17 +76,12 @@ export default function BannerSlot({ slot, className }: { slot: string; classNam
         }}
       >
         {banner.imageUrl ? (
-          <picture>
+          <>
             {banner.imageMobile && (
-              <source media="(max-width: 768px)" srcSet={banner.imageMobile} />
+              <SafeImage src={banner.imageMobile} alt={banner.altText || ''} className="block md:hidden w-full h-full object-cover" />
             )}
-            <img
-              src={banner.imageUrl}
-              alt={banner.altText || ''}
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              loading="lazy"
-            />
-          </picture>
+            <SafeImage src={banner.imageUrl} alt={banner.altText || ''} className={`${banner.imageMobile ? 'hidden md:block' : 'block'} w-full h-full object-cover`} />
+          </>
         ) : (
           <div style={{
             width: '100%', height: '100%',

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface Suggestion {
   products: { id: string; name: string; price: number; images?: string[]; emoji?: string }[];
@@ -57,7 +58,7 @@ export default function SearchBar({ placeholder = 'Бараа, дэлгүүр х
               {suggestions!.products.map(p => (
                 <div key={p.id} onClick={() => { router.push(`/product/${p.id}`); setOpen(false); }}
                   className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-[var(--esl-bg-section)] transition-colors">
-                  {p.images?.[0] ? <img src={p.images[0]} alt="" className="w-8 h-8 rounded-lg object-cover" /> :
+                  {p.images?.[0] ? <SafeImage src={p.images[0]} alt="" className="w-8 h-8 rounded-lg object-cover" /> :
                     <span className="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style={{ background: 'var(--esl-bg-section)' }}>{p.emoji || '📦'}</span>}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate" style={{ color: 'var(--esl-text-primary)' }}>{p.name}</p>
@@ -73,7 +74,7 @@ export default function SearchBar({ placeholder = 'Бараа, дэлгүүр х
               {suggestions!.shops.map(s => (
                 <div key={s.id} onClick={() => { router.push(`/${s.storefrontSlug || s.slug}`); setOpen(false); }}
                   className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-[var(--esl-bg-section)] transition-colors">
-                  {s.logo ? <img src={s.logo} alt="" className="w-8 h-8 rounded-lg object-cover" /> :
+                  {s.logo ? <SafeImage src={s.logo} alt="" className="w-8 h-8 rounded-lg object-cover" /> :
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white" style={{ background: '#E8242C' }}>{s.name[0]}</div>}
                   <p className="text-xs font-medium" style={{ color: 'var(--esl-text-primary)' }}>{s.name}</p>
                 </div>

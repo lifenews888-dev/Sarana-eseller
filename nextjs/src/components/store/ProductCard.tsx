@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { formatPrice, discountPercent } from '@/lib/utils';
 import type { Product } from '@/lib/api';
 import { Heart } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface ProductCardProps {
   product: Product;
@@ -121,7 +122,7 @@ export default function ProductCard({
           >
             {images.map((src, i) => (
               <div key={i} className="h-full flex-shrink-0" style={{ width: `${100 / images.length}%` }}>
-                <img
+                <SafeImage
                   src={src}
                   alt={p.name}
                   className="w-full h-full object-cover"

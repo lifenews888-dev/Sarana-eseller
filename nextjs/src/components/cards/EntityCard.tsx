@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Play, Eye, MapPin, Calendar, Fuel, Gauge, Star, Clock, Truck } from 'lucide-react';
 import { ENTITY_CARD_CONFIG, resolveEntityType, formatPrice, type EntityType } from '@/lib/cards/entityCardConfig';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface MediaItem {
   type: string;
@@ -66,7 +67,7 @@ export default function EntityCard({ item, entityType, showSellerBtn = false, on
             className="w-full h-full object-cover"
           />
         ) : (
-          <img
+          <SafeImage
             src={allImages[mediaIdx] || '/placeholder.jpg'}
             alt={displayName}
             loading="lazy"

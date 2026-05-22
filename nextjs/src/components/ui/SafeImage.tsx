@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties, MouseEventHandler } from 'react';
 import { ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -10,6 +11,8 @@ type SafeImageProps = {
   className?: string;
   fallbackClassName?: string;
   loading?: 'eager' | 'lazy';
+  onClick?: MouseEventHandler<HTMLImageElement>;
+  style?: CSSProperties;
 };
 
 function isPublicImageUrl(src?: string | null) {
@@ -30,10 +33,31 @@ export default function SafeImage({
   className,
   fallbackClassName,
   loading = 'lazy',
+  onClick,
+  style,
 }: SafeImageProps) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   const failed = !isPublicImageUrl(src) || failedSrc === src;
+
+  useEffect(() => {
+    if (!isPublicImageUrl(src)) return;
+
+    const checkAlreadyFailed = () => {
+      const img = imgRef.current;
+      if (img && img.complete && img.naturalWidth === 0) {
+        setFailedSrc(src ?? null);
+      }
+    };
+
+    const immediateTimeout = window.setTimeout(checkAlreadyFailed, 0);
+    const settledTimeout = window.setTimeout(checkAlreadyFailed, 1200);
+    return () => {
+      window.clearTimeout(immediateTimeout);
+      window.clearTimeout(settledTimeout);
+    };
+  }, [src]);
 
   if (failed || !src) {
     return (
@@ -44,6 +68,7 @@ export default function SafeImage({
           className,
           fallbackClassName,
         )}
+        style={style}
       >
         <ImageOff className="h-8 w-8 opacity-60" aria-hidden="true" />
       </div>
@@ -53,11 +78,14 @@ export default function SafeImage({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
+      ref={imgRef}
       src={src}
       alt={alt}
       loading={loading}
       decoding="async"
       className={className}
+      onClick={onClick}
+      style={style}
       onError={() => setFailedSrc(src)}
     />
   );

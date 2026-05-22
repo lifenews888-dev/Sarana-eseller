@@ -3,6 +3,7 @@ import { getShopConfig } from '@/lib/shop-cache';
 import { redirect, notFound } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface Props {
   params: Promise<{ slug: string; id: string }>;
@@ -51,7 +52,7 @@ export default async function ShopProductDetailPage({ params }: Props) {
         {/* Images */}
         <div>
           {product.images?.[0] ? (
-            <img src={product.images[0]} alt={product.name} className="w-full rounded-xl object-cover aspect-square" />
+            <SafeImage src={product.images[0]} alt={product.name} className="w-full rounded-xl object-cover aspect-square" />
           ) : (
             <div className="w-full aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-6xl">
               {product.emoji || '📦'}
@@ -60,7 +61,7 @@ export default async function ShopProductDetailPage({ params }: Props) {
           {product.images && product.images.length > 1 && (
             <div className="grid grid-cols-4 gap-2 mt-3">
               {product.images.slice(1, 5).map((img, i) => (
-                <img key={i} src={img} alt="" className="w-full aspect-square rounded-lg object-cover" />
+                <SafeImage key={i} src={img} alt="" className="w-full aspect-square rounded-lg object-cover" />
               ))}
             </div>
           )}
@@ -117,7 +118,7 @@ export default async function ShopProductDetailPage({ params }: Props) {
 
           {/* Shop info */}
           <div className="mt-6 p-4 bg-gray-50 rounded-xl flex items-center gap-3">
-            {config.logoUrl && <img src={config.logoUrl} className="w-10 h-10 rounded" alt="" />}
+            {config.logoUrl && <SafeImage src={config.logoUrl} className="w-10 h-10 rounded object-cover" alt="" />}
             <div>
               <p className="font-medium text-sm">{config.name}</p>
               {config.phone && <p className="text-xs text-gray-400">{config.phone}</p>}

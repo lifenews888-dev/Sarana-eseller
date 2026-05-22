@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { MapPin, Phone, Star, Shield, ShoppingBag, Users, Share2, Mail, Clock } from 'lucide-react';
 import { ShareModal } from '@/components/shared/ShareModal';
 import ChatWidget from '@/components/chat/ChatWidget';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface ShopData {
   id: string; name: string; slug: string; logo?: string | null; phone?: string | null;
@@ -67,7 +68,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
         <div className="relative z-10 max-w-6xl mx-auto px-6 py-20">
           <div className="flex items-start gap-5 mb-6">
             {logoUrl ? (
-              <img loading="lazy" src={logoUrl} alt={shop.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-white/20 shadow-lg" />
+              <SafeImage src={logoUrl} alt={shop.name} className="w-16 h-16 rounded-2xl object-cover border-2 border-white/20 shadow-lg" />
             ) : (
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-white shadow-lg" style={{ background: primaryColor }}>
                 {shop.name.charAt(0)}
@@ -172,7 +173,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
                   <div className="rounded-xl overflow-hidden border transition-all hover:-translate-y-1 hover:shadow-lg" style={{ background: 'var(--esl-bg-card)', borderColor: 'var(--esl-border)' }}>
                     <div className="relative aspect-square" style={{ background: 'var(--esl-bg-section)' }}>
                       {img ? (
-                        <img loading="lazy" src={img} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                        <SafeImage src={img} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-4xl">{p.emoji || '📦'}</div>
                       )}
@@ -236,7 +237,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
             <div>
               <div className="flex items-center gap-2 mb-3">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={shop.name} className="w-8 h-8 rounded-lg object-cover" />
+                  <SafeImage src={logoUrl} alt={shop.name} className="w-8 h-8 rounded-lg object-cover" />
                 ) : (
                   <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-black text-white" style={{ background: primaryColor }}>{shop.name.charAt(0)}</div>
                 )}
@@ -349,7 +350,7 @@ function BannerSlider({ banners, primaryColor }: { banners: any[]; primaryColor:
   return (
     <section className="relative overflow-hidden" style={{ height: 320 }}>
       {b.imageUrl && (
-        <img src={b.imageUrl} alt={b.title || ''} className="absolute inset-0 w-full h-full object-cover" />
+        <SafeImage src={b.imageUrl} alt={b.title || ''} className="absolute inset-0 w-full h-full object-cover" />
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-8 max-w-6xl mx-auto">

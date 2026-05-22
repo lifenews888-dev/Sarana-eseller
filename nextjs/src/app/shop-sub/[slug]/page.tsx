@@ -3,6 +3,7 @@ import { getShopConfig } from '@/lib/shop-cache';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import type { Metadata } from 'next';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -70,7 +71,7 @@ export default async function ShopHomePage({ params }: Props) {
               >
                 <div className="aspect-square bg-gray-100 overflow-hidden">
                   {product.images?.[0] ? (
-                    <img
+                    <SafeImage
                       src={product.images[0]}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition"

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { formatPrice } from '@/lib/utils';
 import { Search, X } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface Suggestion {
   id: string;
@@ -83,7 +84,7 @@ export default function SearchBar({ value, onChange, inputRef }: SearchBarProps)
             <Link key={s.id} href={`/store/${s.id}`} onClick={() => setShowDropdown(false)}
               className="flex items-center gap-3 px-4 py-2.5 hover:bg-[var(--esl-bg-section)] transition no-underline">
               <div className="w-10 h-10 rounded-lg bg-[var(--esl-bg-section)] flex items-center justify-center text-lg shrink-0 overflow-hidden">
-                {s.image ? <img loading="lazy" src={s.image} alt="" className="w-full h-full object-cover" /> : (s.emoji || '📦')}
+                {s.image ? <SafeImage src={s.image} alt="" className="w-full h-full object-cover" /> : (s.emoji || '📦')}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--esl-text-primary)] truncate">{s.name}</p>

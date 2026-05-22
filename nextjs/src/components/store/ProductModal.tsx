@@ -7,6 +7,7 @@ import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
 import { formatPrice, discountPercent, cn } from '@/lib/utils';
 import { useToast } from '@/components/shared/Toast';
+import SafeImage from '@/components/ui/SafeImage';
 import {
   X, ShoppingCart, Minus, Plus, Share2, Heart, Star,
   Truck, Shield, RotateCcw, Clock, ChevronLeft, ChevronRight,
@@ -226,7 +227,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   className="w-full h-full object-contain bg-black"
                 />
               ) : (
-                <img
+                <SafeImage
                   src={media[activeImg]?.url || images[0]}
                   alt={product.name}
                   className="w-full h-full object-cover transition-opacity duration-300 cursor-zoom-in"
@@ -299,7 +300,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                       <Play className="w-5 h-5 text-white" fill="white" />
                     </div>
                   ) : (
-                    <img loading="lazy" src={m.url} alt="" className="w-full h-full object-cover" />
+                    <SafeImage src={m.url} alt="" className="w-full h-full object-cover" />
                   )}
                 </button>
               ))}
@@ -538,7 +539,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   className="shrink-0 w-[130px] cursor-pointer group">
                   <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5">
                     {p.images?.[0] ? (
-                      <img loading="lazy" src={p.images[0]} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                      <SafeImage src={p.images[0]} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-2xl">{p.emoji || <Package className="w-6 h-6 text-[#CBD5E1]" />}</div>
                     )}
@@ -551,7 +552,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
               {FEATURED_ADS.slice(0, 3).map(ad => (
                 <a key={ad.id} href={ad.link} className="shrink-0 w-[130px] no-underline group">
                   <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5 relative">
-                    <img loading="lazy" src={ad.image} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                    <SafeImage src={ad.image} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                     <span className="absolute top-1 left-1 text-[8px] font-bold bg-black/60 text-white px-1.5 py-0.5 rounded">{ad.badge}</span>
                   </div>
                   <p className="text-[11px] font-semibold text-[var(--esl-text-primary)] line-clamp-1 group-hover:text-[#E24B4A] transition-colors">{ad.title}</p>
@@ -619,7 +620,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={() => setZoomedImg(null)}
         >
-          <img loading="lazy" src={zoomedImg} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
+          <SafeImage src={zoomedImg} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
           <button onClick={() => setZoomedImg(null)}
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border-none cursor-pointer flex items-center justify-center text-white hover:bg-white/20 transition">
             <X className="w-5 h-5" />

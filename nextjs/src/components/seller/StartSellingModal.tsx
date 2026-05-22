@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, CheckCircle, Store } from 'lucide-react';
 import { formatPrice } from '@/lib/cards/entityCardConfig';
+import SafeImage from '@/components/ui/SafeImage';
 
 interface SellerStore {
   id: string;
@@ -110,7 +111,7 @@ export default function StartSellingModal({ item, isOpen, onClose }: StartSellin
             <>
               {/* Product preview */}
               <div className="flex gap-3 bg-[var(--esl-bg-page)] rounded-lg p-3">
-                <img
+                <SafeImage
                   src={item.images?.[0] || '/placeholder.jpg'}
                   alt={displayName}
                   className="w-16 h-16 rounded-lg object-cover"
