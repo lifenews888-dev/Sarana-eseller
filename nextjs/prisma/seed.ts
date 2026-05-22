@@ -58,8 +58,8 @@ const STORE_ITEMS: SeedItem[] = [
     salePrice: 3_500_000,
     description: 'Apple iPhone 15 Pro, Titanium, 256GB, 48MP камер',
     images: [
-      'https://images.unsplash.com/photo-1696446702183-cbd29e23b9c0?w=800',
-      'https://images.unsplash.com/photo-1695048133142-1a20484429be?w=800',
+      'https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=800',
+      'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800',
     ],
     entityType: 'STORE',
     category: 'Электроник',

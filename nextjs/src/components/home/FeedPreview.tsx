@@ -1,8 +1,18 @@
 'use client';
 import Link from 'next/link';
 import { Package, MapPin } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
 
-export default function FeedPreview({ posts }: { posts: any[] }) {
+type FeedPost = {
+  id: string;
+  title: string;
+  price?: number | null;
+  district?: string | null;
+  media?: { url?: string | null }[];
+  category?: { name?: string | null } | null;
+};
+
+export default function FeedPreview({ posts }: { posts: FeedPost[] }) {
   return (
     <section className="max-w-[1200px] mx-auto px-4 pb-10">
       <div className="flex justify-between items-center mb-5">
@@ -28,7 +38,7 @@ export default function FeedPreview({ posts }: { posts: any[] }) {
               <div className="bg-[var(--esl-bg-card)] rounded-2xl overflow-hidden border border-[var(--esl-border)] group-hover:-translate-y-1 group-hover:shadow-lg transition-all">
                 <div className="aspect-[4/3] bg-[var(--esl-bg-section)] overflow-hidden relative">
                   {post.media?.[0]?.url ? (
-                    <img src={post.media[0].url} alt={post.title} className="w-full h-full object-cover" />
+                    <SafeImage src={post.media[0].url} alt={post.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[var(--esl-text-muted)]">
                       <Package size={40} />

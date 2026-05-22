@@ -1,7 +1,17 @@
 'use client';
-import Link from 'next/link';
 
-export default function PromoSection({ products, title }: { products: any[]; title?: string }) {
+import Link from 'next/link';
+import SafeImage from '@/components/ui/SafeImage';
+
+type PromoProduct = {
+  id: string;
+  name: string;
+  price?: number | null;
+  media?: { url?: string | null }[];
+  entity?: { name?: string | null } | null;
+};
+
+export default function PromoSection({ products, title }: { products: PromoProduct[]; title?: string }) {
   if (products.length === 0) return null;
 
   return (
@@ -20,11 +30,7 @@ export default function PromoSection({ products, title }: { products: any[]; tit
           <Link key={p.id} href={`/product/${p.id}`} className="no-underline">
             <div className="bg-[var(--esl-bg-card)] rounded-2xl overflow-hidden border border-[var(--esl-border)] min-w-[180px] max-w-[200px] hover:-translate-y-1 transition-transform">
               <div className="aspect-square bg-[var(--esl-bg-section)] overflow-hidden relative">
-                {p.media?.[0]?.url ? (
-                  <img src={p.media[0].url} alt={p.name} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-[36px]">🛍</div>
-                )}
+                <SafeImage src={p.media?.[0]?.url} alt={p.name} className="w-full h-full object-cover" />
                 <div className="absolute top-2 right-2 bg-[#E8242C] text-white text-[11px] px-2 py-0.5 rounded-md font-bold">
                   SALE
                 </div>

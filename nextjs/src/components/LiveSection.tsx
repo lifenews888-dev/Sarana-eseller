@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Users } from "lucide-react";
+import SafeImage from "@/components/ui/SafeImage";
 
 interface LiveStreamItem {
   id: string;
@@ -49,7 +50,7 @@ export default function LiveSection() {
           >
             <div className="relative aspect-video bg-gray-100">
               {s.thumbnailUrl ? (
-                <img
+                <SafeImage
                   src={s.thumbnailUrl}
                   alt={s.title}
                   className="w-full h-full object-cover"
