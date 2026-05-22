@@ -5,6 +5,11 @@ import type { CSSProperties, MouseEventHandler } from 'react';
 import { ImageOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+const UNRELIABLE_PLACEHOLDER_HOSTS = new Set([
+  'images.unsplash.com',
+  'picsum.photos',
+]);
+
 type SafeImageProps = {
   src?: string | null;
   alt: string;
@@ -21,7 +26,9 @@ function isPublicImageUrl(src?: string | null) {
 
   try {
     const url = new URL(src);
-    return url.protocol === 'https:' || url.protocol === 'http:';
+    if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
+    if (UNRELIABLE_PLACEHOLDER_HOSTS.has(url.hostname)) return false;
+    return true;
   } catch {
     return false;
   }
@@ -44,18 +51,42 @@ export default function SafeImage({
   useEffect(() => {
     if (!isPublicImageUrl(src)) return;
 
+    let settled = false;
     const checkAlreadyFailed = () => {
       const img = imgRef.current;
       if (img && img.complete && img.naturalWidth === 0) {
+        settled = true;
         setFailedSrc(src ?? null);
+      }
+      if (img && img.complete && img.naturalWidth > 0) {
+        settled = true;
       }
     };
 
+    const img = imgRef.current;
+    img?.addEventListener('load', checkAlreadyFailed);
+    img?.addEventListener('error', checkAlreadyFailed);
     const immediateTimeout = window.setTimeout(checkAlreadyFailed, 0);
     const settledTimeout = window.setTimeout(checkAlreadyFailed, 1200);
+    const lateCheck = window.setInterval(() => {
+      if (settled) {
+        window.clearInterval(lateCheck);
+        return;
+      }
+      checkAlreadyFailed();
+    }, 500);
+    const stopLateCheck = window.setTimeout(() => {
+      settled = true;
+      window.clearInterval(lateCheck);
+    }, 8000);
+
     return () => {
+      img?.removeEventListener('load', checkAlreadyFailed);
+      img?.removeEventListener('error', checkAlreadyFailed);
       window.clearTimeout(immediateTimeout);
       window.clearTimeout(settledTimeout);
+      window.clearInterval(lateCheck);
+      window.clearTimeout(stopLateCheck);
     };
   }, [src]);
 
@@ -86,6 +117,9 @@ export default function SafeImage({
       className={className}
       onClick={onClick}
       style={style}
+      onLoad={(event) => {
+        if (event.currentTarget.naturalWidth === 0) setFailedSrc(src ?? null);
+      }}
       onError={() => setFailedSrc(src)}
     />
   );
