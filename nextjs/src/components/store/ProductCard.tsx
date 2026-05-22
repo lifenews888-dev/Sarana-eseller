@@ -2,6 +2,7 @@
 
 import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { formatPrice, discountPercent } from '@/lib/utils';
 import type { Product } from '@/lib/api';
 import { Heart } from 'lucide-react';
@@ -22,9 +23,11 @@ export default function ProductCard({
   isWished,
   onToggleWish,
 }: ProductCardProps) {
+  const router = useRouter();
+  const [renderedAt] = useState(() => Date.now());
   const px = p.salePrice || p.price;
   const disc = discountPercent(p.price, p.salePrice);
-  const isNew = p.createdAt && Date.now() - new Date(p.createdAt).getTime() < 7 * 864e5;
+  const isNew = p.createdAt && renderedAt - new Date(p.createdAt).getTime() < 7 * 864e5;
   const stars = p.rating ? Math.min(5, Math.round(p.rating)) : 0;
   const images = p.images?.length ? p.images : [];
   const hasMultipleImages = images.length > 1;
@@ -49,6 +52,14 @@ export default function ProductCard({
     setActiveImg(0);
   }, []);
 
+  const handleOpen = useCallback(() => {
+    if (onClick) {
+      onClick(p._id);
+      return;
+    }
+    router.push(`/product/${p._id}`);
+  }, [onClick, p._id, router]);
+
   // ─── Stock urgency ───
   const stockInfo = (() => {
     if (!p.stock && p.stock !== 0) return null;
@@ -65,7 +76,15 @@ export default function ProductCard({
         border: '1px solid var(--esl-border)',
         boxShadow: 'var(--esl-shadow-card)',
       }}
-      onClick={() => onClick?.(p._id)}
+      onClick={handleOpen}
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleOpen();
+        }
+      }}
     >
       {/* ─── LIVE badge ─── */}
       {(p as Product & { isLive?: boolean; currentLiveId?: string }).isLive && (

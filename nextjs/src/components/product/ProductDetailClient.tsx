@@ -140,7 +140,17 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
             <h2 className="text-lg font-bold mb-4">Ижил төстэй</h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {relatedProducts.slice(0, 4).map(rp => (
-                <Link key={rp._id} href={`/product/${rp._id}`} className="group">
+                <Link
+                  key={rp._id}
+                  href={`/product/${rp._id}`}
+                  aria-label={`${rp.name} дэлгэрэнгүй`}
+                  onClick={(event) => {
+                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+                    event.preventDefault();
+                    router.push(`/product/${rp._id}`);
+                  }}
+                  className="group block rounded-xl no-underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--esl-bg)]"
+                >
                   <div className="aspect-square rounded-xl overflow-hidden bg-[var(--esl-bg-card)] relative">
                     <SafeImage
                       src={rp.images?.[0]}

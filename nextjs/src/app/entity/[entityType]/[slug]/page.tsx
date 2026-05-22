@@ -182,6 +182,12 @@ function formatPrice(n: number) {
   return n.toLocaleString();
 }
 
+function handleCardKeyDown(event: React.KeyboardEvent<HTMLDivElement>, onClick: () => void) {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  onClick();
+}
+
 /* ═══ Hero Carousel ═══ */
 function HeroCarousel({ images, label, children }: { images: string[]; label: string; children?: React.ReactNode }) {
   const [idx, setIdx] = useState(0);
@@ -225,7 +231,13 @@ function HeroCarousel({ images, label, children }: { images: string[]; label: st
 /* ═══ Vehicle Card ═══ */
 function VehicleCard({ v, onClick }: { v: DemoVehicle; onClick: () => void }) {
   return (
-    <div onClick={onClick} className={cn(
+    <div
+      onClick={onClick}
+      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
+      role="button"
+      tabIndex={0}
+      aria-label={`${v.title} дэлгэрэнгүй`}
+      className={cn(
       'group min-w-[280px] max-w-[320px] rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] snap-start cursor-pointer transition-all hover:border-[#E8242C]/50 hover:shadow-[0_0_30px_rgba(232,36,44,0.15)]',
       v.sold && 'opacity-60'
     )}>
@@ -257,10 +269,17 @@ function VehicleCard({ v, onClick }: { v: DemoVehicle; onClick: () => void }) {
 }
 
 /* ═══ Project Card ═══ */
-function ProjectCard({ p }: { p: DemoProject }) {
+function ProjectCard({ p, onClick }: { p: DemoProject; onClick: () => void }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
   return (
-    <div className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer">
+    <div
+      onClick={onClick}
+      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
+      role="button"
+      tabIndex={0}
+      aria-label={`${p.title} дэлгэрэнгүй`}
+      className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+    >
       <div className="relative h-52 overflow-hidden">
         <SafeImage src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--esl-bg-section)] via-transparent to-transparent" />
@@ -303,7 +322,14 @@ function ProjectCard({ p }: { p: DemoProject }) {
 /* ═══ Listing Card (Agent) ═══ */
 function ListingCard({ l, onClick }: { l: DemoListing; onClick: () => void }) {
   return (
-    <div onClick={onClick} className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer">
+    <div
+      onClick={onClick}
+      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
+      role="button"
+      tabIndex={0}
+      aria-label={`${l.title} дэлгэрэнгүй`}
+      className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+    >
       <div className="relative h-44 overflow-hidden">
         <SafeImage src={l.image} alt={l.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         {l.badge && (
@@ -359,6 +385,7 @@ export default function EntityProfilePage() {
   const [activeTab, setActiveTab] = useState(0);
   const [showPhone, setShowPhone] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<DemoVehicle | null>(null);
+  const [selectedProject, setSelectedProject] = useState<DemoProject | null>(null);
   const [selectedListing, setSelectedListing] = useState<DemoListing | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -507,7 +534,7 @@ export default function EntityProfilePage() {
             {/* Scrollable vehicle cards */}
             <div ref={scrollRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
               {entity.vehicles.map(v => (
-                <VehicleCard key={v.id} v={v} onClick={() => !v.sold && setSelectedVehicle(v)} />
+                <VehicleCard key={v.id} v={v} onClick={() => setSelectedVehicle(v)} />
               ))}
             </div>
             <p className="text-xs text-[var(--esl-text-secondary)] mt-2 text-center">← Гулсуулж бүх машиныг харна уу →</p>
@@ -600,7 +627,7 @@ export default function EntityProfilePage() {
         {/* === COMPANY: Projects === */}
         {entityType === 'company' && activeTab === 0 && entity.projects && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {entity.projects.map(p => <ProjectCard key={p.id} p={p} />)}
+            {entity.projects.map(p => <ProjectCard key={p.id} p={p} onClick={() => setSelectedProject(p)} />)}
           </div>
         )}
 
@@ -730,6 +757,100 @@ export default function EntityProfilePage() {
           </div>
         )}
       </div>
+
+      {selectedProject && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedProject(null)}>
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSelectedProject(null)} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white cursor-pointer border-none">
+              <X className="w-4 h-4" />
+            </button>
+            <SafeImage src={selectedProject.image} alt={selectedProject.title} className="w-full h-64 object-cover" />
+            <div className="p-6">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/10 text-[var(--esl-text-secondary)]">
+                  {selectedProject.status}
+                </span>
+              </div>
+              <h2 className="text-xl font-black text-[var(--esl-text-primary)] mb-2">{selectedProject.title}</h2>
+              <p className="text-sm text-[var(--esl-text-muted)] flex items-center gap-1 mb-4">
+                <MapPin className="w-4 h-4" /> {selectedProject.location}
+              </p>
+              <div className="mb-5">
+                <div className="flex justify-between text-xs text-[var(--esl-text-secondary)] mb-1">
+                  <span>Ахиц</span>
+                  <span className="font-bold text-[var(--esl-text-primary)]">{selectedProject.progress}%</span>
+                </div>
+                <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#E8242C] to-[#FF6B6B] rounded-full" style={{ width: `${selectedProject.progress}%` }} />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
+                  <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedProject.units}</p>
+                  <p className="text-[10px] text-[var(--esl-text-secondary)]">айл</p>
+                </div>
+                <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
+                  <p className="text-sm font-bold text-[#E8242C]">{formatPrice(selectedProject.priceFrom)}₮~</p>
+                  <p className="text-[10px] text-[var(--esl-text-secondary)]">эхлэх үнэ</p>
+                </div>
+                <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
+                  <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedProject.year}</p>
+                  <p className="text-[10px] text-[var(--esl-text-secondary)]">он</p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={() => { setShowPhone(true); setSelectedProject(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
+                  <Phone className="w-4 h-4" /> Залгах
+                </button>
+                <button onClick={() => setSelectedProject(null)} className="flex-1 h-12 bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:opacity-80 transition">
+                  Хаах
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedListing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={() => setSelectedListing(null)}>
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" />
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] overflow-hidden" onClick={e => e.stopPropagation()}>
+            <button onClick={() => setSelectedListing(null)} className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white cursor-pointer border-none">
+              <X className="w-4 h-4" />
+            </button>
+            <SafeImage src={selectedListing.image} alt={selectedListing.title} className="w-full h-64 object-cover" />
+            <div className="p-5">
+              <h2 className="text-xl font-black text-[var(--esl-text-primary)] mb-2">{selectedListing.title}</h2>
+              <p className="text-2xl font-black text-[#E8242C] mb-4">{formatPrice(selectedListing.price)}₮</p>
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                <div className="text-center p-2 bg-[var(--esl-bg-section)] rounded-lg">
+                  <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedListing.sqm}м²</p>
+                  <p className="text-[10px] text-[var(--esl-text-secondary)]">Талбай</p>
+                </div>
+                {selectedListing.rooms > 0 && (
+                  <div className="text-center p-2 bg-[var(--esl-bg-section)] rounded-lg">
+                    <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedListing.rooms}</p>
+                    <p className="text-[10px] text-[var(--esl-text-secondary)]">Өрөө</p>
+                  </div>
+                )}
+                <div className="text-center p-2 bg-[var(--esl-bg-section)] rounded-lg">
+                  <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedListing.district}</p>
+                  <p className="text-[10px] text-[var(--esl-text-secondary)]">Дүүрэг</p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => { setShowPhone(true); setSelectedListing(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
+                  <Phone className="w-4 h-4" /> Залгах
+                </button>
+                <button className="flex-1 h-12 bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[var(--esl-bg-card-hover)] transition">
+                  <MessageCircle className="w-4 h-4" /> Мессеж
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <MobileNav />
     </div>
