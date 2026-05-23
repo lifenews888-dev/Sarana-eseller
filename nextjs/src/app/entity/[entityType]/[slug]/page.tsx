@@ -13,6 +13,7 @@ import {
   Calendar, MessageCircle, Clock, Award, Heart,
   Share2, Fuel, Gauge, DoorOpen, Ruler, CheckCircle2,
   Mail, Globe, X, Search, Camera, BookOpen,
+  ArrowRight,
 } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════
@@ -221,6 +222,10 @@ function formatPrice(n: number) {
   return n.toLocaleString();
 }
 
+function feedDetailHref(id: string): string {
+  return `/feed/${encodeURIComponent(id)}`;
+}
+
 function numberFrom(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -388,8 +393,9 @@ function HeroCarousel({ images, label, children }: { images: string[]; label: st
 function VehicleCard({ v }: { v: DemoVehicle }) {
   return (
     <Link
-      href={`/feed/${v.id}`}
+      href={feedDetailHref(v.id)}
       aria-label={`${v.title} дэлгэрэнгүй`}
+      data-testid={`entity-vehicle-card-${v.id}`}
       className={cn(
       'group block no-underline min-w-[280px] max-w-[320px] rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] snap-start cursor-pointer transition-all hover:border-[#E8242C]/50 hover:shadow-[0_0_30px_rgba(232,36,44,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]',
       v.sold && 'opacity-60'
@@ -415,7 +421,12 @@ function VehicleCard({ v }: { v: DemoVehicle }) {
           <span className="text-[10px] font-semibold text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded">{(v.mileage / 1000).toFixed(0)}к км</span>
           <span className="text-[10px] font-semibold text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded">{v.fuel}</span>
         </div>
-        <p className="text-lg font-black text-[#E8242C]">{formatPrice(v.price)}₮</p>
+        <div className="flex items-end justify-between gap-3">
+          <p className="text-lg font-black text-[#E8242C]">{formatPrice(v.price)}₮</p>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+            Дэлгэрэнгүй <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
       </div>
     </Link>
   );
@@ -426,8 +437,9 @@ function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
   return (
     <Link
-      href={`/feed/${p.id}`}
+      href={feedDetailHref(p.id)}
       aria-label={`${p.title} дэлгэрэнгүй`}
+      data-testid={`entity-project-card-${p.id}`}
       className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
     >
       <div className="relative h-52 overflow-hidden">
@@ -464,6 +476,9 @@ function ProjectCard({ p }: { p: DemoProject }) {
             <p className="text-[9px] text-[var(--esl-text-secondary)]">он</p>
           </div>
         </div>
+        <div className="mt-4 inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+          Дэлгэрэнгүй харах <ArrowRight className="h-3 w-3" />
+        </div>
       </div>
     </Link>
   );
@@ -473,8 +488,9 @@ function ProjectCard({ p }: { p: DemoProject }) {
 function ListingCard({ l }: { l: DemoListing }) {
   return (
     <Link
-      href={`/feed/${l.id}`}
+      href={feedDetailHref(l.id)}
       aria-label={`${l.title} дэлгэрэнгүй`}
+      data-testid={`entity-listing-card-${l.id}`}
       className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
     >
       <div className="relative h-44 overflow-hidden">
@@ -493,7 +509,12 @@ function ListingCard({ l }: { l: DemoListing }) {
           {l.rooms > 0 && <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><DoorOpen className="w-2.5 h-2.5" /> {l.rooms} өрөө</span>}
           <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> {l.district}</span>
         </div>
-        <p className="text-base font-black text-[#E8242C]">{formatPrice(l.price)}₮</p>
+        <div className="flex items-end justify-between gap-3">
+          <p className="text-base font-black text-[#E8242C]">{formatPrice(l.price)}₮</p>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+            Дэлгэрэнгүй <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
       </div>
     </Link>
   );

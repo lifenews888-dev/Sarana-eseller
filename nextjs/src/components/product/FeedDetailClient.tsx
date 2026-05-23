@@ -87,6 +87,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
         <MediaCarousel
           media={media}
           layout={et === 'REAL_ESTATE' || et === 'CONSTRUCTION' ? 'grid' : 'carousel'}
+          mediaLabel={post.title}
         />
 
         <div>

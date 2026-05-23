@@ -19,14 +19,20 @@ interface MediaCarouselProps {
   layout?: 'carousel' | 'grid';
   aspectRatio?: string;
   className?: string;
+  mediaLabel?: string;
 }
 
-export default function MediaCarousel({ media, layout = 'carousel', aspectRatio = 'aspect-[4/3]', className }: MediaCarouselProps) {
+export default function MediaCarousel({ media, layout = 'carousel', aspectRatio = 'aspect-[4/3]', className, mediaLabel }: MediaCarouselProps) {
   const [active, setActive] = useState(0);
-  const [zoomed, setZoomed] = useState<string | null>(null);
+  const [zoomed, setZoomed] = useState<{ src: string; alt: string } | null>(null);
   const [playingVideo, setPlayingVideo] = useState<string | null>(null);
   const [showAll, setShowAll] = useState(false);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
+
+  const fallbackLabel = mediaLabel?.trim() || 'Listing media';
+  const mediaAlt = useCallback((item: MediaItem | undefined, index: number) => (
+    item?.caption?.trim() || `${fallbackLabel} ${index + 1}`
+  ), [fallbackLabel]);
 
   const images = useMemo(() => media.filter(m => m.type === 'IMAGE'), [media]);
   const videos = useMemo(() => media.filter(m => m.type === 'VIDEO'), [media]);
@@ -81,19 +87,19 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
           {/* Main image */}
           <div
             className="col-span-2 row-span-2 relative cursor-pointer group"
-            onClick={() => setZoomed(gridImages[0].url)}
+            onClick={() => setZoomed({ src: gridImages[0].url, alt: mediaAlt(gridImages[0], 0) })}
           >
             <SafeImage
               src={gridImages[0].url}
-              alt=""
+              alt={mediaAlt(gridImages[0], 0)}
               className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           </div>
           {gridImages.slice(1).map((img, i) => (
-            <div key={i} className="relative cursor-pointer group" onClick={() => setZoomed(img.url)}>
+            <div key={i} className="relative cursor-pointer group" onClick={() => setZoomed({ src: img.url, alt: mediaAlt(img, i + 1) })}>
               <SafeImage
                 src={img.url}
-                alt=""
+                alt={mediaAlt(img, i + 1)}
                 className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
               {i === 2 && remaining > 0 && (
@@ -121,15 +127,15 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
             </button>
           )}
           {floorPlans.length > 0 && (
-            <button onClick={() => setZoomed(floorPlans[0].url)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
+            <button onClick={() => setZoomed({ src: floorPlans[0].url, alt: mediaAlt(floorPlans[0], 0) })} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
               <Ruler size={14} /> Зураглал
             </button>
           )}
         </div>
 
         {/* Gallery modal */}
-        {showAll && <GalleryModal images={images} onClose={() => setShowAll(false)} />}
-        {zoomed && <ZoomModal src={zoomed} onClose={() => setZoomed(null)} />}
+        {showAll && <GalleryModal images={images} mediaLabel={fallbackLabel} onClose={() => setShowAll(false)} />}
+        {zoomed && <ZoomModal src={zoomed.src} alt={zoomed.alt} onClose={() => setZoomed(null)} />}
         {playingVideo && <VideoModal src={playingVideo} onClose={() => setPlayingVideo(null)} />}
       </>
     );
@@ -148,7 +154,7 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
         ) : (
           <SafeImage
             src={current.url}
-            alt=""
+            alt={mediaAlt(current, active)}
             loading={active === 0 ? 'eager' : 'lazy'}
             className="absolute inset-0 h-full w-full object-cover"
           />
@@ -164,7 +170,7 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
 
         {/* Zoom */}
         {current.type === 'IMAGE' && (
-          <button onClick={() => setZoomed(current.url)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Maximize2 size={16} /></button>
+          <button onClick={() => setZoomed({ src: current.url, alt: mediaAlt(current, active) })} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Maximize2 size={16} /></button>
         )}
 
         {/* Video play overlay */}
@@ -198,7 +204,7 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
             <button key={i} onClick={() => { setActive(i); setPlayingVideo(null); }}
               className={cn('w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors', i === active ? 'border-[#E8242C]' : 'border-transparent')}
             >
-              <SafeImage src={m.thumbnail || m.url} alt="" className="h-full w-full object-cover" />
+              <SafeImage src={m.thumbnail || m.url} alt={mediaAlt(m, i)} className="h-full w-full object-cover" />
             </button>
           ))}
         </div>
@@ -213,26 +219,26 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
             </button>
           ))}
           {floorPlans.map((f, i) => (
-            <button key={i} onClick={() => setZoomed(f.url)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
+            <button key={i} onClick={() => setZoomed({ src: f.url, alt: mediaAlt(f, i) })} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
               <Ruler size={14} /> Зураглал
             </button>
           ))}
         </div>
       )}
 
-      {zoomed && <ZoomModal src={zoomed} onClose={() => setZoomed(null)} />}
+      {zoomed && <ZoomModal src={zoomed.src} alt={zoomed.alt} onClose={() => setZoomed(null)} />}
       {playingVideo && current.type !== 'VIDEO' && <VideoModal src={playingVideo} onClose={() => setPlayingVideo(null)} />}
     </>
   );
 }
 
 /* ═══ Zoom Modal ═══ */
-function ZoomModal({ src, onClose }: { src: string; onClose: () => void }) {
+function ZoomModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" onClick={onClose}>
       <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"><X size={24} /></button>
       <div className="h-[80vh] w-[90vw] max-w-[1200px]" onClick={e => e.stopPropagation()}>
-        <SafeImage src={src} alt="" className="h-full w-full object-contain" />
+        <SafeImage src={src} alt={alt} className="h-full w-full object-contain" />
       </div>
     </div>
   );
@@ -251,14 +257,14 @@ function VideoModal({ src, onClose }: { src: string; onClose: () => void }) {
 }
 
 /* ═══ Gallery Modal ═══ */
-function GalleryModal({ images, onClose }: { images: MediaItem[]; onClose: () => void }) {
+function GalleryModal({ images, mediaLabel, onClose }: { images: MediaItem[]; mediaLabel: string; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-[9999] bg-black/95 overflow-y-auto p-4" onClick={onClose}>
       <button onClick={onClose} className="fixed top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 z-10"><X size={24} /></button>
       <div className="max-w-5xl mx-auto pt-16 grid grid-cols-2 md:grid-cols-3 gap-2" onClick={e => e.stopPropagation()}>
         {images.map((img, i) => (
           <div key={i} className="relative aspect-square rounded-lg overflow-hidden">
-            <SafeImage src={img.url} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            <SafeImage src={img.url} alt={img.caption?.trim() || `${mediaLabel} ${i + 1}`} className="absolute inset-0 h-full w-full object-cover" />
           </div>
         ))}
       </div>
