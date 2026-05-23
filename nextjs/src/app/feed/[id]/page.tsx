@@ -270,6 +270,7 @@ const DEMO_FEED_LIST_DETAILS: FeedItemData[] = [
       warranty: 'Apple warranty',
       ownerPhone: '9900-5522',
       accessories: ['Хайрцаг', 'USB-C кабель', 'Case'],
+      checks: ['Дэлгэц хэвийн', 'Камер хэвийн', 'Face ID хэвийн', 'Батарей хэвийн'],
     },
   },
   {
@@ -459,6 +460,7 @@ const DEMO_FEED_LIST_DETAILS: FeedItemData[] = [
       warranty: 'Дэлгүүрийн баталгаа үлдсэн',
       ownerPhone: '9900-3344',
       accessories: ['Хайрцаг', 'Цэнэглэгч кабель', 'Case'],
+      checks: ['Дэлгэц хэвийн', 'Камер хэвийн', 'S Pen хэвийн', 'Батарей хэвийн'],
     },
   },
   {
@@ -570,6 +572,7 @@ const DEMO_FEED_LIST_DETAILS: FeedItemData[] = [
       warranty: 'Баталгаа үлдсэн',
       ownerPhone: '9900-3344',
       accessories: ['Хайрцаг', 'Кабель', 'Case'],
+      checks: ['Дэлгэц хэвийн', 'Камер хэвийн', 'S Pen хэвийн', 'Батарей хэвийн'],
     },
   },
 ];
@@ -638,6 +641,7 @@ function toRelatedDemoPost(item: FeedItemData) {
     title: item.title,
     price: item.price,
     image: item.images[0] || DETAIL_IMAGE,
+    category: item.category,
     entityType: item.entityType,
     district: item.district,
     metadata: item.metadata,
@@ -723,6 +727,7 @@ export default async function FeedDetailPage({ params }: Props) {
     price?: number | null;
     images: string[];
     entityType: string;
+    category?: string | null;
     district?: string | null;
     metadata?: unknown;
     createdAt: Date;
@@ -802,6 +807,7 @@ export default async function FeedDetailPage({ params }: Props) {
       title: item.title,
       price: item.price || undefined,
       image: item.media[0]?.url || item.images[0] || DETAIL_IMAGE,
+      category: item.category || undefined,
       entityType: item.entityType,
       district: item.district || undefined,
       metadata: metadataRecord(item.metadata),

@@ -7,6 +7,7 @@ import {
   ArrowLeft, Phone, MapPin, Star, Calendar, Gauge, Fuel, Settings2,
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
   ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
+  Smartphone, BatteryCharging, PackageCheck,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice, type EntityType as DetailEntityType } from '@/lib/cards/entityCardConfig';
 import { categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
@@ -23,6 +24,7 @@ interface RelatedFeedPost {
   title: string;
   price?: number;
   image?: string;
+  category?: string;
   entityType: string;
   district?: string;
   metadata?: FeedMetadata;
@@ -64,6 +66,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const meta = post.metadata || {};
   const ownerHref = post.owner?.href;
   const ownerPhoneHref = phoneHref(post.owner?.phone);
+  const ownerPhoneLabel = formatPhoneLabel(post.owner?.phone);
 
   const media: MediaItem[] = post.media.length > 0
     ? post.media
@@ -124,7 +127,9 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
                 </div>
                 <div className="min-w-0">
                   <p className="font-semibold text-sm text-[var(--esl-text)] truncate">{post.owner.name}</p>
-                  <p className="text-xs text-[var(--esl-text-muted)]">Зарын эзэн · Профайл харах</p>
+                  <p className="text-xs text-[var(--esl-text-muted)]">
+                    {ownerPhoneLabel ? `Утас: ${ownerPhoneLabel}` : 'Зарын эзэн · Профайл харах'}
+                  </p>
                 </div>
               </Link>
             ) : (
@@ -134,7 +139,9 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{post.owner.name}</p>
-                  <p className="text-xs text-[var(--esl-text-muted)]">Зарын эзэн</p>
+                  <p className="text-xs text-[var(--esl-text-muted)]">
+                    {ownerPhoneLabel ? `Утас: ${ownerPhoneLabel}` : 'Зарын эзэн'}
+                  </p>
                 </div>
               </>
             )}
@@ -253,12 +260,25 @@ function phoneHref(phone?: string): string | null {
   return normalized ? `tel:${normalized}` : null;
 }
 
+function formatPhoneLabel(phone?: string): string | null {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, '');
+  if (digits.length === 8) return `${digits.slice(0, 4)}-${digits.slice(4)}`;
+  if (digits.length === 11 && digits.startsWith('976')) return `+976 ${digits.slice(3, 7)}-${digits.slice(7)}`;
+  return phone.trim() || null;
+}
+
 function relatedFacts(post: RelatedFeedPost): string[] {
-  const et = resolveEntityType(post.entityType);
+  const et = resolveFeedDetailType(post.entityType, post.category);
+  const categoryRoot = normalizeMarketplaceCategory(post.category);
   const meta = post.metadata || {};
   const values: Array<string | null | undefined> = [];
 
-  if (et === 'REAL_ESTATE') {
+  if (categoryRoot === 'phones') {
+    values.push(valueToText(pick(meta, ['storage'])));
+    values.push(valueToText(pick(meta, ['condition'])));
+    values.push(post.district);
+  } else if (et === 'REAL_ESTATE') {
     values.push(formatArea(pick(meta, ['sqm', 'area'])));
     values.push(formatRooms(pick(meta, ['rooms'])));
     values.push(post.district);
@@ -360,6 +380,10 @@ function resolveFeedDetailType(entityType: string, category?: string): DetailEnt
 }
 
 function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: string }) {
+  if (normalizeMarketplaceCategory(category) === 'phones') {
+    return <PhoneDetails meta={meta} />;
+  }
+
   const fields = metadataFieldsForCategory(category);
   const items = listingMetadataPreviewItems(fields, meta, 18);
 
@@ -369,6 +393,35 @@ function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: str
     <DetailSection title="Үзүүлэлт" icon={<ClipboardList size={16} />}>
       <InfoGrid items={items} />
     </DetailSection>
+  );
+}
+
+function PhoneDetails({ meta }: { meta: FeedMetadata }) {
+  return (
+    <div className="space-y-4">
+      <DetailSection title="Утасны мэдээлэл" icon={<Smartphone size={16} />}>
+        <InfoGrid items={[
+          { label: 'Брэнд', value: pick(meta, ['brand']) },
+          { label: 'Загвар', value: pick(meta, ['model']) },
+          { label: 'Багтаамж', value: pick(meta, ['storage']) },
+          { label: 'Өнгө', value: pick(meta, ['color']) },
+          { label: 'SIM', value: pick(meta, ['simType']) },
+          { label: 'Төлөв', value: pick(meta, ['condition']) },
+        ]} />
+      </DetailSection>
+
+      <DetailSection title="Баталгаа ба батарей" icon={<BatteryCharging size={16} />}>
+        <InfoGrid items={[
+          { label: 'Батарей', value: formatPercent(pick(meta, ['batteryHealth'])) },
+          { label: 'Баталгаа', value: pick(meta, ['warranty']) },
+          { label: 'IMEI / бүртгэл', value: pick(meta, ['imeiStatus', 'registrationStatus']) },
+          { label: 'Засварын түүх', value: pick(meta, ['repairHistory']) },
+        ]} />
+      </DetailSection>
+
+      <ChipSection title="Дагалдах хэрэгсэл" icon={<PackageCheck size={16} />} items={toList(pick(meta, ['accessories']))} />
+      <ChipSection title="Шалгасан зүйлс" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['checks', 'features']))} />
+    </div>
   );
 }
 
@@ -619,6 +672,11 @@ function formatMoney(value: unknown): string | null {
 function formatMoneyPerSqm(value: unknown): string | null {
   const money = formatMoney(value);
   return money ? `${money}/м²` : null;
+}
+
+function formatPercent(value: unknown): string | null {
+  const n = numberValue(value);
+  return n === null ? valueToText(value) : `${n.toLocaleString('mn-MN')}%`;
 }
 
 function suffixValue(value: unknown, suffix: string): string | null {
