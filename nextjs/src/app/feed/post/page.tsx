@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import {
-  Camera, X, Crown, Info, ArrowLeft, Send, Play, Video,
+  AlertCircle, Camera, CheckCircle2, X, Crown, Info, ArrowLeft, Send, Play, Video,
   MapPin, Phone, Eye, Clock,
   ImageIcon, ChevronLeft, ChevronRight,
   Armchair, Baby, BookOpen, BriefcaseBusiness, Building2, Car, Construction, Dog,
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 import CategorySelector from '@/components/shared/CategorySelector';
-import { findMarketplaceCategory } from '@/lib/marketplaceCategories';
+import { findMarketplaceCategory, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
 import {
   listingMetadataPreviewItems,
   metadataFieldsForCategory,
@@ -75,6 +75,12 @@ type MediaFile = {
   preview: string;
 };
 
+type FeedCreateResponse = {
+  success?: boolean;
+  data?: { id?: string; _id?: string } | null;
+  error?: string;
+};
+
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
@@ -101,6 +107,9 @@ export default function PostAdPage() {
   const [dragOver, setDragOver] = useState(false);
   const [metadataDraft, setMetadataDraft] = useState<Record<string, string>>({});
   const [previewMetadata, setPreviewMetadata] = useState<ListingMetadataRecord>({});
+  const [publishing, setPublishing] = useState(false);
+  const [publishError, setPublishError] = useState('');
+  const [publishedItemId, setPublishedItemId] = useState('');
 
   const imageCount = mediaFiles.filter(m => m.type === 'image').length;
   const videoCount = mediaFiles.filter(m => m.type === 'video').length;
@@ -171,11 +180,75 @@ export default function PostAdPage() {
   const handleSubmit = () => {
     if (!canSubmit) return;
     setPreviewMetadata(normalizeListingMetadata(metadataFields, metadataDraft));
+    setPublishError('');
+    setPublishedItemId('');
     setSubmitting(true);
     setTimeout(() => {
       setSubmitting(false);
       setShowPreview(true);
     }, 1500);
+  };
+
+  const uploadMedia = async (media: MediaFile): Promise<{ type: MediaFile['type']; url: string }> => {
+    const res = await fetch(`/api/upload?filename=${encodeURIComponent(media.file.name)}`, {
+      method: 'POST',
+      body: media.file,
+      headers: { 'Content-Type': media.file.type || 'application/octet-stream' },
+    });
+    const body = await res.json().catch(() => ({})) as { url?: string; error?: string };
+    if (!res.ok || !body.url) throw new Error(body.error || 'Медиа байршуулахад алдаа гарлаа');
+    return { type: media.type, url: body.url };
+  };
+
+  const handlePublish = async () => {
+    if (publishing || publishedItemId) return;
+
+    setPublishing(true);
+    setPublishError('');
+
+    try {
+      const uploadedMedia = await Promise.all(mediaFiles.map(uploadMedia));
+      const imageUrls = uploadedMedia.filter((media) => media.type === 'image').map((media) => media.url);
+      const videoUrls = uploadedMedia.filter((media) => media.type === 'video').map((media) => media.url);
+      const rootCategory = normalizeMarketplaceCategory(category);
+      const metadata: ListingMetadataRecord = { ...previewMetadata };
+      const selectedCondition = CONDITIONS.find(c => c.key === condition)?.label;
+      if (selectedCondition && !metadata.condition) metadata.condition = selectedCondition;
+      if (phone) metadata.ownerPhone = `+976 ${phone}`;
+
+      const res = await fetch('/api/feed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim(),
+          price,
+          images: imageUrls,
+          videoUrls,
+          category: rootCategory === 'all' ? category : rootCategory,
+          subcategory: category && category !== rootCategory ? category : undefined,
+          entityType: 'store',
+          district,
+          province,
+          metadata,
+          tier: isVip ? 'vip' : 'normal',
+        }),
+      });
+      const body = await res.json().catch(() => ({})) as FeedCreateResponse;
+
+      if (!res.ok || body.success === false) {
+        if (res.status === 401) throw new Error('Нэвтэрч орсны дараа зар нийтлэх боломжтой.');
+        throw new Error(body.error || 'Зар нийтлэхэд алдаа гарлаа.');
+      }
+
+      const createdId = body.data?.id || body.data?._id;
+      if (!createdId) throw new Error('Зар үүссэн боловч дугаар буцаж ирсэнгүй.');
+      setPublishedItemId(createdId);
+    } catch (error) {
+      setPublishError(error instanceof Error ? error.message : 'Зар нийтлэхэд алдаа гарлаа.');
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const selectedCategory = findMarketplaceCategory(category);
@@ -198,7 +271,9 @@ export default function PostAdPage() {
             </button>
             <div className="flex-1">
               <h1 className="text-lg font-black text-white">Зарын урьдчилсан харагдац</h1>
-              <p className="text-xs text-green-400">Зар амжилттай илгээгдлээ! Админ шалгасны дараа нийтлэгдэнэ.</p>
+              <p className={`text-xs ${publishedItemId ? 'text-green-400' : 'text-[var(--esl-text-muted)]'}`}>
+                {publishedItemId ? 'Зар амжилттай нийтлэгдлээ.' : 'Мэдээллээ нягтлаад нийтлэх товч дарна уу.'}
+              </p>
             </div>
           </div>
         </header>
@@ -376,14 +451,64 @@ export default function PostAdPage() {
             </div>
           </div>
 
+          {publishError && (
+            <div className="mb-4 flex gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+              <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
+              <div className="flex-1">
+                <p className="font-bold text-red-100">Нийтлэх боломжгүй байна</p>
+                <p className="mt-1 text-xs leading-relaxed text-red-200/90">{publishError}</p>
+                {publishError.includes('Нэвтэрч') && (
+                  <button
+                    onClick={() => router.push('/login?next=/feed/post')}
+                    className="mt-3 rounded-lg bg-[#E8242C] px-4 py-2 text-xs font-bold text-white"
+                  >
+                    Нэвтрэх
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {publishedItemId && (
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-100">
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-400" />
+              <div>
+                <p className="font-bold">Зар нийтлэгдлээ</p>
+                <p className="mt-1 text-xs text-green-100/80">Одоо хэрэглэгчид зарын буланд харах боломжтой.</p>
+              </div>
+            </div>
+          )}
+
           {/* Actions */}
           <div className="flex gap-3">
-            <button onClick={() => { setShowPreview(false); }} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2">
-              <ArrowLeft className="w-4 h-4" /> Засах
-            </button>
-            <button onClick={() => router.push('/feed')} className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#CC0000] transition flex items-center justify-center gap-2">
-              Зарын булан руу буцах
-            </button>
+            {!publishedItemId ? (
+              <>
+                <button
+                  onClick={() => { setShowPreview(false); }}
+                  disabled={publishing}
+                  className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  <ArrowLeft className="w-4 h-4" /> Засах
+                </button>
+                <button
+                  onClick={handlePublish}
+                  disabled={publishing}
+                  className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#CC0000] transition flex items-center justify-center gap-2 disabled:opacity-60"
+                >
+                  <Send className="w-4 h-4" />
+                  {publishing ? 'Нийтэлж байна...' : 'Нийтлэх'}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link href={`/feed/${publishedItemId}`} className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold no-underline hover:bg-[#CC0000] transition flex items-center justify-center gap-2">
+                  Дэлгэрэнгүй харах
+                </Link>
+                <button onClick={() => router.push('/feed')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2">
+                  Зарын булан
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -751,7 +876,7 @@ export default function PostAdPage() {
             }`}
           >
             <Send className="w-4 h-4" />
-            {submitting ? 'Илгээж байна...' : 'Зар оруулах'}
+            {submitting ? 'Бэлтгэж байна...' : 'Урьдчилж харах'}
           </button>
         </div>
       </div>

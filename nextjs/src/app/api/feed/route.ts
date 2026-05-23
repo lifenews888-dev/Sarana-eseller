@@ -325,6 +325,7 @@ export async function POST(req: NextRequest) {
       metadata,
       tier,
       videoUrl,
+      videoUrls,
       virtualTourUrl,
       floorPlanUrl,
     } = body;
@@ -342,6 +343,10 @@ export async function POST(req: NextRequest) {
     const normalizedLng = toOptionalNumber(lng);
     const imageUrls = normalizeMediaUrls(images);
     const normalizedVideoUrl = cleanString(videoUrl);
+    const normalizedVideoUrls = [
+      ...(normalizedVideoUrl ? [normalizedVideoUrl] : []),
+      ...normalizeMediaUrls(videoUrls),
+    ].filter((url, index, urls) => urls.indexOf(url) === index);
     const normalizedVirtualTourUrl = cleanString(virtualTourUrl);
     const normalizedFloorPlanUrl = cleanString(floorPlanUrl);
     const normalizedMetadata = normalizeMetadata(
@@ -423,9 +428,9 @@ export async function POST(req: NextRequest) {
 
     const mediaRows = [
       ...imageUrls.map((url, sortOrder) => ({ feedItemId: item.id, type: 'IMAGE', url, sortOrder })),
-      ...(normalizedVideoUrl ? [{ feedItemId: item.id, type: 'VIDEO', url: normalizedVideoUrl, sortOrder: imageUrls.length }] : []),
-      ...(normalizedVirtualTourUrl ? [{ feedItemId: item.id, type: 'VIRTUAL_TOUR', url: normalizedVirtualTourUrl, sortOrder: imageUrls.length + 1 }] : []),
-      ...(normalizedFloorPlanUrl ? [{ feedItemId: item.id, type: 'FLOOR_PLAN', url: normalizedFloorPlanUrl, sortOrder: imageUrls.length + 2 }] : []),
+      ...normalizedVideoUrls.map((url, index) => ({ feedItemId: item.id, type: 'VIDEO', url, sortOrder: imageUrls.length + index })),
+      ...(normalizedVirtualTourUrl ? [{ feedItemId: item.id, type: 'VIRTUAL_TOUR', url: normalizedVirtualTourUrl, sortOrder: imageUrls.length + normalizedVideoUrls.length }] : []),
+      ...(normalizedFloorPlanUrl ? [{ feedItemId: item.id, type: 'FLOOR_PLAN', url: normalizedFloorPlanUrl, sortOrder: imageUrls.length + normalizedVideoUrls.length + 1 }] : []),
     ].filter((row) => row.url.trim());
 
     if (mediaRows.length > 0) {
