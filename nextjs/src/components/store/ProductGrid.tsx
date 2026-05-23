@@ -6,7 +6,9 @@ import type { Product } from '@/lib/api';
 import type { ItemType } from '@/lib/marketplace';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from '../shared/Skeleton';
-import { Sparkles, Package, Scissors, Search, X } from 'lucide-react';
+import { ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Package, Scissors, Search, Star, Tag, X } from 'lucide-react';
+
+export type StoreSortKey = 'newest' | 'price_asc' | 'price_desc' | 'rating' | 'discount';
 
 const TYPE_TABS = [
   { key: 'all' as const, label: 'Бүгд', icon: Sparkles },
@@ -26,6 +28,14 @@ const FILTER_CATEGORIES = [
   { key: 'auto-moto', label: 'Авто', emoji: '🚗' },
 ];
 
+const SORT_OPTIONS: { key: StoreSortKey; label: string; icon: typeof Sparkles }[] = [
+  { key: 'newest', label: 'Шинэ эхэндээ', icon: Sparkles },
+  { key: 'price_asc', label: 'Үнэ өсөх', icon: ArrowUpNarrowWide },
+  { key: 'price_desc', label: 'Үнэ буурах', icon: ArrowDownNarrowWide },
+  { key: 'rating', label: 'Үнэлгээ өндөр', icon: Star },
+  { key: 'discount', label: 'Хямдрал их', icon: Tag },
+];
+
 interface ProductGridProps {
   products: Product[];
   loading: boolean;
@@ -36,6 +46,8 @@ interface ProductGridProps {
   onClearFilters: () => void;
   onDealChange: (enabled: boolean) => void;
   onSearchChange: (query: string) => void;
+  activeSort: StoreSortKey;
+  onSortChange: (sort: StoreSortKey) => void;
   onProductClick: (id: string) => void;
   onQuickAdd: (product: Product) => void;
   wishlist: Set<string>;
@@ -46,7 +58,7 @@ interface ProductGridProps {
 
 export default function ProductGrid({
   products, loading, activeType, activeCat, onTypeChange, onCatChange,
-  onClearFilters, onDealChange, onSearchChange, onProductClick, onQuickAdd, wishlist, onToggleWish,
+  onClearFilters, onDealChange, onSearchChange, activeSort, onSortChange, onProductClick, onQuickAdd, wishlist, onToggleWish,
   dealOnly = false, searchQuery = '',
 }: ProductGridProps) {
   const sectionTitle = dealOnly
@@ -90,6 +102,27 @@ export default function ProductGrid({
               className={cn('flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-none cursor-pointer transition-all',
                 activeType === t.key ? 'bg-[#E8242C] text-white shadow-sm' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-muted)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-elevated)]')}>
               <t.icon className="w-4 h-4" /> {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort controls */}
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
+          <span className="shrink-0 text-xs font-semibold text-[var(--esl-text-muted)]">Эрэмбэ:</span>
+          {SORT_OPTIONS.map((option) => (
+            <button
+              key={option.key}
+              type="button"
+              onClick={() => onSortChange(option.key)}
+              className={cn(
+                'shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition',
+                activeSort === option.key
+                  ? 'border-[#E8242C] bg-[rgba(232,36,44,0.16)] text-[#FF6B70]'
+                  : 'border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-[var(--esl-text-muted)] hover:border-[#E8242C]/60 hover:text-[var(--esl-text-primary)]'
+              )}
+            >
+              <option.icon className="h-3.5 w-3.5" />
+              {option.label}
             </button>
           ))}
         </div>

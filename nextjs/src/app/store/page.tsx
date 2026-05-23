@@ -14,7 +14,7 @@ import EsellerLogo from '@/components/shared/EsellerLogo';
 import Toast, { useToast } from '@/components/shared/Toast';
 import MegaMenu from '@/components/store/MegaMenu';
 import HeroBanner from '@/components/store/HeroBanner';
-import ProductGrid from '@/components/store/ProductGrid';
+import ProductGrid, { type StoreSortKey } from '@/components/store/ProductGrid';
 import ProductModal from '@/components/store/ProductModal';
 import SaleSlider from '@/components/store/SaleSlider';
 import BannerSlot from '@/components/store/BannerSlot';
@@ -80,6 +80,7 @@ const CATEGORY_ALIASES: Record<string, string> = {
 };
 
 const STORE_CATEGORY_KEYS = new Set(['all', ...CATEGORY_ICONS.map((category) => category.key)]);
+const STORE_SORT_KEYS = new Set<StoreSortKey>(['newest', 'price_asc', 'price_desc', 'rating', 'discount']);
 
 function normalizeStoreCategory(value?: string | null): string {
   if (!value) return 'all';
@@ -89,6 +90,10 @@ function normalizeStoreCategory(value?: string | null): string {
 
 function normalizeStoreType(value?: string | null): 'all' | ItemType {
   return value === 'product' || value === 'service' ? value : 'all';
+}
+
+function normalizeStoreSort(value?: string | null): StoreSortKey {
+  return STORE_SORT_KEYS.has(value as StoreSortKey) ? value as StoreSortKey : 'newest';
 }
 
 function normalizeProductCategory(category?: string): string | undefined {
@@ -137,6 +142,16 @@ function readDealParam(params: URLSearchParams): boolean {
   return params.get('deal') === '1' || params.get('sale') === '1';
 }
 
+function productEffectivePrice(product: Product): number {
+  return product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
+}
+
+function productDiscountAmount(product: Product): number {
+  return product.salePrice && product.salePrice > 0 && product.salePrice < product.price
+    ? product.price - product.salePrice
+    : 0;
+}
+
 /* ─── Marquee component ─── */
 function AnnouncementMarquee() {
   const doubled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
@@ -171,6 +186,7 @@ export default function StorePage() {
   const [activeCat, setActiveCat] = useState('all');
   const [activeType, setActiveType] = useState<'all' | ItemType>('all');
   const [dealOnly, setDealOnly] = useState(false);
+  const [activeSort, setActiveSort] = useState<StoreSortKey>('newest');
   const [cartOpen, setCartOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
@@ -181,7 +197,7 @@ export default function StorePage() {
   const { user, isLoggedIn } = useAuth();
   const toast = useToast();
 
-  const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType, query: string, deals: boolean) => {
+  const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType, query: string, deals: boolean, sort: StoreSortKey) => {
     if (typeof window === 'undefined') return;
     const url = new URL(window.location.href);
     if (category === 'all') url.searchParams.delete('category');
@@ -195,42 +211,51 @@ export default function StorePage() {
       url.searchParams.delete('deal');
       url.searchParams.delete('sale');
     }
+    if (sort === 'newest') url.searchParams.delete('sort');
+    else url.searchParams.set('sort', sort);
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
   }, []);
 
   const handleCategoryChange = useCallback((category: string) => {
     const nextCategory = normalizeStoreCategory(category);
     setActiveCat(nextCategory);
-    syncUrlFilters(nextCategory, activeType, search, dealOnly);
-  }, [activeType, dealOnly, search, syncUrlFilters]);
+    syncUrlFilters(nextCategory, activeType, search, dealOnly, activeSort);
+  }, [activeSort, activeType, dealOnly, search, syncUrlFilters]);
 
   const handleTypeChange = useCallback((type: 'all' | ItemType) => {
     const nextType = normalizeStoreType(type);
     setActiveType(nextType);
-    syncUrlFilters(activeCat, nextType, search, dealOnly);
-  }, [activeCat, dealOnly, search, syncUrlFilters]);
+    syncUrlFilters(activeCat, nextType, search, dealOnly, activeSort);
+  }, [activeCat, activeSort, dealOnly, search, syncUrlFilters]);
 
   const handleDealChange = useCallback((enabled: boolean) => {
     setDealOnly(enabled);
-    syncUrlFilters(activeCat, activeType, search, enabled);
-  }, [activeCat, activeType, search, syncUrlFilters]);
+    syncUrlFilters(activeCat, activeType, search, enabled, activeSort);
+  }, [activeCat, activeSort, activeType, search, syncUrlFilters]);
+
+  const handleSortChange = useCallback((sort: StoreSortKey) => {
+    const nextSort = normalizeStoreSort(sort);
+    setActiveSort(nextSort);
+    syncUrlFilters(activeCat, activeType, search, dealOnly, nextSort);
+  }, [activeCat, activeType, dealOnly, search, syncUrlFilters]);
 
   const clearFilters = useCallback(() => {
     setActiveCat('all');
     setActiveType('all');
     setDealOnly(false);
+    setActiveSort('newest');
     setSearch('');
     setDebSearch('');
-    syncUrlFilters('all', 'all', '', false);
+    syncUrlFilters('all', 'all', '', false, 'newest');
   }, [syncUrlFilters]);
 
   const handleSearchChange = useCallback((query: string) => {
     setSearch(query);
     if (!query.trim()) {
       setDebSearch('');
-      syncUrlFilters(activeCat, activeType, '', dealOnly);
+      syncUrlFilters(activeCat, activeType, '', dealOnly, activeSort);
     }
-  }, [activeCat, activeType, dealOnly, syncUrlFilters]);
+  }, [activeCat, activeSort, activeType, dealOnly, syncUrlFilters]);
 
   useEffect(() => {
     cart.load(); setWishlist(loadWL());
@@ -255,6 +280,7 @@ export default function StorePage() {
       setActiveCat(normalizeStoreCategory(params.get('category')));
       setActiveType(normalizeStoreType(params.get('type')));
       setDealOnly(readDealParam(params));
+      setActiveSort(normalizeStoreSort(params.get('sort')));
       setSearch(params.get('q') || '');
     };
 
@@ -266,10 +292,10 @@ export default function StorePage() {
   useEffect(() => {
     const t = setTimeout(() => {
       setDebSearch(search);
-      syncUrlFilters(activeCat, activeType, search, dealOnly);
+      syncUrlFilters(activeCat, activeType, search, dealOnly, activeSort);
     }, 300);
     return () => clearTimeout(t);
-  }, [activeCat, activeType, dealOnly, search, syncUrlFilters]);
+  }, [activeCat, activeSort, activeType, dealOnly, search, syncUrlFilters]);
 
   const serviceProducts = useMemo(
     () => services.filter((service) => service.isActive).map(serviceToProduct),
@@ -289,8 +315,14 @@ export default function StorePage() {
     if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
     if (dealOnly) list = list.filter(isSaleProduct);
     if (debSearch.trim()) { const q = debSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)); }
-    return list;
-  }, [activeCat, activeType, catalogItems, dealOnly, debSearch, products, serviceProducts]);
+    const sorted = [...list];
+    if (activeSort === 'price_asc') sorted.sort((a, b) => productEffectivePrice(a) - productEffectivePrice(b));
+    else if (activeSort === 'price_desc') sorted.sort((a, b) => productEffectivePrice(b) - productEffectivePrice(a));
+    else if (activeSort === 'rating') sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (activeSort === 'discount') sorted.sort((a, b) => productDiscountAmount(b) - productDiscountAmount(a));
+    else sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return sorted;
+  }, [activeCat, activeSort, activeType, catalogItems, dealOnly, debSearch, products, serviceProducts]);
 
   const saleProducts = useMemo(() => catalogItems.filter(isSaleProduct), [catalogItems]);
   const showSaleSlider = saleProducts.length > 0 && activeCat === 'all' && activeType === 'all' && !dealOnly && !debSearch.trim();
@@ -361,7 +393,7 @@ export default function StorePage() {
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     setDebSearch(search);
-                    syncUrlFilters(activeCat, activeType, search, dealOnly);
+                    syncUrlFilters(activeCat, activeType, search, dealOnly, activeSort);
                   }
                 }}
                 placeholder="Бараа, дэлгүүр хайх..."
@@ -376,7 +408,7 @@ export default function StorePage() {
                 type="button"
                 onClick={() => {
                   setDebSearch(search);
-                  syncUrlFilters(activeCat, activeType, search, dealOnly);
+                  syncUrlFilters(activeCat, activeType, search, dealOnly, activeSort);
                 }}
                 className="absolute right-1 top-1 bottom-1 px-3 bg-[#E8242C] text-white rounded-lg border-none cursor-pointer hover:bg-[#D31E25] transition-colors"
               >
@@ -541,6 +573,8 @@ export default function StorePage() {
               onClearFilters={clearFilters}
               onDealChange={handleDealChange}
               onSearchChange={handleSearchChange}
+              activeSort={activeSort}
+              onSortChange={handleSortChange}
               onProductClick={id => setSelProduct(findProduct(id))}
               onQuickAdd={quickAdd}
               wishlist={wishlist}
