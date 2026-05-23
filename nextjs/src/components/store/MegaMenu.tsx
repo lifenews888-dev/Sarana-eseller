@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
+import { MARKETPLACE_CATEGORIES, subcategoryPreview } from '@/lib/marketplaceCategories';
 import {
   Armchair, Baby, BookOpen, BriefcaseBusiness, Building2, Camera, Car, Construction, Dog,
   Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse,
@@ -58,7 +58,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 
 const UNIFIED_CATEGORIES = MARKETPLACE_CATEGORIES.map((category) => ({
   ...category,
-  icon: ICON_MAP[category.icon] || Package,
+  Icon: ICON_MAP[category.icon] || Package,
 }));
 
 const FEATURED_SHOPS = [
@@ -129,12 +129,12 @@ export default function MegaMenu({ open, onClose, onSelectCategory, onSelectType
                           'w-8 h-8 rounded-lg flex items-center justify-center text-base transition-colors shrink-0',
                           hoveredCat === cat.key ? 'bg-[#E31E24] text-white' : 'bg-[var(--esl-bg-section)]'
                         )}>
-                          {hoveredCat === cat.key ? <cat.icon className="w-4 h-4" /> : cat.emoji}
+                          {hoveredCat === cat.key ? <cat.Icon className="w-4 h-4" /> : cat.emoji}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="text-xs font-semibold text-[var(--esl-text-primary)] group-hover:text-[#E31E24] transition-colors">{cat.shortLabel || cat.label}</div>
                           <div className="mt-0.5 line-clamp-1 text-[10px] text-[var(--esl-text-muted)]">
-                            {cat.subcategories.slice(0, 3).join(' · ')}
+                            {subcategoryPreview(cat, 3)}
                           </div>
                         </div>
                         {cat.count ? <span className="text-[10px] text-[var(--esl-text-muted)] font-medium">{cat.count}+</span> : null}

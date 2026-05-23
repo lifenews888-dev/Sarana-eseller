@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/api';
 import type { ItemType } from '@/lib/marketplace';
-import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
+import { categoryBranchLabel, descendantCategoryPreview, MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from '../shared/Skeleton';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Package, Scissors, Search, Star, Tag, X } from 'lucide-react';
@@ -143,13 +143,18 @@ export default function ProductGrid({
             <div className="flex flex-wrap gap-2">
               {activeCategory.subcategories.map((subcategory) => (
                 <span
-                  key={subcategory}
+                  key={categoryBranchLabel(subcategory)}
                   className="rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] px-2.5 py-1.5 text-xs font-medium text-[var(--esl-text-muted)]"
                 >
-                  {subcategory}
+                  {categoryBranchLabel(subcategory)}
                 </span>
               ))}
             </div>
+            {descendantCategoryPreview(activeCategory, 12) ? (
+              <p className="mt-2 text-[11px] text-[var(--esl-text-muted)]">
+                Дараагийн түвшин: {descendantCategoryPreview(activeCategory, 12)}
+              </p>
+            ) : null}
           </div>
         )}
 

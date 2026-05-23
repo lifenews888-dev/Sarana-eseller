@@ -1,5 +1,11 @@
 export type MarketplaceCategorySection = 'product' | 'service' | 'listing';
 
+export type MarketplaceCategoryBranch = string | {
+  name: string;
+  aliases?: string[];
+  children?: MarketplaceCategoryBranch[];
+};
+
 export type MarketplaceCategory = {
   key: string;
   label: string;
@@ -11,7 +17,7 @@ export type MarketplaceCategory = {
   section: MarketplaceCategorySection;
   entityTypes: string[];
   aliases?: string[];
-  subcategories: string[];
+  subcategories: MarketplaceCategoryBranch[];
 };
 
 export type CategoryTreeNode = {
@@ -41,7 +47,13 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'product',
     entityTypes: ['STORE', 'PRE_ORDER'],
     aliases: ['fashion', 'female', 'women-fashion'],
-    subcategories: ['Эмэгтэй хувцас', 'Эмэгтэй гутал', 'Цүнх & Чемодан', 'Хувцасны аксессуар', 'Дотуур хувцас'],
+    subcategories: [
+      { name: 'Эмэгтэй хувцас', children: ['Даашинз', 'Цамц & футболк', 'Өмд & жинс', 'Гадуур хувцас', 'Үндэсний хувцас'] },
+      { name: 'Эмэгтэй гутал', children: ['Пүүз', 'Өсгийтэй гутал', 'Өдөр тутмын гутал', 'Өвлийн гутал'] },
+      { name: 'Цүнх & Чемодан', children: ['Гар цүнх', 'Үүргэвч', 'Аяллын чемодан', 'Клатч'] },
+      { name: 'Хувцасны аксессуар', children: ['Бүс', 'Ороолт', 'Бээлий', 'Малгай'] },
+      'Дотуур хувцас',
+    ],
   },
   {
     key: 'men',
@@ -53,7 +65,16 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'product',
     entityTypes: ['STORE', 'PRE_ORDER'],
     aliases: ['men-fashion'],
-    subcategories: ['Гадуур хувцас', 'Хослол & Пиджак', 'Өмд & Шорт', 'Цамц & Футболко', 'Спорт өмсгөл', 'Эрэгтэй гутал', 'Малгай', 'Үүргэвч & Турийвч'],
+    subcategories: [
+      { name: 'Гадуур хувцас', children: ['Куртик', 'Пальто', 'Савхин хүрэм', 'Өвлийн хүрэм'] },
+      'Хослол & Пиджак',
+      'Өмд & Шорт',
+      { name: 'Цамц & Футболко', children: ['Футболк', 'Поло', 'Сорочка', 'Ноосон цамц'] },
+      'Спорт өмсгөл',
+      { name: 'Эрэгтэй гутал', children: ['Пүүз', 'Гутал', 'Өвлийн гутал', 'Албан гутал'] },
+      'Малгай',
+      'Үүргэвч & Турийвч',
+    ],
   },
   {
     key: 'beauty-health',
@@ -89,7 +110,26 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'listing',
     entityTypes: ['STORE', 'REAL_ESTATE', 'AGENT'],
     aliases: ['real_estate', 'apartment', 'house', 'office', 'land', 'penthouse', 'property'],
-    subcategories: ['Орон сууц', 'Хаус', 'Оффис', 'Газар', 'Пентхаус', 'Агуулах', 'Зуслан'],
+    subcategories: [
+      {
+        name: 'Орон сууц',
+        aliases: ['apartment'],
+        children: [
+          '1 өрөө',
+          '2 өрөө',
+          { name: '3 өрөө', children: ['Шинэ байр', 'Хуучин байр', 'Тавилгатай', 'Тавилгагүй'] },
+          '4 өрөө',
+          '5+ өрөө',
+          'Студи',
+        ],
+      },
+      { name: 'Хаус', aliases: ['house'], children: ['Таунхаус', 'Амины хаус', 'Зуслангийн хаус', 'Luxury house'] },
+      { name: 'Оффис', aliases: ['office'], children: ['Оффис түрээс', 'Оффис худалдах', 'Co-working', 'Үйлчилгээний талбай'] },
+      { name: 'Газар', aliases: ['land'], children: ['Өмчилсөн газар', 'Зуслангийн газар', 'Үйлдвэрийн газар', 'ХАА газар'] },
+      { name: 'Пентхаус', aliases: ['penthouse'], children: ['Duplex', 'Luxury penthouse'] },
+      'Агуулах',
+      'Зуслан',
+    ],
   },
   {
     key: 'new-buildings',
@@ -101,7 +141,12 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'listing',
     entityTypes: ['STORE', 'CONSTRUCTION', 'COMPANY'],
     aliases: ['new_building', 'residential_project', 'commercial_project', 'mixed_use_project', 'construction-project'],
-    subcategories: ['Шинэ орон сууц', 'Орон сууцны төсөл', 'Оффис / худалдааны төсөл', 'Холимог зориулалттай төсөл'],
+    subcategories: [
+      { name: 'Шинэ орон сууц', aliases: ['new_building'], children: ['Ашиглалтад орсон', 'Барьж байгаа', 'Төлөвлөж байгаа', 'Урьдчилсан захиалга'] },
+      { name: 'Орон сууцны төсөл', aliases: ['residential_project'], children: ['2 өрөө сонголт', '3 өрөө сонголт', '4 өрөө сонголт', 'Пентхаус сонголт'] },
+      { name: 'Оффис / худалдааны төсөл', aliases: ['commercial_project'], children: ['Оффис', 'Үйлчилгээний талбай', 'Худалдааны төв'] },
+      { name: 'Холимог зориулалттай төсөл', aliases: ['mixed_use_project'], children: ['Орон сууц + үйлчилгээ', 'Оффис + худалдаа'] },
+    ],
   },
   {
     key: 'vehicles',
@@ -113,7 +158,71 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'listing',
     entityTypes: ['STORE', 'AUTO'],
     aliases: ['vehicle', 'vehicles', 'sedan', 'suv', 'truck', 'motorcycle'],
-    subcategories: ['Седан', 'SUV / Жийп', 'Ачааны машин', 'Мотоцикл', 'Цахилгаан машин', 'Арилжааны машин'],
+    subcategories: [
+      {
+        name: 'Toyota',
+        aliases: ['toyota'],
+        children: [
+          { name: 'Land Cruiser', children: ['LC 300', 'LC 200', 'Prado', '70 Series'] },
+          { name: 'Prius', children: ['Prius 20', 'Prius 30', 'Prius 40', 'Prius 50'] },
+          'Harrier',
+          'RAV4',
+          'Camry',
+          'Crown',
+          'Hilux',
+          'Aqua',
+          'Alphard',
+        ],
+      },
+      {
+        name: 'Nissan',
+        aliases: ['nissan'],
+        children: ['Patrol', 'X-Trail', 'Leaf', 'Note', 'Teana', 'Juke', 'Serena'],
+      },
+      {
+        name: 'Lexus',
+        aliases: ['lexus'],
+        children: ['LX', 'RX', 'NX', 'GX', 'ES', 'IS'],
+      },
+      {
+        name: 'Mercedes-Benz',
+        aliases: ['mercedes', 'benz'],
+        children: ['C-Class', 'E-Class', 'S-Class', 'GLC', 'GLE', 'G-Class', 'Sprinter'],
+      },
+      {
+        name: 'BMW',
+        aliases: ['bmw'],
+        children: ['3 Series', '5 Series', '7 Series', 'X3', 'X5', 'X6'],
+      },
+      {
+        name: 'Hyundai',
+        aliases: ['hyundai'],
+        children: ['Sonata', 'Tucson', 'Santa Fe', 'Elantra', 'Porter', 'Starex'],
+      },
+      {
+        name: 'Kia',
+        aliases: ['kia'],
+        children: ['K5', 'Sorento', 'Sportage', 'Carnival', 'Morning'],
+      },
+      {
+        name: 'Honda',
+        aliases: ['honda'],
+        children: ['Fit', 'CR-V', 'Accord', 'Civic', 'Vezel'],
+      },
+      {
+        name: 'Subaru',
+        aliases: ['subaru'],
+        children: ['Forester', 'Outback', 'Impreza', 'XV', 'Legacy'],
+      },
+      {
+        name: 'Mitsubishi',
+        aliases: ['mitsubishi'],
+        children: ['Pajero', 'Outlander', 'Delica', 'L200', 'Eclipse Cross'],
+      },
+      { name: 'Tesla', aliases: ['tesla'], children: ['Model 3', 'Model Y', 'Model S', 'Model X'] },
+      { name: 'Ачааны машин', aliases: ['truck'], children: ['Howo', 'Isuzu', 'Hino', 'Fuso', 'Volvo'] },
+      { name: 'Мотоцикл', aliases: ['motorcycle'], children: ['Honda', 'Yamaha', 'Kawasaki', 'Suzuki'] },
+    ],
   },
   {
     key: 'jewelry',
@@ -174,7 +283,36 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'product',
     entityTypes: ['STORE', 'PRE_ORDER'],
     aliases: ['mobile', 'phone'],
-    subcategories: ['Гар утас', 'Гар утасны дагалдах хэрэгсэл', 'Утасны дугаар'],
+    subcategories: [
+      {
+        name: 'Apple iPhone',
+        aliases: ['iphone', 'apple'],
+        children: [
+          { name: 'iPhone 15', children: ['15', '15 Plus', '15 Pro', '15 Pro Max'] },
+          { name: 'iPhone 14', children: ['14', '14 Plus', '14 Pro', '14 Pro Max'] },
+          'iPhone 13',
+          'iPhone 12',
+          'iPhone 11',
+          'iPhone SE',
+        ],
+      },
+      {
+        name: 'Samsung Galaxy',
+        aliases: ['samsung'],
+        children: [
+          { name: 'Galaxy S', children: ['S24', 'S23', 'S22', 'S21'] },
+          'Galaxy Note',
+          'Galaxy Z Fold',
+          'Galaxy Z Flip',
+          'Galaxy A',
+        ],
+      },
+      { name: 'Xiaomi / Redmi', aliases: ['xiaomi', 'redmi'], children: ['Xiaomi Mi', 'Redmi Note', 'Poco', 'Black Shark'] },
+      { name: 'Huawei', aliases: ['huawei'], children: ['P series', 'Mate series', 'Nova series'] },
+      { name: 'Google Pixel', aliases: ['pixel'], children: ['Pixel 8', 'Pixel 7', 'Pixel 6'] },
+      { name: 'Гар утасны дагалдах хэрэгсэл', children: ['Кейс', 'Цэнэглэгч', 'Дэлгэц хамгаалагч', 'Power bank', 'Кабель'] },
+      { name: 'Утасны дугаар', children: ['Дараалсан дугаар', 'Азын дугаар', 'VIP дугаар'] },
+    ],
   },
   {
     key: 'technology',
@@ -186,7 +324,15 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'product',
     entityTypes: ['STORE', 'PRE_ORDER', 'DIGITAL'],
     aliases: ['electronics', 'tech'],
-    subcategories: ['Компьютер', 'Компьютер аксессуар', 'Компьютерийн бүрэлдэхүүн', 'Чихэвч & Спикер', 'Камер & Дрон', 'Проектор', 'Видео тоглоом'],
+    subcategories: [
+      { name: 'Компьютер', children: ['Laptop', 'Desktop PC', 'MacBook', 'iMac', 'Workstation'] },
+      { name: 'Компьютер аксессуар', children: ['Keyboard', 'Mouse', 'Monitor', 'Dock', 'Webcam'] },
+      { name: 'Компьютерийн бүрэлдэхүүн', children: ['CPU', 'GPU', 'RAM', 'SSD/HDD', 'Motherboard', 'Power supply'] },
+      { name: 'Чихэвч & Спикер', children: ['Bluetooth чихэвч', 'Gaming headset', 'Speaker', 'Soundbar'] },
+      { name: 'Камер & Дрон', children: ['DSLR', 'Mirrorless', 'Action camera', 'Drone', 'Lens'] },
+      'Проектор',
+      { name: 'Видео тоглоом', children: ['PlayStation', 'Xbox', 'Nintendo', 'PC game'] },
+    ],
   },
   {
     key: 'gifts-hobby',
@@ -235,7 +381,14 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     section: 'product',
     entityTypes: ['STORE', 'AUTO'],
     aliases: ['auto', 'auto-moto'],
-    subcategories: ['Автомашины сэлбэг', 'Хүнд механизм сэлбэг', 'Авто аксессуар', 'Ачаа, порхов, чиргүүл'],
+    subcategories: [
+      { name: 'Автомашины сэлбэг', children: ['Хөдөлгүүр', 'Кроп', 'Явах эд анги', 'Кузов', 'Гэрэл', 'Тормоз'] },
+      { name: 'Дугуй & Обуд', children: ['Зуны дугуй', 'Өвлийн дугуй', 'Обуд', 'Дугуйн мэдрэгч'] },
+      { name: 'Аккумулятор & Цахилгаан', children: ['Аккумулятор', 'Генератор', 'Стартер', 'Мэдрэгч'] },
+      'Хүнд механизм сэлбэг',
+      { name: 'Авто аксессуар', children: ['Суудлын бүрээс', 'Шалны дэвсгэр', 'Камер', 'Дуу хөгжим'] },
+      'Ачаа, порхов, чиргүүл',
+    ],
   },
   {
     key: 'books-stationery',
@@ -463,10 +616,7 @@ const CATEGORY_ALIAS_MAP = new Map<string, string>(
   MARKETPLACE_CATEGORIES.flatMap((category) => [
     [category.key, category.key] as const,
     ...(category.aliases || []).map((alias) => [alias, category.key] as const),
-    ...category.subcategories.flatMap((name, index) => [
-      [`${category.key}-${index + 1}`, category.key] as const,
-      [`${category.key}-${slugifyCategoryName(name)}`, category.key] as const,
-    ]),
+    ...branchAliasPairs(category.key, category.subcategories),
   ]),
 );
 
@@ -484,6 +634,28 @@ export function categoryLabel(value?: string | null): string {
   return findMarketplaceCategory(value)?.label || value || 'Ангилалгүй';
 }
 
+export function categoryBranchLabel(branch: MarketplaceCategoryBranch): string {
+  return typeof branch === 'string' ? branch : branch.name;
+}
+
+export function subcategoryNames(category: MarketplaceCategory, limit?: number): string[] {
+  const names = category.subcategories.map(categoryBranchLabel);
+  return typeof limit === 'number' ? names.slice(0, limit) : names;
+}
+
+export function subcategoryPreview(category: MarketplaceCategory, limit = 3): string {
+  return subcategoryNames(category, limit).join(' · ');
+}
+
+export function descendantCategoryNames(category: MarketplaceCategory, limit?: number): string[] {
+  const names = category.subcategories.flatMap(branchDescendantNames);
+  return typeof limit === 'number' ? names.slice(0, limit) : names;
+}
+
+export function descendantCategoryPreview(category: MarketplaceCategory, limit = 12): string {
+  return descendantCategoryNames(category, limit).join(' · ');
+}
+
 export function categoryTreeFallback(): CategoryTreeNode[] {
   return MARKETPLACE_CATEGORIES
     .map((category, index) => ({
@@ -499,21 +671,9 @@ export function categoryTreeFallback(): CategoryTreeNode[] {
       isActive: true,
       isApproved: true,
       isFeatured: index < 12,
-      children: category.subcategories.map((name, subIndex) => ({
-        id: `${category.key}-${subIndex + 1}`,
-        slug: `${category.key}-${slugifyCategoryName(name)}`,
-        name,
-        nameEn: null,
-        icon: null,
-        level: 1,
-        parentId: category.key,
-        entityTypes: category.entityTypes,
-        sortOrder: subIndex,
-        isActive: true,
-        isApproved: true,
-        isFeatured: false,
-        children: [],
-      })),
+      children: category.subcategories.map((branch, subIndex) =>
+        branchToTreeNode(branch, category, category.key, category.key, 1, subIndex)
+      ),
     }));
 }
 
@@ -528,4 +688,65 @@ function slugifyCategoryName(value: string): string {
     .replace(/[^a-zа-яөөүё0-9]+/gi, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 48);
+}
+
+function branchChildren(branch: MarketplaceCategoryBranch): MarketplaceCategoryBranch[] {
+  return typeof branch === 'string' ? [] : branch.children || [];
+}
+
+function branchAliases(branch: MarketplaceCategoryBranch): string[] {
+  return typeof branch === 'string' ? [] : branch.aliases || [];
+}
+
+function branchDescendantNames(branch: MarketplaceCategoryBranch): string[] {
+  const children = branchChildren(branch);
+  if (children.length === 0) return [categoryBranchLabel(branch)];
+  return children.flatMap(branchDescendantNames);
+}
+
+function branchAliasPairs(
+  rootKey: string,
+  branches: MarketplaceCategoryBranch[],
+  parentSlug = rootKey,
+): Array<readonly [string, string]> {
+  return branches.flatMap((branch, index) => {
+    const name = categoryBranchLabel(branch);
+    const slug = `${parentSlug}-${slugifyCategoryName(name) || `item-${index + 1}`}`;
+    return [
+      [`${parentSlug}-${index + 1}`, rootKey] as const,
+      [slug, rootKey] as const,
+      ...branchAliases(branch).map((alias) => [alias, rootKey] as const),
+      ...branchAliasPairs(rootKey, branchChildren(branch), slug),
+    ];
+  });
+}
+
+function branchToTreeNode(
+  branch: MarketplaceCategoryBranch,
+  category: MarketplaceCategory,
+  parentId: string,
+  parentSlug: string,
+  level: number,
+  sortOrder: number,
+): CategoryTreeNode {
+  const name = categoryBranchLabel(branch);
+  const slug = `${parentSlug}-${slugifyCategoryName(name) || `item-${sortOrder + 1}`}`;
+
+  return {
+    id: slug,
+    slug,
+    name,
+    nameEn: null,
+    icon: null,
+    level,
+    parentId,
+    entityTypes: category.entityTypes,
+    sortOrder,
+    isActive: true,
+    isApproved: true,
+    isFeatured: false,
+    children: branchChildren(branch).map((child, childIndex) =>
+      branchToTreeNode(child, category, slug, slug, level + 1, childIndex)
+    ),
+  };
 }
