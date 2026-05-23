@@ -217,10 +217,16 @@ export default function PostAdPage() {
   const metadataFields = metadataFieldsForCategory(category);
   const metadataComplete = requiredMetadataComplete(metadataFields, metadataDraft);
   const previewMetadataItems = listingMetadataPreviewItems(metadataFields, previewMetadata, 8);
+  const previewMetadataTitle = metadataPreviewTitle(category);
   const metadataGroups = isGenericProductCategory(category)
     ? genericProductMetadataGroups(metadataFields)
-    : [{ title: 'Дэлгэрэнгүй үзүүлэлт', description: 'Сонгосон ангилалд хэрэгтэй мэдээллээ бөглөнө.', keys: metadataFields.map((field) => field.key), fields: metadataFields }];
-  const previewMetadataTitle = metadataPreviewTitle(category);
+    : [{ title: previewMetadataTitle, description: 'Сонгосон ангилалд хэрэгтэй мэдээллээ бөглөнө.', keys: metadataFields.map((field) => field.key), fields: metadataFields }];
+  const previewMetadataGroups = metadataGroups
+    .map((group) => ({
+      title: group.title,
+      items: listingMetadataPreviewItems(group.fields, previewMetadata, group.fields.length),
+    }))
+    .filter((group) => group.items.length > 0);
   const canSubmit = title.trim() && price.trim() && category && (district || province) && metadataComplete;
 
   const clearSavedDraft = useCallback(() => {
@@ -667,17 +673,21 @@ export default function PostAdPage() {
                   </span>
                 </div>
               )}
-              {previewMetadataItems.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2">{previewMetadataTitle}</h3>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-                    {previewMetadataItems.map((item) => (
-                      <div key={item.key} className="rounded-lg bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] px-3 py-2">
-                        <p className="text-[11px] text-[var(--esl-text-muted)]">{item.label}</p>
-                        <p className="text-sm font-semibold text-white mt-0.5 leading-tight">{item.value}</p>
+              {previewMetadataGroups.length > 0 && (
+                <div className="mb-6 space-y-4">
+                  {previewMetadataGroups.map((group) => (
+                    <div key={group.title}>
+                      <h3 className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2">{group.title}</h3>
+                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                        {group.items.map((item) => (
+                          <div key={item.key} className="rounded-lg bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] px-3 py-2">
+                            <p className="text-[11px] text-[var(--esl-text-muted)]">{item.label}</p>
+                            <p className="text-sm font-semibold text-white mt-0.5 leading-tight">{item.value}</p>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  ))}
                 </div>
               )}
               <div className="mb-6">
