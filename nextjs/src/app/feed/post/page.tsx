@@ -22,6 +22,7 @@ import {
   metadataFieldsForCategory,
   normalizeListingMetadata,
   requiredMetadataComplete,
+  type ListingMetadataField,
   type ListingMetadataRecord,
 } from '@/lib/listingMetadata';
 
@@ -98,11 +99,90 @@ type FeedPostDraft = {
   savedAt: number;
 };
 
+const GENERIC_PRODUCT_META_GROUPS = [
+  {
+    title: 'Барааны мэдээлэл',
+    description: 'Худалдан авагчийн хамгийн түрүүнд шалгах үндсэн үзүүлэлтүүд.',
+    keys: ['brand', 'model', 'productType', 'condition', 'material', 'size', 'color', 'usageDuration', 'warranty'],
+  },
+  {
+    title: 'Худалдааны нөхцөл',
+    description: 'Хүргэлт, авах байршил, үнэ тохиролцох эсэхийг тодорхой бичнэ.',
+    keys: ['deliveryOptions', 'pickupLocation', 'negotiable', 'returnPolicy'],
+  },
+  {
+    title: 'Иж бүрдэл ба шалгалт',
+    description: 'Дагалдах зүйлс болон ажиллагааны шалгалтыг тусад нь оруулна.',
+    keys: ['includedItems', 'checks', 'features'],
+  },
+] as const;
+
+type MetadataFieldGroup = {
+  title: string;
+  description: string;
+  keys: readonly string[];
+  fields: ListingMetadataField[];
+};
+
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
   if (n > 0) return n.toLocaleString() + '₮';
   return '0₮';
+}
+
+function genericProductMetadataGroups(fields: ListingMetadataField[]): MetadataFieldGroup[] {
+  const byKey = new Map(fields.map((field) => [field.key, field]));
+  const used = new Set<string>();
+  const groups: MetadataFieldGroup[] = GENERIC_PRODUCT_META_GROUPS
+    .map((group) => {
+      const groupFields = group.keys
+        .map((key) => byKey.get(key))
+        .filter((field): field is ListingMetadataField => Boolean(field));
+      groupFields.forEach((field) => used.add(field.key));
+      return { ...group, fields: groupFields };
+    })
+    .filter((group) => group.fields.length > 0);
+
+  const otherFields = fields.filter((field) => !used.has(field.key));
+  if (otherFields.length > 0) {
+    groups.push({
+      title: 'Нэмэлт мэдээлэл',
+      description: 'Ангилалд хэрэгтэй бусад дэлгэрэнгүй мэдээлэл.',
+      keys: otherFields.map((field) => field.key),
+      fields: otherFields,
+    });
+  }
+
+  return groups;
+}
+
+function metadataPreviewTitle(category: string) {
+  const root = normalizeMarketplaceCategory(category);
+  if (root === 'phones') return 'Утасны мэдээлэл';
+  if (root === 'vehicles') return 'Машины мэдээлэл';
+  if (root === 'real-estate') return 'Байрны мэдээлэл';
+  if (root === 'new-buildings') return 'Төслийн мэдээлэл';
+  if (category && root !== 'all') return 'Барааны мэдээлэл';
+  return 'Үзүүлэлт';
+}
+
+function isGenericProductCategory(category: string) {
+  const root = normalizeMarketplaceCategory(category);
+  return Boolean(category)
+    && !['phones', 'vehicles', 'real-estate', 'new-buildings'].includes(root)
+    && ![
+      'education-training',
+      'beauty-services',
+      'tech-it-services',
+      'professional-consulting',
+      'auto-services',
+      'repair-services',
+      'printing-services',
+      'manufacturing-custom',
+      'photo-video',
+      'design-creative',
+    ].includes(root);
 }
 
 export default function PostAdPage() {
@@ -137,6 +217,10 @@ export default function PostAdPage() {
   const metadataFields = metadataFieldsForCategory(category);
   const metadataComplete = requiredMetadataComplete(metadataFields, metadataDraft);
   const previewMetadataItems = listingMetadataPreviewItems(metadataFields, previewMetadata, 8);
+  const metadataGroups = isGenericProductCategory(category)
+    ? genericProductMetadataGroups(metadataFields)
+    : [{ title: 'Дэлгэрэнгүй үзүүлэлт', description: 'Сонгосон ангилалд хэрэгтэй мэдээллээ бөглөнө.', keys: metadataFields.map((field) => field.key), fields: metadataFields }];
+  const previewMetadataTitle = metadataPreviewTitle(category);
   const canSubmit = title.trim() && price.trim() && category && (district || province) && metadataComplete;
 
   const clearSavedDraft = useCallback(() => {
@@ -364,6 +448,67 @@ export default function PostAdPage() {
       }
     : null;
 
+  const renderMetadataField = (field: ListingMetadataField) => {
+    const value = metadataDraft[field.key] || '';
+
+    return (
+      <label key={field.key} className={field.type === 'list' ? 'sm:col-span-2' : ''}>
+        <span className="mb-1.5 block text-xs font-bold text-[var(--esl-text-secondary)]">
+          {field.label} {field.required && <span className="text-[#E8242C]">*</span>}
+        </span>
+
+        {field.type === 'select' ? (
+          <select
+            name={field.key}
+            value={value}
+            onChange={(e) => updateMetadata(field.key, e.target.value)}
+            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
+          >
+            <option value="">Сонгох</option>
+            {(field.options || []).map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        ) : field.type === 'boolean' ? (
+          <select
+            name={field.key}
+            value={value}
+            onChange={(e) => updateMetadata(field.key, e.target.value)}
+            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
+          >
+            <option value="">Сонгох</option>
+            <option value="true">Тийм</option>
+            <option value="false">Үгүй</option>
+          </select>
+        ) : field.type === 'list' ? (
+          <textarea
+            name={field.key}
+            value={value}
+            onChange={(e) => updateMetadata(field.key, e.target.value)}
+            placeholder={field.placeholder}
+            rows={3}
+            className="w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#E8242C]"
+          />
+        ) : (
+          <input
+            name={field.key}
+            type="text"
+            inputMode={field.type === 'number' ? 'decimal' : 'text'}
+            value={value}
+            onChange={(e) => updateMetadata(
+              field.key,
+              field.type === 'number' ? e.target.value.replace(/[^0-9.]/g, '') : e.target.value,
+            )}
+            placeholder={field.placeholder}
+            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#E8242C]"
+          />
+        )}
+
+        {field.hint && <span className="mt-1 block text-[11px] text-[var(--esl-text-muted)]">{field.hint}</span>}
+      </label>
+    );
+  };
+
   /* ═══ Preview Modal ═══ */
   if (showPreview) {
     return (
@@ -524,7 +669,7 @@ export default function PostAdPage() {
               )}
               {previewMetadataItems.length > 0 && (
                 <div className="mb-6">
-                  <h3 className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2">Үзүүлэлт</h3>
+                  <h3 className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2">{previewMetadataTitle}</h3>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {previewMetadataItems.map((item) => (
                       <div key={item.key} className="rounded-lg bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] px-3 py-2">
@@ -777,6 +922,7 @@ export default function PostAdPage() {
             value={category}
             onChange={(_id, slug) => {
               setCategory(slug);
+              setMetadataDraft({});
               setPreviewMetadata({});
             }}
             label=""
@@ -786,73 +932,24 @@ export default function PostAdPage() {
         {metadataFields.length > 0 && (
           <section className="mb-6 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4">
             <div className="mb-4">
-              <h2 className="text-sm font-black text-white">Дэлгэрэнгүй үзүүлэлт</h2>
+              <h2 className="text-sm font-black text-white">{previewMetadataTitle}</h2>
               <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
                 Сонгосон ангилалд хэрэгтэй мэдээллээ бөглөнө. Одтой талбарууд зарын чанарт заавал хэрэгтэй.
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {metadataFields.map((field) => {
-                const value = metadataDraft[field.key] || '';
-
-                return (
-                  <label key={field.key} className={field.type === 'list' ? 'sm:col-span-2' : ''}>
-                    <span className="mb-1.5 block text-xs font-bold text-[var(--esl-text-secondary)]">
-                      {field.label} {field.required && <span className="text-[#E8242C]">*</span>}
-                    </span>
-
-                    {field.type === 'select' ? (
-                      <select
-                        name={field.key}
-                        value={value}
-                        onChange={(e) => updateMetadata(field.key, e.target.value)}
-                        className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
-                      >
-                        <option value="">Сонгох</option>
-                        {(field.options || []).map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </select>
-                    ) : field.type === 'boolean' ? (
-                      <select
-                        name={field.key}
-                        value={value}
-                        onChange={(e) => updateMetadata(field.key, e.target.value)}
-                        className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
-                      >
-                        <option value="">Сонгох</option>
-                        <option value="true">Тийм</option>
-                        <option value="false">Үгүй</option>
-                      </select>
-                    ) : field.type === 'list' ? (
-                      <textarea
-                        name={field.key}
-                        value={value}
-                        onChange={(e) => updateMetadata(field.key, e.target.value)}
-                        placeholder={field.placeholder}
-                        rows={3}
-                        className="w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#E8242C]"
-                      />
-                    ) : (
-                      <input
-                        name={field.key}
-                        type="text"
-                        inputMode={field.type === 'number' ? 'decimal' : 'text'}
-                        value={value}
-                        onChange={(e) => updateMetadata(
-                          field.key,
-                          field.type === 'number' ? e.target.value.replace(/[^0-9.]/g, '') : e.target.value,
-                        )}
-                        placeholder={field.placeholder}
-                        className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#E8242C]"
-                      />
-                    )}
-
-                    {field.hint && <span className="mt-1 block text-[11px] text-[var(--esl-text-muted)]">{field.hint}</span>}
-                  </label>
-                );
-              })}
+            <div className="space-y-5">
+              {metadataGroups.map((group) => (
+                <div key={group.title}>
+                  <div className="mb-3">
+                    <p className="text-xs font-black text-white">{group.title}</p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{group.description}</p>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {group.fields.map(renderMetadataField)}
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         )}
