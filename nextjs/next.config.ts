@@ -1,5 +1,27 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV !== 'production';
+const connectSrc = [
+  "'self'",
+  'https://sarana-backend.onrender.com',
+  'https://www.google-analytics.com',
+  'https://api.anthropic.com',
+  'https://maps.googleapis.com',
+  'https://*.ingest.sentry.io',
+  'https://*.sentry.io',
+  'https://accounts.google.com',
+  'https://oauth2.googleapis.com',
+  'https://www.googleapis.com',
+  ...(isDev
+    ? [
+        'http://localhost:*',
+        'http://127.0.0.1:*',
+        'ws://localhost:*',
+        'ws://127.0.0.1:*',
+      ]
+    : []),
+];
+
 const securityHeaders = [
   { key: 'X-DNS-Prefetch-Control', value: 'on' },
   { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
@@ -16,7 +38,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "img-src 'self' data: blob: https: http:",
-      "connect-src 'self' https://sarana-backend.onrender.com https://www.google-analytics.com https://api.anthropic.com https://maps.googleapis.com https://*.ingest.sentry.io https://*.sentry.io https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com",
+      `connect-src ${connectSrc.join(' ')}`,
       "frame-src 'self' https://maps.google.com https://www.google.com",
       "object-src 'none'",
       "base-uri 'self'",
@@ -25,6 +47,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['127.0.0.1', 'localhost'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/duo61k04v/**' },

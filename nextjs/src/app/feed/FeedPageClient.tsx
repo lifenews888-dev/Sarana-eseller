@@ -1,0 +1,919 @@
+'use client';
+
+import { useState, useMemo, useEffect } from 'react';
+import Link from 'next/link';
+import EsellerLogo from '@/components/shared/EsellerLogo';
+import MobileNav from '@/components/shared/MobileNav';
+import { useUserLocation } from '@/hooks/useUserLocation';
+import LocationBar from '@/components/location/LocationBar';
+import CategoryBar from '@/components/shared/CategoryBar';
+import SafeImage from '@/components/ui/SafeImage';
+import {
+  Search, MapPin, Eye, Clock, Plus,
+  X, Heart, Phone, MessageCircle, Share2, ChevronLeft, ChevronRight,
+  BadgeCheck, Calendar, Ruler, DoorOpen, Fuel, Gauge, Play, ImageIcon,
+  Crown, Star, Flame, Store, Home, Building2, Car, BellRing, User,
+  Laptop, Shirt, Sparkles, Baby, Dumbbell, UtensilsCrossed, Wrench, Gem, HardDrive, Briefcase, Package,
+} from 'lucide-react';
+import { type LucideIcon } from 'lucide-react';
+
+/* ═══ Types ═══ */
+type ItemTier = 'vip' | 'featured' | 'discounted' | 'normal';
+export type EntityType = 'store' | 'agent' | 'company' | 'auto_dealer' | 'service' | 'user';
+
+type FeedPageClientProps = {
+  initialCategory?: string;
+  initialEntityType?: EntityType | '';
+};
+
+const TIER_CONFIG: Record<ItemTier, { label: string; badge: LucideIcon | null; color: string; border: string; bg: string }> = {
+  vip: { label: 'ВИП', badge: Crown, color: '#D4AF37', border: 'border-amber-500/30', bg: 'bg-amber-500/5' },
+  featured: { label: 'Онцлох', badge: Star, color: '#3B82F6', border: 'border-blue-500/30', bg: 'bg-blue-500/5' },
+  discounted: { label: 'Хямдрал', badge: Flame, color: '#EF4444', border: 'border-red-500/30', bg: 'bg-red-500/5' },
+  normal: { label: 'Энгийн', badge: null, color: '#6B7280', border: 'border-[var(--esl-border)]', bg: '' },
+};
+
+const ENTITY_LABELS: Record<EntityType, { label: string; icon: LucideIcon }> = {
+  store: { label: 'Дэлгүүр', icon: Store },
+  agent: { label: 'Агент', icon: Home },
+  company: { label: 'Компани', icon: Building2 },
+  auto_dealer: { label: 'Авто', icon: Car },
+  service: { label: 'Үйлчилгээ', icon: BellRing },
+  user: { label: 'Хэрэглэгч', icon: User },
+};
+
+const DISTRICTS = ['Бүгд', 'СБД', 'ХУД', 'БЗД', 'ЧД', 'БГД', 'СХД', 'НД', 'БНД'];
+const SORT_OPTIONS = [
+  { key: 'newest', label: 'Шинэ' },
+  { key: 'price_asc', label: 'Үнэ ↑' },
+  { key: 'price_desc', label: 'Үнэ ↓' },
+  { key: 'popular', label: 'Эрэлттэй' },
+];
+
+/* ═══ Media type ═══ */
+type MediaItem = { type: 'image'; url: string } | { type: 'video'; url: string; thumb?: string };
+
+/* ═══ Demo Data ═══ */
+// Real feed items have MongoDB ObjectIds (24 hex chars). DEMO_FEED uses
+// placeholder "1"–"12" — linking to /feed/7 would 404 because the detail
+// page rejects non-ObjectId ids.
+const isRealFeedId = (id: string) => /^[a-f\d]{24}$/i.test(id);
+const isDemoDetailId = (id: string) => /^[vfpl]\d+$/i.test(id);
+const DEMO_DETAIL_ID_ALIASES: Record<string, string> = {
+  '1': 'l1',
+  '2': 'v3',
+  '3': 'p1',
+};
+
+function feedDetailHref(id: string) {
+  const detailId = DEMO_DETAIL_ID_ALIASES[id] || id;
+  return isRealFeedId(detailId) || isDemoDetailId(detailId) ? `/feed/${detailId}` : null;
+}
+
+const DEMO_FEED = [
+  { id: '1', refId: 'VIP-AGT-001', title: '3 өрөө байр, 13-р хороолол', description: '78мкв, 5 давхарт, шинэ засвартай, тавилгатай. Цонх нар руу харсан, 2 ариун цэврийн өрөөтэй. Паркинг, хамгаалалттай, лифттэй. Төвд ойр, сургууль цэцэрлэгтэй.', price: 280000000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'home-living', entityType: 'agent' as EntityType, entityName: 'Голден Риэлти', entitySlug: 'erdenbat', verified: true, tier: 'vip' as ItemTier, viewCount: 1245, district: 'СБД', metadata: { sqm: 78, rooms: 3, floor: 5 }, createdAt: '2026-04-01' },
+
+  { id: '2', refId: 'VIP-AUTO-001', title: 'Toyota Prius 2022', description: '45,000км, хар өнгө, чипээр ороогүй, татвар төлсөн. Full option. Камер, подогрев, хөтлөгч суудал. Осолд ороогүй, өмчлөгчөөс шууд.', price: 58000000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'video' as const, url: 'https://www.w3schools.com/html/mov_bbb.mp4', thumb: 'https://picsum.photos/seed/eseller-400/400' },
+  ] as MediaItem[], category: 'auto-moto', entityType: 'auto_dealer' as EntityType, entityName: 'AutoMall', entitySlug: 'autocity', verified: true, tier: 'vip' as ItemTier, viewCount: 892, district: 'ХУД', metadata: { year: 2022, mileage: 45000, fuel: 'Hybrid' }, createdAt: '2026-04-02' },
+
+  { id: '3', refId: 'VIP-CMP-001', title: 'Шинэ барилга, 19-р хороолол', description: '45-95мкв, 1-3 өрөө, 2027 он хүлээлгэж өгнө. Банкны зээлтэй. Хаан банк, Голомт банк хамтарсан.', price: 95000000, originalPrice: 110000000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'home-living', entityType: 'company' as EntityType, entityName: 'МАК Констракшн', entitySlug: 'mongolian-properties', verified: true, tier: 'vip' as ItemTier, viewCount: 3456, district: 'НД', metadata: { sqm: 65, rooms: 2 }, createdAt: '2026-03-30' },
+
+  { id: '4', refId: 'FTR-SVC-001', title: 'Вэбсайт хийж өгнө', description: 'React, Next.js, Mobile app хөгжүүлэлт. 3-5 хоногт бэлэн болно. UI/UX дизайн, SEO оптимизаци багтсан.', price: 2500000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'construction', entityType: 'service' as EntityType, entityName: 'TechPro', verified: false, tier: 'featured' as ItemTier, viewCount: 567, district: 'СБД', createdAt: '2026-04-01' },
+
+  { id: '5', refId: 'FTR-USR-001', title: 'iPhone 15 Pro Max 256GB', description: 'Хэрэглээгүй шинэ, баталгаатай. Утасны хайрцагтай, бүрэн комплект. Natural Titanium өнгө.', price: 3800000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'electronics', entityType: 'user' as EntityType, entityName: 'Бат', verified: false, tier: 'featured' as ItemTier, viewCount: 432, district: 'БЗД', createdAt: '2026-04-02' },
+
+  { id: '6', refId: 'DSC-STR-001', title: 'Cashmere цамц 70% OFF', description: '100% монгол ноолуур. XS-XXL хэмжээтэй. Өвөлд тохиромжтой. Бэлэг болгоход тохиромжтой.', price: 45000, originalPrice: 150000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'fashion', entityType: 'store' as EntityType, entityName: 'Gobi Store', verified: true, tier: 'discounted' as ItemTier, viewCount: 2341, district: 'СБД', createdAt: '2026-03-28' },
+
+  { id: '7', refId: 'NRM-USR-001', title: 'Буцлуур зарна', description: 'Хэрэглэсэн, хэвийн ажилладаг. Тээвэрлэлт хийнэ.', price: 35000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'electronics', entityType: 'user' as EntityType, entityName: 'Сараа', verified: false, tier: 'normal' as ItemTier, viewCount: 89, district: 'ЧД', createdAt: '2026-04-03' },
+
+  { id: '8', refId: 'NRM-USR-002', title: '2 өрөө байр түрээслүүлнэ', description: 'Хотын төвд, шинэ засвартай. Сар бүр 1.2 сая. Тавилгатай, интернэттэй.', price: 1200000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'home-living', entityType: 'user' as EntityType, entityName: 'Дорж', verified: false, tier: 'normal' as ItemTier, viewCount: 234, district: 'СБД', metadata: { sqm: 55, rooms: 2 }, createdAt: '2026-04-02' },
+
+  { id: '9', refId: 'NRM-AUTO-001', title: 'Hyundai Tucson 2019', description: '85,000км, цагаан, бензин. Осолд ороогүй. Засвар шаардлагагүй.', price: 42000000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'video' as const, url: 'https://www.w3schools.com/html/mov_bbb.mp4', thumb: 'https://picsum.photos/seed/eseller-400/400' },
+  ] as MediaItem[], category: 'auto-moto', entityType: 'user' as EntityType, entityName: 'Ганаа', verified: false, tier: 'normal' as ItemTier, viewCount: 156, district: 'БГД', metadata: { year: 2019, mileage: 85000, fuel: 'Бензин' }, createdAt: '2026-04-01' },
+
+  { id: '10', refId: 'NRM-USR-003', title: 'Диван + ширээ комплект', description: 'Хэрэглэсэн, L хэлбэрийн диван, кофены ширээ. Цайвар саарал өнгө.', price: 850000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'home-living', entityType: 'user' as EntityType, entityName: 'Оюука', verified: false, tier: 'normal' as ItemTier, viewCount: 67, district: 'БНД', createdAt: '2026-04-03' },
+
+  { id: '11', refId: 'NRM-USR-004', title: 'Гэрийн цэвэрлэгээ хийнэ', description: 'Мэргэжлийн цэвэрлэгээ, 1-4 өрөө гэрт. Цонх, хивс, тавилга.', price: 80000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'construction', entityType: 'user' as EntityType, entityName: 'Цэвэр Гэр', verified: false, tier: 'normal' as ItemTier, viewCount: 312, district: 'СХД', createdAt: '2026-04-03' },
+
+  { id: '12', refId: 'NRM-USR-005', title: 'Samsung Galaxy S24 Ultra', description: '12/256GB, хэрэглэсэн 3 сар, бүрэн комплект. Titanium Gray.', price: 2800000, media: [
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+    { type: 'image' as const, url: 'https://picsum.photos/seed/eseller-800/800' },
+  ] as MediaItem[], category: 'electronics', entityType: 'user' as EntityType, entityName: 'Тэмүүжин', verified: false, tier: 'normal' as ItemTier, viewCount: 198, district: 'ХУД', createdAt: '2026-04-03' },
+];
+
+type FeedItem = (typeof DEMO_FEED)[number] & { province?: string };
+type ApiFeedMedia = { type?: string; url?: string; thumb?: string | null };
+type ApiFeedItem = Omit<Partial<FeedItem>, 'media'> & {
+  _id?: string;
+  entityVerified?: boolean;
+  images?: string[];
+  media?: ApiFeedMedia[] | null;
+};
+
+function normalizeFeedMedia(item: ApiFeedItem): MediaItem[] {
+  const relationMedia = Array.isArray(item.media)
+    ? item.media
+        .map((media) => {
+          const url = typeof media.url === 'string' ? media.url.trim() : '';
+          if (!url) return null;
+          const type = String(media.type || 'image').toLowerCase();
+          if (type === 'video') {
+            return {
+              type: 'video' as const,
+              url,
+              thumb: typeof media.thumb === 'string' ? media.thumb : undefined,
+            };
+          }
+          return { type: 'image' as const, url };
+        })
+        .filter((media): media is MediaItem => Boolean(media))
+    : [];
+
+  if (relationMedia.length > 0) return relationMedia;
+
+  return Array.isArray(item.images)
+    ? item.images
+        .map((url) => (typeof url === 'string' ? url.trim() : ''))
+        .filter(Boolean)
+        .map((url) => ({ type: 'image' as const, url }))
+    : [];
+}
+
+function normalizeFeedItem(item: ApiFeedItem): FeedItem {
+  const entityType = item.entityType && ENTITY_LABELS[item.entityType] ? item.entityType : 'user';
+  const tier = item.tier && TIER_CONFIG[item.tier] ? item.tier : 'normal';
+  const id = String(item.id || item._id || item.refId || '');
+
+  return {
+    ...(item as FeedItem),
+    id,
+    refId: String(item.refId || id),
+    title: String(item.title || 'Зар'),
+    description: String(item.description || ''),
+    price: Number(item.price || 0),
+    media: normalizeFeedMedia(item),
+    category: String(item.category || 'home-living'),
+    entityType,
+    entityName: String(item.entityName || 'eseller.mn'),
+    verified: Boolean(item.verified || item.entityVerified),
+    tier,
+    viewCount: Number(item.viewCount || 0),
+    district: String(item.district || ''),
+    createdAt: String(item.createdAt || new Date().toISOString()),
+  };
+}
+
+function formatPrice(n: number) {
+  if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
+  if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
+  return n.toLocaleString() + '₮';
+}
+
+function timeAgo(dateStr: string) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const days = Math.floor(diff / 86400000);
+  if (days === 0) return 'Өнөөдөр';
+  if (days === 1) return 'Өчигдөр';
+  if (days < 7) return `${days} өдрийн өмнө`;
+  return dateStr;
+}
+
+function categoryIcon(cat: string): LucideIcon {
+  const map: Record<string, LucideIcon> = { electronics: Laptop, fashion: Shirt, 'home-living': Home, 'beauty-health': Sparkles, 'kids-toys': Baby, 'sports-travel': Dumbbell, 'food-beverage': UtensilsCrossed, 'auto-moto': Car, construction: Wrench, 'jewelry-gifts': Gem, 'digital-goods': HardDrive, 'office-business': Briefcase };
+  return map[cat] || Package;
+}
+
+/* ═══ Media Carousel ═══ */
+function MediaCarousel({ media, title, category, isVip, tier, disc }: {
+  media: MediaItem[];
+  title: string;
+  category: string;
+  isVip: boolean;
+  tier: typeof TIER_CONFIG[ItemTier];
+  disc: number;
+}) {
+  const [idx, setIdx] = useState(0);
+  const current = media[idx];
+
+  return (
+    <div className={`relative h-64 sm:h-80 ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`}>
+      {current ? (
+        current.type === 'video' ? (
+          <video src={current.url} controls className="w-full h-full object-contain bg-black" poster={current.thumb} />
+        ) : (
+          <SafeImage src={current.url} alt={title} className="w-full h-full object-cover" />
+        )
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          {(() => { const CatIcon = categoryIcon(category); return <CatIcon className="w-20 h-20 text-[var(--esl-text-muted)]" />; })()}
+        </div>
+      )}
+
+      {media.length > 1 && (
+        <>
+          <button
+            onClick={() => setIdx(i => i > 0 ? i - 1 : media.length - 1)}
+            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition cursor-pointer border-none"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setIdx(i => i < media.length - 1 ? i + 1 : 0)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition cursor-pointer border-none"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold bg-black/60 text-white">
+            {idx + 1} / {media.length}
+          </div>
+          <div className="absolute bottom-3 left-3 flex gap-1.5">
+            {media.map((m, i) => (
+              <button
+                key={i}
+                onClick={() => setIdx(i)}
+                className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${i === idx ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
+              >
+                {m.type === 'video' ? (
+                  <div className="w-full h-full bg-black/80 flex items-center justify-center relative">
+                    {m.thumb && <SafeImage src={m.thumb} alt="" className="w-full h-full object-cover absolute inset-0" />}
+                    <Play className="w-3 h-3 text-white relative z-10" fill="white" />
+                  </div>
+                ) : (
+                  <SafeImage src={m.url} alt="" className="w-full h-full object-cover" />
+                )}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tier && (
+        <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold" style={{ backgroundColor: tier.color + '25', color: tier.color, backdropFilter: 'blur(8px)' }}>
+          {tier.badge && <tier.badge className="w-4 h-4" />} {tier.label}
+        </div>
+      )}
+      {disc > 0 && (
+        <div className="absolute top-4 right-14 bg-[#E8242C] text-white text-sm font-bold px-3 py-1.5 rounded-lg">-{disc}%</div>
+      )}
+    </div>
+  );
+}
+
+/* ═══ Detail Modal ═══ */
+function FeedDetailModal({ item, onClose, onPrev, onNext, hasPrev, hasNext }: {
+  item: typeof DEMO_FEED[0];
+  onClose: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
+}) {
+  const tier = TIER_CONFIG[item.tier];
+  const entity = ENTITY_LABELS[item.entityType];
+  const isVip = item.tier === 'vip';
+  const disc = item.originalPrice ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
+  const detailHref = feedDetailHref(item.id);
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowLeft' && hasPrev) onPrev();
+      if (e.key === 'ArrowRight' && hasNext) onNext();
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('keydown', handleKey);
+    };
+  }, [onClose, onPrev, onNext, hasPrev, hasNext]);
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4" onClick={onClose}>
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
+
+      {/* Nav arrows */}
+      {hasPrev && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onPrev(); }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-[102] w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition cursor-pointer"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      )}
+      {hasNext && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onNext(); }}
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-[102] w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition cursor-pointer"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      )}
+
+      {/* Modal */}
+      <div
+        className="relative z-[101] w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition cursor-pointer border-none"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Image/Video Carousel */}
+        <MediaCarousel
+          media={item.media}
+          title={item.title}
+          category={item.category}
+          isVip={isVip}
+          tier={item.tier !== 'normal' ? tier : null!}
+          disc={disc}
+        />
+
+        {/* Content */}
+        <div className="p-6">
+          {/* Entity info */}
+          <div className="flex items-center gap-2 text-sm text-[var(--esl-text-muted)] mb-3">
+            <entity.icon className="w-4 h-4" />
+            {item.entitySlug ? (
+              <Link href={`/entity/${item.entityType}/${item.entitySlug}`} className="font-semibold text-[var(--esl-text-secondary)] hover:text-[#E8242C] no-underline transition-colors">
+                {item.entityName}
+              </Link>
+            ) : (
+              <span className="font-semibold text-[var(--esl-text-secondary)]">{item.entityName}</span>
+            )}
+            {item.verified && <BadgeCheck className="w-4 h-4 text-blue-400" />}
+            <span className="text-[var(--esl-text-muted)]">·</span>
+            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{item.district}</span>
+            <span className="text-[var(--esl-text-muted)]">·</span>
+            <span className="text-xs text-[var(--esl-text-muted)]">#{item.refId}</span>
+          </div>
+
+          {/* Title */}
+          <h2 className={`text-2xl font-black mb-2 ${isVip ? 'text-[#FFD700]' : 'text-[var(--esl-text-primary)]'}`}>
+            {item.title}
+          </h2>
+
+          {/* Price */}
+          <div className="flex items-center gap-3 mb-4">
+            <span className={`text-3xl font-black ${isVip ? 'text-[#FFD700]' : 'text-[#E8242C]'}`}>
+              {formatPrice(item.price)}
+            </span>
+            {disc > 0 && (
+              <span className="text-base text-[var(--esl-text-disabled)] line-through">{formatPrice(item.originalPrice!)}</span>
+            )}
+          </div>
+
+          {/* Metadata */}
+          {item.metadata && (
+            <div className="flex flex-wrap gap-2 mb-5">
+              {item.metadata.sqm && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 rounded-lg">
+                  <Ruler className="w-3.5 h-3.5" /> {item.metadata.sqm}м²
+                </span>
+              )}
+              {item.metadata.rooms && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 rounded-lg">
+                  <DoorOpen className="w-3.5 h-3.5" /> {item.metadata.rooms} өрөө
+                </span>
+              )}
+              {item.metadata.year && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 rounded-lg">
+                  <Calendar className="w-3.5 h-3.5" /> {item.metadata.year} он
+                </span>
+              )}
+              {item.metadata.mileage && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 rounded-lg">
+                  <Gauge className="w-3.5 h-3.5" /> {(item.metadata.mileage / 1000).toFixed(0)}мян км
+                </span>
+              )}
+              {item.metadata.fuel && (
+                <span className="flex items-center gap-1.5 text-xs font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 rounded-lg">
+                  <Fuel className="w-3.5 h-3.5" /> {item.metadata.fuel}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Description */}
+          <div className="mb-6">
+            <h3 className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2">Тайлбар</h3>
+            <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed">{item.description}</p>
+          </div>
+
+          {/* Stats */}
+          <div className="flex items-center gap-4 text-xs text-[var(--esl-text-muted)] mb-6 pb-6 border-b border-[var(--esl-border)]">
+            <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" /> {item.viewCount} үзсэн</span>
+            <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {timeAgo(item.createdAt)}</span>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-3">
+            <button className="flex-1 flex items-center justify-center gap-2 h-12 bg-[#E8242C] text-white font-bold rounded-xl hover:bg-[#CC0000] transition-colors cursor-pointer border-none text-sm">
+              <Phone className="w-4 h-4" /> Залгах
+            </button>
+            <button className="flex-1 flex items-center justify-center gap-2 h-12 bg-[var(--esl-bg-elevated)] text-[var(--esl-text)] font-bold rounded-xl border border-[var(--esl-border)] hover:border-[#555] transition-colors cursor-pointer text-sm">
+              <MessageCircle className="w-4 h-4" /> Мессеж
+            </button>
+            <button className="w-12 h-12 flex items-center justify-center rounded-xl bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] text-[#888] hover:text-[#E8242C] hover:border-[#555] transition-colors cursor-pointer">
+              <Heart className="w-4 h-4" />
+            </button>
+            <button className="w-12 h-12 flex items-center justify-center rounded-xl bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] text-[var(--esl-text-secondary)] hover:text-[var(--esl-text)] hover:border-[#555] transition-colors cursor-pointer">
+              <Share2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Full detail page link — only for real DB items */}
+          {detailHref ? (
+            <Link
+              href={detailHref}
+              className="block mt-4 text-center py-3 rounded-xl border border-[var(--esl-border)] text-sm font-semibold text-[var(--esl-text-secondary)] hover:bg-[var(--esl-bg-elevated)] hover:border-[#555] transition-colors no-underline"
+            >
+              Дэлгэрэнгүй харах →
+            </Link>
+          ) : (
+            <div
+              className="block mt-4 text-center py-3 rounded-xl border border-[var(--esl-border)] text-sm font-semibold text-[var(--esl-text-disabled)] opacity-60 cursor-not-allowed"
+              title="Жишээ мэдээлэл — дэлгэрэнгүй харах боломжгүй"
+            >
+              Жишээ мэдээлэл
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ Feed Card ═══ */
+function FeedCard({ item, onClick }: { item: typeof DEMO_FEED[0]; onClick: () => void }) {
+  const tier = TIER_CONFIG[item.tier];
+  const entity = ENTITY_LABELS[item.entityType];
+  const isVip = item.tier === 'vip';
+  const disc = item.originalPrice ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
+  const detailHref = feedDetailHref(item.id);
+
+  return (
+    <div
+      onClick={detailHref ? undefined : onClick}
+      data-feed-card
+      data-entity-type={item.entityType}
+      className={`group relative rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,.3)] hover:-translate-y-0.5 cursor-pointer ${tier.border} ${tier.bg || 'bg-[var(--esl-bg-card)]'}`}
+    >
+      {detailHref && (
+        <Link
+          href={detailHref}
+          aria-label={`${item.title} дэлгэрэнгүй харах`}
+          className="absolute inset-0 z-20 rounded-2xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--esl-bg-page)]"
+        >
+          <span className="sr-only">Дэлгэрэнгүй харах</span>
+        </Link>
+      )}
+      <div className="relative z-10 flex flex-col sm:flex-row">
+        {/* Image */}
+        <div className={`relative h-48 sm:h-auto sm:w-56 shrink-0 overflow-hidden ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`}>
+          {item.media.length > 0 ? (
+            <SafeImage
+              src={item.media[0].type === 'video' && 'thumb' in item.media[0] ? item.media[0].thumb! : item.media[0].url}
+              alt={item.title}
+              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              {(() => { const CatIcon = categoryIcon(item.category); return <CatIcon className="w-14 h-14 text-[var(--esl-text-muted)]" />; })()}
+            </div>
+          )}
+          {/* Media count badge */}
+          {item.media.length > 1 && (
+            <div className="absolute bottom-3 left-3 flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold bg-black/60 text-white">
+              <ImageIcon className="w-3 h-3" /> {item.media.filter(m => m.type === 'image').length}
+              {item.media.some(m => m.type === 'video') && <><span className="mx-0.5">·</span><Play className="w-3 h-3" /> {item.media.filter(m => m.type === 'video').length}</>}
+            </div>
+          )}
+          {item.tier !== 'normal' && (
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold" style={{ backgroundColor: tier.color + '20', color: tier.color, backdropFilter: 'blur(8px)' }}>
+              {tier.badge && <tier.badge className="w-3.5 h-3.5" />} {tier.label}
+            </div>
+          )}
+          {disc > 0 && (
+            <div className="absolute top-3 right-3 bg-[#E8242C] text-white text-xs font-bold px-2 py-1 rounded-md">-{disc}%</div>
+          )}
+          <button onClick={(e) => e.stopPropagation()} className="absolute bottom-3 right-3 z-30 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none">
+            <Heart className="w-4 h-4 text-white" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 p-4 sm:p-5">
+          {/* Entity + district */}
+          <div className="flex items-center gap-2 text-xs text-[var(--esl-text-muted)] mb-2">
+            {item.entitySlug ? (
+              <Link
+                href={`/entity/${item.entityType}/${item.entitySlug}`}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-30 text-xs font-semibold text-[var(--esl-text-muted)] hover:text-[#E8242C] no-underline transition-colors flex items-center gap-1"
+              >
+                <entity.icon className="w-3.5 h-3.5" /> {item.entityName}
+              </Link>
+            ) : (
+              <span className="flex items-center gap-1"><entity.icon className="w-3.5 h-3.5" /> {item.entityName}</span>
+            )}
+            {item.verified && <BadgeCheck className="w-3.5 h-3.5 text-blue-400" />}
+            {item.district && (
+              <>
+                <span className="text-[var(--esl-text-muted)]">·</span>
+                <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{item.district}</span>
+              </>
+            )}
+          </div>
+
+          {/* Title */}
+          <h3 className={`text-base font-extrabold mb-1.5 line-clamp-2 leading-snug ${isVip ? 'text-[#FFD700]' : 'text-[var(--esl-text)]'} group-hover:text-[#FF4D53] transition-colors`}>
+            {item.title}
+          </h3>
+
+          {/* Description */}
+          <p className="text-sm text-[var(--esl-text-secondary)] line-clamp-2 mb-3">{item.description}</p>
+
+          {/* Metadata chips */}
+          {item.metadata && (
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {item.metadata.sqm && <span className="text-[11px] font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">{item.metadata.sqm}м²</span>}
+              {item.metadata.rooms && <span className="text-[11px] font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">{item.metadata.rooms} өрөө</span>}
+              {item.metadata.year && <span className="text-[11px] font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">{item.metadata.year} он</span>}
+              {item.metadata.mileage && <span className="text-[11px] font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">{(item.metadata.mileage / 1000).toFixed(0)}мян км</span>}
+              {item.metadata.fuel && <span className="text-[11px] font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">{item.metadata.fuel}</span>}
+            </div>
+          )}
+
+          {/* Price + stats */}
+          <div className="flex items-end justify-between">
+            <div>
+              <span className={`text-xl font-black ${isVip ? 'text-[#FFD700]' : 'text-[#E8242C]'}`}>{formatPrice(item.price)}</span>
+              {disc > 0 && <span className="text-xs text-[var(--esl-text-disabled)] line-through ml-2">{formatPrice(item.originalPrice!)}</span>}
+            </div>
+            <div className="flex items-center gap-3 text-[11px] text-[var(--esl-text-disabled)]">
+              <span className="flex items-center gap-1"><Eye className="w-3 h-3" />{item.viewCount}</span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{timeAgo(item.createdAt)}</span>
+            </div>
+          </div>
+
+          {/* Detail page link — only for real DB items */}
+          {detailHref ? (
+            <span
+              className="block mt-3 text-center py-2 rounded-lg border border-[var(--esl-border)] text-[11px] font-semibold text-[var(--esl-text-muted)] hover:bg-[var(--esl-bg-elevated)] hover:text-[var(--esl-text)] transition-colors no-underline"
+            >
+              Дэлгэрэнгүй →
+            </span>
+          ) : (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              className="block mt-3 text-center py-2 rounded-lg border border-[var(--esl-border)] text-[11px] font-semibold text-[var(--esl-text-disabled)] opacity-60 cursor-not-allowed"
+            >
+              Жишээ
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ Main Page ═══ */
+export default function FeedPageClient({
+  initialCategory = 'all',
+  initialEntityType = '',
+}: FeedPageClientProps) {
+  const [feedItems, setFeedItems] = useState<FeedItem[]>(DEMO_FEED);
+  const [search, setSearch] = useState('');
+  const [activeCat, setActiveCat] = useState(initialCategory || 'all');
+  const [activeEntityType, setActiveEntityType] = useState<EntityType | ''>(initialEntityType);
+  const [activeDistrict, setActiveDistrict] = useState('Бүгд');
+  const [activeProvince, setActiveProvince] = useState('');
+  const [activeSort, setActiveSort] = useState('newest');
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  useEffect(() => {
+    window.setTimeout(() => {
+      setActiveCat(initialCategory || 'all');
+      setActiveEntityType(initialEntityType);
+    }, 0);
+  }, [initialCategory, initialEntityType]);
+
+  // Fetch real feed data from API, fallback to DEMO_FEED
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (activeCat !== 'all') params.set('category', activeCat);
+    if (activeEntityType) params.set('entityType', activeEntityType);
+    const query = params.toString();
+    fetch(`/api/feed${query ? `?${query}` : ''}`).then(r => r.json()).then(res => {
+      const d = res.data || res;
+      const all = [...(d.vip || []), ...(d.featured || []), ...(d.discounted || []), ...(d.normal || [])];
+      if (all.length > 0) setFeedItems(all.map((item: ApiFeedItem) => normalizeFeedItem(item)));
+    }).catch(() => {});
+  }, [activeCat, activeEntityType]);
+  const { district: userDistrict, loading: locLoading, permissionDenied, refresh: refreshLoc, setManualDistrict } = useUserLocation();
+
+  // Auto-set district from GPS
+  useEffect(() => {
+    if (userDistrict && activeDistrict === 'Бүгд') {
+      const shortMap: Record<string, string> = {
+        'khan-uul': 'ХУД', 'sukhbaatar': 'СБД', 'bayangol': 'БГД',
+        'bayanzurkh': 'БЗД', 'chingeltei': 'ЧД', 'songinokhairkhan': 'СХД',
+        'nalaikh': 'НД', 'baganuur': 'БНД',
+      };
+      const short = shortMap[userDistrict.key];
+      if (short) window.setTimeout(() => setActiveDistrict(short), 0);
+    }
+  }, [activeDistrict, userDistrict]);
+
+  const filtered = useMemo(() => {
+    let list = [...feedItems];
+    if (activeCat !== 'all') list = list.filter(i => i.category === activeCat);
+    if (activeEntityType) list = list.filter(i => i.entityType === activeEntityType);
+    if (activeDistrict !== 'Бүгд') list = list.filter(i => i.district === activeDistrict);
+    if (activeProvince) list = list.filter(i => i.province === activeProvince);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(i => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q));
+    }
+    // Sort: VIP first always, then by sort option
+    const tierOrder: Record<ItemTier, number> = { vip: 0, featured: 1, discounted: 2, normal: 3 };
+    list.sort((a, b) => {
+      const tierDiff = tierOrder[a.tier] - tierOrder[b.tier];
+      if (tierDiff !== 0) return tierDiff;
+      if (activeSort === 'price_asc') return (a.price || 0) - (b.price || 0);
+      if (activeSort === 'price_desc') return (b.price || 0) - (a.price || 0);
+      if (activeSort === 'popular') return (b.viewCount || 0) - (a.viewCount || 0);
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    return list;
+  }, [feedItems, search, activeCat, activeEntityType, activeDistrict, activeProvince, activeSort]);
+
+  const vipCount = filtered.filter(i => i.tier === 'vip').length;
+
+  return (
+    <div className="min-h-screen" style={{ background: "var(--esl-bg-page)" }}>
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-[var(--esl-bg-section)] border-b border-[var(--esl-border)]">
+        <div className="max-w-[1320px] mx-auto px-4 h-16 flex items-center gap-5">
+          <Link href="/" className="flex items-center gap-2.5 no-underline shrink-0">
+            <EsellerLogo size={32} />
+            <span className="text-xl font-black text-[var(--esl-text)] hidden sm:block">eseller<span className="text-[#E31E24]">.mn</span></span>
+          </Link>
+          <div className="flex-1" />
+          <Link href="/store" className="text-sm font-semibold text-[var(--esl-text-muted)] hover:text-[var(--esl-text)] no-underline transition">Дэлгүүр</Link>
+          <Link href="/shops" className="text-sm font-semibold text-[var(--esl-text-muted)] hover:text-[var(--esl-text)] no-underline transition">Дэлгүүрүүд</Link>
+          <Link href="/feed" className="text-sm font-bold text-[#E8242C] no-underline">Зарын булан</Link>
+        </div>
+      </header>
+
+      <div className="max-w-[1320px] mx-auto px-4 py-6">
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-black text-[var(--esl-text)] flex items-center gap-3">
+              📋 Зарын булан
+            </h1>
+            <p className="text-sm text-[var(--esl-text-muted)] mt-1">Бараа, үйлчилгээ, орон сууц, авто — бүгдийг нэг дор</p>
+          </div>
+          <Link href="/feed/post" className="flex items-center gap-2 px-5 py-3 bg-[#E8242C] text-white text-sm font-bold rounded-xl no-underline hover:bg-[#CC0000] transition-colors">
+            <Plus className="w-4 h-4" /> Зар оруулах
+          </Link>
+        </div>
+
+        {/* ═══ Location Bar ═══ */}
+        <div className="mb-6">
+          <LocationBar
+            district={userDistrict}
+            loading={locLoading}
+            permissionDenied={permissionDenied}
+            onDistrictChange={(key) => {
+              setManualDistrict(key);
+              const ubShortMap: Record<string, string> = {
+                'khan-uul': 'ХУД', 'sukhbaatar': 'СБД', 'bayangol': 'БГД',
+                'bayanzurkh': 'БЗД', 'chingeltei': 'ЧД', 'songinokhairkhan': 'СХД',
+                'nalaikh': 'НД', 'baganuur': 'БНД',
+              };
+              if (ubShortMap[key]) {
+                // УБ дүүрэг сонгосон
+                setActiveDistrict(ubShortMap[key]);
+                setActiveProvince('');
+              } else {
+                // Аймаг сонгосон
+                setActiveDistrict('Бүгд');
+                setActiveProvince(key);
+              }
+            }}
+            onRefresh={refreshLoc}
+          />
+        </div>
+
+        {/* ═══ Featured Businesses ═══ */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-black text-[var(--esl-text)]">Онцлох бизнесүүд</h2>
+            <Link href="/shops" className="text-xs font-semibold text-[#E8242C] no-underline hover:underline">Бүгдийг харах →</Link>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Auto Dealer */}
+            <Link href="/entity/auto_dealer/autocity" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
+              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="AutoCity Mongolia" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold bg-[#E8242C] text-white px-2 py-0.5 rounded">Авто</span>
+                  <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> Баталгаатай</span>
+                </div>
+                <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">AutoCity Mongolia</h3>
+                <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">Toyota, BMW, Hyundai · 48 машин · ★ 4.8</p>
+              </div>
+            </Link>
+
+            {/* Construction Company */}
+            <Link href="/entity/company/mongolian-properties" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
+              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="Mongolian Properties" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold bg-blue-500 text-white px-2 py-0.5 rounded">Барилга</span>
+                  <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> Баталгаатай</span>
+                </div>
+                <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">Монголиан Пропертиз</h3>
+                <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">15+ төсөл · 3,200+ айл · ★ 4.7</p>
+              </div>
+            </Link>
+
+            {/* Agent */}
+            <Link href="/entity/agent/erdenbat" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
+              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="Real estate agent" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <div className="absolute bottom-0 left-0 right-0 p-5">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-xs font-bold bg-[#D4AF37] text-black px-2 py-0.5 rounded">Агент</span>
+                  <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> Баталгаатай</span>
+                </div>
+                <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">Б. Эрдэнэбат</h3>
+                <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">12 жил туршлага · 800+ хэлцэл · ★ 4.9</p>
+              </div>
+            </Link>
+          </div>
+        </div>
+
+        {/* Search + filters */}
+        <div className="flex flex-col sm:flex-row gap-3 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#666]" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Зар хайх..."
+              className="w-full h-11 pl-11 pr-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text)] text-sm outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)] transition-all"
+            />
+            {search && (
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--esl-text-disabled)] bg-transparent border-none cursor-pointer">
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+          {/* District */}
+          <select
+            value={activeDistrict}
+            onChange={(e) => setActiveDistrict(e.target.value)}
+            className="h-11 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text-secondary)] text-sm outline-none cursor-pointer"
+          >
+            {DISTRICTS.map(d => <option key={d} value={d}>{d === 'Бүгд' ? '📍 Бүх дүүрэг' : d}</option>)}
+          </select>
+          {/* Sort */}
+          <select
+            value={activeSort}
+            onChange={(e) => setActiveSort(e.target.value)}
+            className="h-11 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text-secondary)] text-sm outline-none cursor-pointer"
+          >
+            {SORT_OPTIONS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+          </select>
+        </div>
+
+        {/* Category pills — DB-ээс авна */}
+        <div className="mb-6">
+          <CategoryBar value={activeCat} onChange={(slug) => {
+            setActiveCat(slug);
+            setActiveEntityType('');
+          }} />
+        </div>
+
+        {/* Result bar */}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-[var(--esl-text-muted)]">
+            <span className="font-extrabold text-[var(--esl-text)]">{filtered.length}</span> зар олдлоо
+            {vipCount > 0 && <span className="text-[#D4AF37] inline-flex items-center gap-1"> · <Crown className="w-3.5 h-3.5" /> {vipCount} ВИП</span>}
+          </p>
+        </div>
+
+        {/* Feed grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {filtered.map((item) => (
+            <FeedCard key={item.id} item={item} onClick={() => setSelectedId(item.id)} />
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-16 px-6 rounded-2xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] max-w-xl mx-auto">
+            <span className="text-5xl block mb-4">📋</span>
+            <p className="text-lg font-bold text-[var(--esl-text)]">Энэ шүүлтүүрээр зар олдсонгүй</p>
+            <p className="text-sm text-[var(--esl-text-muted)] mt-2 mb-5">
+              Бүх дүүргийн бүх зарыг шалгана уу
+            </p>
+            <div className="flex flex-wrap gap-2 justify-center">
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setActiveCat('all');
+                  setActiveEntityType('');
+                  setActiveDistrict('Бүгд');
+                  setActiveProvince('');
+                  setActiveSort('newest');
+                }}
+                className="px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold hover:bg-[#c91f26] transition border-none cursor-pointer"
+              >
+                Шүүлтүүр арилгах
+              </button>
+              <Link
+                href="/store"
+                className="px-5 py-2.5 rounded-xl text-sm font-semibold no-underline hover:bg-[var(--esl-bg-section)] transition border border-[var(--esl-border)] text-[var(--esl-text)]"
+              >
+                Marketplace руу
+              </Link>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <footer className="bg-[var(--esl-bg-section)] border-t border-[var(--esl-border)] py-8 mt-12">
+        <div className="max-w-[1320px] mx-auto px-4 text-center">
+          <p className="text-xs text-[var(--esl-text-disabled)]">© 2026 eseller.mn — Зарын булан</p>
+        </div>
+      </footer>
+      <MobileNav />
+
+      {/* Detail Modal */}
+      {selectedId && (() => {
+        const idx = filtered.findIndex(i => i.id === selectedId);
+        const item = filtered[idx];
+        if (!item) return null;
+        return (
+          <FeedDetailModal
+            item={item}
+            onClose={() => setSelectedId(null)}
+            onPrev={() => { if (idx > 0) setSelectedId(filtered[idx - 1].id); }}
+            onNext={() => { if (idx < filtered.length - 1) setSelectedId(filtered[idx + 1].id); }}
+            hasPrev={idx > 0}
+            hasNext={idx < filtered.length - 1}
+          />
+        );
+      })()}
+    </div>
+  );
+}

@@ -77,11 +77,26 @@ export default function RootLayout({
         </ThemeProvider>
 
         {/* Service Worker */}
-        <Script id="sw-register" strategy="afterInteractive">{`
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
-          }
-        `}</Script>
+        {process.env.NODE_ENV === 'production' ? (
+          <Script id="sw-register" strategy="afterInteractive">{`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
+          `}</Script>
+        ) : (
+          <Script id="sw-dev-cleanup" strategy="afterInteractive">{`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations()
+                .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+                .catch(() => {});
+            }
+            if ('caches' in window) {
+              caches.keys()
+                .then((keys) => Promise.all(keys.filter((key) => key.startsWith('eseller-')).map((key) => caches.delete(key))))
+                .catch(() => {});
+            }
+          `}</Script>
+        )}
 
         {/* Facebook Pixel */}
         <FacebookPixel />
