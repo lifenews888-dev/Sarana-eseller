@@ -228,9 +228,19 @@ const DEMO_DETAIL_ID_ALIASES: Record<string, string> = {
   f10: 'l4',
 };
 
+function canonicalDemoId(id: string) {
+  return DEMO_DETAIL_ID_ALIASES[id] || id;
+}
+
 function getDemoPost(id: string) {
-  const detailId = DEMO_DETAIL_ID_ALIASES[id] || id;
+  const detailId = canonicalDemoId(id);
   return [...DEMO_ENTITY_DETAILS, ...DEMO_FEED].find((item) => item.id === detailId);
+}
+
+function metadataRecord(value: unknown): Record<string, unknown> | undefined {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : undefined;
 }
 
 function metadataString(metadata: FeedItemData['metadata'], key: string): string | undefined {
@@ -256,6 +266,43 @@ function demoEntityProfileHref(entityType: string, entityId?: string | null): st
   return entityProfileHref(entityType, slug);
 }
 
+function relatedDemoScore(current: FeedItemData, candidate: FeedItemData) {
+  let score = 0;
+  if (current.entityId && candidate.entityId === current.entityId) score += 4;
+  if (current.category && candidate.category === current.category) score += 2;
+  if (candidate.entityType === current.entityType) score += 1;
+  return score;
+}
+
+function toRelatedDemoPost(item: FeedItemData) {
+  return {
+    id: canonicalDemoId(item.id),
+    title: item.title,
+    price: item.price,
+    image: item.images[0] || DETAIL_IMAGE,
+    entityType: item.entityType,
+    district: item.district,
+    metadata: item.metadata,
+    createdAt: item.createdAt,
+  };
+}
+
+function getDemoRelatedPosts(current: FeedItemData) {
+  const seen = new Set<string>([canonicalDemoId(current.id)]);
+
+  return [...DEMO_ENTITY_DETAILS, ...DEMO_FEED]
+    .map((item) => ({ item, score: relatedDemoScore(current, item) }))
+    .filter(({ item, score }) => {
+      const id = canonicalDemoId(item.id);
+      if (score <= 0 || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4)
+    .map(({ item }) => toRelatedDemoPost(item));
+}
+
 function toClientPost(item: FeedItemData) {
   const images = item.images.length > 0 ? item.images : [DETAIL_IMAGE];
   return {
@@ -275,6 +322,7 @@ function toClientPost(item: FeedItemData) {
           href: demoEntityProfileHref(item.entityType, item.entityId),
         }
       : null,
+    relatedPosts: getDemoRelatedPosts(item),
   };
 }
 
@@ -311,6 +359,17 @@ export default async function FeedDetailPage({ params }: Props) {
   }
 
   let post;
+  let relatedPosts: Array<{
+    id: string;
+    title: string;
+    price?: number | null;
+    images: string[];
+    entityType: string;
+    district?: string | null;
+    metadata?: unknown;
+    createdAt: Date;
+    media: Array<{ url: string; sortOrder: number }>;
+  }> = [];
   try {
     post = await prisma.feedItem.findUnique({
       where: { id },
@@ -322,6 +381,25 @@ export default async function FeedDetailPage({ params }: Props) {
         serviceProvider: { select: { id: true, name: true, phone: true, slug: true } },
       },
     });
+
+    if (post) {
+      relatedPosts = await prisma.feedItem.findMany({
+        where: {
+          id: { not: post.id },
+          status: 'active',
+          OR: [
+            { entityType: post.entityType },
+            { entityId: post.entityId },
+            ...(post.category ? [{ category: post.category }] : []),
+          ],
+        },
+        include: {
+          media: { orderBy: { sortOrder: 'asc' } },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: 4,
+      });
+    }
   } catch { notFound(); }
 
   if (!post) notFound();
@@ -335,10 +413,12 @@ export default async function FeedDetailPage({ params }: Props) {
     price: post.price || undefined,
     originalPrice: post.originalPrice || undefined,
     images: post.images,
+    refId: post.refId,
+    category: post.category || undefined,
+    tier: post.tier,
+    viewCount: post.viewCount,
     entityType: post.entityType,
-    metadata: post.metadata && typeof post.metadata === 'object' && !Array.isArray(post.metadata)
-      ? post.metadata as Record<string, unknown>
-      : undefined,
+    metadata: metadataRecord(post.metadata),
     district: post.district || undefined,
     province: post.province || undefined,
     allowAffiliate: post.allowAffiliate,
@@ -359,6 +439,16 @@ export default async function FeedDetailPage({ params }: Props) {
         }
       : null,
     createdAt: post.createdAt.toISOString(),
+    relatedPosts: relatedPosts.map((item) => ({
+      id: item.id,
+      title: item.title,
+      price: item.price || undefined,
+      image: item.media[0]?.url || item.images[0] || DETAIL_IMAGE,
+      entityType: item.entityType,
+      district: item.district || undefined,
+      metadata: metadataRecord(item.metadata),
+      createdAt: item.createdAt.toISOString(),
+    })),
   };
 
   return <FeedDetailClient post={clientPost} />;

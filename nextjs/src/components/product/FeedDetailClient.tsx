@@ -6,14 +6,26 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Phone, MapPin, Star, Calendar, Gauge, Fuel, Settings2,
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
-  ClipboardList, Banknote, CheckCircle2, Navigation,
+  ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice } from '@/lib/cards/entityCardConfig';
+import SafeImage from '@/components/ui/SafeImage';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
 import ShareWishlistBar from './ShareWishlistBar';
 import StartSellingButton from './StartSellingButton';
 
 type FeedMetadata = Record<string, unknown>;
+
+interface RelatedFeedPost {
+  id: string;
+  title: string;
+  price?: number;
+  image?: string;
+  entityType: string;
+  district?: string;
+  metadata?: FeedMetadata;
+  createdAt?: string;
+}
 
 interface FeedPost {
   _id: string;
@@ -22,6 +34,10 @@ interface FeedPost {
   price?: number;
   originalPrice?: number;
   images: string[];
+  refId?: string;
+  category?: string;
+  tier?: string;
+  viewCount?: number;
   entityType: string;
   metadata?: FeedMetadata;
   district?: string;
@@ -31,6 +47,7 @@ interface FeedPost {
   media: MediaItem[];
   owner?: { name: string; phone?: string; href?: string } | null;
   createdAt?: string;
+  relatedPosts?: RelatedFeedPost[];
 }
 
 interface DetailItem {
@@ -72,7 +89,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
 
         <div>
           <h1 className="text-2xl font-bold leading-tight">{post.title}</h1>
-          {post.price ? (
+          {typeof post.price === 'number' ? (
             <div className="flex items-center gap-3 mt-2">
               <span className="text-2xl font-black" style={{ color: config.color }}>{entityFormatPrice(post.price)}</span>
               {post.originalPrice && post.originalPrice > post.price ? (
@@ -81,6 +98,8 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
             </div>
           ) : null}
         </div>
+
+        <ListingMetaBar post={post} />
 
         <EntityFields et={et} meta={meta} post={post} />
 
@@ -144,8 +163,84 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
         {post.allowAffiliate ? (
           <StartSellingButton productId={post._id} productName={post.title} commission={post.affiliateCommission} />
         ) : null}
+
+        <RelatedFeedSection posts={post.relatedPosts || []} accent={config.color} />
       </div>
     </div>
+  );
+}
+
+function ListingMetaBar({ post }: { post: FeedPost }) {
+  const items: { key: string; icon: ReactNode; label: string }[] = [];
+  const createdAt = formatDateLabel(post.createdAt);
+
+  if (post.refId) items.push({ key: 'ref', icon: <Hash size={13} />, label: post.refId });
+  if (createdAt) items.push({ key: 'date', icon: <Calendar size={13} />, label: createdAt });
+  if (typeof post.viewCount === 'number') items.push({ key: 'views', icon: <Eye size={13} />, label: `${post.viewCount.toLocaleString('mn-MN')} үзэлт` });
+  if (post.category) items.push({ key: 'category', icon: <Tag size={13} />, label: post.category });
+  if (post.district || post.province) items.push({ key: 'place', icon: <MapPin size={13} />, label: [post.district, post.province].filter(Boolean).join(', ') });
+
+  if (items.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((item) => (
+        <span key={item.key} className="inline-flex items-center gap-1.5 rounded-full bg-[var(--esl-bg-card)] border border-[var(--esl-border)] px-3 py-1.5 text-[11px] font-semibold text-[var(--esl-text-muted)]">
+          {item.icon}
+          {item.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function RelatedFeedSection({ posts, accent }: { posts: RelatedFeedPost[]; accent: string }) {
+  if (posts.length === 0) return null;
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-base font-bold">Ижил төстэй зарууд</h2>
+        <Link href="/feed" className="text-xs font-semibold no-underline" style={{ color: accent }}>
+          Бүгдийг харах
+        </Link>
+      </div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {posts.map((item) => {
+          const facts = relatedFacts(item);
+          return (
+            <Link
+              key={item.id}
+              href={`/feed/${item.id}`}
+              className="group overflow-hidden rounded-lg bg-[var(--esl-bg-card)] border border-[var(--esl-border)] no-underline transition-colors hover:border-red-500/60"
+            >
+              <div className="aspect-[16/10] overflow-hidden bg-[var(--esl-bg-muted)]">
+                <SafeImage
+                  src={item.image}
+                  alt={item.title}
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+                />
+              </div>
+              <div className="p-3">
+                <p className="line-clamp-2 text-sm font-bold text-[var(--esl-text)]">{item.title}</p>
+                {typeof item.price === 'number' ? (
+                  <p className="mt-1 text-sm font-black" style={{ color: accent }}>{entityFormatPrice(item.price)}</p>
+                ) : null}
+                {facts.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {facts.map((fact) => (
+                      <span key={fact} className="rounded-md bg-[var(--esl-bg-muted)] border border-[var(--esl-border)] px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-muted)]">
+                        {fact}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -153,6 +248,41 @@ function phoneHref(phone?: string): string | null {
   if (!phone) return null;
   const normalized = phone.replace(/[^\d+]/g, '');
   return normalized ? `tel:${normalized}` : null;
+}
+
+function relatedFacts(post: RelatedFeedPost): string[] {
+  const et = resolveEntityType(post.entityType);
+  const meta = post.metadata || {};
+  const values: Array<string | null | undefined> = [];
+
+  if (et === 'REAL_ESTATE') {
+    values.push(formatArea(pick(meta, ['sqm', 'area'])));
+    values.push(formatRooms(pick(meta, ['rooms'])));
+    values.push(post.district);
+  } else if (et === 'AUTO') {
+    values.push(formatPlainNumber(pick(meta, ['year'])));
+    values.push(formatMileage(pick(meta, ['mileage'])));
+    values.push(valueToText(pick(meta, ['fuelType', 'fuel'])));
+  } else if (et === 'CONSTRUCTION') {
+    values.push(formatMoneyPerSqm(pick(meta, ['pricePerSqm'])));
+    values.push(valueToText(pick(meta, ['completionDate'])));
+    values.push(post.district);
+  } else if (et === 'SERVICE') {
+    values.push(suffixValue(pick(meta, ['duration']), 'мин'));
+    values.push(valueToText(pick(meta, ['rating'])));
+    values.push(post.district);
+  } else {
+    values.push(post.district);
+  }
+
+  return values.filter((value): value is string => Boolean(value)).slice(0, 3);
+}
+
+function formatDateLabel(value?: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('mn-MN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 }
 
 function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post: FeedPost }) {
