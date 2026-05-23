@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Play, Eye, MapPin, Calendar, Fuel, Gauge, Star, Clock, Truck } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Play, Eye, MapPin, Calendar, Gauge, Star, Clock, Truck } from 'lucide-react';
 import { ENTITY_CARD_CONFIG, resolveEntityType, formatPrice, type EntityType } from '@/lib/cards/entityCardConfig';
 import SafeImage from '@/components/ui/SafeImage';
 
@@ -39,6 +40,7 @@ interface EntityCardProps {
 }
 
 export default function EntityCard({ item, entityType, showSellerBtn = false, onStartSelling, onClick }: EntityCardProps) {
+  const router = useRouter();
   const [mediaIdx, setMediaIdx] = useState(0);
   const [showVideo, setShowVideo] = useState(false);
 
@@ -50,11 +52,28 @@ export default function EntityCard({ item, entityType, showSellerBtn = false, on
   const videos = item.media?.filter((m) => m.type === 'VIDEO') || [];
   const hasVirtualTour = item.media?.some((m) => m.type === 'VIRTUAL_TOUR');
   const displayName = item.title || item.name || '';
+  const detailHref = item.id ? `/feed/${item.id}` : '/feed';
+
+  const openDetail = () => {
+    if (onClick) {
+      onClick(item);
+      return;
+    }
+    router.push(detailHref);
+  };
 
   return (
     <div
-      onClick={() => onClick?.(item)}
+      onClick={openDetail}
       className="bg-[var(--esl-bg-card,var(--esl-bg-section))] border border-[var(--esl-border)] rounded-xl overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-lg"
+      role="link"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openDetail();
+        }
+      }}
     >
       {/* MEDIA */}
       <div className="relative aspect-[4/3] overflow-hidden bg-black/80">
@@ -166,7 +185,7 @@ export default function EntityCard({ item, entityType, showSellerBtn = false, on
 
         {/* Detail link */}
         <Link
-          href={`/feed/${item.id}`}
+          href={detailHref}
           onClick={(e) => e.stopPropagation()}
           className="block mt-2 text-center text-[11px] font-medium py-1.5 rounded-lg border border-[var(--esl-border)] hover:bg-[var(--esl-bg-muted)] transition-colors text-[var(--esl-text-muted)]"
         >

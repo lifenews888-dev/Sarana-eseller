@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { ProductsAPI, type Product } from '@/lib/api';
+import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
 import { DEMO_PRODUCTS, cn } from '@/lib/utils';
 import { useAuth, roleHome } from '@/lib/auth';
@@ -64,6 +64,15 @@ const MARQUEE_ITEMS = [
 
 const WL_KEY = 'eseller_wishlist';
 function loadWL(): Set<string> { try { const r = localStorage.getItem(WL_KEY); return r ? new Set(JSON.parse(r)) : new Set(); } catch { return new Set(); } }
+function productId(product: Product): string {
+  return product._id || product.id || '';
+}
+
+function normalizeProducts(items: Product[]): Product[] {
+  return items
+    .map((item) => ({ ...item, _id: productId(item) }))
+    .filter((item) => Boolean(item._id));
+}
 
 /* ─── Marquee component ─── */
 function AnnouncementMarquee() {
@@ -115,12 +124,12 @@ export default function StorePage() {
         const [pr, sv] = await Promise.allSettled([
           // Try Next.js marketplace API first (DB direct), then backend API
           fetch('/api/marketplace').then(r => r.json()).then(d => d.data?.items?.length ? { products: d.data.items } : null)
-            .then(r => r || ProductsAPI.list({ limit: '60' })),
+            .then(r => r || fetch('/api/products?limit=60').then(res => res.json()).then(d => ({ products: d.data?.products || d.products || [] }))),
           fetch('/api/services?shopId=all').then(r => r.json()).catch(() => ({ data: [] })),
         ]);
-        setProducts(pr.status === 'fulfilled' && pr.value.products?.length ? pr.value.products : DEMO_PRODUCTS as unknown as Product[]);
+        setProducts(normalizeProducts(pr.status === 'fulfilled' && pr.value.products?.length ? pr.value.products : DEMO_PRODUCTS as unknown as Product[]));
         setServices(sv.status === 'fulfilled' && Array.isArray(sv.value?.data) ? sv.value.data : DEMO_SERVICES as unknown as Service[]);
-      } catch { setProducts(DEMO_PRODUCTS as unknown as Product[]); setServices(DEMO_SERVICES as unknown as Service[]); }
+      } catch { setProducts(normalizeProducts(DEMO_PRODUCTS as unknown as Product[])); setServices(DEMO_SERVICES as unknown as Service[]); }
       finally { setLoading(false); }
     })();
   }, []); // eslint-disable-line
@@ -138,8 +147,16 @@ export default function StorePage() {
 
   const saleProducts = useMemo(() => products.filter(p => p.salePrice && p.salePrice < p.price), [products]);
   const quickAdd = useCallback((p: Product) => { cart.add(p, 1); toast.show(`${p.name} нэмэгдлээ`, 'ok'); }, [cart, toast]);
-  const toggleWL = useCallback((id: string) => { setWishlist(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); localStorage.setItem(WL_KEY, JSON.stringify([...n])); return n; }); }, []);
-  const findProduct = (id: string) => products.find(p => p._id === id) || null;
+  const toggleWL = useCallback((id: string) => {
+    setWishlist(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      localStorage.setItem(WL_KEY, JSON.stringify([...n]));
+      return n;
+    });
+  }, []);
+  const findProduct = (id: string) => products.find(p => productId(p) === id) || null;
 
   return (
     <ErrorBoundary>
@@ -385,10 +402,10 @@ export default function StorePage() {
               navigator.clipboard.writeText(`${window.location.origin}/store/${selProduct._id}?ref=${user?.username || ''}`)
                 .then(() => toast.show('Линк хуулагдлаа!', 'ok'));
             }}
-            hasPrev={(() => { const idx = products.findIndex(p => p._id === selProduct._id); return idx > 0; })()}
-            hasNext={(() => { const idx = products.findIndex(p => p._id === selProduct._id); return idx < products.length - 1; })()}
-            onPrev={() => { const idx = products.findIndex(p => p._id === selProduct._id); if (idx > 0) setSelProduct(products[idx - 1]); }}
-            onNext={() => { const idx = products.findIndex(p => p._id === selProduct._id); if (idx < products.length - 1) setSelProduct(products[idx + 1]); }}
+            hasPrev={(() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); return idx > 0; })()}
+            hasNext={(() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); return idx < products.length - 1; })()}
+            onPrev={() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); if (idx > 0) setSelProduct(products[idx - 1]); }}
+            onNext={() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); if (idx < products.length - 1) setSelProduct(products[idx + 1]); }}
             allProducts={products}
             onProductClick={(id) => setSelProduct(findProduct(id))}
           />

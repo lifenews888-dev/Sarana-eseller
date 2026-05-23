@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import ProductDetailClient, { type DetailProduct } from '@/components/product/ProductDetailClient';
 import type { Product } from '@/lib/api';
 import type { Metadata } from 'next';
+import { DEMO_PRODUCTS } from '@/lib/utils';
+
+type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[] };
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -12,16 +15,60 @@ function isValidObjectId(id: string): boolean {
   return /^[a-f\d]{24}$/i.test(id);
 }
 
+function demoProduct(id: string) {
+  return (DEMO_PRODUCTS as DemoProduct[]).find((product) => product._id === id) || null;
+}
+
+function demoDetailProduct(product: NonNullable<ReturnType<typeof demoProduct>>) {
+  const images = product.images || [];
+
+  return {
+    ...product,
+    id: product._id,
+    _id: product._id,
+    images,
+    media: images.map((url: string, sortOrder: number) => ({
+      id: `${product._id}-${sortOrder}`,
+      type: 'IMAGE' as const,
+      url,
+      sortOrder,
+    })),
+    entityType: 'STORE',
+    categoryRef: product.category ? { name: product.category } : null,
+    user: product.store
+      ? { id: 'demo-seller', _id: 'demo-seller', name: product.store.name, username: 'demo', phone: null }
+      : null,
+  };
+}
+
+function demoRelatedProducts(id: string) {
+  return (DEMO_PRODUCTS as DemoProduct[])
+    .filter((product) => product._id !== id)
+    .slice(0, 4)
+    .map((product) => ({
+      ...product,
+      id: product._id,
+      _id: product._id,
+      images: product.images || [],
+    }));
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidObjectId(id)) return { title: 'Олдсонгүй' };
+  if (!isValidObjectId(id)) {
+    const product = demoProduct(id);
+    return product
+      ? { title: `${product.name} - eseller.mn`, description: product.description?.slice(0, 160) || product.name }
+      : { title: 'Олдсонгүй' };
+  }
+
   let product;
   try {
     product = await prisma.product.findUnique({ where: { id }, select: { name: true, description: true, images: true } });
   } catch { return { title: 'Олдсонгүй' }; }
   if (!product) return { title: 'Олдсонгүй' };
   return {
-    title: `${product.name} — eseller.mn`,
+    title: `${product.name} - eseller.mn`,
     description: product.description?.slice(0, 160) || product.name,
     openGraph: {
       title: product.name,
@@ -33,7 +80,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
-  if (!isValidObjectId(id)) notFound();
+  if (!isValidObjectId(id)) {
+    const product = demoProduct(id);
+    if (!product) notFound();
+    return (
+      <ProductDetailClient
+        product={demoDetailProduct(product) as unknown as DetailProduct}
+        relatedProducts={demoRelatedProducts(product._id) as unknown as Product[]}
+      />
+    );
+  }
 
   let product;
   try {
@@ -48,13 +104,11 @@ export default async function ProductPage({ params }: Props) {
 
   if (!product) notFound();
 
-  // Fetch entity media
   const media = await prisma.entityMedia.findMany({
     where: { productId: id },
     orderBy: { sortOrder: 'asc' },
   });
 
-  // Fetch related products — prefer same category, fallback to recent
   let related = product.categoryId
     ? await prisma.product.findMany({
         where: {
@@ -67,7 +121,6 @@ export default async function ProductPage({ params }: Props) {
       })
     : [];
 
-  // Fallback: recent active products if category has none
   if (related.length < 4) {
     const fallback = await prisma.product.findMany({
       where: {
@@ -80,7 +133,6 @@ export default async function ProductPage({ params }: Props) {
     related = [...related, ...fallback];
   }
 
-  // Transform to client-compatible shape
   const clientProduct = {
     ...product,
     _id: product.id,
@@ -100,7 +152,6 @@ export default async function ProductPage({ params }: Props) {
     _id: r.id,
   }));
 
-  // Product JSON-LD structured data for SEO
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',

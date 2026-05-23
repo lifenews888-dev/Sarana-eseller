@@ -76,6 +76,7 @@ export const AuthAPI = {
 // ══════ PRODUCTS ══════
 export interface Product {
   _id: string;
+  id?: string;
   name: string;
   price: number;
   salePrice?: number;

@@ -24,6 +24,8 @@ export default function ProductCard({
   onToggleWish,
 }: ProductCardProps) {
   const router = useRouter();
+  const productId = p._id || p.id || '';
+  const productHref = productId ? `/product/${productId}` : '/store';
   const [renderedAt] = useState(() => Date.now());
   const px = p.salePrice || p.price;
   const disc = discountPercent(p.price, p.salePrice);
@@ -53,12 +55,13 @@ export default function ProductCard({
   }, []);
 
   const handleOpen = useCallback(() => {
+    if (!productId) return;
     if (onClick) {
-      onClick(p._id);
+      onClick(productId);
       return;
     }
-    router.push(`/product/${p._id}`);
-  }, [onClick, p._id, router]);
+    router.push(productHref);
+  }, [onClick, productHref, productId, router]);
 
   // ─── Stock urgency ───
   const stockInfo = (() => {
@@ -116,7 +119,7 @@ export default function ProductCard({
       {onToggleWish && (
         <button
           className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/85 flex items-center justify-center border border-[var(--esl-border)]/50 cursor-pointer transition-all hover:bg-white hover:scale-110"
-          onClick={(e) => { e.stopPropagation(); onToggleWish(p._id); }}
+          onClick={(e) => { e.stopPropagation(); if (productId) onToggleWish(productId); }}
         >
           <Heart className="w-3.5 h-3.5" fill={isWished ? '#E24B4A' : 'none'} color={isWished ? '#E24B4A' : '#666'} strokeWidth={1.5} />
         </button>
@@ -224,7 +227,7 @@ export default function ProductCard({
 
         {/* Detail link */}
         <Link
-          href={`/product/${p._id}`}
+          href={productHref}
           onClick={(e) => e.stopPropagation()}
           className="block mt-2 text-center text-[11px] font-medium py-1.5 rounded-lg border border-[var(--esl-border)] hover:bg-[var(--esl-bg-muted)] transition-colors"
           style={{ color: 'var(--esl-text-muted)' }}

@@ -1,6 +1,64 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ok, fail } from '@/lib/api-envelope';
+import { DEMO_PRODUCTS } from '@/lib/utils';
+
+type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[]; stock?: number };
+
+function isValidObjectId(id: string): boolean {
+  return /^[a-f\d]{24}$/i.test(id);
+}
+
+function demoProduct(id: string) {
+  const product = (DEMO_PRODUCTS as DemoProduct[]).find((item) => item._id === id);
+  if (!product) return null;
+
+  return {
+    id: product._id,
+    _id: product._id,
+    name: product.name,
+    price: product.price,
+    salePrice: product.salePrice,
+    description: product.description,
+    images: product.images || [],
+    stock: product.stock,
+    category: product.category,
+    emoji: product.emoji,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    isActive: true,
+    deliveryFee: null,
+    deliveryType: null,
+    estimatedMins: null,
+    entityType: 'STORE',
+    area: null,
+    rooms: null,
+    floor: null,
+    totalFloors: null,
+    district: null,
+    year: null,
+    mileage: null,
+    fuelType: null,
+    transmission: null,
+    brand: null,
+    duration: null,
+    availableSlots: null,
+    totalUnits: null,
+    soldUnits: null,
+    completionDate: null,
+    pricePerSqm: null,
+    minBatch: null,
+    currentBatch: null,
+    advancePercent: null,
+    deliveryEstimate: null,
+    fileType: null,
+    fileSize: null,
+    downloadCount: null,
+    shop: product.store || null,
+    seller: product.store ? { id: 'demo-seller', name: product.store.name, avatar: null } : null,
+    dropship: null,
+  };
+}
 
 // GET /api/products/[id] — product detail for mobile/web
 export async function GET(
@@ -8,6 +66,11 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  if (!isValidObjectId(id)) {
+    const product = demoProduct(id);
+    return product ? ok(product) : fail('Бараа олдсонгүй', 404);
+  }
 
   try {
     const product = await prisma.product.findUnique({
@@ -40,6 +103,7 @@ export async function GET(
 
     return ok({
       id: product.id,
+      _id: product.id,
       name: product.name,
       price: product.price,
       salePrice: product.salePrice,

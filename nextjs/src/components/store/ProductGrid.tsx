@@ -6,7 +6,7 @@ import type { Product } from '@/lib/api';
 import type { ItemType } from '@/lib/marketplace';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from '../shared/Skeleton';
-import { Sparkles, Package, Scissors, Search, ChevronRight } from 'lucide-react';
+import { Sparkles, Package, Scissors, Search } from 'lucide-react';
 
 const TYPE_TABS = [
   { key: 'all' as const, label: 'Бүгд', icon: Sparkles },
@@ -102,12 +102,14 @@ export default function ProductGrid({
         ) : (
           <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"
             initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.03 } } }}>
-            {products.map((p) => (
-              <motion.div key={p._id} variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
+            {products.map((p) => {
+              const productId = p._id || p.id || p.name;
+              return (
+              <motion.div key={productId} variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
                 <ProductCard product={p} onQuickAdd={onQuickAdd} onClick={onProductClick}
-                  isWished={wishlist.has(p._id)} onToggleWish={onToggleWish} />
+                  isWished={wishlist.has(productId)} onToggleWish={onToggleWish} />
               </motion.div>
-            ))}
+            );})}
           </motion.div>
         )}
       </div>

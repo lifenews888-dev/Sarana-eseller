@@ -61,17 +61,19 @@ export default function SaleSlider({ products, quickAdd, findProduct, setSelProd
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {products.map(p => (
-            <div key={p._id} style={{ flex: '0 0 224px', minWidth: 224 }}>
+          {products.map(p => {
+            const productId = p._id || p.id || p.name;
+            return (
+            <div key={productId} style={{ flex: '0 0 224px', minWidth: 224 }}>
               <ProductCard
                 product={p}
                 onQuickAdd={quickAdd}
                 onClick={id => setSelProduct(findProduct(id))}
-                isWished={wishlist.has(p._id)}
+                isWished={wishlist.has(productId)}
                 onToggleWish={toggleWL}
               />
             </div>
-          ))}
+          );})}
         </div>
       </div>
 
