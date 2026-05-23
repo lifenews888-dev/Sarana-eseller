@@ -19,6 +19,7 @@ import CategorySelector from '@/components/shared/CategorySelector';
 import { categoryPathInfo, findMarketplaceCategory, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
 import {
   listingMetadataPreviewItems,
+  inferListingMetadataDraftFromCategory,
   metadataFieldsForCategory,
   normalizeListingMetadata,
   requiredMetadataComplete,
@@ -463,6 +464,28 @@ export default function PostAdPage() {
         icon: CATEGORY_ICON_MAP[selectedCategory.icon] || Package,
       }
     : null;
+
+  const applyCategorySelection = (slug: string) => {
+    const previousRoot = normalizeMarketplaceCategory(category);
+    const nextRoot = normalizeMarketplaceCategory(slug);
+    const previousInferredDraft = inferListingMetadataDraftFromCategory(category);
+    const inferredDraft = inferListingMetadataDraftFromCategory(slug);
+
+    setCategory(slug);
+    setMetadataDraft((prev) => {
+      const base = previousRoot === nextRoot && previousRoot !== 'all' ? prev : {};
+      const next = { ...base };
+
+      for (const [key, value] of Object.entries(inferredDraft)) {
+        const currentValue = next[key]?.trim();
+        const wasAutoFilled = Boolean(previousInferredDraft[key]) && currentValue === previousInferredDraft[key];
+        if ((!currentValue || wasAutoFilled) && value.trim()) next[key] = value;
+      }
+
+      return next;
+    });
+    setPreviewMetadata({});
+  };
 
   const renderMetadataField = (field: ListingMetadataField) => {
     const value = metadataDraft[field.key] || '';
@@ -940,11 +963,7 @@ export default function PostAdPage() {
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Ангилал <span className="text-[#E8242C]">*</span></label>
           <CategorySelector
             value={category}
-            onChange={(_id, slug) => {
-              setCategory(slug);
-              setMetadataDraft({});
-              setPreviewMetadata({});
-            }}
+            onChange={(_id, slug) => applyCategorySelection(slug)}
             label=""
           />
           {selectedCategoryPathLabel && (

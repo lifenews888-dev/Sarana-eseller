@@ -1,4 +1,4 @@
-import { normalizeMarketplaceCategory } from './marketplaceCategories';
+import { categoryPathInfo, normalizeMarketplaceCategory } from './marketplaceCategories';
 
 export type ListingMetadataFieldType = 'text' | 'number' | 'select' | 'boolean' | 'list';
 export type ListingMetadataValue = string | number | boolean | string[];
@@ -142,6 +142,126 @@ const SERVICE_ROOTS = new Set([
   'photo-video',
   'design-creative',
 ]);
+
+function modelFromPathParts(parts: string[]): string | undefined {
+  const clean = parts.map((part) => part.trim()).filter(Boolean);
+  if (clean.length === 0) return undefined;
+
+  return clean.reduce((model, part) => {
+    if (!model) return part;
+
+    const modelParts = model.split(/\s+/);
+    const last = modelParts[modelParts.length - 1] || '';
+    if (last && part.toLowerCase().startsWith(last.toLowerCase())) {
+      const prefix = modelParts.slice(0, -1).join(' ');
+      return [prefix, part].filter(Boolean).join(' ');
+    }
+
+    return `${model} ${part}`;
+  }, '');
+}
+
+function inferPhoneBrand(label?: string): string | undefined {
+  if (!label) return undefined;
+  if (/apple|iphone/i.test(label)) return 'Apple';
+  if (/samsung|galaxy/i.test(label)) return 'Samsung';
+  if (/xiaomi|redmi|poco/i.test(label)) return 'Xiaomi';
+  if (/huawei/i.test(label)) return 'Huawei';
+  if (/google|pixel/i.test(label)) return 'Google';
+  return label;
+}
+
+function roomCountFromLabel(label: string): string | undefined {
+  if (/студи/i.test(label)) return '1';
+  const match = label.match(/(\d+)/);
+  return match ? match[1] : undefined;
+}
+
+function inferNewBuildingProjectStatus(label: string): string | undefined {
+  if (label === 'Ашиглалтад орсон') return 'Ашиглалтад орсон';
+  if (label === 'Барьж байгаа') return 'Баригдаж байна';
+  if (label === 'Төлөвлөж байгаа') return 'Төлөвлөж байна';
+  if (label === 'Урьдчилсан захиалга') return 'Төлөвлөж байна';
+  return undefined;
+}
+
+function setIfMissing(
+  draft: ListingMetadataDraft,
+  key: string,
+  value?: string,
+) {
+  if (value && !draft[key]) draft[key] = value;
+}
+
+export function inferListingMetadataDraftFromCategory(category?: string | null): ListingMetadataDraft {
+  const path = categoryPathInfo(category);
+  if (!path) return {};
+
+  const root = normalizeMarketplaceCategory(category);
+  const labels = path.labels.slice(1);
+  const draft: ListingMetadataDraft = {};
+
+  if (root === 'vehicles') {
+    const [brand, ...modelParts] = labels;
+    setIfMissing(draft, 'brand', brand);
+    setIfMissing(draft, 'model', modelFromPathParts(modelParts));
+    return draft;
+  }
+
+  if (root === 'phones') {
+    const [brandLabel, ...modelParts] = labels;
+    setIfMissing(draft, 'brand', inferPhoneBrand(brandLabel));
+    setIfMissing(draft, 'model', modelFromPathParts(modelParts));
+    return draft;
+  }
+
+  if (root === 'real-estate') {
+    const [propertyLabel, ...detailLabels] = labels;
+    const propertyTypeMap: Record<string, string> = {
+      'Орон сууц': 'Орон сууц',
+      'Хаус': 'Хаус',
+      'Оффис': 'Оффис',
+      'Газар': 'Газар',
+      'Пентхаус': 'Орон сууц',
+      'Агуулах': 'Агуулах',
+      'Зуслан': 'Зуслан',
+    };
+    setIfMissing(draft, 'propertyType', propertyTypeMap[propertyLabel] || propertyLabel);
+
+    for (const label of detailLabels) {
+      if (label.includes('өрөө') || /студи/i.test(label)) setIfMissing(draft, 'rooms', roomCountFromLabel(label));
+      if (label.includes('Тавилгатай')) setIfMissing(draft, 'furnishing', 'Бүрэн тавилгатай');
+      if (label.includes('Тавилгагүй')) setIfMissing(draft, 'furnishing', 'Тавилгагүй');
+      if (label.includes('түрээс')) setIfMissing(draft, 'listingType', 'Түрээслэх');
+      if (label.includes('худалдах')) setIfMissing(draft, 'listingType', 'Худалдах');
+      if (label.includes('Өмчилсөн')) setIfMissing(draft, 'ownershipType', 'Хувийн өмч');
+    }
+
+    return draft;
+  }
+
+  if (root === 'new-buildings') {
+    const status = labels.map(inferNewBuildingProjectStatus).find(Boolean);
+    if (status) {
+      setIfMissing(draft, 'projectStatus', status);
+    }
+
+    const roomChoice = labels.find((label) => label.includes('өрөө'));
+    setIfMissing(draft, 'roomChoices', roomChoice);
+    return draft;
+  }
+
+  if (SERVICE_ROOTS.has(root)) {
+    setIfMissing(draft, 'packageName', labels[labels.length - 1]);
+    return draft;
+  }
+
+  if (category && root !== 'all') {
+    setIfMissing(draft, 'productType', labels[labels.length - 1] || path.leafLabel);
+  }
+
+  return draft;
+}
 
 export function metadataFieldsForCategory(category?: string | null): ListingMetadataField[] {
   const root = normalizeMarketplaceCategory(category);
