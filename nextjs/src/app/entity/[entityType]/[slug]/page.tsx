@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ENTITY_LABELS, type EntityType } from '@/lib/types/entity';
+import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/listingMetadata';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import SafeImage from '@/components/ui/SafeImage';
@@ -16,6 +17,8 @@ import {
   ArrowRight,
 } from 'lucide-react';
 
+type FeedCardMetadata = Record<string, unknown>;
+
 /* ═══════════════════════════════════════════════════════════════
    DEMO DATA — Rich profiles with real images
    ═══════════════════════════════════════════════════════════════ */
@@ -23,16 +26,19 @@ import {
 interface DemoVehicle {
   id: string; title: string; price: number; year: number; mileage: number;
   fuel: string; image: string; badge?: string; sold?: boolean;
+  category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoProject {
   id: string; title: string; status: string; progress: number;
   image: string; units: number; priceFrom: number; location: string; year: string;
+  category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoListing {
   id: string; title: string; price: number; image: string;
   sqm: number; rooms: number; district: string; badge?: string;
+  category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoEntity {
@@ -76,6 +82,7 @@ interface ApiEntityProfile {
 interface ApiFeedItem {
   id: string;
   title: string;
+  category?: string | null;
   price?: number | null;
   images?: string[] | null;
   media?: { type?: string | null; url?: string | null; thumbnail?: string | null }[] | null;
@@ -265,6 +272,8 @@ function mapVehicle(item: ApiFeedItem): DemoVehicle {
     fuel: stringFrom(meta.fuelType, stringFrom(meta.fuel, '')),
     image: firstImage(item, `vehicle-${item.id}`),
     badge: badgeFromTier(item.tier),
+    category: item.category || undefined,
+    metadata: meta,
   };
 }
 
@@ -283,6 +292,8 @@ function mapProject(item: ApiFeedItem): DemoProject {
     priceFrom: numberFrom(item.price, numberFrom(meta.pricePerSqm)),
     location: stringFrom(meta.address, item.district || ''),
     year: stringFrom(meta.completionDate, ''),
+    category: item.category || undefined,
+    metadata: meta,
   };
 }
 
@@ -297,6 +308,40 @@ function mapListing(item: ApiFeedItem): DemoListing {
     rooms: numberFrom(meta.rooms),
     district: item.district || stringFrom(meta.district, ''),
     badge: badgeFromTier(item.tier),
+    category: item.category || undefined,
+    metadata: meta,
+  };
+}
+
+function compactMetadataPreviewItems(
+  category: string | undefined,
+  metadata: FeedCardMetadata | undefined,
+  limit: number,
+  skipKeys: string[] = [],
+) {
+  if (!metadata) return [];
+  const fields = metadataFieldsForCategory(category);
+  return listingMetadataPreviewItems(fields, metadata, limit + skipKeys.length + 4)
+    .filter((item) => !skipKeys.includes(item.key))
+    .slice(0, limit);
+}
+
+function listingFallbackMetadata(listing: DemoListing): FeedCardMetadata {
+  const title = listing.title.toLowerCase();
+  const propertyType = title.includes('оффис')
+    ? 'Оффис'
+    : title.includes('газар')
+    ? 'Газар'
+    : title.includes('пентхаус')
+    ? 'Пентхаус'
+    : 'Орон сууц';
+
+  return {
+    propertyType,
+    listingType: title.includes('түрээс') ? 'Түрээслэх' : 'Худалдах',
+    sqm: listing.sqm,
+    rooms: listing.rooms,
+    district: listing.district,
   };
 }
 
@@ -391,6 +436,13 @@ function HeroCarousel({ images, label, children }: { images: string[]; label: st
 
 /* ═══ Vehicle Card ═══ */
 function VehicleCard({ v }: { v: DemoVehicle }) {
+  const specItems = compactMetadataPreviewItems(
+    v.category || 'vehicles',
+    v.metadata,
+    4,
+    ['brand', 'model', 'year', 'mileage', 'fuelType', 'fuel'],
+  );
+
   return (
     <Link
       href={feedDetailHref(v.id)}
@@ -421,6 +473,16 @@ function VehicleCard({ v }: { v: DemoVehicle }) {
           <span className="text-[10px] font-semibold text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded">{(v.mileage / 1000).toFixed(0)}к км</span>
           <span className="text-[10px] font-semibold text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded">{v.fuel}</span>
         </div>
+        {specItems.length > 0 && (
+          <div className="mb-3 grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex items-end justify-between gap-3">
           <p className="text-lg font-black text-[#E8242C]">{formatPrice(v.price)}₮</p>
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
@@ -435,6 +497,13 @@ function VehicleCard({ v }: { v: DemoVehicle }) {
 /* ═══ Project Card ═══ */
 function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
+  const specItems = compactMetadataPreviewItems(
+    p.category || 'new-buildings',
+    p.metadata,
+    4,
+    ['projectStatus', 'address', 'totalUnits', 'soldUnits', 'pricePerSqm', 'completionDate'],
+  );
+
   return (
     <Link
       href={feedDetailHref(p.id)}
@@ -476,6 +545,16 @@ function ProjectCard({ p }: { p: DemoProject }) {
             <p className="text-[9px] text-[var(--esl-text-secondary)]">он</p>
           </div>
         </div>
+        {specItems.length > 0 && (
+          <div className="mt-3 grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="mt-4 inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
           Дэлгэрэнгүй харах <ArrowRight className="h-3 w-3" />
         </div>
@@ -486,6 +565,14 @@ function ProjectCard({ p }: { p: DemoProject }) {
 
 /* ═══ Listing Card (Agent) ═══ */
 function ListingCard({ l }: { l: DemoListing }) {
+  const meta = { ...listingFallbackMetadata(l), ...(l.metadata || {}) };
+  const specItems = compactMetadataPreviewItems(
+    l.category || 'apartment',
+    meta,
+    5,
+    ['sqm', 'rooms', 'district'],
+  );
+
   return (
     <Link
       href={feedDetailHref(l.id)}
@@ -504,11 +591,21 @@ function ListingCard({ l }: { l: DemoListing }) {
       </div>
       <div className="p-4">
         <h3 className="text-sm font-bold text-white mb-1.5 group-hover:text-[#E8242C] transition-colors">{l.title}</h3>
-        <div className="flex gap-2 mb-2">
-          <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><Ruler className="w-2.5 h-2.5" /> {l.sqm}м²</span>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {l.sqm > 0 && <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><Ruler className="w-2.5 h-2.5" /> {l.sqm}м²</span>}
           {l.rooms > 0 && <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><DoorOpen className="w-2.5 h-2.5" /> {l.rooms} өрөө</span>}
-          <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> {l.district}</span>
+          {l.district && <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> {l.district}</span>}
         </div>
+        {specItems.length > 0 && (
+          <div className="mb-3 grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+        )}
         <div className="flex items-end justify-between gap-3">
           <p className="text-base font-black text-[#E8242C]">{formatPrice(l.price)}₮</p>
           <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
