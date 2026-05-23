@@ -12,10 +12,10 @@ interface SaleSliderProps {
   setSelProduct: (p: Product | null) => void;
   wishlist: Set<string>;
   toggleWL: (id: string) => void;
-  setActiveCat: (cat: string) => void;
+  onViewDeals: () => void;
 }
 
-export default function SaleSlider({ products, quickAdd, findProduct, setSelProduct, wishlist, toggleWL, setActiveCat }: SaleSliderProps) {
+export default function SaleSlider({ products, quickAdd, findProduct, setSelProduct, wishlist, toggleWL, onViewDeals }: SaleSliderProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (dir: 'left' | 'right') => {
@@ -41,7 +41,7 @@ export default function SaleSlider({ products, quickAdd, findProduct, setSelProd
             <button onClick={() => scroll('right')} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--esl-bg-card)', border: '1px solid #3D3D3D', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
               <ChevronRight size={18} />
             </button>
-            <button onClick={() => setActiveCat('all')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E31E24', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
+            <button onClick={onViewDeals} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E31E24', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
               Бүгд <ChevronRight size={16} />
             </button>
           </div>

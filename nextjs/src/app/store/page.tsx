@@ -129,6 +129,14 @@ function serviceToProduct(service: Service): Product {
   };
 }
 
+function isSaleProduct(product: Product): boolean {
+  return typeof product.salePrice === 'number' && product.salePrice > 0 && product.salePrice < product.price;
+}
+
+function readDealParam(params: URLSearchParams): boolean {
+  return params.get('deal') === '1' || params.get('sale') === '1';
+}
+
 /* ─── Marquee component ─── */
 function AnnouncementMarquee() {
   const doubled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
@@ -162,6 +170,7 @@ export default function StorePage() {
   const [debSearch, setDebSearch] = useState('');
   const [activeCat, setActiveCat] = useState('all');
   const [activeType, setActiveType] = useState<'all' | ItemType>('all');
+  const [dealOnly, setDealOnly] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
@@ -172,27 +181,48 @@ export default function StorePage() {
   const { user, isLoggedIn } = useAuth();
   const toast = useToast();
 
-  const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType) => {
+  const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType, query: string, deals: boolean) => {
     if (typeof window === 'undefined') return;
     const url = new URL(window.location.href);
     if (category === 'all') url.searchParams.delete('category');
     else url.searchParams.set('category', category);
     if (type === 'all') url.searchParams.delete('type');
     else url.searchParams.set('type', type);
+    if (query.trim()) url.searchParams.set('q', query.trim());
+    else url.searchParams.delete('q');
+    if (deals) url.searchParams.set('deal', '1');
+    else {
+      url.searchParams.delete('deal');
+      url.searchParams.delete('sale');
+    }
     window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
   }, []);
 
   const handleCategoryChange = useCallback((category: string) => {
     const nextCategory = normalizeStoreCategory(category);
     setActiveCat(nextCategory);
-    syncUrlFilters(nextCategory, activeType);
-  }, [activeType, syncUrlFilters]);
+    syncUrlFilters(nextCategory, activeType, search, dealOnly);
+  }, [activeType, dealOnly, search, syncUrlFilters]);
 
   const handleTypeChange = useCallback((type: 'all' | ItemType) => {
     const nextType = normalizeStoreType(type);
     setActiveType(nextType);
-    syncUrlFilters(activeCat, nextType);
-  }, [activeCat, syncUrlFilters]);
+    syncUrlFilters(activeCat, nextType, search, dealOnly);
+  }, [activeCat, dealOnly, search, syncUrlFilters]);
+
+  const handleDealChange = useCallback((enabled: boolean) => {
+    setDealOnly(enabled);
+    syncUrlFilters(activeCat, activeType, search, enabled);
+  }, [activeCat, activeType, search, syncUrlFilters]);
+
+  const clearFilters = useCallback(() => {
+    setActiveCat('all');
+    setActiveType('all');
+    setDealOnly(false);
+    setSearch('');
+    setDebSearch('');
+    syncUrlFilters('all', 'all', '', false);
+  }, [syncUrlFilters]);
 
   useEffect(() => {
     cart.load(); setWishlist(loadWL());
@@ -216,8 +246,8 @@ export default function StorePage() {
       const params = new URLSearchParams(window.location.search);
       setActiveCat(normalizeStoreCategory(params.get('category')));
       setActiveType(normalizeStoreType(params.get('type')));
-      const query = params.get('q');
-      if (query !== null) setSearch(query);
+      setDealOnly(readDealParam(params));
+      setSearch(params.get('q') || '');
     };
 
     applyUrlFilters();
@@ -225,7 +255,13 @@ export default function StorePage() {
     return () => window.removeEventListener('popstate', applyUrlFilters);
   }, []);
 
-  useEffect(() => { const t = setTimeout(() => setDebSearch(search), 300); return () => clearTimeout(t); }, [search]);
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebSearch(search);
+      syncUrlFilters(activeCat, activeType, search, dealOnly);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [activeCat, activeType, dealOnly, search, syncUrlFilters]);
 
   const serviceProducts = useMemo(
     () => services.filter((service) => service.isActive).map(serviceToProduct),
@@ -243,11 +279,13 @@ export default function StorePage() {
       : activeType === 'product' ? products
       : catalogItems;
     if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
+    if (dealOnly) list = list.filter(isSaleProduct);
     if (debSearch.trim()) { const q = debSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)); }
     return list;
-  }, [activeCat, activeType, catalogItems, debSearch, products, serviceProducts]);
+  }, [activeCat, activeType, catalogItems, dealOnly, debSearch, products, serviceProducts]);
 
-  const saleProducts = useMemo(() => products.filter(p => p.salePrice && p.salePrice < p.price), [products]);
+  const saleProducts = useMemo(() => catalogItems.filter(isSaleProduct), [catalogItems]);
+  const showSaleSlider = saleProducts.length > 0 && activeCat === 'all' && activeType === 'all' && !dealOnly && !debSearch.trim();
   const quickAdd = useCallback((p: Product) => { cart.add(p, 1); toast.show(`${p.name} нэмэгдлээ`, 'ok'); }, [cart, toast]);
   const toggleWL = useCallback((id: string) => {
     setWishlist(prev => {
@@ -312,6 +350,12 @@ export default function StorePage() {
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setDebSearch(search);
+                    syncUrlFilters(activeCat, activeType, search, dealOnly);
+                  }
+                }}
                 placeholder="Бараа, дэлгүүр хайх..."
                 className="w-full h-11 pl-4 pr-12 rounded-xl text-sm outline-none transition-all"
                 style={{
@@ -320,7 +364,14 @@ export default function StorePage() {
                   color: 'var(--esl-text-primary)',
                 }}
               />
-              <button className="absolute right-1 top-1 bottom-1 px-3 bg-[#E8242C] text-white rounded-lg border-none cursor-pointer hover:bg-[#D31E25] transition-colors">
+              <button
+                type="button"
+                onClick={() => {
+                  setDebSearch(search);
+                  syncUrlFilters(activeCat, activeType, search, dealOnly);
+                }}
+                className="absolute right-1 top-1 bottom-1 px-3 bg-[#E8242C] text-white rounded-lg border-none cursor-pointer hover:bg-[#D31E25] transition-colors"
+              >
                 <Search className="w-4 h-4" />
               </button>
             </div>
@@ -374,8 +425,11 @@ export default function StorePage() {
               ))}
               <div className="flex-1" />
               <button
-                onClick={() => handleCategoryChange('all')}
-                className="shrink-0 h-full px-4 text-sm font-bold border-none cursor-pointer bg-transparent text-[#FCD34D] flex items-center gap-1.5 whitespace-nowrap"
+                onClick={() => handleDealChange(!dealOnly)}
+                className={cn(
+                  'shrink-0 h-full px-4 text-sm font-bold border-none cursor-pointer flex items-center gap-1.5 whitespace-nowrap transition-colors',
+                  dealOnly ? 'bg-white/20 text-white' : 'bg-transparent text-[#FCD34D] hover:bg-white/10'
+                )}
               >
                 <Tag className="w-3.5 h-3.5" />Хямдралтай
               </button>
@@ -403,7 +457,7 @@ export default function StorePage() {
         </div>
 
         {/* ━━━ Sale slider ━━━ */}
-        {saleProducts.length > 0 && (
+        {showSaleSlider && (
           <SaleSlider
             products={saleProducts}
             quickAdd={quickAdd}
@@ -411,7 +465,7 @@ export default function StorePage() {
             setSelProduct={setSelProduct}
             wishlist={wishlist}
             toggleWL={toggleWL}
-            setActiveCat={handleCategoryChange}
+            onViewDeals={() => handleDealChange(true)}
           />
         )}
 
@@ -476,6 +530,7 @@ export default function StorePage() {
               activeCat={activeCat}
               onTypeChange={handleTypeChange}
               onCatChange={handleCategoryChange}
+              onClearFilters={clearFilters}
               onProductClick={id => setSelProduct(findProduct(id))}
               onQuickAdd={quickAdd}
               wishlist={wishlist}
@@ -560,7 +615,7 @@ export default function StorePage() {
                 <ul className="list-none p-0 m-0 space-y-2">
                   {[
                     { t: 'Бүх бараа', h: '/store' },
-                    { t: 'Хямдрал', h: '/store' },
+                    { t: 'Хямдрал', h: '/store?deal=1' },
                     { t: 'Шинэ ирэлт', h: '/store' },
                     { t: 'Зар сурталчилгаа', h: '/feed' },
                   ].map(l => (

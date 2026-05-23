@@ -33,6 +33,7 @@ interface ProductGridProps {
   activeCat: string;
   onTypeChange: (type: 'all' | ItemType) => void;
   onCatChange: (cat: string) => void;
+  onClearFilters: () => void;
   onProductClick: (id: string) => void;
   onQuickAdd: (product: Product) => void;
   wishlist: Set<string>;
@@ -41,7 +42,7 @@ interface ProductGridProps {
 
 export default function ProductGrid({
   products, loading, activeType, activeCat, onTypeChange, onCatChange,
-  onProductClick, onQuickAdd, wishlist, onToggleWish,
+  onClearFilters, onProductClick, onQuickAdd, wishlist, onToggleWish,
 }: ProductGridProps) {
   return (
     <section className="bg-[var(--esl-bg-page)]">
@@ -95,7 +96,7 @@ export default function ProductGrid({
             </div>
             <h3 className="text-base font-bold text-white mb-1">Бараа олдсонгүй</h3>
             <p className="text-sm text-[var(--esl-text-muted)] mb-4">Өөр хайлтаар дахин оролдоно уу</p>
-            <button onClick={() => { onCatChange('all'); onTypeChange('all'); }}
+            <button onClick={onClearFilters}
               className="text-sm font-bold text-[#FF4D53] bg-[rgba(232,36,44,0.15)] px-5 py-2.5 rounded-xl border-none cursor-pointer hover:bg-[rgba(232,36,44,0.25)] transition">
               Шүүлтүүр цэвэрлэх
             </button>
