@@ -55,10 +55,10 @@ type MediaItem = { type: 'image'; url: string } | { type: 'video'; url: string; 
 
 /* ═══ Demo Data ═══ */
 // Real feed items have MongoDB ObjectIds (24 hex chars). DEMO_FEED uses
-// placeholder "1"–"12" — linking to /feed/7 would 404 because the detail
-// page rejects non-ObjectId ids.
+// placeholder "1"–"12"; the detail page supports these launch demo IDs.
 const isRealFeedId = (id: string) => /^[a-f\d]{24}$/i.test(id);
 const isDemoDetailId = (id: string) => /^[vfpl]\d+$/i.test(id);
+const isFeedListDemoId = (id: string) => /^\d+$/.test(id) && Number(id) >= 1 && Number(id) <= 12;
 const DEMO_DETAIL_ID_ALIASES: Record<string, string> = {
   '1': 'l1',
   '2': 'v3',
@@ -73,7 +73,7 @@ const DEMO_DETAIL_ID_ALIASES: Record<string, string> = {
 
 function feedDetailHref(id: string) {
   const detailId = DEMO_DETAIL_ID_ALIASES[id] || id;
-  return isRealFeedId(detailId) || isDemoDetailId(detailId) ? `/feed/${detailId}` : null;
+  return isRealFeedId(detailId) || isDemoDetailId(detailId) || isFeedListDemoId(detailId) ? `/feed/${detailId}` : null;
 }
 
 const DEMO_FEED = [
@@ -503,6 +503,7 @@ function FeedCard({ item, onClick }: { item: typeof DEMO_FEED[0]; onClick: () =>
     <div
       onClick={detailHref ? undefined : onClick}
       data-feed-card
+      data-testid={`feed-card-${item.id}`}
       data-entity-type={item.entityType}
       className={`group relative rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-[0_8px_30px_rgba(0,0,0,.3)] hover:-translate-y-0.5 cursor-pointer ${tier.border} ${tier.bg || 'bg-[var(--esl-bg-card)]'}`}
     >

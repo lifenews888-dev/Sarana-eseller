@@ -8,8 +8,8 @@ import {
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
   ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
 } from 'lucide-react';
-import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice } from '@/lib/cards/entityCardConfig';
-import { categoryLabel as marketplaceCategoryLabel } from '@/lib/marketplaceCategories';
+import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice, type EntityType as DetailEntityType } from '@/lib/cards/entityCardConfig';
+import { categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
 import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/listingMetadata';
 import SafeImage from '@/components/ui/SafeImage';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
@@ -59,7 +59,7 @@ interface DetailItem {
 
 export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const router = useRouter();
-  const et = resolveEntityType(post.entityType);
+  const et = resolveFeedDetailType(post.entityType, post.category);
   const config = ENTITY_CARD_CONFIG[et];
   const meta = post.metadata || {};
   const ownerHref = post.owner?.href;
@@ -329,12 +329,34 @@ function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post
   );
 }
 
-function DetailedSpecs({ et, meta, post }: { et: string; meta: FeedMetadata; post: FeedPost }) {
+function DetailedSpecs({ et, meta, post }: { et: DetailEntityType; meta: FeedMetadata; post: FeedPost }) {
   if (et === 'REAL_ESTATE') return <RealEstateDetails meta={meta} post={post} />;
   if (et === 'AUTO') return <AutoDetails meta={meta} />;
   if (et === 'CONSTRUCTION') return <ConstructionDetails meta={meta} post={post} />;
   if (et === 'SERVICE') return <ServiceDetails meta={meta} post={post} />;
   return <GenericDetails meta={meta} category={post.category} />;
+}
+
+function resolveFeedDetailType(entityType: string, category?: string): DetailEntityType {
+  const categoryRoot = normalizeMarketplaceCategory(category);
+  if (categoryRoot === 'real-estate') return 'REAL_ESTATE';
+  if (categoryRoot === 'new-buildings') return 'CONSTRUCTION';
+  if (categoryRoot === 'vehicles') return 'AUTO';
+  if ([
+    'education-training',
+    'beauty-services',
+    'tech-it-services',
+    'professional-consulting',
+    'auto-services',
+    'repair-services',
+    'printing-services',
+    'manufacturing-custom',
+    'photo-video',
+    'design-creative',
+  ].includes(categoryRoot)) {
+    return 'SERVICE';
+  }
+  return resolveEntityType(entityType);
 }
 
 function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: string }) {
