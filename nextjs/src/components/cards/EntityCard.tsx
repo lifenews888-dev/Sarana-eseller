@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Play, Eye, MapPin, Calendar, Gauge, Star, Clock, Truck } from 'lucide-react';
 import { ENTITY_CARD_CONFIG, resolveEntityType, formatPrice, type EntityType } from '@/lib/cards/entityCardConfig';
+import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/listingMetadata';
 import SafeImage from '@/components/ui/SafeImage';
 
 interface MediaItem {
@@ -22,6 +23,7 @@ interface EntityItem {
   images?: string[];
   media?: MediaItem[];
   metadata?: Record<string, unknown>;
+  category?: string;
   entityType?: string;
   district?: string;
   allowAffiliate?: boolean;
@@ -198,6 +200,7 @@ export default function EntityCard({ item, entityType, showSellerBtn = false, on
 
 function EntityFields({ item, meta, entityType }: { item: EntityItem; meta: Record<string, unknown>; entityType: EntityType }) {
   const fieldStyle = 'text-[11px] text-[var(--esl-text-secondary)] flex items-center gap-1';
+  const genericItems = listingMetadataPreviewItems(metadataFieldsForCategory(item.category), meta, 3);
 
   if (entityType === 'REAL_ESTATE') {
     return (
@@ -282,6 +285,9 @@ function EntityFields({ item, meta, entityType }: { item: EntityItem; meta: Reco
       {meta.deliveryDays != null && (
         <div className={fieldStyle}><Truck size={10} /> {String(meta.deliveryDays)} хоногт</div>
       )}
+      {genericItems.map((field) => (
+        <div key={field.key} className={fieldStyle}>{field.label}: {field.value}</div>
+      ))}
     </div>
   );
 }

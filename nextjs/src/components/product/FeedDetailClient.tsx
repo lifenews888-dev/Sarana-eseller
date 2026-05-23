@@ -9,6 +9,8 @@ import {
   ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice } from '@/lib/cards/entityCardConfig';
+import { categoryLabel as marketplaceCategoryLabel } from '@/lib/marketplaceCategories';
+import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/listingMetadata';
 import SafeImage from '@/components/ui/SafeImage';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
 import ShareWishlistBar from './ShareWishlistBar';
@@ -177,7 +179,7 @@ function ListingMetaBar({ post }: { post: FeedPost }) {
   if (post.refId) items.push({ key: 'ref', icon: <Hash size={13} />, label: post.refId });
   if (createdAt) items.push({ key: 'date', icon: <Calendar size={13} />, label: createdAt });
   if (typeof post.viewCount === 'number') items.push({ key: 'views', icon: <Eye size={13} />, label: `${post.viewCount.toLocaleString('mn-MN')} үзэлт` });
-  if (post.category) items.push({ key: 'category', icon: <Tag size={13} />, label: post.category });
+  if (post.category) items.push({ key: 'category', icon: <Tag size={13} />, label: marketplaceCategoryLabel(post.category) });
   if (post.district || post.province) items.push({ key: 'place', icon: <MapPin size={13} />, label: [post.district, post.province].filter(Boolean).join(', ') });
 
   if (items.length === 0) return null;
@@ -331,7 +333,20 @@ function DetailedSpecs({ et, meta, post }: { et: string; meta: FeedMetadata; pos
   if (et === 'AUTO') return <AutoDetails meta={meta} />;
   if (et === 'CONSTRUCTION') return <ConstructionDetails meta={meta} post={post} />;
   if (et === 'SERVICE') return <ServiceDetails meta={meta} post={post} />;
-  return null;
+  return <GenericDetails meta={meta} category={post.category} />;
+}
+
+function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: string }) {
+  const fields = metadataFieldsForCategory(category);
+  const items = listingMetadataPreviewItems(fields, meta, 18);
+
+  if (items.length === 0) return null;
+
+  return (
+    <DetailSection title="Үзүүлэлт" icon={<ClipboardList size={16} />}>
+      <InfoGrid items={items} />
+    </DetailSection>
+  );
 }
 
 function RealEstateDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
