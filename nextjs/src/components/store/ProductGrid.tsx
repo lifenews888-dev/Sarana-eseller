@@ -6,7 +6,7 @@ import type { Product } from '@/lib/api';
 import type { ItemType } from '@/lib/marketplace';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from '../shared/Skeleton';
-import { Sparkles, Package, Scissors, Search } from 'lucide-react';
+import { Sparkles, Package, Scissors, Search, X } from 'lucide-react';
 
 const TYPE_TABS = [
   { key: 'all' as const, label: 'Бүгд', icon: Sparkles },
@@ -34,16 +34,39 @@ interface ProductGridProps {
   onTypeChange: (type: 'all' | ItemType) => void;
   onCatChange: (cat: string) => void;
   onClearFilters: () => void;
+  onDealChange: (enabled: boolean) => void;
+  onSearchChange: (query: string) => void;
   onProductClick: (id: string) => void;
   onQuickAdd: (product: Product) => void;
   wishlist: Set<string>;
   onToggleWish: (id: string) => void;
+  dealOnly?: boolean;
+  searchQuery?: string;
 }
 
 export default function ProductGrid({
   products, loading, activeType, activeCat, onTypeChange, onCatChange,
-  onClearFilters, onProductClick, onQuickAdd, wishlist, onToggleWish,
+  onClearFilters, onDealChange, onSearchChange, onProductClick, onQuickAdd, wishlist, onToggleWish,
+  dealOnly = false, searchQuery = '',
 }: ProductGridProps) {
+  const sectionTitle = dealOnly
+    ? 'Хямдралтай бараа'
+    : activeType === 'service'
+      ? 'Үйлчилгээ'
+      : activeType === 'product'
+        ? 'Бараа бүтээгдэхүүн'
+        : 'Бүх бараа & үйлчилгээ';
+  const activeFilters = [
+    activeCat !== 'all'
+      ? { key: 'category', label: FILTER_CATEGORIES.find((c) => c.key === activeCat)?.label || activeCat, onClear: () => onCatChange('all') }
+      : null,
+    activeType !== 'all'
+      ? { key: 'type', label: TYPE_TABS.find((t) => t.key === activeType)?.label || activeType, onClear: () => onTypeChange('all') }
+      : null,
+    dealOnly ? { key: 'deal', label: 'Хямдралтай', onClear: () => onDealChange(false) } : null,
+    searchQuery.trim() ? { key: 'search', label: `Хайлт: ${searchQuery.trim()}`, onClear: () => onSearchChange('') } : null,
+  ].filter((item): item is { key: string; label: string; onClear: () => void } => Boolean(item));
+
   return (
     <section className="bg-[var(--esl-bg-page)]">
       <div className="max-w-[1320px] mx-auto px-4 py-8">
@@ -52,7 +75,7 @@ export default function ProductGrid({
           <div className="flex items-center gap-3">
             <div className="w-1 h-6 rounded-full bg-[#E8242C]" />
             <h2 className="text-xl font-black text-white">
-              {activeType === 'service' ? 'Үйлчилгээ' : activeType === 'product' ? 'Бараа бүтээгдэхүүн' : 'Бүх бараа & үйлчилгээ'}
+              {sectionTitle}
             </h2>
           </div>
           <span className="text-sm text-[var(--esl-text-muted)] font-medium bg-[var(--esl-bg-card)] px-3 py-1 rounded-lg">
@@ -72,7 +95,7 @@ export default function ProductGrid({
         </div>
 
         {/* Category pills */}
-        <div className="flex items-center gap-2 mb-6 overflow-x-auto scrollbar-none pb-1">
+        <div className={cn('flex items-center gap-2 overflow-x-auto scrollbar-none pb-1', activeFilters.length > 0 ? 'mb-3' : 'mb-6')}>
           {FILTER_CATEGORIES.map((c) => (
             <button key={c.key} onClick={() => onCatChange(c.key)}
               className={cn('shrink-0 px-4 py-2 rounded-full text-xs font-semibold border cursor-pointer transition-all whitespace-nowrap',
@@ -81,6 +104,30 @@ export default function ProductGrid({
             </button>
           ))}
         </div>
+
+        {activeFilters.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">
+            <span className="text-xs font-semibold text-[var(--esl-text-muted)]">Идэвхтэй:</span>
+            {activeFilters.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={filter.onClear}
+                className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#E8242C]/30 bg-[rgba(232,36,44,0.14)] px-2.5 text-xs font-semibold text-[#FF6B70] transition hover:bg-[rgba(232,36,44,0.24)]"
+              >
+                <span className="max-w-[180px] truncate">{filter.label}</span>
+                <X className="h-3.5 w-3.5" />
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={onClearFilters}
+              className="ml-auto h-8 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] px-3 text-xs font-semibold text-[var(--esl-text-muted)] transition hover:text-[var(--esl-text)]"
+            >
+              Бүгдийг цэвэрлэх
+            </button>
+          </div>
+        )}
 
         {/* Grid */}
         {loading ? (

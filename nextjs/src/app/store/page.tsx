@@ -224,6 +224,14 @@ export default function StorePage() {
     syncUrlFilters('all', 'all', '', false);
   }, [syncUrlFilters]);
 
+  const handleSearchChange = useCallback((query: string) => {
+    setSearch(query);
+    if (!query.trim()) {
+      setDebSearch('');
+      syncUrlFilters(activeCat, activeType, '', dealOnly);
+    }
+  }, [activeCat, activeType, dealOnly, syncUrlFilters]);
+
   useEffect(() => {
     cart.load(); setWishlist(loadWL());
     (async () => {
@@ -349,7 +357,7 @@ export default function StorePage() {
                 ref={searchRef}
                 type="text"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => handleSearchChange(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     setDebSearch(search);
@@ -531,10 +539,14 @@ export default function StorePage() {
               onTypeChange={handleTypeChange}
               onCatChange={handleCategoryChange}
               onClearFilters={clearFilters}
+              onDealChange={handleDealChange}
+              onSearchChange={handleSearchChange}
               onProductClick={id => setSelProduct(findProduct(id))}
               onQuickAdd={quickAdd}
               wishlist={wishlist}
               onToggleWish={toggleWL}
+              dealOnly={dealOnly}
+              searchQuery={search}
             />
           </div>
 
