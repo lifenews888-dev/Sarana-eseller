@@ -16,13 +16,14 @@ const TYPE_TABS = [
 
 const FILTER_CATEGORIES = [
   { key: 'all', label: 'Бүгд', emoji: '🛍' },
-  { key: 'food', label: 'Хоол', emoji: '🍔' },
+  { key: 'food-beverage', label: 'Хоол хүнс', emoji: '🍔' },
   { key: 'fashion', label: 'Хувцас', emoji: '👗' },
   { key: 'electronics', label: 'Электроник', emoji: '📱' },
-  { key: 'beauty', label: 'Гоо сайхан', emoji: '💄' },
-  { key: 'home', label: 'Гэр', emoji: '🏡' },
-  { key: 'sports', label: 'Спорт', emoji: '⚽' },
-  { key: 'other', label: 'Бусад', emoji: '📦' },
+  { key: 'beauty-health', label: 'Гоо сайхан', emoji: '💄' },
+  { key: 'home-living', label: 'Гэр ахуй', emoji: '🏡' },
+  { key: 'sports-travel', label: 'Спорт', emoji: '⚽' },
+  { key: 'kids-toys', label: 'Хүүхдийн', emoji: '🧸' },
+  { key: 'auto-moto', label: 'Авто', emoji: '🚗' },
 ];
 
 interface ProductGridProps {

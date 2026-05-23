@@ -68,10 +68,65 @@ function productId(product: Product): string {
   return product._id || product.id || '';
 }
 
+const CATEGORY_ALIASES: Record<string, string> = {
+  food: 'food-beverage',
+  beauty: 'beauty-health',
+  home: 'home-living',
+  sports: 'sports-travel',
+  auto: 'auto-moto',
+  baby: 'kids-toys',
+  salon: 'beauty-health',
+  beauty_service: 'beauty-health',
+};
+
+const STORE_CATEGORY_KEYS = new Set(['all', ...CATEGORY_ICONS.map((category) => category.key)]);
+
+function normalizeStoreCategory(value?: string | null): string {
+  if (!value) return 'all';
+  const canonical = CATEGORY_ALIASES[value] || value;
+  return STORE_CATEGORY_KEYS.has(canonical) ? canonical : 'all';
+}
+
+function normalizeStoreType(value?: string | null): 'all' | ItemType {
+  return value === 'product' || value === 'service' ? value : 'all';
+}
+
+function normalizeProductCategory(category?: string): string | undefined {
+  if (!category) return undefined;
+  return CATEGORY_ALIASES[category] || category;
+}
+
+function serviceCategoryToStoreCategory(category?: string): string | undefined {
+  const normalized = normalizeProductCategory(category);
+  if (!normalized) return undefined;
+  if (['haircut', 'coloring', 'nails', 'facial', 'massage'].includes(normalized)) return 'beauty-health';
+  if (['repair', 'printing', 'cleaning'].includes(normalized)) return 'service';
+  return normalized;
+}
+
 function normalizeProducts(items: Product[]): Product[] {
   return items
-    .map((item) => ({ ...item, _id: productId(item) }))
+    .map((item) => ({ ...item, _id: productId(item), category: normalizeProductCategory(item.category) }))
     .filter((item) => Boolean(item._id));
+}
+
+function serviceToProduct(service: Service): Product {
+  return {
+    _id: service._id,
+    id: service._id,
+    name: service.name,
+    price: service.price,
+    salePrice: service.salePrice,
+    description: service.description,
+    category: serviceCategoryToStoreCategory(service.category),
+    emoji: service.emoji,
+    images: service.images,
+    rating: service.rating,
+    reviewCount: service.reviewCount,
+    createdAt: service.createdAt,
+    duration: service.duration,
+    entityType: 'SERVICE',
+  };
 }
 
 /* ─── Marquee component ─── */
@@ -117,6 +172,28 @@ export default function StorePage() {
   const { user, isLoggedIn } = useAuth();
   const toast = useToast();
 
+  const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType) => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    if (category === 'all') url.searchParams.delete('category');
+    else url.searchParams.set('category', category);
+    if (type === 'all') url.searchParams.delete('type');
+    else url.searchParams.set('type', type);
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  const handleCategoryChange = useCallback((category: string) => {
+    const nextCategory = normalizeStoreCategory(category);
+    setActiveCat(nextCategory);
+    syncUrlFilters(nextCategory, activeType);
+  }, [activeType, syncUrlFilters]);
+
+  const handleTypeChange = useCallback((type: 'all' | ItemType) => {
+    const nextType = normalizeStoreType(type);
+    setActiveType(nextType);
+    syncUrlFilters(activeCat, nextType);
+  }, [activeCat, syncUrlFilters]);
+
   useEffect(() => {
     cart.load(); setWishlist(loadWL());
     (async () => {
@@ -133,17 +210,42 @@ export default function StorePage() {
       finally { setLoading(false); }
     })();
   }, []); // eslint-disable-line
+
+  useEffect(() => {
+    const applyUrlFilters = () => {
+      const params = new URLSearchParams(window.location.search);
+      setActiveCat(normalizeStoreCategory(params.get('category')));
+      setActiveType(normalizeStoreType(params.get('type')));
+      const query = params.get('q');
+      if (query !== null) setSearch(query);
+    };
+
+    applyUrlFilters();
+    window.addEventListener('popstate', applyUrlFilters);
+    return () => window.removeEventListener('popstate', applyUrlFilters);
+  }, []);
+
   useEffect(() => { const t = setTimeout(() => setDebSearch(search), 300); return () => clearTimeout(t); }, [search]);
+
+  const serviceProducts = useMemo(
+    () => services.filter((service) => service.isActive).map(serviceToProduct),
+    [services]
+  );
+
+  const catalogItems = useMemo(
+    () => [...products, ...serviceProducts],
+    [products, serviceProducts]
+  );
 
   const filtered = useMemo(() => {
     let list: Product[] = activeType === 'service'
-      ? services.filter(s => s.isActive).map(s => ({ _id: s._id, name: s.name, price: s.price, salePrice: s.salePrice, description: s.description, category: s.category, emoji: s.emoji, images: s.images, rating: s.rating, reviewCount: s.reviewCount } as unknown as Product))
+      ? serviceProducts
       : activeType === 'product' ? products
-      : [...products, ...services.filter(s => s.isActive).map(s => ({ _id: s._id, name: s.name, price: s.price, salePrice: s.salePrice, description: s.description, category: s.category, emoji: s.emoji, images: s.images, rating: s.rating, reviewCount: s.reviewCount } as unknown as Product))];
+      : catalogItems;
     if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
     if (debSearch.trim()) { const q = debSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)); }
     return list;
-  }, [products, services, activeCat, debSearch, activeType]);
+  }, [activeCat, activeType, catalogItems, debSearch, products, serviceProducts]);
 
   const saleProducts = useMemo(() => products.filter(p => p.salePrice && p.salePrice < p.price), [products]);
   const quickAdd = useCallback((p: Product) => { cart.add(p, 1); toast.show(`${p.name} нэмэгдлээ`, 'ok'); }, [cart, toast]);
@@ -156,7 +258,7 @@ export default function StorePage() {
       return n;
     });
   }, []);
-  const findProduct = (id: string) => products.find(p => productId(p) === id) || null;
+  const findProduct = useCallback((id: string) => catalogItems.find(p => productId(p) === id) || null, [catalogItems]);
 
   return (
     <ErrorBoundary>
@@ -261,7 +363,7 @@ export default function StorePage() {
               {NAV_CATS.map(c => (
                 <button
                   key={c.key}
-                  onClick={() => { setActiveCat(c.key); setMegaOpen(false); }}
+                  onClick={() => { handleCategoryChange(c.key); setMegaOpen(false); }}
                   className={cn(
                     'shrink-0 h-full px-4 text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-colors',
                     activeCat === c.key ? 'bg-white/20 text-white' : 'bg-transparent text-white/85 hover:bg-white/10'
@@ -272,13 +374,13 @@ export default function StorePage() {
               ))}
               <div className="flex-1" />
               <button
-                onClick={() => setActiveCat('all')}
+                onClick={() => handleCategoryChange('all')}
                 className="shrink-0 h-full px-4 text-sm font-bold border-none cursor-pointer bg-transparent text-[#FCD34D] flex items-center gap-1.5 whitespace-nowrap"
               >
                 <Tag className="w-3.5 h-3.5" />Хямдралтай
               </button>
             </div>
-            <MegaMenu open={megaOpen} onClose={() => setMegaOpen(false)} onSelectCategory={setActiveCat} onSelectType={setActiveType} />
+            <MegaMenu open={megaOpen} onClose={() => setMegaOpen(false)} onSelectCategory={handleCategoryChange} onSelectType={handleTypeChange} />
           </div>
         </header>
 
@@ -309,7 +411,7 @@ export default function StorePage() {
             setSelProduct={setSelProduct}
             wishlist={wishlist}
             toggleWL={toggleWL}
-            setActiveCat={setActiveCat}
+            setActiveCat={handleCategoryChange}
           />
         )}
 
@@ -319,7 +421,7 @@ export default function StorePage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold m-0" style={{ color: 'var(--esl-text-primary)' }}>Ангилалаар хайх</h2>
               <button
-                onClick={() => setActiveCat('all')}
+                onClick={() => handleCategoryChange('all')}
                 className="text-xs font-semibold border-none bg-transparent cursor-pointer flex items-center gap-1 transition-colors"
                 style={{ color: '#E8242C' }}
               >
@@ -332,7 +434,7 @@ export default function StorePage() {
                 return (
                   <button
                     key={cat.key}
-                    onClick={() => setActiveCat(isActive ? 'all' : cat.key)}
+                    onClick={() => handleCategoryChange(isActive ? 'all' : cat.key)}
                     className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-none cursor-pointer transition-all group"
                     style={{
                       background: isActive ? cat.color + '14' : 'var(--esl-bg-card)',
@@ -372,8 +474,8 @@ export default function StorePage() {
               loading={loading}
               activeType={activeType}
               activeCat={activeCat}
-              onTypeChange={setActiveType}
-              onCatChange={setActiveCat}
+              onTypeChange={handleTypeChange}
+              onCatChange={handleCategoryChange}
               onProductClick={id => setSelProduct(findProduct(id))}
               onQuickAdd={quickAdd}
               wishlist={wishlist}
@@ -399,14 +501,14 @@ export default function StorePage() {
             onClose={() => setSelProduct(null)}
             isAffiliate={isLoggedIn && user?.role === 'affiliate'}
             onShare={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/store/${selProduct._id}?ref=${user?.username || ''}`)
+              navigator.clipboard.writeText(`${window.location.origin}/product/${productId(selProduct)}?ref=${user?.username || ''}`)
                 .then(() => toast.show('Линк хуулагдлаа!', 'ok'));
             }}
-            hasPrev={(() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); return idx > 0; })()}
-            hasNext={(() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); return idx < products.length - 1; })()}
-            onPrev={() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); if (idx > 0) setSelProduct(products[idx - 1]); }}
-            onNext={() => { const idx = products.findIndex(p => productId(p) === productId(selProduct)); if (idx < products.length - 1) setSelProduct(products[idx + 1]); }}
-            allProducts={products}
+            hasPrev={(() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); return idx > 0; })()}
+            hasNext={(() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); return idx >= 0 && idx < filtered.length - 1; })()}
+            onPrev={() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); if (idx > 0) setSelProduct(filtered[idx - 1]); }}
+            onNext={() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); if (idx >= 0 && idx < filtered.length - 1) setSelProduct(filtered[idx + 1]); }}
+            allProducts={catalogItems}
             onProductClick={(id) => setSelProduct(findProduct(id))}
           />
         )}
