@@ -295,6 +295,8 @@ function relatedFacts(post: RelatedFeedPost): string[] {
     values.push(valueToText(pick(meta, ['rating'])));
     values.push(post.district);
   } else {
+    values.push(valueToText(pick(meta, ['condition'])));
+    values.push(valueToText(pick(meta, ['brand', 'model'])));
     values.push(post.district);
   }
 
@@ -310,6 +312,7 @@ function formatDateLabel(value?: string): string | null {
 
 function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post: FeedPost }) {
   const pills: { icon: ReactNode; value: string }[] = [];
+  const categoryRoot = normalizeMarketplaceCategory(post.category);
   const add = (icon: ReactNode, value: unknown) => {
     const text = valueToText(value);
     if (text) pills.push({ icon, value: text });
@@ -334,6 +337,14 @@ function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post
     add(<Ruler size={14} />, formatMoneyPerSqm(pick(meta, ['pricePerSqm'])));
     add(<Clock size={14} />, pick(meta, ['completionDate']));
     add(<Building2 size={14} />, pick(meta, ['projectStatus']));
+  } else if (categoryRoot === 'phones') {
+    add(<Smartphone size={14} />, pick(meta, ['storage', 'model']));
+    add(<Tag size={14} />, pick(meta, ['condition']));
+    add(<MapPin size={14} />, post.district);
+  } else if (post.category) {
+    add(<PackageCheck size={14} />, pick(meta, ['brand', 'model']));
+    add(<Tag size={14} />, pick(meta, ['condition']));
+    add(<MapPin size={14} />, post.district);
   }
 
   if (pills.length === 0) return null;
@@ -384,6 +395,10 @@ function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: str
     return <PhoneDetails meta={meta} />;
   }
 
+  if (category && normalizeMarketplaceCategory(category) !== 'all') {
+    return <ProductDetails meta={meta} category={category} />;
+  }
+
   const fields = metadataFieldsForCategory(category);
   const items = listingMetadataPreviewItems(fields, meta, 18);
 
@@ -393,6 +408,56 @@ function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: str
     <DetailSection title="Үзүүлэлт" icon={<ClipboardList size={16} />}>
       <InfoGrid items={items} />
     </DetailSection>
+  );
+}
+
+function ProductDetails({ meta, category }: { meta: FeedMetadata; category?: string }) {
+  const productItems: DetailItem[] = [
+    { label: 'Ангилал', value: category ? marketplaceCategoryLabel(category) : undefined },
+    { label: 'Брэнд', value: pick(meta, ['brand']) },
+    { label: 'Загвар', value: pick(meta, ['model']) },
+    { label: 'Төрөл', value: pick(meta, ['productType', 'itemType']) },
+    { label: 'Төлөв', value: pick(meta, ['condition']) },
+    { label: 'Материал', value: pick(meta, ['material']) },
+    { label: 'Хэмжээ', value: pick(meta, ['size', 'dimensions']) },
+    { label: 'Өнгө', value: pick(meta, ['color']) },
+    { label: 'Хэрэглэсэн хугацаа', value: pick(meta, ['usageDuration']) },
+    { label: 'Баталгаа', value: pick(meta, ['warranty']) },
+  ];
+  const tradeItems: DetailItem[] = [
+    { label: 'Хүргэлт', value: listSummary(pick(meta, ['deliveryOptions', 'delivery'])) },
+    { label: 'Үзэх/авах цэг', value: pick(meta, ['pickupLocation', 'address', 'location']) },
+    { label: 'Үнэ тохиролцох', value: pick(meta, ['negotiable']) },
+    { label: 'Буцаалт', value: pick(meta, ['returnPolicy']) },
+  ];
+  const features = toList(pick(meta, ['features', 'highlights']));
+  const includedItems = toList(pick(meta, ['includedItems', 'accessories']));
+  const checks = toList(pick(meta, ['checks']));
+  const hasProductInfo = hasVisibleDetailItems(productItems);
+  const hasTradeInfo = hasVisibleDetailItems(tradeItems);
+
+  if (!hasProductInfo && !hasTradeInfo && features.length === 0 && includedItems.length === 0 && checks.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-4">
+      {hasProductInfo ? (
+        <DetailSection title="Барааны мэдээлэл" icon={<PackageCheck size={16} />}>
+          <InfoGrid items={productItems} />
+        </DetailSection>
+      ) : null}
+
+      {hasTradeInfo ? (
+        <DetailSection title="Худалдааны нөхцөл" icon={<Banknote size={16} />}>
+          <InfoGrid items={tradeItems} />
+        </DetailSection>
+      ) : null}
+
+      <ChipSection title="Онцлог" icon={<CheckCircle2 size={16} />} items={features} />
+      <ChipSection title="Иж бүрдэл" icon={<PackageCheck size={16} />} items={includedItems} />
+      <ChipSection title="Шалгасан зүйлс" icon={<ShieldCheck size={16} />} items={checks} />
+    </div>
   );
 }
 
@@ -582,6 +647,10 @@ function InfoGrid({ items }: { items: DetailItem[] }) {
   );
 }
 
+function hasVisibleDetailItems(items: DetailItem[]): boolean {
+  return items.some((item) => Boolean(valueToText(item.value)));
+}
+
 function ChipSection({ title, icon, items }: { title: string; icon: ReactNode; items: string[] }) {
   if (items.length === 0) return null;
   return (
@@ -635,6 +704,11 @@ function toList(value: unknown): string[] {
   }
   const text = valueToText(value);
   return text ? [text] : [];
+}
+
+function listSummary(value: unknown): string | null {
+  const items = toList(value);
+  return items.length > 0 ? items.join(', ') : null;
 }
 
 function formatArea(value: unknown): string | null {

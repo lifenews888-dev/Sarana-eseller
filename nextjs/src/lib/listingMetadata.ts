@@ -115,8 +115,18 @@ const SERVICE_FIELDS: ListingMetadataField[] = [
 const GENERIC_PRODUCT_FIELDS: ListingMetadataField[] = [
   { key: 'brand', label: 'Брэнд', type: 'text', placeholder: 'Брэнд нэр' },
   { key: 'model', label: 'Загвар', type: 'text', placeholder: 'Загвар / код' },
+  { key: 'productType', label: 'Барааны төрөл', type: 'text', placeholder: 'Гал тогооны хэрэгсэл / тавилга / хэрэгсэл' },
   { key: 'condition', label: 'Төлөв', type: 'select', options: ['Шинэ', 'Бараг шинэ', 'Хэрэглэсэн', 'Сэвтэй'] },
+  { key: 'material', label: 'Материал', type: 'text', placeholder: 'Металл / мод / даавуу' },
+  { key: 'size', label: 'Хэмжээ', type: 'text', placeholder: 'L / 120x80см / 750W' },
+  { key: 'color', label: 'Өнгө', type: 'text', placeholder: 'Хар / саарал / цагаан' },
+  { key: 'usageDuration', label: 'Хэрэглэсэн хугацаа', type: 'text', placeholder: '6 сар / 1 жил' },
   { key: 'warranty', label: 'Баталгаа', type: 'text', placeholder: '7 хоног / 1 сар' },
+  { key: 'deliveryOptions', label: 'Хүргэлт', type: 'list', placeholder: 'өөрөө авна, хүргэлт тохиролцоно' },
+  { key: 'pickupLocation', label: 'Үзэх/авах байршил', type: 'text', placeholder: 'ЧД, 6-р хороо' },
+  { key: 'negotiable', label: 'Үнэ тохиролцох боломжтой', type: 'boolean' },
+  { key: 'includedItems', label: 'Иж бүрдэл', type: 'list', placeholder: 'хайрцаг, дагалдах хэрэгсэл, нэмэлт эд анги' },
+  { key: 'checks', label: 'Шалгасан зүйлс', type: 'list', placeholder: 'асаалт хэвийн, сэвгүй, бүрэн ажиллагаатай' },
   { key: 'features', label: 'Онцлог', type: 'list', placeholder: 'өнгө, хэмжээ, материал, багц' },
 ];
 
