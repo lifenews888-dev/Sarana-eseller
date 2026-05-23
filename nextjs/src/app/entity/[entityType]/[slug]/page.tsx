@@ -326,6 +326,35 @@ function compactMetadataPreviewItems(
     .slice(0, limit);
 }
 
+function vehicleFallbackMetadata(vehicle: DemoVehicle): FeedCardMetadata {
+  const titleParts = vehicle.title.split(/\s+/).filter(Boolean);
+  const brand = titleParts[0] || '';
+  const model = titleParts.slice(1).join(' ');
+
+  return {
+    brand,
+    model,
+    year: vehicle.year,
+    mileage: vehicle.mileage,
+    fuelType: vehicle.fuel,
+  };
+}
+
+function projectFallbackMetadata(project: DemoProject): FeedCardMetadata {
+  const soldUnits = Math.round((project.units * project.progress) / 100);
+  const availableUnits = Math.max(project.units - soldUnits, 0);
+
+  return {
+    projectStatus: project.status,
+    address: project.location,
+    totalUnits: project.units,
+    soldUnits,
+    availableUnits,
+    pricePerSqm: project.priceFrom,
+    completionDate: project.year,
+  };
+}
+
 function listingFallbackMetadata(listing: DemoListing): FeedCardMetadata {
   const title = listing.title.toLowerCase();
   const propertyType = title.includes('оффис')
@@ -436,11 +465,12 @@ function HeroCarousel({ images, label, children }: { images: string[]; label: st
 
 /* ═══ Vehicle Card ═══ */
 function VehicleCard({ v }: { v: DemoVehicle }) {
+  const meta = { ...vehicleFallbackMetadata(v), ...(v.metadata || {}) };
   const specItems = compactMetadataPreviewItems(
     v.category || 'vehicles',
-    v.metadata,
+    meta,
     4,
-    ['brand', 'model', 'year', 'mileage', 'fuelType', 'fuel'],
+    ['year', 'mileage', 'fuelType', 'fuel'],
   );
 
   return (
@@ -497,9 +527,10 @@ function VehicleCard({ v }: { v: DemoVehicle }) {
 /* ═══ Project Card ═══ */
 function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
+  const meta = { ...projectFallbackMetadata(p), ...(p.metadata || {}) };
   const specItems = compactMetadataPreviewItems(
     p.category || 'new-buildings',
-    p.metadata,
+    meta,
     4,
     ['projectStatus', 'address', 'totalUnits', 'soldUnits', 'pricePerSqm', 'completionDate'],
   );
