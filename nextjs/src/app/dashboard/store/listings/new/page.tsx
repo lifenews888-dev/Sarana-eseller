@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Building2, Car, Home, Loader2, MapPin, Send, Tag } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { MediaUploader } from '@/components/shared/MediaUploader';
 import { ENTITY_CARD_CONFIG, type EntityType as CardEntityType } from '@/lib/cards/entityCardConfig';
+import { PRODUCT_MARKETPLACE_CATEGORIES, SERVICE_MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 
 type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'list';
 type MetadataValue = string | number | boolean | string[];
@@ -161,6 +162,38 @@ const DISTRICTS = ['СБД', 'ХУД', 'БЗД', 'ЧД', 'БГД', 'СХД', 'Н
 const VALID_ENTITY_TYPES = new Set(Object.keys(ENTITY_FIELDS));
 const SPECIAL_ENTITY_TYPES = new Set(['agent', 'company', 'auto_dealer']);
 
+const SPECIAL_LISTING_CATEGORIES: Record<string, { value: string; label: string }[]> = {
+  agent: [
+    { value: 'apartment', label: 'Орон сууц' },
+    { value: 'house', label: 'Хаус' },
+    { value: 'office', label: 'Оффис' },
+    { value: 'land', label: 'Газар' },
+    { value: 'penthouse', label: 'Пентхаус' },
+  ],
+  company: [
+    { value: 'new_building', label: 'Шинэ орон сууц' },
+    { value: 'residential_project', label: 'Орон сууцны төсөл' },
+    { value: 'commercial_project', label: 'Оффис / худалдааны төсөл' },
+    { value: 'mixed_use_project', label: 'Холимог зориулалттай төсөл' },
+  ],
+  auto_dealer: [
+    { value: 'vehicle', label: 'Автомашин' },
+    { value: 'sedan', label: 'Седан' },
+    { value: 'suv', label: 'SUV / Жийп' },
+    { value: 'truck', label: 'Ачааны машин' },
+    { value: 'motorcycle', label: 'Мотоцикл' },
+    { value: 'auto_part', label: 'Авто сэлбэг' },
+  ],
+};
+
+function listingCategoryOptions(entityType: string): { value: string; label: string }[] {
+  if (SPECIAL_LISTING_CATEGORIES[entityType]) return SPECIAL_LISTING_CATEGORIES[entityType];
+  if (entityType === 'service') {
+    return SERVICE_MARKETPLACE_CATEGORIES.map((category) => ({ value: category.key, label: category.label }));
+  }
+  return PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({ value: category.key, label: category.label }));
+}
+
 function normalizeEntityType(value?: string | null): string {
   if (!value) return 'store';
   if (value === 'real_estate') return 'agent';
@@ -298,13 +331,16 @@ export default function NewListingPage() {
   const maxImages = mediaConfig.maxImages;
   const isSpecialListing = SPECIAL_ENTITY_TYPES.has(entityType);
   const SectionIcon = config.icon;
+  const categoryOptions = listingCategoryOptions(entityType);
 
-  const titlePlaceholder = useMemo(() => {
-    if (entityType === 'auto_dealer') return 'Toyota Land Cruiser 300, 2024';
-    if (entityType === 'company') return 'Zaisan Heights шинэ төсөл';
-    if (entityType === 'agent') return '3 өрөө байр, Ривер Гарден';
-    return 'Зарын гарчиг';
-  }, [entityType]);
+  const titlePlaceholder =
+    entityType === 'auto_dealer'
+      ? 'Toyota Land Cruiser 300, 2024'
+      : entityType === 'company'
+        ? 'Zaisan Heights шинэ төсөл'
+        : entityType === 'agent'
+          ? '3 өрөө байр, Ривер Гарден'
+          : 'Зарын гарчиг';
 
   useEffect(() => {
     if (!editId) return;
@@ -501,7 +537,15 @@ export default function NewListingPage() {
         </div>
         <div>
           <label className={labelCls}>Ангилал</label>
-          <input value={form.category} onChange={(e) => update('category', e.target.value)} placeholder="Хоосон үлдээвэл төрлөөс автоматаар онооно" className={inputCls} />
+          <select value={form.category} onChange={(e) => update('category', e.target.value)} className={inputCls}>
+            <option value="">Төрлөөс автоматаар оноох</option>
+            {categoryOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-[11px] text-[var(--esl-text-muted)]">
+            Дэлгүүр, үйлчилгээ, авто, үл хөдлөх болон төслийн зарууд тус бүр өөрийн ангиллын сонголттой.
+          </p>
         </div>
       </div>
 

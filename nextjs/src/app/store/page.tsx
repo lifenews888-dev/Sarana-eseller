@@ -23,28 +23,66 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   Search, ShoppingCart, User, ChevronDown, Tag, ChevronRight,
   ShieldCheck, Truck, RefreshCw, Lock,
-  UtensilsCrossed, Shirt, Cpu, Sparkles, Home, Dumbbell, Scissors, Wrench,
+  Armchair, Baby, BookOpen, BriefcaseBusiness, Car, Camera, Construction, Cpu, Dog,
+  Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse, Home, Laptop,
+  Mars, Monitor, Palette, Plane, Plug, Printer, Scissors, Shield, Shirt, Sparkles,
+  TentTree, UtensilsCrossed, Venus, Wrench,
   Store, Newspaper, Crown,
+  type LucideIcon,
 } from 'lucide-react';
+import {
+  PRODUCT_MARKETPLACE_CATEGORIES,
+  SERVICE_MARKETPLACE_CATEGORIES,
+  normalizeMarketplaceCategory,
+} from '@/lib/marketplaceCategories';
 
 /* ─── Constants ─── */
-const NAV_CATS = [
-  { key: 'food-beverage', label: 'Хоол хүнс' }, { key: 'fashion', label: 'Хувцас' },
-  { key: 'electronics', label: 'Электроник' }, { key: 'beauty-health', label: 'Гоо сайхан' },
-  { key: 'home-living', label: 'Гэр ахуй' }, { key: 'sports-travel', label: 'Спорт' },
-  { key: 'kids-toys', label: 'Хүүхдийн' }, { key: 'auto-moto', label: 'Авто' },
-];
+const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
+  Armchair,
+  Baby,
+  BookOpen,
+  BriefcaseBusiness,
+  Car,
+  Camera,
+  Construction,
+  Cpu,
+  Dog,
+  Dumbbell,
+  Factory,
+  Gamepad2,
+  Gem,
+  Gift,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Laptop,
+  Mars,
+  Monitor,
+  Palette,
+  Plane,
+  Plug,
+  Printer,
+  Scissors,
+  Shield,
+  Shirt,
+  Sparkles,
+  TentTree,
+  UtensilsCrossed,
+  Venus,
+  Wrench,
+};
 
-const CATEGORY_ICONS = [
-  { key: 'food-beverage', label: 'Хоол хүнс', icon: UtensilsCrossed, color: '#059669' },
-  { key: 'fashion', label: 'Хувцас', icon: Shirt, color: '#7C3AED' },
-  { key: 'electronics', label: 'Электроник', icon: Cpu, color: '#0891B2' },
-  { key: 'beauty-health', label: 'Гоо сайхан', icon: Sparkles, color: '#DB2777' },
-  { key: 'home-living', label: 'Гэр ахуй', icon: Home, color: '#D97706' },
-  { key: 'sports-travel', label: 'Спорт', icon: Dumbbell, color: '#2563EB' },
-  { key: 'kids-toys', label: 'Хүүхдийн', icon: Scissors, color: '#9333EA' },
-  { key: 'auto-moto', label: 'Авто', icon: Wrench, color: '#DC2626' },
-];
+const NAV_CATS = PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({
+  key: category.key,
+  label: category.shortLabel || category.label,
+}));
+
+const CATEGORY_ICONS = PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({
+  key: category.key,
+  label: category.shortLabel || category.label,
+  icon: CATEGORY_ICON_MAP[category.icon] || Store,
+  color: category.color,
+}));
 
 const TRUST_ITEMS = [
   { icon: ShieldCheck, label: 'Баталгаат', sub: 'Бүх бараа баталгаатай', color: '#059669' },
@@ -68,23 +106,16 @@ function productId(product: Product): string {
   return product._id || product.id || '';
 }
 
-const CATEGORY_ALIASES: Record<string, string> = {
-  food: 'food-beverage',
-  beauty: 'beauty-health',
-  home: 'home-living',
-  sports: 'sports-travel',
-  auto: 'auto-moto',
-  baby: 'kids-toys',
-  salon: 'beauty-health',
-  beauty_service: 'beauty-health',
-};
-
-const STORE_CATEGORY_KEYS = new Set(['all', ...CATEGORY_ICONS.map((category) => category.key)]);
+const STORE_CATEGORY_KEYS = new Set([
+  'all',
+  ...PRODUCT_MARKETPLACE_CATEGORIES.map((category) => category.key),
+  ...SERVICE_MARKETPLACE_CATEGORIES.map((category) => category.key),
+]);
 const STORE_SORT_KEYS = new Set<StoreSortKey>(['newest', 'price_asc', 'price_desc', 'rating', 'discount']);
 
 function normalizeStoreCategory(value?: string | null): string {
   if (!value) return 'all';
-  const canonical = CATEGORY_ALIASES[value] || value;
+  const canonical = normalizeMarketplaceCategory(value);
   return STORE_CATEGORY_KEYS.has(canonical) ? canonical : 'all';
 }
 
@@ -98,15 +129,11 @@ function normalizeStoreSort(value?: string | null): StoreSortKey {
 
 function normalizeProductCategory(category?: string): string | undefined {
   if (!category) return undefined;
-  return CATEGORY_ALIASES[category] || category;
+  return normalizeMarketplaceCategory(category);
 }
 
 function serviceCategoryToStoreCategory(category?: string): string | undefined {
-  const normalized = normalizeProductCategory(category);
-  if (!normalized) return undefined;
-  if (['haircut', 'coloring', 'nails', 'facial', 'massage'].includes(normalized)) return 'beauty-health';
-  if (['repair', 'printing', 'cleaning'].includes(normalized)) return 'service';
-  return normalized;
+  return normalizeProductCategory(category);
 }
 
 function normalizeProducts(items: Product[]): Product[] {

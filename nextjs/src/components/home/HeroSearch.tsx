@@ -2,15 +2,16 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Crown, Link2, Car, Lock } from 'lucide-react';
+import { PRODUCT_MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 
 const CATEGORIES = [
   { slug: '', name: 'Бүгд' },
-  { slug: 'fashion', name: 'Хувцас' },
-  { slug: 'electronics', name: 'Электроник' },
-  { slug: 'beauty-health', name: 'Гоо сайхан' },
-  { slug: 'home-living', name: 'Гэр ахуй' },
-  { slug: 'auto-moto', name: 'Авто' },
+  ...PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({
+    slug: category.key,
+    name: category.shortLabel || category.label,
+  })),
   { slug: 'real-estate-feed', name: 'Үл хөдлөх' },
+  { slug: 'services-feed', name: 'Үйлчилгээ' },
 ];
 
 export default function HeroSearch() {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { categoryTreeFallback } from '@/lib/marketplaceCategories';
 
 interface Category {
   id: string;
@@ -14,20 +15,11 @@ interface Category {
   children?: Category[];
 }
 
-const FALLBACK_ROOTS: Category[] = [
-  { id: 'f1', slug: 'electronics', name: 'Электроник & Технологи', icon: '💻', level: 0, parentId: null, entityTypes: ['STORE','PRE_ORDER','DIGITAL'] },
-  { id: 'f2', slug: 'fashion', name: 'Хувцас & Гутал', icon: '👗', level: 0, parentId: null, entityTypes: ['STORE','PRE_ORDER'] },
-  { id: 'f3', slug: 'home-living', name: 'Гэр Ахуй & Тавилга', icon: '🏠', level: 0, parentId: null, entityTypes: ['STORE','PRE_ORDER'] },
-  { id: 'f4', slug: 'beauty-health', name: 'Гоо Сайхан & Эрүүл Мэнд', icon: '💄', level: 0, parentId: null, entityTypes: ['STORE','PRE_ORDER'] },
-  { id: 'f5', slug: 'kids-toys', name: 'Хүүхдийн Бараа & Тоглоом', icon: '🧸', level: 0, parentId: null, entityTypes: ['STORE','PRE_ORDER'] },
-  { id: 'f6', slug: 'sports-travel', name: 'Спорт & Аялал', icon: '⚽', level: 0, parentId: null, entityTypes: ['STORE','PRE_ORDER'] },
-  { id: 'f7', slug: 'food-beverage', name: 'Хол & Унд', icon: '🍔', level: 0, parentId: null, entityTypes: ['STORE','PRE_ORDER'] },
-  { id: 'f8', slug: 'auto-moto', name: 'Авто & Мото', icon: '🚗', level: 0, parentId: null, entityTypes: ['STORE','AUTO'] },
-  { id: 'f9', slug: 'construction', name: 'Барилга & Засвар', icon: '🔨', level: 0, parentId: null, entityTypes: ['STORE','CONSTRUCTION'] },
-  { id: 'f10', slug: 'digital-goods', name: 'Дижитал Бараа', icon: '💾', level: 0, parentId: null, entityTypes: ['DIGITAL'] },
-  { id: 'f11', slug: 'books-education', name: 'Ном & Боловсрол', icon: '📚', level: 0, parentId: null, entityTypes: ['STORE','DIGITAL'] },
-  { id: 'f12', slug: 'other', name: 'Бусад', icon: '📦', level: 0, parentId: null, entityTypes: [] },
-];
+const FALLBACK_ROOTS: Category[] = categoryTreeFallback();
+
+function flattenCategories(categories: Category[]): Category[] {
+  return categories.flatMap((category) => [category, ...flattenCategories(category.children || [])]);
+}
 
 interface CategorySelectorProps {
   entityType?: string;
@@ -38,38 +30,50 @@ interface CategorySelectorProps {
 
 export default function CategorySelector({ entityType, value, onChange, label }: CategorySelectorProps) {
   const [categories, setCategories] = useState<Category[]>(FALLBACK_ROOTS);
-  const [flat, setFlat] = useState<Category[]>(FALLBACK_ROOTS);
+  const [flat, setFlat] = useState<Category[]>(flattenCategories(FALLBACK_ROOTS));
   const [loading, setLoading] = useState(true);
   const [selectedRoot, setSelectedRoot] = useState('');
   const [selectedSub, setSelectedSub] = useState('');
 
   useEffect(() => {
-    fetch('/api/admin/categories')
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.categories?.length) setCategories(d.categories);
-        if (d.flat?.length) setFlat(d.flat);
-        // If value already set, find the root/sub
-        if (value && d.flat) {
-          const cat = d.flat.find((c: Category) => c.id === value);
-          if (cat) {
-            if (cat.level === 0) {
-              setSelectedRoot(cat.id);
-            } else if (cat.level === 1) {
-              setSelectedRoot(cat.parentId || '');
-              setSelectedSub(cat.id);
-            } else if (cat.level === 2) {
-              const parent = d.flat.find((c: Category) => c.id === cat.parentId);
-              if (parent) {
-                setSelectedRoot(parent.parentId || '');
-                setSelectedSub(parent.id);
-              }
-            }
+    const applySelection = (all: Category[]) => {
+      if (!value) return;
+      const cat = all.find((c: Category) => c.id === value || c.slug === value);
+      if (cat) {
+        if (cat.level === 0) {
+          setSelectedRoot(cat.id);
+          setSelectedSub('');
+        } else if (cat.level === 1) {
+          setSelectedRoot(cat.parentId || '');
+          setSelectedSub(cat.id);
+        } else if (cat.level === 2) {
+          const parent = all.find((c: Category) => c.id === cat.parentId);
+          if (parent) {
+            setSelectedRoot(parent.parentId || '');
+            setSelectedSub(parent.id);
           }
         }
+      }
+    };
+
+    fetch(`/api/categories/tree${entityType ? `?entityType=${encodeURIComponent(entityType)}` : ''}`)
+      .then((r) => r.json())
+      .then((d) => {
+        const nextCategories = d.data?.length ? d.data : FALLBACK_ROOTS;
+        const nextFlat = flattenCategories(nextCategories);
+        setCategories(nextCategories);
+        setFlat(nextFlat);
+        applySelection(nextFlat);
+      })
+      .catch(() => {
+        const nextCategories = categoryTreeFallback(entityType) as Category[];
+        const nextFlat = flattenCategories(nextCategories);
+        setCategories(nextCategories);
+        setFlat(nextFlat);
+        applySelection(nextFlat);
       })
       .finally(() => setLoading(false));
-  }, [value]);
+  }, [entityType, value]);
 
   // Filter roots by entityType
   const roots = entityType

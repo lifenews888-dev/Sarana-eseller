@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/api';
 import type { ItemType } from '@/lib/marketplace';
+import { MARKETPLACE_CATEGORIES, PRODUCT_MARKETPLACE_CATEGORIES, SERVICE_MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from '../shared/Skeleton';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Package, Scissors, Search, Star, Tag, X } from 'lucide-react';
@@ -14,18 +15,6 @@ const TYPE_TABS = [
   { key: 'all' as const, label: 'Бүгд', icon: Sparkles },
   { key: 'product' as const, label: 'Бараа', icon: Package },
   { key: 'service' as const, label: 'Үйлчилгээ', icon: Scissors },
-];
-
-const FILTER_CATEGORIES = [
-  { key: 'all', label: 'Бүгд', emoji: '🛍' },
-  { key: 'food-beverage', label: 'Хоол хүнс', emoji: '🍔' },
-  { key: 'fashion', label: 'Хувцас', emoji: '👗' },
-  { key: 'electronics', label: 'Электроник', emoji: '📱' },
-  { key: 'beauty-health', label: 'Гоо сайхан', emoji: '💄' },
-  { key: 'home-living', label: 'Гэр ахуй', emoji: '🏡' },
-  { key: 'sports-travel', label: 'Спорт', emoji: '⚽' },
-  { key: 'kids-toys', label: 'Хүүхдийн', emoji: '🧸' },
-  { key: 'auto-moto', label: 'Авто', emoji: '🚗' },
 ];
 
 const SORT_OPTIONS: { key: StoreSortKey; label: string; icon: typeof Sparkles }[] = [
@@ -61,6 +50,20 @@ export default function ProductGrid({
   onClearFilters, onDealChange, onSearchChange, activeSort, onSortChange, onProductClick, onQuickAdd, wishlist, onToggleWish,
   dealOnly = false, searchQuery = '',
 }: ProductGridProps) {
+  const filterCategories = [
+    { key: 'all', label: 'Бүгд', emoji: '🛍' },
+    ...(activeType === 'service'
+      ? SERVICE_MARKETPLACE_CATEGORIES
+      : activeType === 'product'
+        ? PRODUCT_MARKETPLACE_CATEGORIES
+        : MARKETPLACE_CATEGORIES
+    ).map((category) => ({
+      key: category.key,
+      label: category.shortLabel || category.label,
+      emoji: category.emoji,
+    })),
+  ];
+  const activeCategory = MARKETPLACE_CATEGORIES.find((category) => category.key === activeCat);
   const sectionTitle = dealOnly
     ? 'Хямдралтай бараа'
     : activeType === 'service'
@@ -70,7 +73,7 @@ export default function ProductGrid({
         : 'Бүх бараа & үйлчилгээ';
   const activeFilters = [
     activeCat !== 'all'
-      ? { key: 'category', label: FILTER_CATEGORIES.find((c) => c.key === activeCat)?.label || activeCat, onClear: () => onCatChange('all') }
+      ? { key: 'category', label: activeCategory?.label || activeCat, onClear: () => onCatChange('all') }
       : null,
     activeType !== 'all'
       ? { key: 'type', label: TYPE_TABS.find((t) => t.key === activeType)?.label || activeType, onClear: () => onTypeChange('all') }
@@ -132,7 +135,7 @@ export default function ProductGrid({
 
         {/* Category pills */}
         <div className={cn('flex items-center gap-2 overflow-x-auto scrollbar-none pb-1', activeFilters.length > 0 ? 'mb-3' : 'mb-6')}>
-          {FILTER_CATEGORIES.map((c) => (
+          {filterCategories.map((c) => (
             <button key={c.key} onClick={() => onCatChange(c.key)}
               className={cn('shrink-0 px-4 py-2 rounded-full text-xs font-semibold border cursor-pointer transition-all whitespace-nowrap',
                 activeCat === c.key ? 'bg-[#E8242C] text-white border-[#E8242C]' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-muted)] border-[var(--esl-border)] hover:border-[#E8242C]')}>
@@ -140,6 +143,24 @@ export default function ProductGrid({
             </button>
           ))}
         </div>
+
+        {activeCategory && activeCategory.subcategories.length > 0 && (
+          <div className="mb-4 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-3">
+            <div className="mb-2 text-xs font-semibold text-[var(--esl-text-muted)]">
+              {activeCategory.label} дэд ангилал
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {activeCategory.subcategories.map((subcategory) => (
+                <span
+                  key={subcategory}
+                  className="rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] px-2.5 py-1.5 text-xs font-medium text-[var(--esl-text-muted)]"
+                >
+                  {subcategory}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {activeFilters.length > 0 && (
           <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">

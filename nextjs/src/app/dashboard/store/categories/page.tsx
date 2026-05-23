@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { Search, Check, ChevronRight, ChevronDown, Loader2, Plus, Send, FolderOpen } from 'lucide-react';
 import { useToast } from '@/components/shared/Toast';
 import EmptyState from '@/components/shared/EmptyState';
@@ -27,11 +27,7 @@ export default function StoreCategoriesPage() {
   const [reqParent, setReqParent] = useState('');
   const [reqSending, setReqSending] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  async function loadData() {
+  const loadData = useCallback(async () => {
     const token = localStorage.getItem('token');
     const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -46,13 +42,17 @@ export default function StoreCategoriesPage() {
       const selData = await selRes.json();
 
       setTree(treeData.data || []);
-      setSelected(new Set((selData.data || []).map((c: any) => c.id)));
+      setSelected(new Set((selData.data || []).map((c: Category) => c.id)));
     } catch {
       toast.show('Ангилал ачаалж чадсангүй', 'error');
     } finally {
       setLoading(false);
     }
-  }
+  }, [toast]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   function toggleCategory(id: string) {
     setSelected(prev => {
@@ -125,6 +125,11 @@ export default function StoreCategoriesPage() {
   }
 
   const filtered = filterTree(tree, search);
+  const totalCategoryCount = tree.reduce((total, cat) => {
+    const countChildren = (items: Category[] = []): number =>
+      items.reduce((sum, item) => sum + 1 + countChildren(item.children || []), 0);
+    return total + 1 + countChildren(cat.children || []);
+  }, 0);
 
   if (loading) return (
     <div className="flex items-center justify-center py-20">
@@ -139,7 +144,7 @@ export default function StoreCategoriesPage() {
         <div>
           <h1 className="text-lg font-bold" style={{ color: 'var(--esl-text-primary)' }}>📂 Ангилал удирдлага</h1>
           <p className="text-xs mt-1" style={{ color: 'var(--esl-text-muted)' }}>
-            191 ангилалаас сонгож дэлгүүртээ нэмнэ · {selected.size} сонгогдсон
+            {totalCategoryCount} ангилал, дэд ангилалаас сонгож дэлгүүртээ нэмнэ · {selected.size} сонгогдсон
           </p>
         </div>
         <div className="flex gap-2">
