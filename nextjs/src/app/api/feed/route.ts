@@ -4,6 +4,11 @@ import { prisma } from '@/lib/prisma';
 import { json, requireAuth, errorJson } from '@/lib/api-auth';
 import { DEMO_FEED } from '@/lib/types/entity';
 import { buildOwnedFeedWhere, normalizeListingEntityType } from '@/lib/feedOwnership';
+import {
+  categoryDescendantValues,
+  categoryPathInfo,
+  normalizeMarketplaceCategory,
+} from '@/lib/marketplaceCategories';
 
 const mediaInclude = { media: { orderBy: { sortOrder: 'asc' as const } } };
 
@@ -225,7 +230,20 @@ export async function GET(req: NextRequest) {
 
   try {
     const where: Prisma.FeedItemWhereInput = mine ? {} : { status: 'active' };
-    if (category) where.category = category;
+    if (category && category !== 'all') {
+      const categoryRoot = normalizeMarketplaceCategory(category);
+      const descendantValues = categoryDescendantValues(category);
+      const categoryWhere: Prisma.FeedItemWhereInput =
+        categoryRoot && categoryRoot !== 'all' && categoryRoot !== category
+          ? {
+              OR: [
+                { category },
+                { category: categoryRoot, subcategory: { in: descendantValues } },
+              ],
+            }
+          : { category };
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), categoryWhere];
+    }
     if (tier && tier !== 'all') where.tier = tier;
     if (entityType && !mine) where.entityType = entityType;
     if (district) where.district = district;
@@ -285,7 +303,17 @@ export async function GET(req: NextRequest) {
     }
 
     let items = [...DEMO_FEED];
-    if (category) items = items.filter((i) => i.category === category);
+    if (category && category !== 'all') {
+      const categoryRoot = normalizeMarketplaceCategory(category);
+      const descendantValues = categoryDescendantValues(category);
+      items = items.filter((i) => {
+        if (i.category === category) return true;
+        return categoryRoot !== category
+          && i.category === categoryRoot
+          && typeof i.subcategory === 'string'
+          && descendantValues.includes(i.subcategory);
+      });
+    }
     if (entityType) items = items.filter((i) => normalizeListingEntityType(i.entityType) === entityType);
     if (search) {
       const q = search.toLowerCase();
@@ -355,7 +383,19 @@ export async function POST(req: NextRequest) {
       normalizedDistrict,
       normalizedPrice
     );
-    const normalizedCategory = cleanString(category) || defaultCategory(normalizedEntityType, normalizedMetadata);
+    const rawCategory = cleanString(category) || defaultCategory(normalizedEntityType, normalizedMetadata);
+    const categoryRoot = normalizeMarketplaceCategory(rawCategory);
+    const normalizedCategory = categoryRoot === 'all' ? rawCategory : categoryRoot;
+    const categoryPath = categoryPathInfo(normalizedSubcategory || rawCategory || normalizedCategory);
+
+    if (normalizedCategory) normalizedMetadata.categoryRoot = normalizedCategory;
+    if (normalizedSubcategory) normalizedMetadata.categorySelection = normalizedSubcategory;
+    if (categoryPath) {
+      normalizedMetadata.categoryPath = categoryPath.labels;
+      normalizedMetadata.categoryPathLabel = categoryPath.label;
+      normalizedMetadata.categoryLeafLabel = categoryPath.leafLabel;
+    }
+
     if (!title || !normalizedEntityType) return errorJson('title, entityType шаардлагатай');
 
     if (!normalizedTitle) return errorJson('Гарчиг шаардлагатай');

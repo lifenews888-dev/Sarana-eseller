@@ -666,6 +666,7 @@ function toRelatedDemoPost(item: FeedItemData) {
     price: item.price,
     image: item.images[0] || DETAIL_IMAGE,
     category: item.category,
+    subcategory: item.subcategory,
     entityType: item.entityType,
     district: item.district,
     metadata: item.metadata,
@@ -752,6 +753,7 @@ export default async function FeedDetailPage({ params }: Props) {
     images: string[];
     entityType: string;
     category?: string | null;
+    subcategory?: string | null;
     district?: string | null;
     metadata?: unknown;
     createdAt: Date;
@@ -802,6 +804,7 @@ export default async function FeedDetailPage({ params }: Props) {
     images: post.images,
     refId: post.refId,
     category: post.category || undefined,
+    subcategory: post.subcategory || undefined,
     tier: post.tier,
     viewCount: post.viewCount,
     entityType: post.entityType,
@@ -832,6 +835,7 @@ export default async function FeedDetailPage({ params }: Props) {
       price: item.price || undefined,
       image: item.media[0]?.url || item.images[0] || DETAIL_IMAGE,
       category: item.category || undefined,
+      subcategory: item.subcategory || undefined,
       entityType: item.entityType,
       district: item.district || undefined,
       metadata: metadataRecord(item.metadata),

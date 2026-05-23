@@ -13,9 +13,10 @@ import {
   X, Heart, Phone, MessageCircle, Share2, ChevronLeft, ChevronRight,
   BadgeCheck, Calendar, Ruler, DoorOpen, Fuel, Gauge, Play, ImageIcon,
   Crown, Star, Flame, Store, Home, Building2, Car, BellRing, User,
-  Laptop, Shirt, Sparkles, Baby, Dumbbell, UtensilsCrossed, Wrench, Gem, HardDrive, Briefcase, Package,
+  Laptop, Shirt, Sparkles, Baby, Dumbbell, UtensilsCrossed, Wrench, Gem, HardDrive, Briefcase, Package, Tag,
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
+import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel } from '@/lib/marketplaceCategories';
 
 /* ═══ Types ═══ */
 type ItemTier = 'vip' | 'featured' | 'discounted' | 'normal';
@@ -143,7 +144,7 @@ const DEMO_FEED = [
   ] as MediaItem[], category: 'electronics', entityType: 'user' as EntityType, entityName: 'Тэмүүжин', verified: false, tier: 'normal' as ItemTier, viewCount: 198, district: 'ХУД', createdAt: '2026-04-03' },
 ];
 
-type FeedItem = (typeof DEMO_FEED)[number] & { province?: string };
+type FeedItem = (typeof DEMO_FEED)[number] & { province?: string; subcategory?: string };
 type ApiFeedMedia = { type?: string; url?: string; thumb?: string | null };
 type ApiFeedItem = Omit<Partial<FeedItem>, 'media'> & {
   _id?: string;
@@ -225,6 +226,25 @@ function categoryIcon(cat: string): LucideIcon {
   return map[cat] || Package;
 }
 
+function feedCategoryLabel(item: FeedItem): string | null {
+  const meta = (item.metadata && typeof item.metadata === 'object'
+    ? item.metadata
+    : {}) as Record<string, unknown>;
+  const metaPath = Array.isArray(meta.categoryPath)
+    ? meta.categoryPath.map((value) => String(value).trim()).filter(Boolean)
+    : [];
+  if (metaPath.length > 0) return metaPath.join(' / ');
+
+  const metaSelection = typeof meta.categorySelection === 'string' ? meta.categorySelection : '';
+  const selected = item.subcategory || metaSelection || item.category;
+  const path = categoryPathInfo(selected);
+  if (path) return path.label;
+
+  if (item.category && item.subcategory) return `${marketplaceCategoryLabel(item.category)} / ${item.subcategory}`;
+  if (item.category) return marketplaceCategoryLabel(item.category);
+  return null;
+}
+
 /* ═══ Media Carousel ═══ */
 function MediaCarousel({ media, title, category, isVip, tier, disc }: {
   media: MediaItem[];
@@ -303,7 +323,7 @@ function MediaCarousel({ media, title, category, isVip, tier, disc }: {
 
 /* ═══ Detail Modal ═══ */
 function FeedDetailModal({ item, onClose, onPrev, onNext, hasPrev, hasNext }: {
-  item: typeof DEMO_FEED[0];
+  item: FeedItem;
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
@@ -315,6 +335,7 @@ function FeedDetailModal({ item, onClose, onPrev, onNext, hasPrev, hasNext }: {
   const isVip = item.tier === 'vip';
   const disc = item.originalPrice ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
   const detailHref = feedDetailHref(item.id);
+  const categoryLabel = feedCategoryLabel(item);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
@@ -394,6 +415,12 @@ function FeedDetailModal({ item, onClose, onPrev, onNext, hasPrev, hasNext }: {
             <span className="text-[var(--esl-text-muted)]">·</span>
             <span className="text-xs text-[var(--esl-text-muted)]">#{item.refId}</span>
           </div>
+          {categoryLabel && (
+            <div className="mb-3 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 text-xs font-semibold text-[var(--esl-text-secondary)]">
+              <Tag className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{categoryLabel}</span>
+            </div>
+          )}
 
           {/* Title */}
           <h2 className={`text-2xl font-black mb-2 ${isVip ? 'text-[#FFD700]' : 'text-[var(--esl-text-primary)]'}`}>
@@ -492,12 +519,13 @@ function FeedDetailModal({ item, onClose, onPrev, onNext, hasPrev, hasNext }: {
 }
 
 /* ═══ Feed Card ═══ */
-function FeedCard({ item, onClick }: { item: typeof DEMO_FEED[0]; onClick: () => void }) {
+function FeedCard({ item, onClick }: { item: FeedItem; onClick: () => void }) {
   const tier = TIER_CONFIG[item.tier];
   const entity = ENTITY_LABELS[item.entityType];
   const isVip = item.tier === 'vip';
   const disc = item.originalPrice ? Math.round((1 - item.price / item.originalPrice) * 100) : 0;
   const detailHref = feedDetailHref(item.id);
+  const categoryLabel = feedCategoryLabel(item);
 
   return (
     <div
@@ -573,6 +601,12 @@ function FeedCard({ item, onClick }: { item: typeof DEMO_FEED[0]; onClick: () =>
               </>
             )}
           </div>
+          {categoryLabel && (
+            <div className="mb-2 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-elevated)] px-2.5 py-1 text-[11px] font-semibold text-[var(--esl-text-secondary)]">
+              <Tag className="h-3 w-3 shrink-0" />
+              <span className="truncate">{categoryLabel}</span>
+            </div>
+          )}
 
           {/* Title */}
           <h3 className={`text-base font-extrabold mb-1.5 line-clamp-2 leading-snug ${isVip ? 'text-[#FFD700]' : 'text-[var(--esl-text)]'} group-hover:text-[#FF4D53] transition-colors`}>

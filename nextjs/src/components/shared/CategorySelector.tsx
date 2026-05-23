@@ -36,7 +36,10 @@ export default function CategorySelector({ value, onChange, label }: CategorySel
 
   useEffect(() => {
     const applySelection = (all: Category[]) => {
-      if (!value) return;
+      if (!value) {
+        setSelectedPath([]);
+        return;
+      }
       const cat = all.find((c: Category) => c.id === value || c.slug === value);
       if (!cat) return;
 

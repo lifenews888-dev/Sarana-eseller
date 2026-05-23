@@ -10,7 +10,7 @@ import {
   Smartphone, BatteryCharging, PackageCheck,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice, type EntityType as DetailEntityType } from '@/lib/cards/entityCardConfig';
-import { categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
+import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
 import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/listingMetadata';
 import SafeImage from '@/components/ui/SafeImage';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
@@ -25,6 +25,7 @@ interface RelatedFeedPost {
   price?: number;
   image?: string;
   category?: string;
+  subcategory?: string;
   entityType: string;
   district?: string;
   metadata?: FeedMetadata;
@@ -40,6 +41,7 @@ interface FeedPost {
   images: string[];
   refId?: string;
   category?: string;
+  subcategory?: string;
   tier?: string;
   viewCount?: number;
   entityType: string;
@@ -61,7 +63,7 @@ interface DetailItem {
 
 export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const router = useRouter();
-  const et = resolveFeedDetailType(post.entityType, post.category);
+  const et = resolveFeedDetailType(post.entityType, post.subcategory || post.category);
   const config = ENTITY_CARD_CONFIG[et];
   const meta = post.metadata || {};
   const ownerHref = post.owner?.href;
@@ -187,7 +189,8 @@ function ListingMetaBar({ post }: { post: FeedPost }) {
   if (post.refId) items.push({ key: 'ref', icon: <Hash size={13} />, label: post.refId });
   if (createdAt) items.push({ key: 'date', icon: <Calendar size={13} />, label: createdAt });
   if (typeof post.viewCount === 'number') items.push({ key: 'views', icon: <Eye size={13} />, label: `${post.viewCount.toLocaleString('mn-MN')} үзэлт` });
-  if (post.category) items.push({ key: 'category', icon: <Tag size={13} />, label: marketplaceCategoryLabel(post.category) });
+  const categoryLabel = listingCategoryLabel(post.category, post.subcategory, post.metadata);
+  if (categoryLabel) items.push({ key: 'category', icon: <Tag size={13} />, label: categoryLabel });
   if (post.district || post.province) items.push({ key: 'place', icon: <MapPin size={13} />, label: [post.district, post.province].filter(Boolean).join(', ') });
 
   if (items.length === 0) return null;
@@ -268,9 +271,25 @@ function formatPhoneLabel(phone?: string): string | null {
   return phone.trim() || null;
 }
 
+function listingCategoryLabel(category?: string, subcategory?: string, meta?: FeedMetadata): string | null {
+  const metaPath = Array.isArray(meta?.categoryPath)
+    ? meta.categoryPath.map((item) => String(item).trim()).filter(Boolean)
+    : [];
+  if (metaPath.length > 0) return metaPath.join(' / ');
+
+  const metaSelection = typeof meta?.categorySelection === 'string' ? meta.categorySelection : '';
+  const selected = subcategory || metaSelection || category;
+  const path = categoryPathInfo(selected);
+  if (path) return path.label;
+
+  if (category && subcategory) return `${marketplaceCategoryLabel(category)} / ${subcategory}`;
+  if (category) return marketplaceCategoryLabel(category);
+  return null;
+}
+
 function relatedFacts(post: RelatedFeedPost): string[] {
-  const et = resolveFeedDetailType(post.entityType, post.category);
-  const categoryRoot = normalizeMarketplaceCategory(post.category);
+  const et = resolveFeedDetailType(post.entityType, post.subcategory || post.category);
+  const categoryRoot = normalizeMarketplaceCategory(post.subcategory || post.category);
   const meta = post.metadata || {};
   const values: Array<string | null | undefined> = [];
 
@@ -312,7 +331,7 @@ function formatDateLabel(value?: string): string | null {
 
 function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post: FeedPost }) {
   const pills: { icon: ReactNode; value: string }[] = [];
-  const categoryRoot = normalizeMarketplaceCategory(post.category);
+  const categoryRoot = normalizeMarketplaceCategory(post.subcategory || post.category);
   const add = (icon: ReactNode, value: unknown) => {
     const text = valueToText(value);
     if (text) pills.push({ icon, value: text });
@@ -365,7 +384,7 @@ function DetailedSpecs({ et, meta, post }: { et: DetailEntityType; meta: FeedMet
   if (et === 'AUTO') return <AutoDetails meta={meta} />;
   if (et === 'CONSTRUCTION') return <ConstructionDetails meta={meta} post={post} />;
   if (et === 'SERVICE') return <ServiceDetails meta={meta} post={post} />;
-  return <GenericDetails meta={meta} category={post.category} />;
+  return <GenericDetails meta={meta} category={post.category} subcategory={post.subcategory} />;
 }
 
 function resolveFeedDetailType(entityType: string, category?: string): DetailEntityType {
@@ -390,16 +409,17 @@ function resolveFeedDetailType(entityType: string, category?: string): DetailEnt
   return resolveEntityType(entityType);
 }
 
-function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: string }) {
-  if (normalizeMarketplaceCategory(category) === 'phones') {
+function GenericDetails({ meta, category, subcategory }: { meta: FeedMetadata; category?: string; subcategory?: string }) {
+  const selectedCategory = subcategory || category;
+  if (normalizeMarketplaceCategory(selectedCategory) === 'phones') {
     return <PhoneDetails meta={meta} />;
   }
 
-  if (category && normalizeMarketplaceCategory(category) !== 'all') {
-    return <ProductDetails meta={meta} category={category} />;
+  if (selectedCategory && normalizeMarketplaceCategory(selectedCategory) !== 'all') {
+    return <ProductDetails meta={meta} category={category} subcategory={subcategory} />;
   }
 
-  const fields = metadataFieldsForCategory(category);
+  const fields = metadataFieldsForCategory(selectedCategory);
   const items = listingMetadataPreviewItems(fields, meta, 18);
 
   if (items.length === 0) return null;
@@ -411,9 +431,9 @@ function GenericDetails({ meta, category }: { meta: FeedMetadata; category?: str
   );
 }
 
-function ProductDetails({ meta, category }: { meta: FeedMetadata; category?: string }) {
+function ProductDetails({ meta, category, subcategory }: { meta: FeedMetadata; category?: string; subcategory?: string }) {
   const productItems: DetailItem[] = [
-    { label: 'Ангилал', value: category ? marketplaceCategoryLabel(category) : undefined },
+    { label: 'Ангилал', value: listingCategoryLabel(category, subcategory, meta) },
     { label: 'Брэнд', value: pick(meta, ['brand']) },
     { label: 'Загвар', value: pick(meta, ['model']) },
     { label: 'Төрөл', value: pick(meta, ['productType', 'itemType']) },

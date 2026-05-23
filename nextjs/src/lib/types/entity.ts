@@ -32,6 +32,7 @@ export interface FeedItemData {
   originalPrice?: number;
   images: string[];
   category?: string;
+  subcategory?: string;
   entityType: EntityType;
   entityId: string;
   tier: ItemTier;

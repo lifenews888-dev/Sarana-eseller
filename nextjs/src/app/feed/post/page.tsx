@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 import CategorySelector from '@/components/shared/CategorySelector';
-import { findMarketplaceCategory, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
+import { categoryPathInfo, findMarketplaceCategory, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
 import {
   listingMetadataPreviewItems,
   metadataFieldsForCategory,
@@ -404,10 +404,18 @@ export default function PostAdPage() {
       const imageUrls = uploadedMedia.filter((media) => media.type === 'image').map((media) => media.url);
       const videoUrls = uploadedMedia.filter((media) => media.type === 'video').map((media) => media.url);
       const rootCategory = normalizeMarketplaceCategory(category);
+      const selectedCategoryPath = categoryPathInfo(category);
       const metadata: ListingMetadataRecord = { ...previewMetadata };
       const selectedCondition = CONDITIONS.find(c => c.key === condition)?.label;
       if (selectedCondition && !metadata.condition) metadata.condition = selectedCondition;
       if (phone) metadata.ownerPhone = `+976 ${phone}`;
+      if (category) metadata.categorySelection = category;
+      if (selectedCategoryPath) {
+        metadata.categoryRoot = selectedCategoryPath.rootKey;
+        metadata.categoryPath = selectedCategoryPath.labels;
+        metadata.categoryPathLabel = selectedCategoryPath.label;
+        metadata.categoryLeafLabel = selectedCategoryPath.leafLabel;
+      }
 
       const res = await fetch('/api/feed', {
         method: 'POST',
@@ -446,6 +454,8 @@ export default function PostAdPage() {
   };
 
   const selectedCategory = findMarketplaceCategory(category);
+  const selectedCategoryPath = categoryPathInfo(category);
+  const selectedCategoryPathLabel = selectedCategoryPath?.label || selectedCategory?.label || '';
   const catInfo = selectedCategory
     ? {
         key: selectedCategory.key,
@@ -937,6 +947,12 @@ export default function PostAdPage() {
             }}
             label=""
           />
+          {selectedCategoryPathLabel && (
+            <div className="mt-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2">
+              <p className="text-[11px] font-bold text-[var(--esl-text-muted)]">Сонгосон ангилал</p>
+              <p className="mt-0.5 text-sm font-semibold text-white">{selectedCategoryPathLabel}</p>
+            </div>
+          )}
         </div>
 
         {metadataFields.length > 0 && (
