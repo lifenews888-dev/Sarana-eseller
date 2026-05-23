@@ -599,16 +599,30 @@ function AutoDetails({ meta }: { meta: FeedMetadata }) {
 }
 
 function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
+  const totalUnits = numberValue(pick(meta, ['totalUnits', 'units']));
+  const soldUnits = numberValue(pick(meta, ['soldUnits']));
+  const explicitAvailableUnits = numberValue(pick(meta, ['availableUnits']));
+  const availableUnits = explicitAvailableUnits ?? (
+    totalUnits !== null && soldUnits !== null ? Math.max(totalUnits - soldUnits, 0) : null
+  );
+
   return (
     <div className="space-y-4">
+      <ConstructionProgressSummary
+        meta={meta}
+        totalUnits={totalUnits}
+        soldUnits={soldUnits}
+        availableUnits={availableUnits}
+      />
+
       <DetailSection title="Төслийн мэдээлэл" icon={<Building2 size={16} />}>
         <InfoGrid items={[
           { label: 'Төслийн төлөв', value: pick(meta, ['projectStatus']) },
           { label: 'Байршил', value: pick(meta, ['address', 'location']) || post.district },
           { label: 'Ашиглалтад орох', value: pick(meta, ['completionDate']) },
-          { label: 'Нийт айл', value: suffixValue(pick(meta, ['totalUnits']), 'айл') },
-          { label: 'Борлуулагдсан', value: suffixValue(pick(meta, ['soldUnits']), 'айл') },
-          { label: 'Боломжит үлдэгдэл', value: suffixValue(pick(meta, ['availableUnits']), 'айл') },
+          { label: 'Нийт айл', value: suffixValue(totalUnits ?? pick(meta, ['totalUnits', 'units']), 'айл') },
+          { label: 'Борлуулагдсан', value: suffixValue(soldUnits ?? pick(meta, ['soldUnits']), 'айл') },
+          { label: 'Боломжит үлдэгдэл', value: suffixValue(availableUnits ?? pick(meta, ['availableUnits']), 'айл') },
           { label: 'Давхар', value: suffixValue(pick(meta, ['floors']), 'давхар') },
           { label: 'Зогсоол', value: pick(meta, ['parking']) },
           { label: '1м² үнэ', value: formatMoneyPerSqm(pick(meta, ['pricePerSqm'])) },
@@ -619,6 +633,85 @@ function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPos
       <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['amenities']))} />
       <ChipSection title="Төлбөрийн нөхцөл" icon={<Banknote size={16} />} items={toList(pick(meta, ['paymentTerms']))} />
     </div>
+  );
+}
+
+function ConstructionProgressSummary({
+  meta,
+  totalUnits,
+  soldUnits,
+  availableUnits,
+}: {
+  meta: FeedMetadata;
+  totalUnits: number | null;
+  soldUnits: number | null;
+  availableUnits: number | null;
+}) {
+  const computedProgress = totalUnits && soldUnits !== null
+    ? Math.min(100, Math.max(0, Math.round((soldUnits / totalUnits) * 100)))
+    : null;
+  const explicitProgress = numberValue(pick(meta, ['progress', 'progressPercent']));
+  const progress = explicitProgress ?? computedProgress;
+  const pricePerSqm = formatMoneyPerSqm(pick(meta, ['pricePerSqm']));
+  const completionDate = valueToText(pick(meta, ['completionDate']));
+
+  const stats: Array<{ label: string; value: string | null; icon: ReactNode }> = [
+    { label: 'Нийт айл', value: suffixValue(totalUnits, 'айл'), icon: <Building2 size={14} /> },
+    { label: 'Борлуулагдсан', value: suffixValue(soldUnits, 'айл'), icon: <CheckCircle2 size={14} /> },
+    { label: 'Боломжит үлдэгдэл', value: suffixValue(availableUnits, 'айл'), icon: <Home size={14} /> },
+    { label: '1м² үнэ', value: pricePerSqm, icon: <Banknote size={14} /> },
+    { label: 'Ашиглалтад орох', value: completionDate, icon: <Clock size={14} /> },
+  ];
+  const visibleStats = stats.filter((item): item is { label: string; value: string; icon: ReactNode } =>
+    Boolean(item.value),
+  );
+
+  if (progress === null && visibleStats.length === 0) return null;
+
+  return (
+    <section className="rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-bold flex items-center gap-2">
+            <span className="text-[var(--esl-text-muted)]"><Building2 size={16} /></span>
+            Борлуулалтын явц
+          </h2>
+          <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
+            Үлдэгдэл, үнэ болон ашиглалтад орох мэдээллийг нэг дор харуулж байна.
+          </p>
+        </div>
+        {progress !== null ? (
+          <span className="rounded-full bg-[var(--esl-bg-muted)] border border-[var(--esl-border)] px-3 py-1 text-sm font-black text-[var(--esl-text)]">
+            {progress}%
+          </span>
+        ) : null}
+      </div>
+
+      {progress !== null ? (
+        <div className="mt-4">
+          <div className="h-2 rounded-full bg-[var(--esl-bg-muted)] overflow-hidden">
+            <div
+              className="h-full rounded-full bg-[#E8242C]"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      {visibleStats.length > 0 ? (
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {visibleStats.map((item) => (
+            <div key={item.label} className="rounded-lg bg-[var(--esl-bg-muted)] border border-[var(--esl-border)] px-3 py-2">
+              <div className="flex items-center gap-1.5 text-[var(--esl-text-muted)]">
+                {item.icon}
+                <p className="text-[11px]">{item.label}</p>
+              </div>
+              <p className="mt-1 text-sm font-semibold leading-tight">{item.value}</p>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </section>
   );
 }
 
