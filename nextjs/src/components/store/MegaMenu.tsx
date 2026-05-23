@@ -4,9 +4,9 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { PRODUCT_MARKETPLACE_CATEGORIES, SERVICE_MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
+import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 import {
-  Armchair, Baby, BookOpen, BriefcaseBusiness, Camera, Car, Construction, Dog,
+  Armchair, Baby, BookOpen, BriefcaseBusiness, Building2, Camera, Car, Construction, Dog,
   Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse,
   Home, Laptop, Mars, Monitor, Package, Palette, Plug, Printer, Scissors, Shield,
   Shirt, Smartphone, Sparkles, TentTree, UtensilsCrossed, Venus, Wrench,
@@ -26,6 +26,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Baby,
   BookOpen,
   BriefcaseBusiness,
+  Building2,
   Camera,
   Car,
   Construction,
@@ -55,14 +56,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Wrench,
 };
 
-const PRODUCT_CATEGORIES = PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({
+const UNIFIED_CATEGORIES = MARKETPLACE_CATEGORIES.map((category) => ({
   ...category,
   icon: ICON_MAP[category.icon] || Package,
-}));
-
-const SERVICE_CATEGORIES = SERVICE_MARKETPLACE_CATEGORIES.map((category) => ({
-  ...category,
-  icon: ICON_MAP[category.icon] || Wrench,
 }));
 
 const FEATURED_SHOPS = [
@@ -109,14 +105,17 @@ export default function MegaMenu({ open, onClose, onSelectCategory, onSelectType
             <div className="max-w-[1320px] mx-auto px-4 py-6">
               <div className="grid grid-cols-12 gap-6">
 
-                {/* ═══ БАРАА АНГИЛАЛ — Left column ═══ */}
-                <div className="col-span-5">
+                {/* ═══ НЭГДСЭН АНГИЛАЛ — Left column ═══ */}
+                <div className="col-span-8">
                   <div className="flex items-center gap-2 mb-3">
                     <Package className="w-4 h-4 text-[#E31E24]" />
-                    <h3 className="text-sm font-bold text-[var(--esl-text-primary)] uppercase tracking-wider">Бараа бүтээгдэхүүн</h3>
+                    <h3 className="text-sm font-bold text-[var(--esl-text-primary)] uppercase tracking-wider">Нэгдсэн ангилал</h3>
+                    <span className="rounded-full bg-[var(--esl-bg-section)] px-2 py-0.5 text-[10px] font-bold text-[var(--esl-text-muted)]">
+                      {UNIFIED_CATEGORIES.length} үндсэн
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    {PRODUCT_CATEGORIES.map((cat) => (
+                  <div className="grid max-h-[58vh] grid-cols-2 gap-1 overflow-y-auto pr-1 lg:grid-cols-3">
+                    {UNIFIED_CATEGORIES.map((cat) => (
                       <button
                         key={cat.key}
                         onClick={() => handleCategory(cat.key)}
@@ -138,63 +137,21 @@ export default function MegaMenu({ open, onClose, onSelectCategory, onSelectType
                             {cat.subcategories.slice(0, 3).join(' · ')}
                           </div>
                         </div>
-                        <span className="text-[10px] text-[var(--esl-text-muted)] font-medium">{cat.count}+</span>
+                        {cat.count ? <span className="text-[10px] text-[var(--esl-text-muted)] font-medium">{cat.count}+</span> : null}
                         <ChevronRight className="w-3.5 h-3.5 text-[var(--esl-text-muted)] group-hover:text-[#E31E24] transition-colors" />
                       </button>
                     ))}
                   </div>
                   <button
-                    onClick={() => handleType('product')}
+                    onClick={() => handleType('all')}
                     className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-[#E31E24] bg-red-50 hover:bg-red-100 border-none cursor-pointer transition"
                   >
-                    Бүх бараа харах <ArrowRight className="w-3 h-3" />
-                  </button>
-                </div>
-
-                {/* ═══ ҮЙЛЧИЛГЭЭ АНГИЛАЛ — Middle column ═══ */}
-                <div className="col-span-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Scissors className="w-4 h-4 text-indigo-600" />
-                    <h3 className="text-sm font-bold text-[var(--esl-text-primary)] uppercase tracking-wider">Үйлчилгээ</h3>
-                  </div>
-                  <div className="space-y-0.5">
-                    {SERVICE_CATEGORIES.map((cat) => (
-                      <button
-                        key={cat.key}
-                        onClick={() => handleCategory(cat.key)}
-                        onMouseEnter={() => setHoveredCat(cat.key)}
-                        className={cn(
-                          'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left border-none cursor-pointer transition-all group',
-                          hoveredCat === cat.key ? 'bg-indigo-50' : 'bg-transparent hover:bg-[var(--esl-bg-section)]'
-                        )}
-                      >
-                        <div className={cn(
-                          'w-9 h-9 rounded-lg flex items-center justify-center text-lg transition-colors',
-                          hoveredCat === cat.key ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-section)]'
-                        )}>
-                          {hoveredCat === cat.key ? <cat.icon className="w-4 h-4" /> : cat.emoji}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-[var(--esl-text-primary)] group-hover:text-indigo-600 transition-colors">{cat.shortLabel || cat.label}</div>
-                          <div className="mt-0.5 line-clamp-1 text-[10px] text-[var(--esl-text-muted)]">
-                            {cat.subcategories.slice(0, 3).join(' · ')}
-                          </div>
-                        </div>
-                        <span className="text-[10px] text-[var(--esl-text-muted)] font-medium">{cat.count}+</span>
-                        <ChevronRight className="w-3.5 h-3.5 text-[var(--esl-text-muted)] group-hover:text-indigo-600 transition-colors" />
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => handleType('service')}
-                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border-none cursor-pointer transition"
-                  >
-                    Бүх үйлчилгээ харах <ArrowRight className="w-3 h-3" />
+                    Бүх ангилал харах <ArrowRight className="w-3 h-3" />
                   </button>
                 </div>
 
                 {/* ═══ RIGHT COLUMN — Featured + Promo ═══ */}
-                <div className="col-span-3 space-y-5">
+                <div className="col-span-4 space-y-5">
                   {/* Promo banner */}
                   <div className="bg-gradient-to-br from-[#E31E24] to-[#8B0000] rounded-2xl p-5 text-white relative overflow-hidden">
                     <div className="absolute top-[-20px] right-[-20px] w-24 h-24 rounded-full bg-white/10" />

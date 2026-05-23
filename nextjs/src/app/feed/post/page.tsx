@@ -1,5 +1,6 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element */
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -7,24 +8,50 @@ import EsellerLogo from '@/components/shared/EsellerLogo';
 import {
   Camera, X, Crown, Info, ArrowLeft, Send, Play, Video,
   MapPin, Phone, Eye, Clock,
-  ImageIcon, ChevronLeft, ChevronRight, BadgeCheck,
-  Home, Car, Smartphone, Shirt, Sofa, Wrench, Baby, Dumbbell, Sparkles, Package, User,
+  ImageIcon, ChevronLeft, ChevronRight,
+  Armchair, Baby, BookOpen, BriefcaseBusiness, Building2, Car, Construction, Dog,
+  Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse, Home, Laptop,
+  Mars, Monitor, Package, Palette, Plug, Printer, Scissors, Shield, Shirt, Smartphone,
+  Sparkles, TentTree, UtensilsCrossed, User, Venus, Wrench,
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
 import CategorySelector from '@/components/shared/CategorySelector';
+import { findMarketplaceCategory } from '@/lib/marketplaceCategories';
 
-const CATEGORIES = [
-  { key: 'apartment', label: 'Орон сууц', icon: Home },
-  { key: 'auto', label: 'Авто', icon: Car },
-  { key: 'electronics', label: 'Электроник', icon: Smartphone },
-  { key: 'fashion', label: 'Хувцас', icon: Shirt },
-  { key: 'furniture', label: 'Тавилга', icon: Sofa },
-  { key: 'services', label: 'Үйлчилгээ', icon: Wrench },
-  { key: 'kids', label: 'Хүүхэд', icon: Baby },
-  { key: 'sports', label: 'Спорт', icon: Dumbbell },
-  { key: 'beauty', label: 'Гоо сайхан', icon: Sparkles },
-  { key: 'other', label: 'Бусад', icon: Package },
-];
+const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
+  Armchair,
+  Baby,
+  BookOpen,
+  BriefcaseBusiness,
+  Building2,
+  Camera,
+  Car,
+  Construction,
+  Dog,
+  Dumbbell,
+  Factory,
+  Gamepad2,
+  Gem,
+  Gift,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Laptop,
+  Mars,
+  Monitor,
+  Palette,
+  Plug,
+  Printer,
+  Scissors,
+  Shield,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  TentTree,
+  UtensilsCrossed,
+  Venus,
+  Wrench,
+};
 
 const DISTRICTS = ['СБД', 'ХУД', 'БЗД', 'ЧД', 'БГД', 'СХД', 'НД', 'БНД', 'Багахангай'];
 const CONDITIONS = [
@@ -134,7 +161,14 @@ export default function PostAdPage() {
     }, 1500);
   };
 
-  const catInfo = CATEGORIES.find(c => c.key === category);
+  const selectedCategory = findMarketplaceCategory(category);
+  const catInfo = selectedCategory
+    ? {
+        key: selectedCategory.key,
+        label: selectedCategory.label,
+        icon: CATEGORY_ICON_MAP[selectedCategory.icon] || Package,
+      }
+    : null;
 
   /* ═══ Preview Modal ═══ */
   if (showPreview) {

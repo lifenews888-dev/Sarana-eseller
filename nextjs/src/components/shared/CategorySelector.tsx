@@ -28,7 +28,7 @@ interface CategorySelectorProps {
   label?: string;
 }
 
-export default function CategorySelector({ entityType, value, onChange, label }: CategorySelectorProps) {
+export default function CategorySelector({ value, onChange, label }: CategorySelectorProps) {
   const [categories, setCategories] = useState<Category[]>(FALLBACK_ROOTS);
   const [flat, setFlat] = useState<Category[]>(flattenCategories(FALLBACK_ROOTS));
   const [loading, setLoading] = useState(true);
@@ -56,7 +56,7 @@ export default function CategorySelector({ entityType, value, onChange, label }:
       }
     };
 
-    fetch(`/api/categories/tree${entityType ? `?entityType=${encodeURIComponent(entityType)}` : ''}`)
+    fetch('/api/categories/tree')
       .then((r) => r.json())
       .then((d) => {
         const nextCategories = d.data?.length ? d.data : FALLBACK_ROOTS;
@@ -66,19 +66,16 @@ export default function CategorySelector({ entityType, value, onChange, label }:
         applySelection(nextFlat);
       })
       .catch(() => {
-        const nextCategories = categoryTreeFallback(entityType) as Category[];
+        const nextCategories = categoryTreeFallback() as Category[];
         const nextFlat = flattenCategories(nextCategories);
         setCategories(nextCategories);
         setFlat(nextFlat);
         applySelection(nextFlat);
       })
       .finally(() => setLoading(false));
-  }, [entityType, value]);
+  }, [value]);
 
-  // Filter roots by entityType
-  const roots = entityType
-    ? categories.filter((c) => c.entityTypes?.length === 0 || c.entityTypes?.some((et) => et === entityType))
-    : categories;
+  const roots = categories;
 
   // Get subs for selected root
   const rootCat = categories.find((c) => c.id === selectedRoot);

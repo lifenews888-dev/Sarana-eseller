@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/api';
 import type { ItemType } from '@/lib/marketplace';
-import { MARKETPLACE_CATEGORIES, PRODUCT_MARKETPLACE_CATEGORIES, SERVICE_MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
+import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from '../shared/Skeleton';
 import { ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Package, Scissors, Search, Star, Tag, X } from 'lucide-react';
@@ -52,12 +52,7 @@ export default function ProductGrid({
 }: ProductGridProps) {
   const filterCategories = [
     { key: 'all', label: 'Бүгд', emoji: '🛍' },
-    ...(activeType === 'service'
-      ? SERVICE_MARKETPLACE_CATEGORIES
-      : activeType === 'product'
-        ? PRODUCT_MARKETPLACE_CATEGORIES
-        : MARKETPLACE_CATEGORIES
-    ).map((category) => ({
+    ...MARKETPLACE_CATEGORIES.map((category) => ({
       key: category.key,
       label: category.shortLabel || category.label,
       emoji: category.emoji,
@@ -66,11 +61,7 @@ export default function ProductGrid({
   const activeCategory = MARKETPLACE_CATEGORIES.find((category) => category.key === activeCat);
   const sectionTitle = dealOnly
     ? 'Хямдралтай бараа'
-    : activeType === 'service'
-      ? 'Үйлчилгээ'
-      : activeType === 'product'
-        ? 'Бараа бүтээгдэхүүн'
-        : 'Бүх бараа & үйлчилгээ';
+    : 'Нэгдсэн ангиллын зарууд';
   const activeFilters = [
     activeCat !== 'all'
       ? { key: 'category', label: activeCategory?.label || activeCat, onClear: () => onCatChange('all') }
@@ -97,7 +88,7 @@ export default function ProductGrid({
             </h2>
           </div>
           <span className="text-sm text-[var(--esl-text-muted)] font-medium bg-[var(--esl-bg-card)] px-3 py-1 rounded-lg">
-            {products.length} {activeType === 'service' ? 'үйлчилгээ' : 'бараа'}
+            {products.length} зар
           </span>
         </div>
 

@@ -1,4 +1,4 @@
-export type MarketplaceCategorySection = 'product' | 'service';
+export type MarketplaceCategorySection = 'product' | 'service' | 'listing';
 
 export type MarketplaceCategory = {
   key: string;
@@ -79,6 +79,41 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     entityTypes: ['STORE', 'PRE_ORDER'],
     aliases: ['home', 'home-living'],
     subcategories: ['Гэрийн декор', 'Гал тогооны хэрэгсэл', 'Угаалга цэвэрлэгээ', 'Ор дэрний хэрэглэл', 'Гэрийн цэцэрлэгжүүлэлт'],
+  },
+  {
+    key: 'real-estate',
+    label: 'Үл хөдлөх',
+    emoji: '🏢',
+    icon: 'Building2',
+    color: '#0F766E',
+    section: 'listing',
+    entityTypes: ['STORE', 'REAL_ESTATE', 'AGENT'],
+    aliases: ['real_estate', 'apartment', 'house', 'office', 'land', 'penthouse', 'property'],
+    subcategories: ['Орон сууц', 'Хаус', 'Оффис', 'Газар', 'Пентхаус', 'Агуулах', 'Зуслан'],
+  },
+  {
+    key: 'new-buildings',
+    label: 'Шинэ орон сууц & Төсөл',
+    shortLabel: 'Шинэ төсөл',
+    emoji: '🏗️',
+    icon: 'Building2',
+    color: '#EA580C',
+    section: 'listing',
+    entityTypes: ['STORE', 'CONSTRUCTION', 'COMPANY'],
+    aliases: ['new_building', 'residential_project', 'commercial_project', 'mixed_use_project', 'construction-project'],
+    subcategories: ['Шинэ орон сууц', 'Орон сууцны төсөл', 'Оффис / худалдааны төсөл', 'Холимог зориулалттай төсөл'],
+  },
+  {
+    key: 'vehicles',
+    label: 'Автомашин',
+    shortLabel: 'Машин',
+    emoji: '🚘',
+    icon: 'Car',
+    color: '#DC2626',
+    section: 'listing',
+    entityTypes: ['STORE', 'AUTO'],
+    aliases: ['vehicle', 'vehicles', 'sedan', 'suv', 'truck', 'motorcycle'],
+    subcategories: ['Седан', 'SUV / Жийп', 'Ачааны машин', 'Мотоцикл', 'Цахилгаан машин', 'Арилжааны машин'],
   },
   {
     key: 'jewelry',
@@ -428,6 +463,10 @@ const CATEGORY_ALIAS_MAP = new Map<string, string>(
   MARKETPLACE_CATEGORIES.flatMap((category) => [
     [category.key, category.key] as const,
     ...(category.aliases || []).map((alias) => [alias, category.key] as const),
+    ...category.subcategories.flatMap((name, index) => [
+      [`${category.key}-${index + 1}`, category.key] as const,
+      [`${category.key}-${slugifyCategoryName(name)}`, category.key] as const,
+    ]),
   ]),
 );
 
@@ -445,10 +484,8 @@ export function categoryLabel(value?: string | null): string {
   return findMarketplaceCategory(value)?.label || value || 'Ангилалгүй';
 }
 
-export function categoryTreeFallback(entityType?: string): CategoryTreeNode[] {
-  const wanted = entityType?.toUpperCase();
+export function categoryTreeFallback(): CategoryTreeNode[] {
   return MARKETPLACE_CATEGORIES
-    .filter((category) => !wanted || category.entityTypes.length === 0 || category.entityTypes.includes(wanted))
     .map((category, index) => ({
       id: category.key,
       slug: category.key,

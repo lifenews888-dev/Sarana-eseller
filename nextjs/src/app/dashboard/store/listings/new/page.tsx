@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { ArrowLeft, Building2, Car, Home, Loader2, MapPin, Send, Tag } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 import { MediaUploader } from '@/components/shared/MediaUploader';
+import CategorySelector from '@/components/shared/CategorySelector';
 import { ENTITY_CARD_CONFIG, type EntityType as CardEntityType } from '@/lib/cards/entityCardConfig';
-import { PRODUCT_MARKETPLACE_CATEGORIES, SERVICE_MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 
 type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'list';
 type MetadataValue = string | number | boolean | string[];
@@ -162,38 +162,6 @@ const DISTRICTS = ['СБД', 'ХУД', 'БЗД', 'ЧД', 'БГД', 'СХД', 'Н
 const VALID_ENTITY_TYPES = new Set(Object.keys(ENTITY_FIELDS));
 const SPECIAL_ENTITY_TYPES = new Set(['agent', 'company', 'auto_dealer']);
 
-const SPECIAL_LISTING_CATEGORIES: Record<string, { value: string; label: string }[]> = {
-  agent: [
-    { value: 'apartment', label: 'Орон сууц' },
-    { value: 'house', label: 'Хаус' },
-    { value: 'office', label: 'Оффис' },
-    { value: 'land', label: 'Газар' },
-    { value: 'penthouse', label: 'Пентхаус' },
-  ],
-  company: [
-    { value: 'new_building', label: 'Шинэ орон сууц' },
-    { value: 'residential_project', label: 'Орон сууцны төсөл' },
-    { value: 'commercial_project', label: 'Оффис / худалдааны төсөл' },
-    { value: 'mixed_use_project', label: 'Холимог зориулалттай төсөл' },
-  ],
-  auto_dealer: [
-    { value: 'vehicle', label: 'Автомашин' },
-    { value: 'sedan', label: 'Седан' },
-    { value: 'suv', label: 'SUV / Жийп' },
-    { value: 'truck', label: 'Ачааны машин' },
-    { value: 'motorcycle', label: 'Мотоцикл' },
-    { value: 'auto_part', label: 'Авто сэлбэг' },
-  ],
-};
-
-function listingCategoryOptions(entityType: string): { value: string; label: string }[] {
-  if (SPECIAL_LISTING_CATEGORIES[entityType]) return SPECIAL_LISTING_CATEGORIES[entityType];
-  if (entityType === 'service') {
-    return SERVICE_MARKETPLACE_CATEGORIES.map((category) => ({ value: category.key, label: category.label }));
-  }
-  return PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({ value: category.key, label: category.label }));
-}
-
 function normalizeEntityType(value?: string | null): string {
   if (!value) return 'store';
   if (value === 'real_estate') return 'agent';
@@ -208,17 +176,12 @@ function redirectFor(entityType: string): string {
   return '/dashboard/store/listings';
 }
 
-function defaultCategory(entityType: string, metadata: Record<string, MetadataValue>): string {
-  if (entityType === 'company') return 'new_building';
-  if (entityType === 'auto_dealer') return 'vehicle';
-  if (entityType === 'service') return 'service';
+function defaultCategory(entityType: string): string {
+  if (entityType === 'company') return 'new-buildings';
+  if (entityType === 'auto_dealer') return 'vehicles';
+  if (entityType === 'service') return '';
   if (entityType !== 'agent') return '';
-
-  const type = String(metadata.propertyType || '').toLowerCase();
-  if (type.includes('газар')) return 'land';
-  if (type.includes('оффис')) return 'office';
-  if (type.includes('хаус')) return 'house';
-  return 'apartment';
+  return 'real-estate';
 }
 
 function splitList(value: string): string[] {
@@ -331,7 +294,6 @@ export default function NewListingPage() {
   const maxImages = mediaConfig.maxImages;
   const isSpecialListing = SPECIAL_ENTITY_TYPES.has(entityType);
   const SectionIcon = config.icon;
-  const categoryOptions = listingCategoryOptions(entityType);
 
   const titlePlaceholder =
     entityType === 'auto_dealer'
@@ -409,7 +371,7 @@ export default function NewListingPage() {
 
     const price = form.price ? Number(form.price) : undefined;
     const cleanMetadata = normalizeMetadata(config.fields, metadata, entityType, form.district, price);
-    const category = form.category.trim() || defaultCategory(entityType, cleanMetadata);
+    const category = form.category.trim() || defaultCategory(entityType);
     const token = localStorage.getItem('token');
 
     const res = await fetch(editId ? `/api/feed/${editId}` : '/api/feed', {
@@ -537,14 +499,12 @@ export default function NewListingPage() {
         </div>
         <div>
           <label className={labelCls}>Ангилал</label>
-          <select value={form.category} onChange={(e) => update('category', e.target.value)} className={inputCls}>
-            <option value="">Төрлөөс автоматаар оноох</option>
-            {categoryOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
+          <CategorySelector
+            value={form.category}
+            onChange={(_id, slug) => update('category', slug)}
+          />
           <p className="mt-1 text-[11px] text-[var(--esl-text-muted)]">
-            Дэлгүүр, үйлчилгээ, авто, үл хөдлөх болон төслийн зарууд тус бүр өөрийн ангиллын сонголттой.
+            Eseller.mn-ийн бүх зар нэг нэгдсэн ангиллын модноос сонгогдоно.
           </p>
         </div>
       </div>

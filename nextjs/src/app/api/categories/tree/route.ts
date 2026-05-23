@@ -1,10 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { categoryTreeFallback } from '@/lib/marketplaceCategories';
 
 // GET /api/categories/tree — full category tree (public)
-export async function GET(req: NextRequest) {
-  const entityType = req.nextUrl.searchParams.get('entityType') || undefined;
+export async function GET() {
+  // entityType is accepted for backward compatibility, but category browsing is
+  // intentionally one unified marketplace flow across all seller/listing types.
+  const fallback = categoryTreeFallback();
 
   try {
     const categories = await prisma.category.findMany({
@@ -12,7 +14,6 @@ export async function GET(req: NextRequest) {
         isApproved: true,
         isActive: true,
         level: 0,
-        ...(entityType ? { entityTypes: { has: entityType } } : {}),
       },
       include: {
         children: {
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
       orderBy: { sortOrder: 'asc' },
     });
 
-    if (categories.length > 0) {
+    if (categories.length >= fallback.length) {
       return NextResponse.json({ success: true, data: categories, source: 'db' });
     }
   } catch (error) {
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     success: true,
-    data: categoryTreeFallback(entityType),
+    data: fallback,
     source: 'fallback',
   });
 }

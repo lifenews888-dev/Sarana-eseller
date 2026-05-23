@@ -23,16 +23,15 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   Search, ShoppingCart, User, ChevronDown, Tag, ChevronRight,
   ShieldCheck, Truck, RefreshCw, Lock,
-  Armchair, Baby, BookOpen, BriefcaseBusiness, Car, Camera, Construction, Cpu, Dog,
+  Armchair, Baby, BookOpen, BriefcaseBusiness, Building2, Car, Camera, Construction, Cpu, Dog,
   Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse, Home, Laptop,
   Mars, Monitor, Palette, Plane, Plug, Printer, Scissors, Shield, Shirt, Sparkles,
-  TentTree, UtensilsCrossed, Venus, Wrench,
+  Smartphone, TentTree, UtensilsCrossed, Venus, Wrench,
   Store, Newspaper, Crown,
   type LucideIcon,
 } from 'lucide-react';
 import {
-  PRODUCT_MARKETPLACE_CATEGORIES,
-  SERVICE_MARKETPLACE_CATEGORIES,
+  MARKETPLACE_CATEGORIES,
   normalizeMarketplaceCategory,
 } from '@/lib/marketplaceCategories';
 
@@ -42,6 +41,7 @@ const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
   Baby,
   BookOpen,
   BriefcaseBusiness,
+  Building2,
   Car,
   Camera,
   Construction,
@@ -65,6 +65,7 @@ const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
   Scissors,
   Shield,
   Shirt,
+  Smartphone,
   Sparkles,
   TentTree,
   UtensilsCrossed,
@@ -72,12 +73,12 @@ const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
   Wrench,
 };
 
-const NAV_CATS = PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({
+const NAV_CATS = MARKETPLACE_CATEGORIES.map((category) => ({
   key: category.key,
   label: category.shortLabel || category.label,
 }));
 
-const CATEGORY_ICONS = PRODUCT_MARKETPLACE_CATEGORIES.map((category) => ({
+const CATEGORY_ICONS = MARKETPLACE_CATEGORIES.map((category) => ({
   key: category.key,
   label: category.shortLabel || category.label,
   icon: CATEGORY_ICON_MAP[category.icon] || Store,
@@ -108,8 +109,7 @@ function productId(product: Product): string {
 
 const STORE_CATEGORY_KEYS = new Set([
   'all',
-  ...PRODUCT_MARKETPLACE_CATEGORIES.map((category) => category.key),
-  ...SERVICE_MARKETPLACE_CATEGORIES.map((category) => category.key),
+  ...MARKETPLACE_CATEGORIES.map((category) => category.key),
 ]);
 const STORE_SORT_KEYS = new Set<StoreSortKey>(['newest', 'price_asc', 'price_desc', 'rating', 'discount']);
 
@@ -246,8 +246,9 @@ export default function StorePage() {
   const handleCategoryChange = useCallback((category: string) => {
     const nextCategory = normalizeStoreCategory(category);
     setActiveCat(nextCategory);
-    syncUrlFilters(nextCategory, activeType, search, dealOnly, activeSort);
-  }, [activeSort, activeType, dealOnly, search, syncUrlFilters]);
+    setActiveType('all');
+    syncUrlFilters(nextCategory, 'all', search, dealOnly, activeSort);
+  }, [activeSort, dealOnly, search, syncUrlFilters]);
 
   const handleTypeChange = useCallback((type: 'all' | ItemType) => {
     const nextType = normalizeStoreType(type);
