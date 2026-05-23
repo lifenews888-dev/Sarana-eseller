@@ -1,7 +1,7 @@
 'use client';
 
 /* eslint-disable @next/next/no-img-element */
-import { useState, useRef } from 'react';
+import { useCallback, useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import EsellerLogo from '@/components/shared/EsellerLogo';
@@ -81,6 +81,23 @@ type FeedCreateResponse = {
   error?: string;
 };
 
+const FEED_POST_DRAFT_KEY = 'eseller.feedPostDraft.v1';
+const FEED_POST_DRAFT_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+
+type FeedPostDraft = {
+  title: string;
+  description: string;
+  price: string;
+  category: string;
+  district: string;
+  province: string;
+  condition: string;
+  phone: string;
+  isVip: boolean;
+  metadataDraft: Record<string, string>;
+  savedAt: number;
+};
+
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
@@ -110,6 +127,10 @@ export default function PostAdPage() {
   const [publishing, setPublishing] = useState(false);
   const [publishError, setPublishError] = useState('');
   const [publishedItemId, setPublishedItemId] = useState('');
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
+  const [draftNoticeDismissed, setDraftNoticeDismissed] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   const imageCount = mediaFiles.filter(m => m.type === 'image').length;
   const videoCount = mediaFiles.filter(m => m.type === 'video').length;
@@ -117,6 +138,88 @@ export default function PostAdPage() {
   const metadataComplete = requiredMetadataComplete(metadataFields, metadataDraft);
   const previewMetadataItems = listingMetadataPreviewItems(metadataFields, previewMetadata, 8);
   const canSubmit = title.trim() && price.trim() && category && (district || province) && metadataComplete;
+
+  const clearSavedDraft = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem(FEED_POST_DRAFT_KEY);
+    }
+    setDraftSavedAt(null);
+    setDraftRestored(false);
+  }, []);
+
+  useEffect(() => {
+    try {
+      const rawDraft = window.localStorage.getItem(FEED_POST_DRAFT_KEY);
+      if (!rawDraft) return;
+
+      const draft = JSON.parse(rawDraft) as Partial<FeedPostDraft>;
+      if (!draft.savedAt || Date.now() - draft.savedAt > FEED_POST_DRAFT_MAX_AGE_MS) {
+        window.localStorage.removeItem(FEED_POST_DRAFT_KEY);
+        return;
+      }
+
+      setTitle(draft.title || '');
+      setDescription(draft.description || '');
+      setPrice(draft.price || '');
+      setCategory(draft.category || '');
+      setDistrict(draft.district || '');
+      setProvince(draft.province || '');
+      setCondition(draft.condition || '');
+      setPhone(draft.phone || '');
+      setIsVip(Boolean(draft.isVip));
+      setMetadataDraft(draft.metadataDraft || {});
+      setDraftSavedAt(draft.savedAt);
+      setDraftRestored(true);
+    } catch {
+      window.localStorage.removeItem(FEED_POST_DRAFT_KEY);
+    } finally {
+      setDraftLoaded(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draftLoaded) return;
+
+    const metadataHasContent = Object.values(metadataDraft).some((value) => value.trim());
+    const hasDraftContent = Boolean(
+      title.trim()
+      || description.trim()
+      || price.trim()
+      || category
+      || district
+      || province
+      || condition
+      || phone
+      || isVip
+      || metadataHasContent,
+    );
+
+    if (!hasDraftContent) {
+      clearSavedDraft();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const savedAt = Date.now();
+      const draft: FeedPostDraft = {
+        title,
+        description,
+        price,
+        category,
+        district,
+        province,
+        condition,
+        phone,
+        isVip,
+        metadataDraft,
+        savedAt,
+      };
+      window.localStorage.setItem(FEED_POST_DRAFT_KEY, JSON.stringify(draft));
+      setDraftSavedAt(savedAt);
+    }, 500);
+
+    return () => window.clearTimeout(timer);
+  }, [draftLoaded, title, description, price, category, district, province, condition, phone, isVip, metadataDraft, clearSavedDraft]);
 
   const addFiles = (files: FileList | null) => {
     if (!files) return;
@@ -244,6 +347,7 @@ export default function PostAdPage() {
       const createdId = body.data?.id || body.data?._id;
       if (!createdId) throw new Error('Зар үүссэн боловч дугаар буцаж ирсэнгүй.');
       setPublishedItemId(createdId);
+      clearSavedDraft();
     } catch (error) {
       setPublishError(error instanceof Error ? error.message : 'Зар нийтлэхэд алдаа гарлаа.');
     } finally {
@@ -459,7 +563,7 @@ export default function PostAdPage() {
                 <p className="mt-1 text-xs leading-relaxed text-red-200/90">{publishError}</p>
                 {publishError.includes('Нэвтэрч') && (
                   <button
-                    onClick={() => router.push('/login?next=/feed/post')}
+                    onClick={() => router.push('/login?redirect=/feed/post')}
                     className="mt-3 rounded-lg bg-[#E8242C] px-4 py-2 text-xs font-bold text-white"
                   >
                     Нэвтрэх
@@ -545,6 +649,29 @@ export default function PostAdPage() {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 py-8">
+        {!draftNoticeDismissed && (draftRestored || draftSavedAt) && (
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 sm:flex-row sm:items-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300">
+              <Clock className="h-5 w-5" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-extrabold text-blue-100">
+                {draftRestored ? 'Өмнөх ноорог сэргээгдлээ' : 'Ноорог автоматаар хадгалагдлаа'}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-blue-100/70">
+                Нэвтрэх шаардлага гарсан ч бөглөсөн талбарууд хадгалагдана. Зураг, видео файлыг хөтөч дахин сэргээдэггүй тул нийтлэхийн өмнө дахин сонгоно.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setDraftNoticeDismissed(true)}
+              className="h-9 rounded-xl border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-bold text-blue-100 transition hover:bg-blue-500/20"
+            >
+              Мэдэгдлийг хаах
+            </button>
+          </div>
+        )}
+
         {/* Media Upload */}
         <div className="mb-8">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-1 block">

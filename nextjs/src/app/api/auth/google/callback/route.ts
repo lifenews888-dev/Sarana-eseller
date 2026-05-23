@@ -7,6 +7,10 @@ const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
 
+function safeRelativePath(target: string | undefined): string {
+  return target && target.startsWith('/') && !target.startsWith('//') ? target : '';
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -149,10 +153,13 @@ export async function GET(req: NextRequest) {
 
     // Redirect to login page with token in hash (client-side picks it up)
     const redirectUrl = new URL('/login', baseUrl);
+    const redirectTarget = safeRelativePath(req.cookies.get('google_oauth_redirect')?.value);
+    if (redirectTarget) redirectUrl.searchParams.set('redirect', redirectTarget);
     redirectUrl.hash = `google_auth=${encodeURIComponent(JSON.stringify({ token, user: userData }))}`;
 
     const res = NextResponse.redirect(redirectUrl.toString());
     res.cookies.delete('google_oauth_state');
+    res.cookies.delete('google_oauth_redirect');
     // Mirror token into httpOnly cookie for Edge middleware role enforcement.
     res.cookies.set('auth-token', token, {
       httpOnly: true,
