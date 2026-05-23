@@ -216,8 +216,21 @@ const DEMO_ENTITY_DETAILS: FeedItemData[] = [
   { id: 'l6', refId: 'DEMO-AGENT-006', title: 'Газар 500м², Налайх', description: 'Налайхад 500м² өмчилсөн газар. Төв замтай ойр, хашаатай.', price: 45000000, images: detailImages('agent-erdenbat-nalaikh-land', 4), category: 'land', entityType: 'agent', entityId: 'erdenbat', tier: 'normal', status: 'active', viewCount: 0, district: 'НД', entityName: 'Б. Эрдэнэбат', entityVerified: true, createdAt: '2026-04-03', metadata: { propertyType: 'Газар', listingType: 'Худалдах', address: 'НД, төв замаас 1.2км', sqm: 500, rooms: 0, ownershipType: 'Өмчилсөн', certificateReady: true, mortgageAvailable: false, ownerPhone: '9900-1122', highlights: ['Хашаатай', 'Төв замтай ойр', 'Цахилгаан татах боломжтой'], nearby: ['Төв зам', 'Дэлгүүр'], documents: ['Газрын гэрчилгээ', 'Кадастрын зураг'] } },
 ];
 
+const DEMO_DETAIL_ID_ALIASES: Record<string, string> = {
+  '1': 'l1',
+  '2': 'v3',
+  '3': 'p1',
+  f1: 'l1',
+  f2: 'p1',
+  f3: 'v3',
+  f7: 'l2',
+  f8: 'v4',
+  f10: 'l4',
+};
+
 function getDemoPost(id: string) {
-  return [...DEMO_ENTITY_DETAILS, ...DEMO_FEED].find((item) => item.id === id);
+  const detailId = DEMO_DETAIL_ID_ALIASES[id] || id;
+  return [...DEMO_ENTITY_DETAILS, ...DEMO_FEED].find((item) => item.id === detailId);
 }
 
 function metadataString(metadata: FeedItemData['metadata'], key: string): string | undefined {

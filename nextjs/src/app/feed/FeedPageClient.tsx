@@ -63,6 +63,12 @@ const DEMO_DETAIL_ID_ALIASES: Record<string, string> = {
   '1': 'l1',
   '2': 'v3',
   '3': 'p1',
+  f1: 'l1',
+  f2: 'p1',
+  f3: 'v3',
+  f7: 'l2',
+  f8: 'v4',
+  f10: 'l4',
 };
 
 function feedDetailHref(id: string) {
