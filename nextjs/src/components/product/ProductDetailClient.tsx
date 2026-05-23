@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft, Star, Truck, Shield, Clock, Phone, MapPin,
+  ArrowLeft, Star, Truck, Clock, Phone, MapPin,
   Calendar, Fuel, Gauge, Settings2, Tag, Building2,
-  Download, FileText, HardDrive, Users, Timer,
+  Download, FileText, HardDrive, Timer,
   ChevronDown, ChevronUp, Package, MessageCircle,
   Ruler, BedDouble, Building, MapPinned,
 } from 'lucide-react';
@@ -20,12 +20,14 @@ import ShareWishlistBar from './ShareWishlistBar';
 import ReviewSection from './ReviewSection';
 import SafeImage from '@/components/ui/SafeImage';
 
+export type DetailProduct = Product & {
+  media?: MediaItem[];
+  categoryRef?: { name: string } | null;
+  user?: { name: string; _id: string; username?: string; phone?: string | null } | null;
+};
+
 interface ProductDetailClientProps {
-  product: Product & {
-    media?: MediaItem[];
-    categoryRef?: { name: string } | null;
-    user?: { name: string; _id: string; username?: string; phone?: string } | null;
-  };
+  product: DetailProduct;
   relatedProducts?: Product[];
 }
 
@@ -33,6 +35,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
   const router = useRouter();
   const et = (product.entityType || 'STORE') as EntityType;
   const config = ENTITY_CARD_CONFIG[et] || ENTITY_CARD_CONFIG.STORE;
+  const ownerPhoneHref = phoneHref(product.user?.phone);
 
   // Build media from either media array or images array
   const media: MediaItem[] = product.media && product.media.length > 0
@@ -91,10 +94,10 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
           <div className="space-y-5">
             {/* Entity-specific layout */}
             {et === 'STORE' && <StoreLayout product={product} price={price} hasDiscount={!!hasDiscount} discount={discount} config={config} />}
-            {et === 'REAL_ESTATE' && <RealEstateLayout product={product} price={price} config={config} />}
-            {et === 'AUTO' && <AutoLayout product={product} price={price} config={config} />}
+            {et === 'REAL_ESTATE' && <RealEstateLayout product={product} price={price} config={config} contactHref={ownerPhoneHref} />}
+            {et === 'AUTO' && <AutoLayout product={product} price={price} config={config} contactHref={ownerPhoneHref} />}
             {et === 'SERVICE' && <ServiceLayout product={product} price={price} config={config} />}
-            {et === 'CONSTRUCTION' && <ConstructionLayout product={product} price={price} config={config} />}
+            {et === 'CONSTRUCTION' && <ConstructionLayout product={product} price={price} config={config} contactHref={ownerPhoneHref} />}
             {et === 'PRE_ORDER' && <PreOrderLayout product={product} price={price} config={config} />}
             {et === 'DIGITAL' && <DigitalLayout product={product} price={price} config={config} />}
             {/* Fallback for NETWORK_BUSINESS or unknown */}
@@ -109,12 +112,12 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
             <button onClick={() => {
               const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
               if (!token) { window.location.href = '/login'; return; }
-              const user = JSON.parse(atob(token.split('.')[1]));
+              const user = parseTokenUser(token);
               fetch('/api/chat/conversations', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ shopId: (product as any).user?._id || '', customerId: user.userId || user.id, customerName: user.name || 'Хэрэглэгч', productName: product.name, productPrice: product.price }),
-              }).then(r => r.json()).then(conv => { window.location.href = `/dashboard/chat`; }).catch(() => { window.location.href = '/dashboard/chat'; });
+                body: JSON.stringify({ shopId: product.user?._id || '', customerId: user.userId || user.id, customerName: user.name || 'Хэрэглэгч', productName: product.name, productPrice: product.price }),
+              }).then(r => r.json()).then(() => { window.location.href = `/dashboard/chat`; }).catch(() => { window.location.href = '/dashboard/chat'; });
             }}
               className="w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all border cursor-pointer"
               style={{ borderColor: 'var(--esl-border)', color: 'var(--esl-text-primary)', background: 'var(--esl-bg-card)' }}>
@@ -144,11 +147,6 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
                   key={rp._id}
                   href={`/product/${rp._id}`}
                   aria-label={`${rp.name} дэлгэрэнгүй`}
-                  onClick={(event) => {
-                    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
-                    event.preventDefault();
-                    router.push(`/product/${rp._id}`);
-                  }}
                   className="group block rounded-xl no-underline cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--esl-bg)]"
                 >
                   <div className="aspect-square rounded-xl overflow-hidden bg-[var(--esl-bg-card)] relative">
@@ -174,7 +172,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
    STORE / DEFAULT Layout
    ═══════════════════════════════════════════ */
 function StoreLayout({ product, price, hasDiscount, discount, config }: {
-  product: Product; price: number; hasDiscount: boolean; discount: number;
+  product: DetailProduct; price: number; hasDiscount: boolean; discount: number;
   config: { color: string; primaryCta: string };
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -224,8 +222,8 @@ function StoreLayout({ product, price, hasDiscount, discount, config }: {
         <Truck size={18} className="text-[var(--esl-text-muted)]" />
         <div className="text-sm">
           <span className="font-medium">Хүргэлт:</span>{' '}
-          {(product as any).deliveryFee ? `${formatPrice((product as any).deliveryFee)}` : 'Үнэгүй'}
-          {(product as any).estimatedMins && <span className="text-[var(--esl-text-muted)]"> · ~{(product as any).estimatedMins} мин</span>}
+          {product.deliveryFee ? `${formatPrice(product.deliveryFee)}` : 'Үнэгүй'}
+          {product.estimatedMins && <span className="text-[var(--esl-text-muted)]"> · ~{product.estimatedMins} мин</span>}
         </div>
       </div>
 
@@ -238,8 +236,8 @@ function StoreLayout({ product, price, hasDiscount, discount, config }: {
 /* ═══════════════════════════════════════════
    REAL_ESTATE Layout
    ═══════════════════════════════════════════ */
-function RealEstateLayout({ product, price, config }: {
-  product: Product; price: number; config: { color: string; primaryCta: string };
+function RealEstateLayout({ product, price, config, contactHref }: {
+  product: DetailProduct; price: number; config: { color: string; primaryCta: string }; contactHref: string | null;
 }) {
   return (
     <>
@@ -263,25 +261,29 @@ function RealEstateLayout({ product, price, config }: {
       {product.description && <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed">{product.description}</p>}
 
       {/* Agent card */}
-      {(product as any).user && (
+      {product.user && (
         <div className="flex items-center gap-4 p-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)]">
           <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-lg font-bold text-blue-600">
-            {(product as any).user.name?.[0] || '?'}
+            {product.user.name?.[0] || '?'}
           </div>
           <div className="flex-1">
-            <p className="font-semibold text-sm">{(product as any).user.name}</p>
+            <p className="font-semibold text-sm">{product.user.name}</p>
             <p className="text-xs text-[var(--esl-text-muted)]">Зуучлагч</p>
           </div>
-          <a href={`tel:${(product as any).user.phone || ''}`} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: config.color }}>
-            <Phone size={18} className="text-white" />
-          </a>
+          {contactHref ? (
+            <a href={contactHref} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: config.color }} aria-label="Залгах">
+              <Phone size={18} className="text-white" />
+            </a>
+          ) : (
+            <span className="w-10 h-10 rounded-full flex items-center justify-center opacity-50" style={{ background: config.color }} aria-hidden="true">
+              <Phone size={18} className="text-white" />
+            </span>
+          )}
         </div>
       )}
 
       {/* CTA */}
-      <button className="w-full h-12 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2" style={{ background: config.color }}>
-        <Phone size={18} /> {config.primaryCta}
-      </button>
+      <ContactCta href={contactHref} color={config.color} icon={<Phone size={18} />} label={config.primaryCta} />
     </>
   );
 }
@@ -289,8 +291,8 @@ function RealEstateLayout({ product, price, config }: {
 /* ═══════════════════════════════════════════
    AUTO Layout
    ═══════════════════════════════════════════ */
-function AutoLayout({ product, price, config }: {
-  product: Product; price: number; config: { color: string; primaryCta: string };
+function AutoLayout({ product, price, config, contactHref }: {
+  product: DetailProduct; price: number; config: { color: string; primaryCta: string }; contactHref: string | null;
 }) {
   const [showSpecs, setShowSpecs] = useState(false);
 
@@ -326,9 +328,7 @@ function AutoLayout({ product, price, config }: {
       )}
 
       {/* CTAs */}
-      <button className="w-full h-12 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2" style={{ background: config.color }}>
-        <Calendar size={18} /> {config.primaryCta}
-      </button>
+      <ContactCta href={contactHref} color={config.color} icon={<Calendar size={18} />} label={config.primaryCta} />
     </>
   );
 }
@@ -337,7 +337,7 @@ function AutoLayout({ product, price, config }: {
    SERVICE Layout
    ═══════════════════════════════════════════ */
 function ServiceLayout({ product, price, config }: {
-  product: Product; price: number; config: { color: string; primaryCta: string };
+  product: DetailProduct; price: number; config: { color: string; primaryCta: string };
 }) {
   return (
     <>
@@ -383,8 +383,8 @@ function ServiceLayout({ product, price, config }: {
 /* ═══════════════════════════════════════════
    CONSTRUCTION Layout
    ═══════════════════════════════════════════ */
-function ConstructionLayout({ product, price, config }: {
-  product: Product; price: number; config: { color: string; primaryCta: string };
+function ConstructionLayout({ product, price, config, contactHref }: {
+  product: DetailProduct; price: number; config: { color: string; primaryCta: string }; contactHref: string | null;
 }) {
   const sold = product.soldUnits || 0;
   const total = product.totalUnits || 1;
@@ -424,9 +424,7 @@ function ConstructionLayout({ product, price, config }: {
       {product.description && <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed">{product.description}</p>}
 
       {/* CTA */}
-      <button className="w-full h-12 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2" style={{ background: config.color }}>
-        <Package size={18} /> {config.primaryCta}
-      </button>
+      <ContactCta href={contactHref} color={config.color} icon={<Package size={18} />} label={config.primaryCta} />
     </>
   );
 }
@@ -435,15 +433,16 @@ function ConstructionLayout({ product, price, config }: {
    PRE_ORDER Layout
    ═══════════════════════════════════════════ */
 function PreOrderLayout({ product, price, config }: {
-  product: Product; price: number; config: { color: string; primaryCta: string };
+  product: DetailProduct; price: number; config: { color: string; primaryCta: string };
 }) {
   const current = product.currentBatch || 0;
   const min = product.minBatch || 1;
   const progress = Math.min(Math.round((current / min) * 100), 100);
+  const [now] = useState(() => Date.now());
 
   // Countdown (if deliveryEstimate is a date string)
   const deadline = product.deliveryEstimate ? new Date(product.deliveryEstimate) : null;
-  const daysLeft = deadline ? Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / 86400000)) : null;
+  const daysLeft = deadline ? Math.max(0, Math.ceil((deadline.getTime() - now) / 86400000)) : null;
 
   return (
     <>
@@ -486,7 +485,7 @@ function PreOrderLayout({ product, price, config }: {
    DIGITAL Layout
    ═══════════════════════════════════════════ */
 function DigitalLayout({ product, price, config }: {
-  product: Product; price: number; config: { color: string; primaryCta: string };
+  product: DetailProduct; price: number; config: { color: string; primaryCta: string };
 }) {
   return (
     <>
@@ -514,6 +513,38 @@ function DigitalLayout({ product, price, config }: {
 }
 
 /* ═══ Shared small components ═══ */
+
+function parseTokenUser(token: string): { id?: string; userId?: string; name?: string } {
+  try {
+    return JSON.parse(atob(token.split('.')[1])) as { id?: string; userId?: string; name?: string };
+  } catch {
+    return {};
+  }
+}
+
+function ContactCta({ href, color, icon, label }: { href: string | null; color: string; icon: React.ReactNode; label: string }) {
+  const className = "w-full h-12 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2";
+
+  if (!href) {
+    return (
+      <button disabled className={`${className} cursor-not-allowed opacity-60`} style={{ background: color }}>
+        {icon} Холбогдох утас алга
+      </button>
+    );
+  }
+
+  return (
+    <a href={href} className={`${className} no-underline`} style={{ background: color }}>
+      {icon} {label}
+    </a>
+  );
+}
+
+function phoneHref(phone?: string | null): string | null {
+  if (!phone) return null;
+  const normalized = phone.replace(/[^\d+]/g, '');
+  return normalized ? `tel:${normalized}` : null;
+}
 
 function SpecCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (

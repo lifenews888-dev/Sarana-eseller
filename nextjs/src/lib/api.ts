@@ -85,6 +85,8 @@ export interface Product {
   images?: string[];
   videoUrl?: string;
   stock?: number;
+  deliveryFee?: number;
+  estimatedMins?: number;
   commission?: number;
   rating?: number;
   reviewCount?: number;

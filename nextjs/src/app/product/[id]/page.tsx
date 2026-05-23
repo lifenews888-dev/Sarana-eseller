@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import ProductDetailClient from '@/components/product/ProductDetailClient';
+import ProductDetailClient, { type DetailProduct } from '@/components/product/ProductDetailClient';
+import type { Product } from '@/lib/api';
 import type { Metadata } from 'next';
 
 interface Props {
@@ -40,7 +41,7 @@ export default async function ProductPage({ params }: Props) {
       where: { id },
       include: {
         categoryRef: true,
-        user: { select: { name: true, id: true, username: true } },
+        user: { select: { name: true, id: true, username: true, phone: true } },
       },
     });
   } catch { notFound(); }
@@ -130,7 +131,7 @@ export default async function ProductPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ProductDetailClient product={clientProduct as any} relatedProducts={relatedProducts as any} />
+      <ProductDetailClient product={clientProduct as unknown as DetailProduct} relatedProducts={relatedProducts as unknown as Product[]} />
     </>
   );
 }
