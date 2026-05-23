@@ -76,6 +76,9 @@ export default function ProductGrid({
       ? { key: 'type', label: TYPE_TABS.find((t) => t.key === activeType)?.label || activeType, onClear: () => onTypeChange('all') }
       : null,
     dealOnly ? { key: 'deal', label: 'Хямдралтай', onClear: () => onDealChange(false) } : null,
+    activeSort !== 'newest'
+      ? { key: 'sort', label: `Эрэмбэ: ${SORT_OPTIONS.find((option) => option.key === activeSort)?.label || activeSort}`, onClear: () => onSortChange('newest') }
+      : null,
     searchQuery.trim() ? { key: 'search', label: `Хайлт: ${searchQuery.trim()}`, onClear: () => onSearchChange('') } : null,
   ].filter((item): item is { key: string; label: string; onClear: () => void } => Boolean(item));
 
