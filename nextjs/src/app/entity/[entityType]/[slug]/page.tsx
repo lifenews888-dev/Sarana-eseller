@@ -32,7 +32,7 @@ interface DemoVehicle {
 interface DemoProject {
   id: string; title: string; status: string; progress: number;
   image: string; units: number; priceFrom: number; location: string; year: string;
-  category?: string; metadata?: FeedCardMetadata;
+  pricePerSqm?: number; category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoListing {
@@ -159,10 +159,10 @@ const DEMO: Record<string, Record<string, DemoEntity>> = {
         { label: 'Ажилтан', value: '120+' },
       ],
       projects: [
-        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 95000000, location: 'ХУД, Зайсан', year: '2027' },
-        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 120000000, location: 'СБД, 1-р хороолол', year: '2028' },
-        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 78000000, location: 'БГД, 3-р хороолол', year: '2025' },
-        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 135000000, location: 'СБД, Туул голын эрэг', year: '2029' },
+        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 95000000, pricePerSqm: 4500000, location: 'ХУД, Зайсан', year: '2027' },
+        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 120000000, pricePerSqm: 5200000, location: 'СБД, 1-р хороолол', year: '2028' },
+        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 78000000, pricePerSqm: 3600000, location: 'БГД, 3-р хороолол', year: '2025' },
+        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 135000000, pricePerSqm: 6000000, location: 'СБД, Туул голын эрэг', year: '2029' },
       ],
       milestones: [
         { year: '2010', text: 'Компани үүсгэн байгуулагдсан' },
@@ -290,6 +290,7 @@ function mapProject(item: ApiFeedItem): DemoProject {
     image: firstImage(item, `project-${item.id}`),
     units: totalUnits,
     priceFrom: numberFrom(item.price, numberFrom(meta.pricePerSqm)),
+    pricePerSqm: numberFrom(meta.pricePerSqm),
     location: stringFrom(meta.address, item.district || ''),
     year: stringFrom(meta.completionDate, ''),
     category: item.category || undefined,
@@ -350,7 +351,7 @@ function projectFallbackMetadata(project: DemoProject): FeedCardMetadata {
     totalUnits: project.units,
     soldUnits,
     availableUnits,
-    pricePerSqm: project.priceFrom,
+    pricePerSqm: project.pricePerSqm,
     completionDate: project.year,
   };
 }
@@ -528,6 +529,7 @@ function VehicleCard({ v }: { v: DemoVehicle }) {
 function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
   const meta = { ...projectFallbackMetadata(p), ...(p.metadata || {}) };
+  const pricePerSqm = numberFrom(meta.pricePerSqm);
   const specItems = compactMetadataPreviewItems(
     p.category || 'new-buildings',
     meta,
@@ -562,7 +564,7 @@ function ProjectCard({ p }: { p: DemoProject }) {
             <div className="h-full bg-gradient-to-r from-[#E8242C] to-[#FF6B6B] rounded-full transition-all" style={{ width: `${p.progress}%` }} />
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
           <div className="bg-white/5 rounded-lg py-2">
             <p className="text-xs font-black text-white">{p.units}</p>
             <p className="text-[9px] text-[var(--esl-text-secondary)]">айл</p>
@@ -570,6 +572,10 @@ function ProjectCard({ p }: { p: DemoProject }) {
           <div className="bg-white/5 rounded-lg py-2">
             <p className="text-xs font-black text-[#E8242C]">{formatPrice(p.priceFrom)}₮~</p>
             <p className="text-[9px] text-[var(--esl-text-secondary)]">эхлэх үнэ</p>
+          </div>
+          <div className="bg-white/5 rounded-lg py-2">
+            <p className="text-xs font-black text-white">{pricePerSqm ? `${formatPrice(pricePerSqm)}₮` : '—'}</p>
+            <p className="text-[9px] text-[var(--esl-text-secondary)]">1м²</p>
           </div>
           <div className="bg-white/5 rounded-lg py-2">
             <p className="text-xs font-black text-white">{p.year}</p>
@@ -1118,7 +1124,7 @@ export default function EntityProfilePage() {
                   <div className="h-full bg-gradient-to-r from-[#E8242C] to-[#FF6B6B] rounded-full" style={{ width: `${selectedProject.progress}%` }} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4">
                 <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
                   <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedProject.units}</p>
                   <p className="text-[10px] text-[var(--esl-text-secondary)]">айл</p>
@@ -1126,6 +1132,12 @@ export default function EntityProfilePage() {
                 <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
                   <p className="text-sm font-bold text-[#E8242C]">{formatPrice(selectedProject.priceFrom)}₮~</p>
                   <p className="text-[10px] text-[var(--esl-text-secondary)]">эхлэх үнэ</p>
+                </div>
+                <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
+                  <p className="text-sm font-bold text-[var(--esl-text-primary)]">
+                    {selectedProject.pricePerSqm ? `${formatPrice(selectedProject.pricePerSqm)}₮` : '—'}
+                  </p>
+                  <p className="text-[10px] text-[var(--esl-text-secondary)]">1м²</p>
                 </div>
                 <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
                   <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedProject.year}</p>

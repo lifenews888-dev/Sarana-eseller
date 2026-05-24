@@ -857,8 +857,25 @@ function formatMoney(value: unknown): string | null {
 }
 
 function formatMoneyPerSqm(value: unknown): string | null {
-  const money = formatMoney(value);
-  return money ? `${money}/м²` : null;
+  const n = numberValue(value);
+  if (n === null) {
+    const text = valueToText(value);
+    return text ? `${text}/м²` : null;
+  }
+
+  if (n >= 1_000_000_000) {
+    const billions = n / 1_000_000_000;
+    const label = billions % 1 === 0 ? billions.toFixed(0) : billions.toFixed(1);
+    return `${label}тэрбум₮/м²`;
+  }
+
+  if (n >= 1_000_000) {
+    const millions = n / 1_000_000;
+    const label = millions % 1 === 0 ? millions.toFixed(0) : millions.toFixed(1);
+    return `${label}сая₮/м²`;
+  }
+
+  return `${n.toLocaleString('mn-MN')}₮/м²`;
 }
 
 function formatPercent(value: unknown): string | null {
