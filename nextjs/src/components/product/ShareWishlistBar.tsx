@@ -34,16 +34,51 @@ async function copyText(text: string): Promise<void> {
   document.body.removeChild(textarea);
 }
 
+function defaultShareUrl(): string {
+  if (typeof window === 'undefined') return '';
+  return sanitizeShareUrl(window.location.href);
+}
+
+function sanitizeShareUrl(value: string): string {
+  if (!value) return '';
+  if (typeof window === 'undefined') return value;
+
+  try {
+    const parsed = new URL(value, window.location.origin);
+    parsed.searchParams.delete('verify');
+    return parsed.toString();
+  } catch {
+    return value;
+  }
+}
+
+function readWishlistSaved(productId?: string): boolean {
+  if (!productId || typeof window === 'undefined') return false;
+
+  try {
+    return window.localStorage?.getItem(`eseller:wishlist:${productId}`) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function writeWishlistSaved(productId: string | undefined, saved: boolean): void {
+  if (!productId || typeof window === 'undefined') return;
+
+  try {
+    if (saved) window.localStorage?.setItem(`eseller:wishlist:${productId}`, '1');
+    else window.localStorage?.removeItem(`eseller:wishlist:${productId}`);
+  } catch {
+    // Wishlist still updates visually when browser storage is unavailable.
+  }
+}
+
 export default function ShareWishlistBar({ url, title, productId, className }: ShareWishlistBarProps) {
-  const [liked, setLiked] = useState(() => {
-    if (!productId || typeof window === 'undefined') return false;
-    return localStorage.getItem(`eseller:wishlist:${productId}`) === '1';
-  });
+  const [liked, setLiked] = useState(() => readWishlistSaved(productId));
   const [copied, setCopied] = useState(false);
   const toast = useToast();
 
-  const shareUrl = url || (typeof window !== 'undefined' ? window.location.href : '');
-  const wishlistKey = productId ? `eseller:wishlist:${productId}` : null;
+  const shareUrl = url ? sanitizeShareUrl(url) : defaultShareUrl();
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -69,10 +104,7 @@ export default function ShareWishlistBar({ url, title, productId, className }: S
   const handleWishlist = () => {
     const next = !liked;
     setLiked(next);
-    if (wishlistKey) {
-      if (next) localStorage.setItem(wishlistKey, '1');
-      else localStorage.removeItem(wishlistKey);
-    }
+    writeWishlistSaved(productId, next);
     toast.show(next ? 'Хадгалагдлаа' : 'Хадгалсан жагсаалтаас хасагдлаа', 'ok');
   };
 

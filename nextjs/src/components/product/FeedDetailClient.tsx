@@ -189,7 +189,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
           </button>
         )}
 
-        <ShareWishlistBar title={post.title} />
+        <ShareWishlistBar url={`/feed/${post._id}`} title={post.title} productId={post._id} />
 
         {post.allowAffiliate ? (
           <StartSellingButton productId={post._id} productName={post.title} commission={post.affiliateCommission} />
