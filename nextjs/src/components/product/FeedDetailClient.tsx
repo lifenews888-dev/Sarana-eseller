@@ -578,7 +578,98 @@ function RealEstateDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost 
       <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['highlights', 'amenities']))} />
       <ChipSection title="Ойр орчим" icon={<Navigation size={16} />} items={toList(pick(meta, ['nearby']))} />
       <ChipSection title="Баримт бичиг" icon={<ClipboardList size={16} />} items={toList(pick(meta, ['documents']))} />
+      <RealEstateInquiryPanel meta={meta} post={post} />
     </div>
+  );
+}
+
+function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
+  const [copied, setCopied] = useState(false);
+  const [questionsCopied, setQuestionsCopied] = useState(false);
+  const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const questions = realEstateInquiryQuestions(meta);
+  const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
+  const inquiryText = buildRealEstateInquiryText({ meta, post, phone });
+
+  function copyInquiryText() {
+    setCopied(true);
+    void copyTextToClipboard(inquiryText).catch(() => undefined);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  function copyQuestions() {
+    setQuestionsCopied(true);
+    void copyTextToClipboard(questionText).catch(() => undefined);
+    window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  return (
+    <DetailSection title="Лавлагаа авахад бэлдэх" icon={<ClipboardList size={16} />}>
+      <div className="space-y-3">
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold">Бэлэн лавлагаа</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
+                {inquiryText}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyInquiryText}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={14} /> {copied ? 'Хуулагдлаа' : 'Текст'}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold">Лавлах асуултууд</p>
+            <button
+              type="button"
+              onClick={copyQuestions}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2.5 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={13} /> {questionsCopied ? 'Хуулагдлаа' : 'Хуулах'}
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {questions.map((question, index) => (
+              <div key={`real-estate-question-${question}`} className="flex gap-2 rounded-lg bg-[var(--esl-bg-card)] px-3 py-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E8242C]/15 text-[10px] font-black text-[#E8242C]">
+                  {index + 1}
+                </span>
+                <p className="text-xs leading-relaxed text-[var(--esl-text-muted)]">{question}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {href ? (
+            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
+              <Phone size={16} /> Залгаж лавлах
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
+              <Phone size={16} /> Утас алга
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              void copyTextToClipboard(window.location.href).catch(() => undefined);
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
+          >
+            <Share2 size={16} /> Зарын линк
+          </button>
+        </div>
+      </div>
+    </DetailSection>
   );
 }
 
@@ -1295,6 +1386,49 @@ function buildRoomInquiryText({
   ];
 
   return parts.filter(Boolean).join(' ');
+}
+
+function buildRealEstateInquiryText({
+  meta,
+  post,
+  phone,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  phone: string | null;
+}): string {
+  const parts = [
+    `Сайн байна уу, ${post.title} зарын талаар лавлаж байна.`,
+    post.refId ? `Зарын дугаар: ${post.refId}.` : null,
+    formatMoney(post.price) ? `Үнэ: ${formatMoney(post.price)}.` : null,
+    formatArea(pick(meta, ['sqm', 'area'])) ? `Талбай: ${formatArea(pick(meta, ['sqm', 'area']))}.` : null,
+    formatRooms(pick(meta, ['rooms'])) ? `Өрөө: ${formatRooms(pick(meta, ['rooms']))}.` : null,
+    formatFloor(pick(meta, ['floor']), pick(meta, ['totalFloors'])) ? `Давхар: ${formatFloor(pick(meta, ['floor']), pick(meta, ['totalFloors']))}.` : null,
+    valueToText(pick(meta, ['address', 'location'])) || post.district ? `Байршил: ${valueToText(pick(meta, ['address', 'location'])) || post.district}.` : null,
+    phone ? `Холбогдох утас: ${phone}.` : null,
+  ];
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function realEstateInquiryQuestions(meta: FeedMetadata): string[] {
+  const questions = [
+    'Үнэ тохиролцох боломж болон төлбөрийн нөхцөл ямар вэ?',
+  ];
+  const floor = formatFloor(pick(meta, ['floor']), pick(meta, ['totalFloors']));
+  const certificateReady = valueToText(pick(meta, ['certificateReady']));
+  const mortgageAvailable = valueToText(pick(meta, ['mortgageAvailable']));
+
+  if (floor) questions.push(`${floor} байрлалтай эсэх, лифт/орцны нөхцөл ямар вэ?`);
+  if (pick(meta, ['orientation', 'balcony'])) questions.push('Цонхны харц, тагт, нар тусгалын мэдээллийг тодруулж өгнө үү.');
+  if (pick(meta, ['condition', 'furnishing'])) questions.push('Засвар, тавилга, үлдэх эд зүйлсийн жагсаалтыг баталгаажуулж болох уу?');
+  if (certificateReady || mortgageAvailable) questions.push('Гэрчилгээ, ипотек, банкны шаардлагатай бичиг баримтын төлөв ямар вэ?');
+  if (pick(meta, ['maintenanceFeeMnt'])) questions.push('СӨХ болон сарын ашиглалтын зардал хэд орчим гардаг вэ?');
+  if (toList(pick(meta, ['nearby'])).length > 0) questions.push('Ойр орчны сургууль, цэцэрлэг, үйлчилгээ, зогсоолын нөхцөлийг тайлбарлаж өгнө үү.');
+
+  questions.push('Байрыг үзэх боломжтой өдөр, цагийг тохирч болох уу?');
+
+  return questions;
 }
 
 function roomUnitId(room: RoomChoiceDetail): string {
