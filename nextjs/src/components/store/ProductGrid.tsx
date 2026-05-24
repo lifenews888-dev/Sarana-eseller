@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import type { Product } from '@/lib/api';
@@ -68,6 +69,9 @@ export default function ProductGrid({
     : undefined;
   const activeCategoryChildren = activeCat === 'all' ? [] : categoryChildOptions(activeCat);
   const isNestedCategory = Boolean(activeCategoryPath && activeCategoryPath.value !== activeCategoryPath.rootKey);
+  const isListingCategory = activeCategory?.section === 'listing';
+  const listingFeedHref = activeCat !== 'all' ? `/feed?category=${encodeURIComponent(activeCat)}` : '/feed';
+  const listingPostHref = activeCat !== 'all' ? `/feed/post?category=${encodeURIComponent(activeCat)}` : '/feed/post';
   const sectionTitle = dealOnly
     ? 'Хямдралтай бараа'
     : 'Нэгдсэн ангиллын зарууд';
@@ -184,6 +188,32 @@ export default function ProductGrid({
                 })}
               </div>
             ) : null}
+            {isListingCategory ? (
+              <div className="mb-3 flex flex-col gap-3 rounded-xl border border-[#E8242C]/25 bg-[rgba(232,36,44,0.10)] p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="m-0 text-xs font-bold text-[#FF6B70]">
+                    {activeCategoryLabel} зарын ангилал
+                  </p>
+                  <p className="mt-1 mb-0 text-[11px] text-[var(--esl-text-muted)]">
+                    Машин, үл хөдлөх болон төслийн зарууд Зарын буланд дэлгэрэнгүй харагдана.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={listingFeedHref}
+                    className="rounded-lg bg-[#E8242C] px-3 py-2 text-xs font-bold text-white no-underline transition hover:bg-[#D31E25]"
+                  >
+                    Заруудыг үзэх
+                  </Link>
+                  <Link
+                    href={listingPostHref}
+                    className="rounded-lg border border-[#E8242C]/40 bg-[var(--esl-bg-muted)] px-3 py-2 text-xs font-bold text-[#FF6B70] no-underline transition hover:bg-[rgba(232,36,44,0.16)]"
+                  >
+                    Зар нэмэх
+                  </Link>
+                </div>
+              </div>
+            ) : null}
             {activeCategoryChildren.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {activeCategoryChildren.map((option) => (
@@ -251,12 +281,37 @@ export default function ProductGrid({
             <div className="w-20 h-20 rounded-2xl bg-[var(--esl-bg-card)] flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-[#3D3D3D]" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">Бараа олдсонгүй</h3>
-            <p className="text-sm text-[var(--esl-text-muted)] mb-4">Өөр хайлтаар дахин оролдоно уу</p>
-            <button onClick={onClearFilters}
-              className="text-sm font-bold text-[#FF4D53] bg-[rgba(232,36,44,0.15)] px-5 py-2.5 rounded-xl border-none cursor-pointer hover:bg-[rgba(232,36,44,0.25)] transition">
-              Шүүлтүүр цэвэрлэх
-            </button>
+            <h3 className="text-base font-bold text-white mb-1">
+              {isListingCategory ? 'Энэ ангиллын зарууд Зарын буланд байна' : 'Бараа олдсонгүй'}
+            </h3>
+            <p className="text-sm text-[var(--esl-text-muted)] mb-4">
+              {isListingCategory ? 'Ижил ангиллаар заруудыг үзэх эсвэл шинэ зар нэмэх боломжтой.' : 'Өөр хайлтаар дахин оролдоно уу'}
+            </p>
+            {isListingCategory ? (
+              <div className="flex flex-wrap justify-center gap-2">
+                <Link
+                  href={listingFeedHref}
+                  className="rounded-xl bg-[#E8242C] px-5 py-2.5 text-sm font-bold text-white no-underline transition hover:bg-[#D31E25]"
+                >
+                  Зарын буланд үзэх
+                </Link>
+                <Link
+                  href={listingPostHref}
+                  className="rounded-xl bg-[rgba(232,36,44,0.15)] px-5 py-2.5 text-sm font-bold text-[#FF4D53] no-underline transition hover:bg-[rgba(232,36,44,0.25)]"
+                >
+                  Зар нэмэх
+                </Link>
+                <button onClick={onClearFilters}
+                  className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-5 py-2.5 text-sm font-bold text-[var(--esl-text-muted)] transition hover:text-white">
+                  Шүүлтүүр цэвэрлэх
+                </button>
+              </div>
+            ) : (
+              <button onClick={onClearFilters}
+                className="text-sm font-bold text-[#FF4D53] bg-[rgba(232,36,44,0.15)] px-5 py-2.5 rounded-xl border-none cursor-pointer hover:bg-[rgba(232,36,44,0.25)] transition">
+                Шүүлтүүр цэвэрлэх
+              </button>
+            )}
           </div>
         ) : (
           <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"
