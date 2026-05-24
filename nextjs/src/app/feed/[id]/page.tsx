@@ -652,6 +652,7 @@ const DEMO_ENTITY_SLUGS: Record<string, Record<string, string>> = {
   agent: { a1: 'erdenbat', erdenbat: 'erdenbat' },
   company: { c1: 'mongolian-properties', 'mongolian-properties': 'mongolian-properties' },
   auto_dealer: { ad1: 'autocity', autocity: 'autocity' },
+  service: { techpro: 'techpro' },
 };
 
 function demoEntityProfileHref(entityType: string, entityId?: string | null): string | undefined {

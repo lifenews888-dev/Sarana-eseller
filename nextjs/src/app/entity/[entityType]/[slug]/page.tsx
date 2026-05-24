@@ -41,6 +41,12 @@ interface DemoListing {
   category?: string; metadata?: FeedCardMetadata;
 }
 
+interface DemoServiceOffering {
+  id: string; title: string; price: number; image: string;
+  duration?: number; packageName?: string; district?: string; badge?: string;
+  category?: string; metadata?: FeedCardMetadata;
+}
+
 interface DemoEntity {
   name: string; slug: string; type: EntityType;
   logo?: string; coverImage: string; coverImages?: string[];
@@ -51,6 +57,7 @@ interface DemoEntity {
   brands?: string[]; vehicles?: DemoVehicle[]; gallery?: string[];
   projects?: DemoProject[]; milestones?: { year: string; text: string }[];
   specialties?: string[]; experience?: number; listings?: DemoListing[];
+  serviceListings?: DemoServiceOffering[];
   testimonials?: { name: string; text: string; rating: number }[];
   services?: string[]; awards?: string[];
   website?: string; email?: string; social?: { ig?: string; fb?: string };
@@ -220,6 +227,52 @@ const DEMO: Record<string, Record<string, DemoEntity>> = {
       ],
     },
   },
+  service: {
+    techpro: {
+      name: 'TechPro', slug: 'techpro', type: 'service',
+      logo: 'https://picsum.photos/seed/eseller-techpro-logo/200',
+      coverImage: 'https://picsum.photos/seed/eseller-techpro-cover/1400',
+      coverImages: [
+        'https://picsum.photos/seed/eseller-techpro-cover/1400',
+        'https://picsum.photos/seed/eseller-techpro-workspace/1400',
+      ],
+      description: 'Вэб систем, marketplace, booking, админ dashboard, SEO суурь болон production deployment хийдэг үйлчилгээний баг.',
+      phone: '9900-4455', district: 'СБД', isVerified: false, rating: 4.8, reviewCount: 42,
+      website: 'techpro.mn', email: 'hello@techpro.mn',
+      stats: [
+        { label: 'Төсөл', value: '70+' },
+        { label: 'Дундаж хугацаа', value: '3 өдөр' },
+        { label: 'Баталгаа', value: '14 хоног' },
+        { label: 'Үнэлгээ', value: '4.8★' },
+      ],
+      services: ['Next.js вэб хөгжүүлэлт', 'UI/UX дизайн', 'SEO суурь тохиргоо', 'Админ dashboard', 'Deployment'],
+      serviceListings: [
+        {
+          id: '4',
+          title: 'Вэбсайт хийж өгнө',
+          price: 2500000,
+          image: 'https://picsum.photos/seed/feed-web-development-service-1/1000/760',
+          duration: 4320,
+          packageName: 'Next.js вэб + SEO',
+          district: 'СБД',
+          badge: 'Featured',
+          category: 'tech-it-services',
+          metadata: {
+            duration: 4320,
+            packageName: 'Next.js вэб + SEO',
+            availableSlots: 2,
+            warranty: '14 хоногийн засвар',
+            highlights: ['UI/UX дизайн', 'Mobile responsive', 'SEO суурь тохиргоо', 'Админ самбар', 'Deployment'],
+          },
+        },
+      ],
+      testimonials: [
+        { name: 'B. Энхтөр', text: 'Landing page болон админ хэсгийг хурдан гаргаж, mobile дээр цэвэр болгож өгсөн.', rating: 5 },
+        { name: 'M. Саруул', text: 'SEO суурь, analytics, deployment бүгдийг нэг багцаар шийдсэн нь их амар байсан.', rating: 5 },
+      ],
+      awards: ['Verified service workflow', 'Launch support'],
+    },
+  },
 };
 
 /* ═══ Helpers ═══ */
@@ -330,6 +383,22 @@ function mapListing(item: ApiFeedItem): DemoListing {
   };
 }
 
+function mapServiceOffering(item: ApiFeedItem): DemoServiceOffering {
+  const meta = item.metadata || {};
+  return {
+    id: item.id,
+    title: item.title,
+    price: numberFrom(item.price),
+    image: firstImage(item, `service-${item.id}`),
+    duration: numberFrom(meta.duration),
+    packageName: stringFrom(meta.packageName),
+    district: item.district || stringFrom(meta.district, ''),
+    badge: badgeFromTier(item.tier),
+    category: item.category || undefined,
+    metadata: meta,
+  };
+}
+
 function compactMetadataPreviewItems(
   category: string | undefined,
   metadata: FeedCardMetadata | undefined,
@@ -394,6 +463,27 @@ function listingFallbackMetadata(listing: DemoListing): FeedCardMetadata {
   };
 }
 
+function serviceFallbackMetadata(service: DemoServiceOffering): FeedCardMetadata {
+  return {
+    duration: service.duration,
+    packageName: service.packageName,
+    district: service.district,
+  };
+}
+
+function formatDuration(minutes?: number): string {
+  if (!minutes || !Number.isFinite(minutes)) return 'Тохиролцоно';
+  if (minutes < 60) return `${minutes.toLocaleString('mn-MN')} мин`;
+  const hours = minutes / 60;
+  if (hours < 24) {
+    const label = Number.isInteger(hours) ? hours.toFixed(0) : hours.toFixed(1);
+    return `${label} цаг`;
+  }
+  const days = hours / 24;
+  const label = Number.isInteger(days) ? days.toFixed(0) : days.toFixed(1);
+  return `${label} өдөр`;
+}
+
 function buildLiveStats(entityType: string, count: number, base?: DemoEntity): DemoEntity['stats'] {
   if (base?.stats?.length) return base.stats;
   if (entityType === 'auto_dealer') {
@@ -440,6 +530,7 @@ function mergeLiveEntity(entityType: string, slug: string, payload: ApiEntityRes
   if (entityType === 'auto_dealer') mapped.vehicles = feedItems.length ? feedItems.map(mapVehicle) : base?.vehicles;
   if (entityType === 'company') mapped.projects = feedItems.length ? feedItems.map(mapProject) : base?.projects;
   if (entityType === 'agent') mapped.listings = feedItems.length ? feedItems.map(mapListing) : base?.listings;
+  if (entityType === 'service') mapped.serviceListings = feedItems.length ? feedItems.map(mapServiceOffering) : base?.serviceListings;
   return mapped;
 }
 
@@ -703,6 +794,69 @@ function ListingCard({ l }: { l: DemoListing }) {
 }
 
 /* ═══ Testimonial Card ═══ */
+function ServiceCard({ s }: { s: DemoServiceOffering }) {
+  const meta = { ...serviceFallbackMetadata(s), ...(s.metadata || {}) };
+  const specItems = compactMetadataPreviewItems(
+    s.category || 'tech-it-services',
+    meta,
+    4,
+    ['duration', 'packageName', 'district'],
+  );
+
+  return (
+    <Link
+      href={feedDetailHref(s.id)}
+      aria-label={`${s.title} дэлгэрэнгүй`}
+      data-testid={`entity-service-card-${s.id}`}
+      className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+    >
+      <div className="relative h-44 overflow-hidden">
+        <SafeImage src={s.image} alt={s.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        {s.badge && (
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black bg-[#E8242C] text-white uppercase tracking-wider">
+            {s.badge}
+          </div>
+        )}
+        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[var(--esl-bg-section)] to-transparent" />
+      </div>
+      <div className="p-4">
+        <h3 className="text-sm font-bold text-white mb-1.5 group-hover:text-[#E8242C] transition-colors">{s.title}</h3>
+        <div className="flex flex-wrap gap-2 mb-2">
+          <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1">
+            <Clock className="w-2.5 h-2.5" /> {formatDuration(s.duration)}
+          </span>
+          {s.packageName && (
+            <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1">
+              <BookOpen className="w-2.5 h-2.5" /> {s.packageName}
+            </span>
+          )}
+          {s.district && (
+            <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1">
+              <MapPin className="w-2.5 h-2.5" /> {s.district}
+            </span>
+          )}
+        </div>
+        {specItems.length > 0 && (
+          <div className="mb-3 grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex items-end justify-between gap-3">
+          <p className="text-base font-black text-[#E8242C]">{formatPrice(s.price)}₮</p>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+            Дэлгэрэнгүй <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function TestimonialCard({ t }: { t: { name: string; text: string; rating: number } }) {
   return (
     <div className="bg-white/5 border border-[var(--esl-border)] rounded-2xl p-5 min-w-[300px] snap-start">
@@ -797,6 +951,8 @@ export default function EntityProfilePage() {
     ? ['Машинууд', 'Галерей', 'Үнэлгээ', 'Тухай']
     : entityType === 'company'
     ? ['Төслүүд', 'Галерей', 'Үнэлгээ', 'Тухай']
+    : entityType === 'service'
+    ? ['Үйлчилгээ', 'Үнэлгээ', 'Тухай']
     : ['Зарууд', 'Үнэлгээ', 'Тухай'];
 
   const coverImages = entity.coverImages || [entity.coverImage];
@@ -1025,6 +1181,30 @@ export default function EntityProfilePage() {
           </div>
         )}
 
+        {/* === SERVICE: Offerings === */}
+        {entityType === 'service' && activeTab === 0 && (
+          <div className="space-y-5">
+            {entity.services && (
+              <div className="flex flex-wrap gap-2">
+                {entity.services.map((service) => (
+                  <span key={service} className="rounded-xl border border-[var(--esl-border)] bg-white/5 px-3 py-2 text-xs font-semibold text-[var(--esl-text-muted)]">
+                    {service}
+                  </span>
+                ))}
+              </div>
+            )}
+            {entity.serviceListings?.length ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {entity.serviceListings.map(s => <ServiceCard key={s.id} s={s} />)}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-[var(--esl-border)] bg-white/5 p-6 text-sm text-[var(--esl-text-muted)]">
+                Одоогоор нийтэлсэн үйлчилгээ алга.
+              </div>
+            )}
+          </div>
+        )}
+
         {/* === Gallery (auto_dealer tab 1, company tab 1) === */}
         {((entityType === 'auto_dealer' && activeTab === 1) || (entityType === 'company' && activeTab === 1)) && entity.gallery && (
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -1037,7 +1217,7 @@ export default function EntityProfilePage() {
         )}
 
         {/* === Reviews === */}
-        {((entityType === 'auto_dealer' && activeTab === 2) || (entityType === 'company' && activeTab === 2) || (entityType === 'agent' && activeTab === 1)) && (
+        {((entityType === 'auto_dealer' && activeTab === 2) || (entityType === 'company' && activeTab === 2) || (entityType === 'agent' && activeTab === 1) || (entityType === 'service' && activeTab === 1)) && (
           <div>
             {/* Rating summary */}
             <div className="bg-white/5 border border-[var(--esl-border)] rounded-2xl p-6 mb-6 flex items-center gap-6 flex-wrap">
@@ -1077,7 +1257,7 @@ export default function EntityProfilePage() {
         )}
 
         {/* === About === */}
-        {((entityType === 'auto_dealer' && activeTab === 3) || (entityType === 'company' && activeTab === 3) || (entityType === 'agent' && activeTab === 2)) && (
+        {((entityType === 'auto_dealer' && activeTab === 3) || (entityType === 'company' && activeTab === 3) || (entityType === 'agent' && activeTab === 2) || (entityType === 'service' && activeTab === 2)) && (
           <div className="space-y-6">
             <div className="bg-white/5 border border-[var(--esl-border)] rounded-2xl p-6">
               <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed">{entity.description}</p>
