@@ -16,7 +16,13 @@ import {
   Laptop, Shirt, Sparkles, Baby, Dumbbell, UtensilsCrossed, Wrench, Gem, HardDrive, Briefcase, Package, Tag,
 } from 'lucide-react';
 import { type LucideIcon } from 'lucide-react';
-import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel } from '@/lib/marketplaceCategories';
+import {
+  categoryChildOptions,
+  categoryDescendantValues,
+  categoryPathInfo,
+  normalizeMarketplaceCategory,
+  categoryLabel as marketplaceCategoryLabel,
+} from '@/lib/marketplaceCategories';
 
 /* ═══ Types ═══ */
 type ItemTier = 'vip' | 'featured' | 'discounted' | 'normal';
@@ -196,6 +202,7 @@ function normalizeFeedItem(item: ApiFeedItem): FeedItem {
     price: Number(item.price || 0),
     media: normalizeFeedMedia(item),
     category: String(item.category || 'home-living'),
+    subcategory: typeof item.subcategory === 'string' ? item.subcategory : undefined,
     entityType,
     entityName: String(item.entityName || 'eseller.mn'),
     verified: Boolean(item.verified || item.entityVerified),
@@ -230,10 +237,42 @@ function categoryIcon(cat: string): LucideIcon {
   return map[cat] || Package;
 }
 
+function feedItemMeta(item: FeedItem): Record<string, unknown> {
+  return (item.metadata && typeof item.metadata === 'object' ? item.metadata : {}) as Record<string, unknown>;
+}
+
+function feedItemCategorySelection(item: FeedItem): string {
+  const meta = feedItemMeta(item);
+  const metaSelection = typeof meta.categorySelection === 'string' ? meta.categorySelection : '';
+  return item.subcategory || metaSelection || item.category || '';
+}
+
+function feedItemMatchesCategory(item: FeedItem, activeCategory: string): boolean {
+  if (!activeCategory || activeCategory === 'all') return true;
+
+  const activePath = categoryPathInfo(activeCategory);
+  const activeValue = activePath?.value || normalizeMarketplaceCategory(activeCategory);
+  const activeRoot = activePath?.rootKey || normalizeMarketplaceCategory(activeCategory);
+  const itemSelection = feedItemCategorySelection(item);
+  const itemPath = categoryPathInfo(itemSelection) || categoryPathInfo(item.category);
+  const itemRoot = itemPath?.rootKey || normalizeMarketplaceCategory(item.category);
+
+  if (!activePath || activeValue === activeRoot) {
+    return itemRoot === activeRoot || normalizeMarketplaceCategory(itemSelection) === activeRoot;
+  }
+
+  const descendants = categoryDescendantValues(activeCategory);
+  const itemValues = Array.from(new Set([item.category, itemSelection, item.subcategory, itemPath?.value].filter(Boolean)));
+
+  return itemValues.some((value) => {
+    const path = categoryPathInfo(String(value));
+    const comparable = path?.value || String(value);
+    return comparable === activeValue || descendants.includes(comparable);
+  });
+}
+
 function feedCategoryLabel(item: FeedItem): string | null {
-  const meta = (item.metadata && typeof item.metadata === 'object'
-    ? item.metadata
-    : {}) as Record<string, unknown>;
+  const meta = feedItemMeta(item);
   const metaPath = Array.isArray(meta.categoryPath)
     ? meta.categoryPath.map((value) => String(value).trim()).filter(Boolean)
     : [];
@@ -691,11 +730,14 @@ export default function FeedPageClient({
     if (activeCat !== 'all') params.set('category', activeCat);
     if (activeEntityType) params.set('entityType', activeEntityType);
     const query = params.toString();
+    const canUseDemoFeed = activeCat === 'all' && !activeEntityType;
     fetch(`/api/feed${query ? `?${query}` : ''}`).then(r => r.json()).then(res => {
       const d = res.data || res;
       const all = [...(d.vip || []), ...(d.featured || []), ...(d.discounted || []), ...(d.normal || [])];
-      if (all.length > 0) setFeedItems(all.map((item: ApiFeedItem) => normalizeFeedItem(item)));
-    }).catch(() => {});
+      setFeedItems(all.length > 0 ? all.map((item: ApiFeedItem) => normalizeFeedItem(item)) : (canUseDemoFeed ? DEMO_FEED : []));
+    }).catch(() => {
+      setFeedItems(canUseDemoFeed ? DEMO_FEED : []);
+    });
   }, [activeCat, activeEntityType]);
   const { district: userDistrict, loading: locLoading, permissionDenied, refresh: refreshLoc, setManualDistrict } = useUserLocation();
 
@@ -714,7 +756,7 @@ export default function FeedPageClient({
 
   const filtered = useMemo(() => {
     let list = [...feedItems];
-    if (activeCat !== 'all') list = list.filter(i => i.category === activeCat);
+    if (activeCat !== 'all') list = list.filter(i => feedItemMatchesCategory(i, activeCat));
     if (activeEntityType) list = list.filter(i => i.entityType === activeEntityType);
     if (activeDistrict !== 'Бүгд') list = list.filter(i => i.district === activeDistrict);
     if (activeProvince) list = list.filter(i => i.province === activeProvince);
@@ -736,6 +778,10 @@ export default function FeedPageClient({
   }, [feedItems, search, activeCat, activeEntityType, activeDistrict, activeProvince, activeSort]);
 
   const vipCount = filtered.filter(i => i.tier === 'vip').length;
+  const activeCategoryPath = activeCat === 'all' ? undefined : categoryPathInfo(activeCat);
+  const activeCategoryChildren = activeCat === 'all' ? [] : categoryChildOptions(activeCat);
+  const activeCategoryLabel = activeCategoryPath?.label || (activeCat === 'all' ? '' : marketplaceCategoryLabel(activeCat));
+  const isNestedCategory = Boolean(activeCategoryPath && activeCategoryPath.value !== activeCategoryPath.rootKey);
 
   return (
     <div className="min-h-screen" style={{ background: "var(--esl-bg-page)" }}>
@@ -886,6 +932,54 @@ export default function FeedPageClient({
             setActiveCat(slug);
             setActiveEntityType('');
           }} />
+          {activeCat !== 'all' && (activeCategoryChildren.length > 0 || isNestedCategory) && (
+            <div className="mt-3 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-4 py-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--esl-text-disabled)]">
+                    Дэд ангилал
+                  </p>
+                  <p className="text-sm font-bold text-[var(--esl-text)]">
+                    {activeCategoryLabel}
+                  </p>
+                </div>
+                {isNestedCategory && activeCategoryPath && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveCat(activeCategoryPath.rootKey);
+                      setActiveEntityType('');
+                    }}
+                    className="self-start sm:self-auto px-3 py-1.5 rounded-full border border-[var(--esl-border)] text-xs font-semibold text-[var(--esl-text-secondary)] hover:text-[var(--esl-text)] hover:border-[#E8242C] transition"
+                  >
+                    {activeCategoryPath.rootLabel} руу буцах
+                  </button>
+                )}
+              </div>
+
+              {activeCategoryChildren.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {activeCategoryChildren.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        setActiveCat(option.value);
+                        setActiveEntityType('');
+                      }}
+                      className="px-3 py-1.5 rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-xs font-semibold text-[var(--esl-text-secondary)] hover:text-white hover:bg-[#E8242C] hover:border-[#E8242C] transition"
+                    >
+                      {option.label}{option.hasChildren ? ' ›' : ''}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-3 text-xs text-[var(--esl-text-muted)]">
+                  Энэ ангилалд дараагийн түвшний сонголт алга.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Result bar */}
