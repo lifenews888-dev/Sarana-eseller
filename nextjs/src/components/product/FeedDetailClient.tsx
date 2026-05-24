@@ -9,9 +9,10 @@ import {
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
   ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
   Smartphone, BatteryCharging, PackageCheck, Share2, X, MessageCircle,
+  ChevronRight, ListFilter, PlusCircle,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice, type EntityType as DetailEntityType } from '@/lib/cards/entityCardConfig';
-import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
+import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory, type MarketplaceCategoryPath } from '@/lib/marketplaceCategories';
 import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/listingMetadata';
 import SafeImage from '@/components/ui/SafeImage';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
@@ -141,6 +142,8 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
 
         <ListingMetaBar post={post} />
 
+        <ListingCategoryActions post={post} accent={config.color} />
+
         <EntityFields et={et} meta={meta} post={post} />
 
         <ListingQualitySummary post={post} et={et} imageCount={imageCount} />
@@ -241,6 +244,53 @@ function ListingMetaBar({ post }: { post: FeedPost }) {
   );
 }
 
+function ListingCategoryActions({ post, accent }: { post: FeedPost; accent: string }) {
+  const path = listingCategoryPath(post.category, post.subcategory, post.metadata);
+  if (!path) return null;
+
+  const feedHref = feedCategoryHref(path.value);
+  const postHref = `/feed/post?category=${encodeURIComponent(path.value)}`;
+
+  return (
+    <section className="rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] p-3">
+      <nav aria-label="Зарын ангиллын зам" className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold text-[var(--esl-text-muted)]">
+        <Link href="/feed" className="rounded-full px-2 py-1 text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-muted)] hover:text-[var(--esl-text)]">
+          Зарын булан
+        </Link>
+        {path.segments.map((segment) => (
+          <span key={`${segment.value}-${segment.label}`} className="inline-flex items-center gap-1.5">
+            <ChevronRight size={13} className="text-[var(--esl-text-muted)]" />
+            <Link
+              href={feedCategoryHref(segment.value)}
+              className="rounded-full px-2 py-1 text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg-muted)]"
+            >
+              {segment.label}
+            </Link>
+          </span>
+        ))}
+      </nav>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <Link
+          href={feedHref}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 text-xs font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg-muted)]"
+        >
+          <ListFilter size={15} style={{ color: accent }} />
+          Энэ ангиллын зарууд
+        </Link>
+        <Link
+          href={postHref}
+          className="inline-flex h-10 items-center justify-center gap-2 rounded-lg px-3 text-xs font-bold text-white no-underline"
+          style={{ background: accent }}
+        >
+          <PlusCircle size={15} />
+          Ийм зар нэмэх
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 function RelatedFeedSection({ posts, accent }: { posts: RelatedFeedPost[]; accent: string }) {
   if (posts.length === 0) return null;
 
@@ -330,14 +380,67 @@ function listingCategoryLabel(category?: string, subcategory?: string, meta?: Fe
     : [];
   if (metaPath.length > 0) return metaPath.join(' / ');
 
-  const metaSelection = typeof meta?.categorySelection === 'string' ? meta.categorySelection : '';
-  const selected = subcategory || metaSelection || category;
-  const path = categoryPathInfo(selected);
+  const path = listingCategoryPath(category, subcategory, meta);
   if (path) return path.label;
 
   if (category && subcategory) return `${marketplaceCategoryLabel(category)} / ${subcategory}`;
   if (category) return marketplaceCategoryLabel(category);
   return null;
+}
+
+function listingCategoryPath(category?: string, subcategory?: string, meta?: FeedMetadata): MarketplaceCategoryPath | null {
+  const metaSelection = typeof meta?.categorySelection === 'string' ? meta.categorySelection : '';
+  const explicitSelection = subcategory || metaSelection;
+  const explicitPath = categoryPathInfo(explicitSelection);
+  if (explicitPath) return explicitPath;
+
+  const inferredPath = inferCategoryPathFromMetadata(category, meta);
+  if (inferredPath) return inferredPath;
+
+  return categoryPathInfo(category) || null;
+}
+
+function feedCategoryHref(value: string): string {
+  return `/feed?category=${encodeURIComponent(value)}`;
+}
+
+function inferCategoryPathFromMetadata(category?: string, meta?: FeedMetadata): MarketplaceCategoryPath | null {
+  if (!meta || normalizeMarketplaceCategory(category) !== 'vehicles') return null;
+
+  const brand = valueToText(pick(meta, ['brand']));
+  const model = valueToText(pick(meta, ['model']));
+  if (!brand || !model) return null;
+
+  const brandSlug = categorySlugPart(brand);
+  if (!brandSlug) return null;
+
+  for (const modelSlug of vehicleModelSlugCandidates(model)) {
+    const path = categoryPathInfo(`vehicles-${brandSlug}-${modelSlug}`);
+    if (path) return path;
+  }
+
+  return categoryPathInfo(`vehicles-${brandSlug}`) || null;
+}
+
+function vehicleModelSlugCandidates(model: string): string[] {
+  const fullSlug = categorySlugPart(model);
+  const parts = fullSlug.split('-').filter(Boolean);
+  const candidates: string[] = [];
+
+  for (let length = parts.length; length >= 1; length -= 1) {
+    candidates.push(parts.slice(0, length).join('-'));
+  }
+
+  return Array.from(new Set(candidates.filter(Boolean)));
+}
+
+function categorySlugPart(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
 }
 
 function relatedFacts(post: RelatedFeedPost): string[] {
