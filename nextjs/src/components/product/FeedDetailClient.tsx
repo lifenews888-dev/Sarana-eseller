@@ -629,7 +629,10 @@ function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPos
         ]} />
       </DetailSection>
 
-      <ChipSection title="Өрөөний сонголт" icon={<Home size={16} />} items={toList(pick(meta, ['roomChoices']))} />
+      <ConstructionRoomChoices
+        choices={toList(pick(meta, ['roomChoices']))}
+        pricePerSqm={numberValue(pick(meta, ['pricePerSqm']))}
+      />
       <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['amenities']))} />
       <ChipSection title="Төлбөрийн нөхцөл" icon={<Banknote size={16} />} items={toList(pick(meta, ['paymentTerms']))} />
     </div>
@@ -713,6 +716,58 @@ function ConstructionProgressSummary({
       ) : null}
     </section>
   );
+}
+
+function ConstructionRoomChoices({
+  choices,
+  pricePerSqm,
+}: {
+  choices: string[];
+  pricePerSqm: number | null;
+}) {
+  if (choices.length === 0) return null;
+
+  return (
+    <DetailSection title="Өрөөний сонголт" icon={<Home size={16} />}>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {choices.map((choice) => {
+          const room = parseRoomChoice(choice, pricePerSqm);
+
+          return (
+            <div key={choice} className="rounded-lg bg-[var(--esl-bg-muted)] border border-[var(--esl-border)] px-3 py-3">
+              <p className="text-sm font-bold leading-tight">{room.label}</p>
+              <div className="mt-2 space-y-1">
+                {room.area !== null ? (
+                  <p className="text-[11px] text-[var(--esl-text-muted)]">
+                    Талбай: <span className="font-semibold text-[var(--esl-text)]">{formatArea(room.area)}</span>
+                  </p>
+                ) : null}
+                {room.estimatedPrice !== null ? (
+                  <p className="text-[11px] text-[var(--esl-text-muted)]">
+                    Ойролцоо үнэ: <span className="font-semibold text-[#E8242C]">{formatMoney(room.estimatedPrice)}</span>
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </DetailSection>
+  );
+}
+
+function parseRoomChoice(choice: string, pricePerSqm: number | null) {
+  const areaMatch = choice.match(/(\d+(?:[.,]\d+)?)\s*(?:м²|м2|мкв|m²|m2)/i);
+  const area = areaMatch ? numberValue(areaMatch[1].replace(',', '.')) : null;
+  const estimatedPrice = area !== null && pricePerSqm !== null
+    ? Math.round(area * pricePerSqm)
+    : null;
+
+  return {
+    label: choice,
+    area,
+    estimatedPrice,
+  };
 }
 
 function ServiceDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {

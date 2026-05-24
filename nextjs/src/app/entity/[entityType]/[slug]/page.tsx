@@ -159,10 +159,10 @@ const DEMO: Record<string, Record<string, DemoEntity>> = {
         { label: 'Ажилтан', value: '120+' },
       ],
       projects: [
-        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 95000000, pricePerSqm: 4500000, location: 'ХУД, Зайсан', year: '2027' },
-        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 120000000, pricePerSqm: 5200000, location: 'СБД, 1-р хороолол', year: '2028' },
-        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 78000000, pricePerSqm: 3600000, location: 'БГД, 3-р хороолол', year: '2025' },
-        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 135000000, pricePerSqm: 6000000, location: 'СБД, Туул голын эрэг', year: '2029' },
+        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 261000000, pricePerSqm: 4500000, location: 'ХУД, Зайсан', year: '2027' },
+        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 218400000, pricePerSqm: 5200000, location: 'СБД, 1-р хороолол', year: '2028' },
+        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 198000000, pricePerSqm: 3600000, location: 'БГД, 3-р хороолол', year: '2025' },
+        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 330000000, pricePerSqm: 6000000, location: 'СБД, Туул голын эрэг', year: '2029' },
       ],
       milestones: [
         { year: '2010', text: 'Компани үүсгэн байгуулагдсан' },
