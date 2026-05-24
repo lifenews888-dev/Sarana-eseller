@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import { useUserLocation } from '@/hooks/useUserLocation';
@@ -708,6 +709,8 @@ export default function FeedPageClient({
   initialCategory = 'all',
   initialEntityType = '',
 }: FeedPageClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
   const [feedItems, setFeedItems] = useState<FeedItem[]>(DEMO_FEED);
   const [search, setSearch] = useState('');
   const [activeCat, setActiveCat] = useState(initialCategory || 'all');
@@ -716,6 +719,35 @@ export default function FeedPageClient({
   const [activeProvince, setActiveProvince] = useState('');
   const [activeSort, setActiveSort] = useState('newest');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const applyFeedRouteFilters = useCallback((nextCategory: string, nextEntityType: EntityType | '' = '') => {
+    const category = nextCategory || 'all';
+    setActiveCat(category);
+    setActiveEntityType(nextEntityType);
+
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete('verify');
+    if (category === 'all') {
+      params.delete('category');
+    } else {
+      params.set('category', category);
+    }
+
+    if (nextEntityType) {
+      params.set('entityType', nextEntityType);
+    } else {
+      params.delete('entityType');
+    }
+
+    const query = params.toString();
+    const nextUrl = query ? `${pathname}?${query}` : pathname;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (currentUrl !== nextUrl) {
+      router.push(nextUrl, { scroll: false });
+    }
+  }, [pathname, router]);
 
   useEffect(() => {
     window.setTimeout(() => {
@@ -929,8 +961,7 @@ export default function FeedPageClient({
         {/* Category pills — DB-ээс авна */}
         <div className="mb-6">
           <CategoryBar value={activeCat} onChange={(slug) => {
-            setActiveCat(slug);
-            setActiveEntityType('');
+            applyFeedRouteFilters(slug);
           }} />
           {activeCat !== 'all' && (activeCategoryChildren.length > 0 || isNestedCategory) && (
             <div className="mt-3 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-4 py-3">
@@ -947,8 +978,7 @@ export default function FeedPageClient({
                   <button
                     type="button"
                     onClick={() => {
-                      setActiveCat(activeCategoryPath.rootKey);
-                      setActiveEntityType('');
+                      applyFeedRouteFilters(activeCategoryPath.rootKey);
                     }}
                     className="self-start sm:self-auto px-3 py-1.5 rounded-full border border-[var(--esl-border)] text-xs font-semibold text-[var(--esl-text-secondary)] hover:text-[var(--esl-text)] hover:border-[#E8242C] transition"
                   >
@@ -964,8 +994,7 @@ export default function FeedPageClient({
                       key={option.value}
                       type="button"
                       onClick={() => {
-                        setActiveCat(option.value);
-                        setActiveEntityType('');
+                        applyFeedRouteFilters(option.value);
                       }}
                       className="px-3 py-1.5 rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-xs font-semibold text-[var(--esl-text-secondary)] hover:text-white hover:bg-[#E8242C] hover:border-[#E8242C] transition"
                     >
@@ -1008,8 +1037,7 @@ export default function FeedPageClient({
               <button
                 onClick={() => {
                   setSearch('');
-                  setActiveCat('all');
-                  setActiveEntityType('');
+                  applyFeedRouteFilters('all');
                   setActiveDistrict('Бүгд');
                   setActiveProvince('');
                   setActiveSort('newest');
