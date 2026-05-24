@@ -31,6 +31,9 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import {
+  categoryDescendantValues,
+  categoryPathInfo,
+  isMarketplaceCategoryValue,
   MARKETPLACE_CATEGORIES,
   normalizeMarketplaceCategory,
 } from '@/lib/marketplaceCategories';
@@ -137,16 +140,14 @@ async function copyStoreText(text: string): Promise<void> {
   document.body.removeChild(textarea);
 }
 
-const STORE_CATEGORY_KEYS = new Set([
-  'all',
-  ...MARKETPLACE_CATEGORIES.map((category) => category.key),
-]);
 const STORE_SORT_KEYS = new Set<StoreSortKey>(['newest', 'price_asc', 'price_desc', 'rating', 'discount']);
 
 function normalizeStoreCategory(value?: string | null): string {
   if (!value) return 'all';
+  const categoryPath = categoryPathInfo(value);
+  if (categoryPath) return categoryPath.value;
   const canonical = normalizeMarketplaceCategory(value);
-  return STORE_CATEGORY_KEYS.has(canonical) ? canonical : 'all';
+  return isMarketplaceCategoryValue(canonical) ? canonical : 'all';
 }
 
 function normalizeStoreType(value?: string | null): 'all' | ItemType {
@@ -159,7 +160,7 @@ function normalizeStoreSort(value?: string | null): StoreSortKey {
 
 function normalizeProductCategory(category?: string): string | undefined {
   if (!category) return undefined;
-  return normalizeMarketplaceCategory(category);
+  return categoryPathInfo(category)?.value || normalizeMarketplaceCategory(category);
 }
 
 function serviceCategoryToStoreCategory(category?: string): string | undefined {
@@ -207,6 +208,23 @@ function productDiscountAmount(product: Product): number {
   return product.salePrice && product.salePrice > 0 && product.salePrice < product.price
     ? product.price - product.salePrice
     : 0;
+}
+
+function productMatchesStoreCategory(product: Product, activeCategory: string): boolean {
+  if (activeCategory === 'all') return true;
+  const activePath = categoryPathInfo(activeCategory);
+  if (!activePath) return normalizeProductCategory(product.category) === activeCategory;
+
+  const productCategory = normalizeProductCategory(product.category);
+  const productPath = categoryPathInfo(productCategory);
+  if (!productPath) return productCategory === activePath.value;
+
+  if (activePath.value === activePath.rootKey) {
+    return productPath.rootKey === activePath.rootKey;
+  }
+
+  const acceptedValues = new Set([activePath.value, ...categoryDescendantValues(activePath.value)]);
+  return acceptedValues.has(productPath.value);
 }
 
 /* ─── Marquee component ─── */
@@ -371,7 +389,7 @@ export default function StorePage() {
       ? serviceProducts
       : activeType === 'product' ? products
       : catalogItems;
-    if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
+    if (activeCat !== 'all') list = list.filter(p => productMatchesStoreCategory(p, activeCat));
     if (dealOnly) list = list.filter(isSaleProduct);
     if (debSearch.trim()) { const q = debSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)); }
     const sorted = [...list];
