@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { Plus, Eye, Trash2, MapPin, Package, Loader2, Clock } from 'lucide-react';
+import { Plus, Eye, Trash2, MapPin, Package, Loader2, Pencil } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
 
 interface Listing {
   id: string;
@@ -10,6 +12,7 @@ interface Listing {
   price: number | null;
   images: string[];
   district: string | null;
+  entityType?: string | null;
   status: string;
   tier: string;
   viewCount: number;
@@ -17,12 +20,15 @@ interface Listing {
 }
 
 export default function ListingsPage() {
+  const { user } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const entityType = user?.entityType || 'store';
+  const createHref = `/dashboard/store/listings/new?entityType=${entityType}`;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    fetch('/api/feed?limit=50', {
+    fetch('/api/feed?mine=1&limit=50', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     })
       .then(r => r.json())
@@ -51,7 +57,7 @@ export default function ListingsPage() {
           <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)]">Зарууд</h1>
           <p className="text-sm text-[var(--esl-text-secondary)]">{listings.length} зар</p>
         </div>
-        <Link href="/dashboard/store/listings/new"
+        <Link href={createHref}
           className="flex items-center gap-2 px-5 py-2.5 bg-[#E8242C] text-white rounded-xl font-bold text-sm no-underline hover:bg-red-700 transition">
           <Plus className="w-4 h-4" /> Зар нэмэх
         </Link>
@@ -66,7 +72,7 @@ export default function ListingsPage() {
           <Package className="w-12 h-12 mx-auto text-[var(--esl-text-muted)] opacity-20 mb-4" />
           <h3 className="text-lg font-bold text-[var(--esl-text-primary)] mb-2">Зар байхгүй байна</h3>
           <p className="text-sm text-[var(--esl-text-muted)] mb-6">Эхний зараа нэмэцгээе</p>
-          <Link href="/dashboard/store/listings/new"
+          <Link href={createHref}
             className="inline-flex items-center gap-2 px-6 py-3 bg-[#E8242C] text-white rounded-xl font-bold text-sm no-underline">
             <Plus className="w-4 h-4" /> Зар нэмэх
           </Link>
@@ -75,9 +81,9 @@ export default function ListingsPage() {
         <div className="space-y-3">
           {listings.map(item => (
             <div key={item.id} className="flex items-center gap-4 bg-[var(--esl-bg-card)] rounded-xl p-4 border border-[var(--esl-border)]">
-              <div className="w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[var(--esl-bg-section)]">
+              <div className="relative w-16 h-16 rounded-lg overflow-hidden shrink-0 bg-[var(--esl-bg-section)]">
                 {item.images?.[0] ? (
-                  <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
+                  <Image src={item.images[0]} alt="" fill sizes="64px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center"><Package className="w-6 h-6 text-[var(--esl-text-disabled)]" /></div>
                 )}
@@ -101,6 +107,10 @@ export default function ListingsPage() {
                 <Link href={`/feed/${item.id}`} target="_blank"
                   className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
                   <Eye className="w-4 h-4" />
+                </Link>
+                <Link href={`/dashboard/store/listings/new?entityType=${item.entityType || entityType}&edit=${item.id}`}
+                  className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
+                  <Pencil className="w-4 h-4" />
                 </Link>
                 <button onClick={() => deleteListing(item.id)}
                   className="w-8 h-8 rounded-lg bg-red-50 border border-red-200 flex items-center justify-center text-red-500 cursor-pointer hover:bg-red-100">

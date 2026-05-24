@@ -1,90 +1,119 @@
 'use client';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
 
-interface Vehicle {
-  _id: string;
+import { useEffect, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Car, Eye, Gauge, Image as ImageIcon, Pencil, Plus } from 'lucide-react';
+
+interface FeedVehicle {
+  id: string;
   title: string;
-  brand: string;
-  model: string;
-  year: number;
-  price: number;
-  mileage: number;
-  status: 'available' | 'sold' | 'reserved';
+  price: number | null;
   images: string[];
+  metadata?: Record<string, string | number>;
+  status: string;
+  district?: string | null;
 }
 
-const STATUS_LABEL: Record<string, string> = {
-  available: 'Зарна',
-  sold: 'Зарагдсан',
-  reserved: 'Захиалгатай',
+type FeedBuckets = {
+  vip?: FeedVehicle[];
+  featured?: FeedVehicle[];
+  discounted?: FeedVehicle[];
+  normal?: FeedVehicle[];
 };
 
-const STATUS_CLASS: Record<string, string> = {
-  available: 'bg-green-100 text-green-700',
-  sold: 'bg-gray-100 text-gray-600',
-  reserved: 'bg-yellow-100 text-yellow-700',
-};
+function flattenFeed(data: (FeedBuckets & { data?: FeedBuckets }) | null): FeedVehicle[] {
+  const d = data?.data || data || {};
+  return [
+    ...(d.vip || []),
+    ...(d.featured || []),
+    ...(d.discounted || []),
+    ...(d.normal || []),
+  ];
+}
 
 export default function VehiclesPage() {
-  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicles, setVehicles] = useState<FeedVehicle[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/seller/vehicles')
-      .then((r) => r.json())
-      .then((d) => setVehicles(d.vehicles || d.products || []))
+    const token = localStorage.getItem('token');
+    fetch('/api/feed?mine=1&entityType=auto_dealer&limit=50', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+      .then((res) => res.json())
+      .then((payload) => setVehicles(flattenFeed(payload)))
       .catch(() => setVehicles([]))
       .finally(() => setLoading(false));
   }, []);
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Тээврийн хэрэгслүүд</h1>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)]">Машины жагсаалт</h1>
+          <p className="text-sm text-[var(--esl-text-secondary)]">{vehicles.length} зар</p>
+        </div>
         <Link
-          href="/dashboard/store/products/new"
-          className="px-4 py-2 bg-black text-white rounded-xl text-sm"
+          href="/dashboard/store/listings/new?entityType=auto_dealer"
+          className="inline-flex items-center gap-2 rounded-xl bg-[#E8242C] px-5 py-2.5 text-sm font-bold text-white no-underline transition hover:bg-red-700"
         >
-          + Машин нэмэх
+          <Plus className="h-4 w-4" /> Машин нэмэх
         </Link>
       </div>
+
       {loading ? (
-        <div className="animate-pulse h-40 bg-gray-100 rounded-xl" />
+        <div className="h-40 animate-pulse rounded-2xl bg-[var(--esl-bg-card)]" />
       ) : vehicles.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">Одоогоор машин байхгүй</div>
+        <div className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] py-20 text-center">
+          <Car className="mx-auto mb-4 h-12 w-12 text-[var(--esl-text-muted)] opacity-30" />
+          <p className="text-sm text-[var(--esl-text-muted)]">Одоогоор машин байхгүй байна</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {vehicles.map((v) => (
-            <div key={v._id} className="bg-white rounded-xl border overflow-hidden">
-              {v.images?.[0] && (
-                <div className="relative h-40">
-                  <Image
-                    src={v.images[0]}
-                    alt={v.title || `${v.brand} ${v.model}`}
-                    fill
-                    className="object-cover"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {vehicles.map((vehicle) => {
+            const meta = vehicle.metadata || {};
+            const title = [meta.brand, meta.model, meta.year].filter(Boolean).join(' ') || vehicle.title;
+            return (
+              <div
+                key={vehicle.id}
+                className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] transition hover:border-[#E8242C]/40"
+              >
+                <div className="relative aspect-[4/3] bg-[var(--esl-bg-section)]">
+                  {vehicle.images?.[0] ? (
+                    <Image src={vehicle.images[0]} alt={vehicle.title} fill sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw" className="object-cover" />
+                  ) : (
+                    <div className="flex h-full items-center justify-center">
+                      <ImageIcon className="h-8 w-8 text-[var(--esl-text-disabled)]" />
+                    </div>
+                  )}
                 </div>
-              )}
-              <div className="p-4">
-                <h3 className="font-semibold">
-                  {v.brand} {v.model} {v.year}
-                </h3>
-                <p className="text-red-600 font-bold">{v.price?.toLocaleString()}₮</p>
-                <p className="text-sm text-gray-500">{v.mileage?.toLocaleString()} км</p>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full mt-2 inline-block ${STATUS_CLASS[v.status]}`}
-                >
-                  {STATUS_LABEL[v.status]}
-                </span>
+                <div className="space-y-2 p-4">
+                  <h3 className="line-clamp-2 text-sm font-bold text-[var(--esl-text-primary)]">{title}</h3>
+                  <p className="text-lg font-black text-[#E8242C]">
+                    {vehicle.price ? `${vehicle.price.toLocaleString()}₮` : 'Үнэ тохиролцоно'}
+                  </p>
+                  <div className="flex flex-wrap gap-2 text-xs text-[var(--esl-text-muted)]">
+                    {meta.mileage && (
+                      <span className="inline-flex items-center gap-1 rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">
+                        <Gauge className="h-3 w-3" /> {Number(meta.mileage).toLocaleString()} км
+                      </span>
+                    )}
+                    {meta.fuelType && <span className="rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">{String(meta.fuelType)}</span>}
+                    {vehicle.district && <span className="rounded-lg bg-[var(--esl-bg-section)] px-2 py-1">{vehicle.district}</span>}
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <Link href={`/feed/${vehicle.id}`} target="_blank" className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2 text-xs font-bold text-[var(--esl-text-secondary)] no-underline hover:text-white">
+                      <Eye className="h-3.5 w-3.5" /> Харах
+                    </Link>
+                    <Link href={`/dashboard/store/listings/new?entityType=auto_dealer&edit=${vehicle.id}`} className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2 text-xs font-bold text-[var(--esl-text-secondary)] no-underline hover:text-white">
+                      <Pencil className="h-3.5 w-3.5" /> Засах
+                    </Link>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

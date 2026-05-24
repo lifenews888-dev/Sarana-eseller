@@ -3,7 +3,7 @@ import Script from 'next/script';
 import './globals.css';
 import AuthProvider from '@/components/shared/AuthProvider';
 import Toast from '@/components/shared/Toast';
-import { ThemeProvider, ThemeScript } from '@/providers/ThemeProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 import InstallPrompt from '@/components/pwa/InstallPrompt';
 import ChatWidget from '@/components/chat/ChatWidget';
 import AIShopperWidget from '@/components/AIShopperWidget';
@@ -50,9 +50,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="mn" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="mn" className="h-full antialiased" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
-        <ThemeScript />
+        <Script id="theme-init" strategy="beforeInteractive">{`
+          (function(){
+            var s=localStorage.getItem('esl-theme');
+            var d=window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var t=s==='dark'||((!s||s==='system')&&d)?'dark':'light';
+            document.documentElement.setAttribute('data-theme',t);
+            document.documentElement.classList.toggle('dark',t==='dark');
+          })();
+        `}</Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://images.unsplash.com" />
@@ -77,11 +85,26 @@ export default function RootLayout({
         </ThemeProvider>
 
         {/* Service Worker */}
-        <Script id="sw-register" strategy="afterInteractive">{`
-          if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {});
-          }
-        `}</Script>
+        {process.env.NODE_ENV === 'production' ? (
+          <Script id="sw-register" strategy="afterInteractive">{`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.register('/sw.js').catch(() => {});
+            }
+          `}</Script>
+        ) : (
+          <Script id="sw-dev-cleanup" strategy="afterInteractive">{`
+            if ('serviceWorker' in navigator) {
+              navigator.serviceWorker.getRegistrations()
+                .then((registrations) => registrations.forEach((registration) => registration.unregister()))
+                .catch(() => {});
+            }
+            if ('caches' in window) {
+              caches.keys()
+                .then((keys) => Promise.all(keys.filter((key) => key.startsWith('eseller-')).map((key) => caches.delete(key))))
+                .catch(() => {});
+            }
+          `}</Script>
+        )}
 
         {/* Facebook Pixel */}
         <FacebookPixel />

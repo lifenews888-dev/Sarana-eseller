@@ -7,21 +7,45 @@ import { Ref } from '@/lib/ref';
 import { useCartStore } from '@/lib/cart';
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    setUser(getStoredUser());
-    setToken(getStoredToken());
-    Ref.capture();
-    useCartStore.getState().load();
-  }, []);
+  const [user, setUser] = useState<User | null>(() => getStoredUser());
+  const [token, setToken] = useState<string | null>(() => getStoredToken());
 
   const login = useCallback((t: string, u: User) => {
     saveAuth(t, u);
     setToken(t);
     setUser(u);
   }, []);
+
+  const refreshUser = useCallback(async () => {
+    const currentToken = getStoredToken();
+    if (!currentToken) return null;
+
+    try {
+      const res = await fetch('/api/auth/me', {
+        headers: { Authorization: `Bearer ${currentToken}` },
+        credentials: 'include',
+      });
+      const payload = await res.json().catch(() => null);
+      const freshUser = payload?.data?.user || payload?.user;
+      if (!res.ok || !freshUser) return null;
+
+      saveAuth(currentToken, freshUser);
+      setToken(currentToken);
+      setUser(freshUser);
+      return freshUser as User;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  useEffect(() => {
+    Ref.capture();
+    useCartStore.getState().load();
+    const timer = window.setTimeout(() => {
+      void refreshUser();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [refreshUser]);
 
   const logout = useCallback(() => {
     clearAuth();
@@ -35,7 +59,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoggedIn: !!token }}>
+    <AuthContext.Provider value={{ user, token, login, logout, refreshUser, isLoggedIn: !!token }}>
       {children}
     </AuthContext.Provider>
   );

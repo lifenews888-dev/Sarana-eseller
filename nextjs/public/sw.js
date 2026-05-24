@@ -27,7 +27,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(caches.match(request).then((cached) => { const net = fetch(request).then((res) => { const clone = res.clone(); caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone)); return res; }).catch(() => caches.match('/offline')); return cached || net; }));
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const clone = res.clone();
+            caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone));
+          }
+          return res;
+        })
+        .catch(() => caches.match(request).then((cached) => cached || caches.match('/offline')))
+    );
     return;
   }
 

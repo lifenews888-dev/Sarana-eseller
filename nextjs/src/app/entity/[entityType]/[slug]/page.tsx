@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { ENTITY_LABELS, type EntityType } from '@/lib/types/entity';
+import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/listingMetadata';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import SafeImage from '@/components/ui/SafeImage';
@@ -13,7 +14,10 @@ import {
   Calendar, MessageCircle, Clock, Award, Heart,
   Share2, Fuel, Gauge, DoorOpen, Ruler, CheckCircle2,
   Mail, Globe, X, Search, Camera, BookOpen,
+  ArrowRight,
 } from 'lucide-react';
+
+type FeedCardMetadata = Record<string, unknown>;
 
 /* ═══════════════════════════════════════════════════════════════
    DEMO DATA — Rich profiles with real images
@@ -22,16 +26,25 @@ import {
 interface DemoVehicle {
   id: string; title: string; price: number; year: number; mileage: number;
   fuel: string; image: string; badge?: string; sold?: boolean;
+  category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoProject {
   id: string; title: string; status: string; progress: number;
   image: string; units: number; priceFrom: number; location: string; year: string;
+  pricePerSqm?: number; availableUnits?: number; roomChoices?: string[]; category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoListing {
   id: string; title: string; price: number; image: string;
   sqm: number; rooms: number; district: string; badge?: string;
+  category?: string; metadata?: FeedCardMetadata;
+}
+
+interface DemoServiceOffering {
+  id: string; title: string; price: number; image: string;
+  duration?: number; packageName?: string; district?: string; badge?: string;
+  category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoEntity {
@@ -44,9 +57,50 @@ interface DemoEntity {
   brands?: string[]; vehicles?: DemoVehicle[]; gallery?: string[];
   projects?: DemoProject[]; milestones?: { year: string; text: string }[];
   specialties?: string[]; experience?: number; listings?: DemoListing[];
+  serviceListings?: DemoServiceOffering[];
   testimonials?: { name: string; text: string; rating: number }[];
   services?: string[]; awards?: string[];
   website?: string; email?: string; social?: { ig?: string; fb?: string };
+}
+
+interface ApiEntityProfile {
+  id?: string;
+  type?: EntityType | string;
+  name?: string;
+  slug?: string;
+  logo?: string | null;
+  profilePhoto?: string | null;
+  coverImage?: string | null;
+  description?: string | null;
+  bio?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  district?: string | null;
+  isVerified?: boolean | null;
+  rating?: number | null;
+  reviewCount?: number | null;
+  brands?: string[] | null;
+  specialties?: string[] | null;
+  experience?: number | null;
+  website?: string | null;
+  email?: string | null;
+}
+
+interface ApiFeedItem {
+  id: string;
+  title: string;
+  category?: string | null;
+  price?: number | null;
+  images?: string[] | null;
+  media?: { type?: string | null; url?: string | null; thumbnail?: string | null }[] | null;
+  metadata?: Record<string, unknown> | null;
+  district?: string | null;
+  tier?: string | null;
+}
+
+interface ApiEntityResponse {
+  entity?: ApiEntityProfile | null;
+  feedItems?: ApiFeedItem[] | null;
 }
 
 const DEMO: Record<string, Record<string, DemoEntity>> = {
@@ -112,10 +166,10 @@ const DEMO: Record<string, Record<string, DemoEntity>> = {
         { label: 'Ажилтан', value: '120+' },
       ],
       projects: [
-        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 95000000, location: 'ХУД, Зайсан', year: '2027' },
-        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 120000000, location: 'СБД, 1-р хороолол', year: '2028' },
-        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 78000000, location: 'БГД, 3-р хороолол', year: '2025' },
-        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 135000000, location: 'СБД, Туул голын эрэг', year: '2029' },
+        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 261000000, pricePerSqm: 4500000, availableUnits: 60, roomChoices: ['2 өрөө 58м²', '3 өрөө 92м²', '4 өрөө 128м²'], location: 'ХУД, Зайсан', year: '2027' },
+        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 218400000, pricePerSqm: 5200000, availableUnits: 99, roomChoices: ['1 өрөө 42м²', '2 өрөө 68м²', '3 өрөө 105м²'], location: 'СБД, 1-р хороолол', year: '2028' },
+        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 99, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 198000000, pricePerSqm: 3600000, availableUnits: 4, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²'], location: 'БГД, 3-р хороолол', year: '2025' },
+        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 330000000, pricePerSqm: 6000000, availableUnits: 135, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²', 'Пентхаус 160м²'], location: 'СБД, Туул голын эрэг', year: '2029' },
       ],
       milestones: [
         { year: '2010', text: 'Компани үүсгэн байгуулагдсан' },
@@ -173,6 +227,52 @@ const DEMO: Record<string, Record<string, DemoEntity>> = {
       ],
     },
   },
+  service: {
+    techpro: {
+      name: 'TechPro', slug: 'techpro', type: 'service',
+      logo: 'https://picsum.photos/seed/eseller-techpro-logo/200',
+      coverImage: 'https://picsum.photos/seed/eseller-techpro-cover/1400',
+      coverImages: [
+        'https://picsum.photos/seed/eseller-techpro-cover/1400',
+        'https://picsum.photos/seed/eseller-techpro-workspace/1400',
+      ],
+      description: 'Вэб систем, marketplace, booking, админ dashboard, SEO суурь болон production deployment хийдэг үйлчилгээний баг.',
+      phone: '9900-4455', district: 'СБД', isVerified: false, rating: 4.8, reviewCount: 42,
+      website: 'techpro.mn', email: 'hello@techpro.mn',
+      stats: [
+        { label: 'Төсөл', value: '70+' },
+        { label: 'Дундаж хугацаа', value: '3 өдөр' },
+        { label: 'Баталгаа', value: '14 хоног' },
+        { label: 'Үнэлгээ', value: '4.8★' },
+      ],
+      services: ['Next.js вэб хөгжүүлэлт', 'UI/UX дизайн', 'SEO суурь тохиргоо', 'Админ dashboard', 'Deployment'],
+      serviceListings: [
+        {
+          id: '4',
+          title: 'Вэбсайт хийж өгнө',
+          price: 2500000,
+          image: 'https://picsum.photos/seed/feed-web-development-service-1/1000/760',
+          duration: 4320,
+          packageName: 'Next.js вэб + SEO',
+          district: 'СБД',
+          badge: 'Featured',
+          category: 'tech-it-services',
+          metadata: {
+            duration: 4320,
+            packageName: 'Next.js вэб + SEO',
+            availableSlots: 2,
+            warranty: '14 хоногийн засвар',
+            highlights: ['UI/UX дизайн', 'Mobile responsive', 'SEO суурь тохиргоо', 'Админ самбар', 'Deployment'],
+          },
+        },
+      ],
+      testimonials: [
+        { name: 'B. Энхтөр', text: 'Landing page болон админ хэсгийг хурдан гаргаж, mobile дээр цэвэр болгож өгсөн.', rating: 5 },
+        { name: 'M. Саруул', text: 'SEO суурь, analytics, deployment бүгдийг нэг багцаар шийдсэн нь их амар байсан.', rating: 5 },
+      ],
+      awards: ['Verified service workflow', 'Launch support'],
+    },
+  },
 };
 
 /* ═══ Helpers ═══ */
@@ -182,10 +282,293 @@ function formatPrice(n: number) {
   return n.toLocaleString();
 }
 
-function handleCardKeyDown(event: React.KeyboardEvent<HTMLDivElement>, onClick: () => void) {
-  if (event.key !== 'Enter' && event.key !== ' ') return;
-  event.preventDefault();
-  onClick();
+function feedDetailHref(id: string): string {
+  return `/feed/${encodeURIComponent(id)}`;
+}
+
+function feedDetailUnitHref(id: string, unit: string): string {
+  const params = new URLSearchParams({ unit });
+  return `${feedDetailHref(id)}?${params.toString()}`;
+}
+
+function normalizePhone(phone?: string | null): string | null {
+  const digits = phone?.replace(/[^\d+]/g, '') || '';
+  return digits.length >= 6 ? digits : null;
+}
+
+function telHref(phone?: string | null): string | null {
+  const normalized = normalizePhone(phone);
+  return normalized ? `tel:${normalized}` : null;
+}
+
+function smsHref(phone?: string | null): string | null {
+  const normalized = normalizePhone(phone);
+  return normalized ? `sms:${normalized}` : null;
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall through to the textarea fallback for older or stricter browsers.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+function numberFrom(value: unknown, fallback = 0): number {
+  if (typeof value === 'number' && Number.isFinite(value)) return value;
+  if (typeof value === 'string') {
+    const parsed = Number(value.replace(/[,\s₮]/g, ''));
+    if (Number.isFinite(parsed)) return parsed;
+  }
+  return fallback;
+}
+
+function stringFrom(value: unknown, fallback = ''): string {
+  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
+}
+
+function stringListFrom(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[\n,]/) : [];
+  return values
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+}
+
+function firstImage(item: ApiFeedItem, seed: string): string {
+  return (
+    item.images?.find((url) => typeof url === 'string' && url.trim()) ||
+    item.media?.find((media) => media.type === 'IMAGE' && media.url)?.url ||
+    item.media?.find((media) => media.thumbnail)?.thumbnail ||
+    `https://picsum.photos/seed/${seed}/600/600`
+  );
+}
+
+function badgeFromTier(tier?: string | null): string | undefined {
+  if (tier === 'vip') return 'VIP';
+  if (tier === 'featured') return 'Premium';
+  return undefined;
+}
+
+function mapVehicle(item: ApiFeedItem): DemoVehicle {
+  const meta = item.metadata || {};
+  return {
+    id: item.id,
+    title: item.title,
+    price: numberFrom(item.price),
+    year: numberFrom(meta.year),
+    mileage: numberFrom(meta.mileage),
+    fuel: stringFrom(meta.fuelType, stringFrom(meta.fuel, '')),
+    image: firstImage(item, `vehicle-${item.id}`),
+    badge: badgeFromTier(item.tier),
+    category: item.category || undefined,
+    metadata: meta,
+  };
+}
+
+function mapProject(item: ApiFeedItem): DemoProject {
+  const meta = item.metadata || {};
+  const totalUnits = numberFrom(meta.totalUnits, numberFrom(meta.units));
+  const fallbackSoldUnits = numberFrom(meta.soldUnits);
+  const availableUnits = numberFrom(meta.availableUnits, Math.max(totalUnits - fallbackSoldUnits, 0));
+  const soldUnits = Math.max(totalUnits - availableUnits, 0);
+  const progress = totalUnits > 0 ? Math.min(100, Math.round((soldUnits / totalUnits) * 100)) : 0;
+  return {
+    id: item.id,
+    title: item.title,
+    status: stringFrom(meta.projectStatus, 'Идэвхтэй'),
+    progress,
+    image: firstImage(item, `project-${item.id}`),
+    units: totalUnits,
+    priceFrom: numberFrom(item.price, numberFrom(meta.pricePerSqm)),
+    pricePerSqm: numberFrom(meta.pricePerSqm),
+    availableUnits,
+    roomChoices: stringListFrom(meta.roomChoices),
+    location: stringFrom(meta.address, item.district || ''),
+    year: stringFrom(meta.completionDate, ''),
+    category: item.category || undefined,
+    metadata: meta,
+  };
+}
+
+function mapListing(item: ApiFeedItem): DemoListing {
+  const meta = item.metadata || {};
+  return {
+    id: item.id,
+    title: item.title,
+    price: numberFrom(item.price),
+    image: firstImage(item, `listing-${item.id}`),
+    sqm: numberFrom(meta.sqm, numberFrom(meta.area)),
+    rooms: numberFrom(meta.rooms),
+    district: item.district || stringFrom(meta.district, ''),
+    badge: badgeFromTier(item.tier),
+    category: item.category || undefined,
+    metadata: meta,
+  };
+}
+
+function mapServiceOffering(item: ApiFeedItem): DemoServiceOffering {
+  const meta = item.metadata || {};
+  return {
+    id: item.id,
+    title: item.title,
+    price: numberFrom(item.price),
+    image: firstImage(item, `service-${item.id}`),
+    duration: numberFrom(meta.duration),
+    packageName: stringFrom(meta.packageName),
+    district: item.district || stringFrom(meta.district, ''),
+    badge: badgeFromTier(item.tier),
+    category: item.category || undefined,
+    metadata: meta,
+  };
+}
+
+function compactMetadataPreviewItems(
+  category: string | undefined,
+  metadata: FeedCardMetadata | undefined,
+  limit: number,
+  skipKeys: string[] = [],
+) {
+  if (!metadata) return [];
+  const fields = metadataFieldsForCategory(category);
+  return listingMetadataPreviewItems(fields, metadata, limit + skipKeys.length + 4)
+    .filter((item) => !skipKeys.includes(item.key))
+    .slice(0, limit);
+}
+
+function vehicleFallbackMetadata(vehicle: DemoVehicle): FeedCardMetadata {
+  const titleParts = vehicle.title.split(/\s+/).filter(Boolean);
+  const brand = titleParts[0] || '';
+  const model = titleParts.slice(1).join(' ');
+
+  return {
+    brand,
+    model,
+    year: vehicle.year,
+    mileage: vehicle.mileage,
+    fuelType: vehicle.fuel,
+  };
+}
+
+function projectFallbackMetadata(project: DemoProject): FeedCardMetadata {
+  const availableUnits = typeof project.availableUnits === 'number'
+    ? Math.max(project.availableUnits, 0)
+    : Math.max(project.units - Math.round((project.units * project.progress) / 100), 0);
+  const soldUnits = Math.max(project.units - availableUnits, 0);
+
+  return {
+    projectStatus: project.status,
+    address: project.location,
+    totalUnits: project.units,
+    soldUnits,
+    availableUnits,
+    pricePerSqm: project.pricePerSqm,
+    roomChoices: project.roomChoices || [],
+    completionDate: project.year,
+  };
+}
+
+function listingFallbackMetadata(listing: DemoListing): FeedCardMetadata {
+  const title = listing.title.toLowerCase();
+  const propertyType = title.includes('оффис')
+    ? 'Оффис'
+    : title.includes('газар')
+    ? 'Газар'
+    : title.includes('пентхаус')
+    ? 'Пентхаус'
+    : 'Орон сууц';
+
+  return {
+    propertyType,
+    listingType: title.includes('түрээс') ? 'Түрээслэх' : 'Худалдах',
+    sqm: listing.sqm,
+    rooms: listing.rooms,
+    district: listing.district,
+  };
+}
+
+function serviceFallbackMetadata(service: DemoServiceOffering): FeedCardMetadata {
+  return {
+    duration: service.duration,
+    packageName: service.packageName,
+    district: service.district,
+  };
+}
+
+function formatDuration(minutes?: number): string {
+  if (!minutes || !Number.isFinite(minutes)) return 'Тохиролцоно';
+  if (minutes < 60) return `${minutes.toLocaleString('mn-MN')} мин`;
+  const hours = minutes / 60;
+  if (hours < 24) {
+    const label = Number.isInteger(hours) ? hours.toFixed(0) : hours.toFixed(1);
+    return `${label} цаг`;
+  }
+  const days = hours / 24;
+  const label = Number.isInteger(days) ? days.toFixed(0) : days.toFixed(1);
+  return `${label} өдөр`;
+}
+
+function buildLiveStats(entityType: string, count: number, base?: DemoEntity): DemoEntity['stats'] {
+  if (base?.stats?.length) return base.stats;
+  if (entityType === 'auto_dealer') {
+    return [{ label: 'Одоо байгаа', value: `${count}` }, { label: 'Баталгаатай', value: '✓' }];
+  }
+  if (entityType === 'company') {
+    return [{ label: 'Төсөл', value: `${count}` }, { label: 'Баталгаатай', value: '✓' }];
+  }
+  return [{ label: 'Идэвхтэй зар', value: `${count}` }, { label: 'Баталгаатай', value: '✓' }];
+}
+
+function mergeLiveEntity(entityType: string, slug: string, payload: ApiEntityResponse, base?: DemoEntity): DemoEntity | null {
+  if (!payload.entity) return base || null;
+  const api = payload.entity;
+  const feedItems = payload.feedItems || [];
+  const fallbackCover = feedItems[0] ? firstImage(feedItems[0], `entity-${slug}`) : 'https://picsum.photos/seed/eseller-1400/1400';
+  const mapped: DemoEntity = {
+    name: api.name || base?.name || slug,
+    slug: api.slug || base?.slug || slug,
+    type: (api.type as EntityType) || (entityType as EntityType),
+    logo: api.profilePhoto || api.logo || base?.logo,
+    coverImage: api.coverImage || base?.coverImage || fallbackCover,
+    coverImages: base?.coverImages || [api.coverImage || fallbackCover],
+    description: api.description || api.bio || base?.description || '',
+    phone: api.phone || base?.phone || '',
+    district: api.district || base?.district || '',
+    isVerified: Boolean(api.isVerified ?? base?.isVerified),
+    rating: api.rating ?? base?.rating ?? 0,
+    reviewCount: api.reviewCount ?? base?.reviewCount ?? 0,
+    stats: buildLiveStats(entityType, feedItems.length, base),
+    brands: api.brands || base?.brands,
+    specialties: api.specialties || base?.specialties,
+    experience: api.experience ?? base?.experience,
+    gallery: base?.gallery,
+    milestones: base?.milestones,
+    testimonials: base?.testimonials,
+    services: base?.services,
+    awards: base?.awards,
+    website: api.website || base?.website,
+    email: api.email || base?.email,
+    social: base?.social,
+  };
+
+  if (entityType === 'auto_dealer') mapped.vehicles = feedItems.length ? feedItems.map(mapVehicle) : base?.vehicles;
+  if (entityType === 'company') mapped.projects = feedItems.length ? feedItems.map(mapProject) : base?.projects;
+  if (entityType === 'agent') mapped.listings = feedItems.length ? feedItems.map(mapListing) : base?.listings;
+  if (entityType === 'service') mapped.serviceListings = feedItems.length ? feedItems.map(mapServiceOffering) : base?.serviceListings;
+  return mapped;
 }
 
 /* ═══ Hero Carousel ═══ */
@@ -229,16 +612,22 @@ function HeroCarousel({ images, label, children }: { images: string[]; label: st
 }
 
 /* ═══ Vehicle Card ═══ */
-function VehicleCard({ v, onClick }: { v: DemoVehicle; onClick: () => void }) {
+function VehicleCard({ v }: { v: DemoVehicle }) {
+  const meta = { ...vehicleFallbackMetadata(v), ...(v.metadata || {}) };
+  const specItems = compactMetadataPreviewItems(
+    v.category || 'vehicles',
+    meta,
+    4,
+    ['year', 'mileage', 'fuelType', 'fuel'],
+  );
+
   return (
-    <div
-      onClick={onClick}
-      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
-      role="button"
-      tabIndex={0}
+    <Link
+      href={feedDetailHref(v.id)}
       aria-label={`${v.title} дэлгэрэнгүй`}
+      data-testid={`entity-vehicle-card-${v.id}`}
       className={cn(
-      'group min-w-[280px] max-w-[320px] rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] snap-start cursor-pointer transition-all hover:border-[#E8242C]/50 hover:shadow-[0_0_30px_rgba(232,36,44,0.15)]',
+      'group block no-underline min-w-[280px] max-w-[320px] rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] snap-start cursor-pointer transition-all hover:border-[#E8242C]/50 hover:shadow-[0_0_30px_rgba(232,36,44,0.15)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]',
       v.sold && 'opacity-60'
     )}>
       <div className="relative h-48 overflow-hidden">
@@ -262,29 +651,63 @@ function VehicleCard({ v, onClick }: { v: DemoVehicle; onClick: () => void }) {
           <span className="text-[10px] font-semibold text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded">{(v.mileage / 1000).toFixed(0)}к км</span>
           <span className="text-[10px] font-semibold text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded">{v.fuel}</span>
         </div>
-        <p className="text-lg font-black text-[#E8242C]">{formatPrice(v.price)}₮</p>
+        {specItems.length > 0 && (
+          <div className="mb-3 grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex items-end justify-between gap-3">
+          <p className="text-lg font-black text-[#E8242C]">{formatPrice(v.price)}₮</p>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+            Дэлгэрэнгүй <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
 /* ═══ Project Card ═══ */
-function ProjectCard({ p, onClick }: { p: DemoProject; onClick: () => void }) {
+function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
+  const meta = { ...projectFallbackMetadata(p), ...(p.metadata || {}) };
+  const pricePerSqm = numberFrom(meta.pricePerSqm);
+  const availableUnits = numberFrom(meta.availableUnits);
+  const availabilityLabel = availableUnits > 0 ? `${availableUnits} айл боломжтой` : 'Хүлээлгийн жагсаалт';
+  const availabilityClass = availableUnits > 0
+    ? 'border-emerald-400/25 bg-emerald-500/15 text-emerald-200'
+    : 'border-amber-400/25 bg-amber-500/15 text-amber-200';
+  const roomChoices = stringListFrom(meta.roomChoices).slice(0, 3);
+  const specItems = compactMetadataPreviewItems(
+    p.category || 'new-buildings',
+    meta,
+    4,
+    ['projectStatus', 'address', 'totalUnits', 'soldUnits', 'availableUnits', 'pricePerSqm', 'completionDate', 'roomChoices'],
+  );
+
   return (
-    <div
-      onClick={onClick}
-      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
-      role="button"
-      tabIndex={0}
-      aria-label={`${p.title} дэлгэрэнгүй`}
-      className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+    <article
+      data-testid={`entity-project-card-${p.id}`}
+      className="group overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] transition-all hover:border-white/20"
     >
-      <div className="relative h-52 overflow-hidden">
+      <Link
+        href={feedDetailHref(p.id)}
+        aria-label={`${p.title} дэлгэрэнгүй`}
+        className="block no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+      >
+        <div className="relative h-52 overflow-hidden">
         <SafeImage src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--esl-bg-section)] via-transparent to-transparent" />
         <div className={cn('absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider', statusColor, 'bg-black/60')}>
           {p.status}
+        </div>
+        <div className={cn('absolute top-3 right-3 rounded-lg border px-2.5 py-1 text-[10px] font-black', availabilityClass)}>
+          {availabilityLabel}
         </div>
       </div>
       <div className="p-5">
@@ -300,7 +723,7 @@ function ProjectCard({ p, onClick }: { p: DemoProject; onClick: () => void }) {
             <div className="h-full bg-gradient-to-r from-[#E8242C] to-[#FF6B6B] rounded-full transition-all" style={{ width: `${p.progress}%` }} />
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
           <div className="bg-white/5 rounded-lg py-2">
             <p className="text-xs font-black text-white">{p.units}</p>
             <p className="text-[9px] text-[var(--esl-text-secondary)]">айл</p>
@@ -310,25 +733,65 @@ function ProjectCard({ p, onClick }: { p: DemoProject; onClick: () => void }) {
             <p className="text-[9px] text-[var(--esl-text-secondary)]">эхлэх үнэ</p>
           </div>
           <div className="bg-white/5 rounded-lg py-2">
+            <p className="text-xs font-black text-white">{pricePerSqm ? `${formatPrice(pricePerSqm)}₮` : '—'}</p>
+            <p className="text-[9px] text-[var(--esl-text-secondary)]">1м²</p>
+          </div>
+          <div className="bg-white/5 rounded-lg py-2">
             <p className="text-xs font-black text-white">{p.year}</p>
             <p className="text-[9px] text-[var(--esl-text-secondary)]">он</p>
           </div>
         </div>
       </div>
-    </div>
+      </Link>
+        {roomChoices.length > 0 && (
+          <div className="px-5 pb-3 flex flex-wrap gap-1.5">
+            {roomChoices.map((choice) => (
+              <Link
+                key={choice}
+                href={feedDetailUnitHref(p.id, choice)}
+                className="rounded-lg bg-black/25 border border-white/10 px-2 py-1 text-[10px] font-semibold text-white/80 no-underline transition hover:border-[#E8242C]/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+                aria-label={`${p.title} ${choice} сонголтыг харах`}
+              >
+                {choice}
+              </Link>
+            ))}
+          </div>
+        )}
+        <div className="px-5 pb-5">
+          {specItems.length > 0 && (
+          <div className="grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+          )}
+        <Link href={feedDetailHref(p.id)} className="mt-4 inline-flex items-center gap-1 text-[11px] font-bold text-white/80 no-underline transition-colors hover:text-[#E8242C]">
+          Дэлгэрэнгүй харах <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+    </article>
   );
 }
 
 /* ═══ Listing Card (Agent) ═══ */
-function ListingCard({ l, onClick }: { l: DemoListing; onClick: () => void }) {
+function ListingCard({ l }: { l: DemoListing }) {
+  const meta = { ...listingFallbackMetadata(l), ...(l.metadata || {}) };
+  const specItems = compactMetadataPreviewItems(
+    l.category || 'apartment',
+    meta,
+    5,
+    ['sqm', 'rooms', 'district'],
+  );
+
   return (
-    <div
-      onClick={onClick}
-      onKeyDown={(event) => handleCardKeyDown(event, onClick)}
-      role="button"
-      tabIndex={0}
+    <Link
+      href={feedDetailHref(l.id)}
       aria-label={`${l.title} дэлгэрэнгүй`}
-      className="group rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+      data-testid={`entity-listing-card-${l.id}`}
+      className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
     >
       <div className="relative h-44 overflow-hidden">
         <SafeImage src={l.image} alt={l.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
@@ -341,18 +804,96 @@ function ListingCard({ l, onClick }: { l: DemoListing; onClick: () => void }) {
       </div>
       <div className="p-4">
         <h3 className="text-sm font-bold text-white mb-1.5 group-hover:text-[#E8242C] transition-colors">{l.title}</h3>
-        <div className="flex gap-2 mb-2">
-          <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><Ruler className="w-2.5 h-2.5" /> {l.sqm}м²</span>
+        <div className="flex flex-wrap gap-2 mb-2">
+          {l.sqm > 0 && <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><Ruler className="w-2.5 h-2.5" /> {l.sqm}м²</span>}
           {l.rooms > 0 && <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><DoorOpen className="w-2.5 h-2.5" /> {l.rooms} өрөө</span>}
-          <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> {l.district}</span>
+          {l.district && <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1"><MapPin className="w-2.5 h-2.5" /> {l.district}</span>}
         </div>
-        <p className="text-base font-black text-[#E8242C]">{formatPrice(l.price)}₮</p>
+        {specItems.length > 0 && (
+          <div className="mb-3 grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex items-end justify-between gap-3">
+          <p className="text-base font-black text-[#E8242C]">{formatPrice(l.price)}₮</p>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+            Дэлгэрэнгүй <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
       </div>
-    </div>
+    </Link>
   );
 }
 
 /* ═══ Testimonial Card ═══ */
+function ServiceCard({ s }: { s: DemoServiceOffering }) {
+  const meta = { ...serviceFallbackMetadata(s), ...(s.metadata || {}) };
+  const specItems = compactMetadataPreviewItems(
+    s.category || 'tech-it-services',
+    meta,
+    4,
+    ['duration', 'packageName', 'district'],
+  );
+
+  return (
+    <Link
+      href={feedDetailHref(s.id)}
+      aria-label={`${s.title} дэлгэрэнгүй`}
+      data-testid={`entity-service-card-${s.id}`}
+      className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+    >
+      <div className="relative h-44 overflow-hidden">
+        <SafeImage src={s.image} alt={s.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+        {s.badge && (
+          <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black bg-[#E8242C] text-white uppercase tracking-wider">
+            {s.badge}
+          </div>
+        )}
+        <div className="absolute bottom-0 inset-x-0 h-16 bg-gradient-to-t from-[var(--esl-bg-section)] to-transparent" />
+      </div>
+      <div className="p-4">
+        <h3 className="text-sm font-bold text-white mb-1.5 group-hover:text-[#E8242C] transition-colors">{s.title}</h3>
+        <div className="flex flex-wrap gap-2 mb-2">
+          <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1">
+            <Clock className="w-2.5 h-2.5" /> {formatDuration(s.duration)}
+          </span>
+          {s.packageName && (
+            <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1">
+              <BookOpen className="w-2.5 h-2.5" /> {s.packageName}
+            </span>
+          )}
+          {s.district && (
+            <span className="text-[10px] text-[var(--esl-text-muted)] bg-white/5 px-2 py-0.5 rounded flex items-center gap-1">
+              <MapPin className="w-2.5 h-2.5" /> {s.district}
+            </span>
+          )}
+        </div>
+        {specItems.length > 0 && (
+          <div className="mb-3 grid grid-cols-2 gap-1.5">
+            {specItems.map((item) => (
+              <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
+                <span className="block truncate text-white/80">{item.value}</span>
+                <span className="block truncate text-[var(--esl-text-muted)]">{item.label}</span>
+              </span>
+            ))}
+          </div>
+        )}
+        <div className="flex items-end justify-between gap-3">
+          <p className="text-base font-black text-[#E8242C]">{formatPrice(s.price)}₮</p>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+            Дэлгэрэнгүй <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function TestimonialCard({ t }: { t: { name: string; text: string; rating: number } }) {
   return (
     <div className="bg-white/5 border border-[var(--esl-border)] rounded-2xl p-5 min-w-[300px] snap-start">
@@ -380,16 +921,57 @@ function StatCard({ label, value }: { label: string; value: string }) {
 /* ═══ MAIN PAGE ═══ */
 export default function EntityProfilePage() {
   const params = useParams();
-  const entityType = params.entityType as string;
-  const slug = params.slug as string;
+  const entityType = Array.isArray(params.entityType) ? params.entityType[0] : params.entityType as string;
+  const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug as string;
+  const demoEntity = DEMO[entityType]?.[slug];
   const [activeTab, setActiveTab] = useState(0);
   const [showPhone, setShowPhone] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<DemoVehicle | null>(null);
   const [selectedProject, setSelectedProject] = useState<DemoProject | null>(null);
   const [selectedListing, setSelectedListing] = useState<DemoListing | null>(null);
+  const [liveEntity, setLiveEntity] = useState<DemoEntity | null>(null);
+  const [loadingEntity, setLoadingEntity] = useState(() => !demoEntity);
+  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const entity = DEMO[entityType]?.[slug];
+  const entity = liveEntity || demoEntity;
+
+  useEffect(() => {
+    if (!entityType || !slug) return;
+    let cancelled = false;
+    fetch(`/api/entity/${encodeURIComponent(entityType)}/${encodeURIComponent(slug)}`)
+      .then(async (res) => {
+        if (!res.ok) return null;
+        return await res.json() as ApiEntityResponse;
+      })
+      .then((payload) => {
+        if (!cancelled && payload?.entity) {
+          setLiveEntity(mergeLiveEntity(entityType, slug, payload, demoEntity));
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setLiveEntity(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingEntity(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [entityType, slug, demoEntity]);
+
+  if (!entity && loadingEntity) {
+    return (
+      <div className="min-h-screen bg-[var(--esl-bg-page)] flex items-center justify-center">
+        <div className="text-center">
+          <Search className="w-16 h-16 mb-4 mx-auto animate-pulse" style={{ color: 'var(--esl-text-muted)' }} />
+          <h2 className="text-xl font-black text-white mb-2">Уншиж байна</h2>
+          <p className="text-sm text-[var(--esl-text-muted)]">Дэлгүүрийн мэдээлэл болон заруудыг ачаалж байна</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!entity) {
     return (
@@ -408,9 +990,23 @@ export default function EntityProfilePage() {
     ? ['Машинууд', 'Галерей', 'Үнэлгээ', 'Тухай']
     : entityType === 'company'
     ? ['Төслүүд', 'Галерей', 'Үнэлгээ', 'Тухай']
+    : entityType === 'service'
+    ? ['Үйлчилгээ', 'Үнэлгээ', 'Тухай']
     : ['Зарууд', 'Үнэлгээ', 'Тухай'];
 
   const coverImages = entity.coverImages || [entity.coverImage];
+  const tel = telHref(entity.phone);
+  const sms = smsHref(entity.phone);
+  const actionButtonClass = 'flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer no-underline';
+  const iconButtonClass = 'w-10 h-10 rounded-xl bg-white/10 border border-[var(--esl-border)] flex items-center justify-center transition cursor-pointer';
+  const modalMessageClass = 'flex-1 h-12 bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] text-sm flex items-center justify-center gap-2 hover:opacity-80 transition no-underline';
+
+  const copyProfileLink = async () => {
+    const url = window.location.href;
+    await copyText(url);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
 
   return (
     <div className="min-h-screen bg-[var(--esl-bg-page)]">
@@ -467,22 +1063,65 @@ export default function EntityProfilePage() {
       {/* ── Action bar ── */}
       <div className="sticky top-14 z-40 bg-[var(--esl-bg-page)]/95 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
+          {showPhone && tel ? (
+            <a
+              href={tel}
+              className={`${actionButtonClass} bg-[#E8242C] text-white hover:bg-[#CC0000] border border-[#E8242C]`}
+              aria-label={`${entity.name} руу залгах`}
+            >
+              <Phone className="w-4 h-4" />
+              {entity.phone}
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowPhone(true)}
+              disabled={!tel}
+              className={`${actionButtonClass} border-none ${tel ? 'bg-[#E8242C] text-white hover:bg-[#CC0000]' : 'bg-white/10 text-[var(--esl-text-muted)] cursor-not-allowed'}`}
+            >
+              <Phone className="w-4 h-4" />
+              Залгах
+            </button>
+          )}
+          {sms ? (
+            <a
+              href={sms}
+              className={`${actionButtonClass} bg-white/10 text-white hover:bg-white/15 border border-[var(--esl-border)]`}
+              aria-label={`${entity.name} руу мессеж бичих`}
+            >
+              <MessageCircle className="w-4 h-4" /> Мессеж
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className={`${actionButtonClass} bg-white/10 text-[var(--esl-text-muted)] border border-[var(--esl-border)] cursor-not-allowed`}
+            >
+              <MessageCircle className="w-4 h-4" /> Мессеж
+            </button>
+          )}
           <button
-            onClick={() => setShowPhone(!showPhone)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#E8242C] text-white rounded-xl text-sm font-bold hover:bg-[#CC0000] transition cursor-pointer border-none"
+            type="button"
+            onClick={() => setSaved((value) => !value)}
+            aria-pressed={saved}
+            aria-label={saved ? 'Хадгалсан жагсаалтаас хасах' : 'Хадгалах'}
+            title={saved ? 'Хадгалсан' : 'Хадгалах'}
+            className={`${iconButtonClass} ${saved ? 'text-[#E8242C] border-[#E8242C]/70 bg-[#E8242C]/10' : 'text-[var(--esl-text-muted)] hover:text-[#E8242C]'}`}
           >
-            <Phone className="w-4 h-4" />
-            {showPhone ? entity.phone : 'Залгах'}
+            <Heart className={cn('w-4 h-4', saved && 'fill-current')} />
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-white/10 text-white rounded-xl text-sm font-semibold hover:bg-white/15 transition cursor-pointer border border-[var(--esl-border)]">
-            <MessageCircle className="w-4 h-4" /> Мессеж
-          </button>
-          <button className="w-10 h-10 rounded-xl bg-white/10 border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] hover:text-[#E8242C] transition cursor-pointer">
-            <Heart className="w-4 h-4" />
-          </button>
-          <button className="w-10 h-10 rounded-xl bg-white/10 border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] hover:text-white transition cursor-pointer">
+          <button
+            type="button"
+            onClick={copyProfileLink}
+            aria-label={copied ? 'Профайлын линк хуулагдлаа' : 'Профайлын линк хуулах'}
+            title={copied ? 'Линк хуулагдлаа' : 'Хуваалцах'}
+            className={`${iconButtonClass} ${copied ? 'text-emerald-300 border-emerald-300/60 bg-emerald-400/10' : 'text-[var(--esl-text-muted)] hover:text-white'}`}
+          >
             <Share2 className="w-4 h-4" />
           </button>
+          {copied && (
+            <span className="text-xs font-semibold text-emerald-300">Линк хуулагдлаа</span>
+          )}
           <div className="flex-1" />
           {entity.website && (
             <a href={`https://${entity.website}`} target="_blank" rel="noopener" className="text-xs text-[var(--esl-text-muted)] hover:text-white transition no-underline flex items-center gap-1">
@@ -533,9 +1172,7 @@ export default function EntityProfilePage() {
             )}
             {/* Scrollable vehicle cards */}
             <div ref={scrollRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4 scrollbar-hide" style={{ scrollbarWidth: 'none' }}>
-              {entity.vehicles.map(v => (
-                <VehicleCard key={v.id} v={v} onClick={() => setSelectedVehicle(v)} />
-              ))}
+                {entity.vehicles.map(v => <VehicleCard key={v.id} v={v} />)}
             </div>
             <p className="text-xs text-[var(--esl-text-secondary)] mt-2 text-center">← Гулсуулж бүх машиныг харна уу →</p>
 
@@ -572,9 +1209,15 @@ export default function EntityProfilePage() {
                       <button onClick={() => { setShowPhone(true); setSelectedVehicle(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
                         <Phone className="w-4 h-4" /> Залгах
                       </button>
-                      <button className="flex-1 h-12 bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:opacity-80 transition">
-                        <MessageCircle className="w-4 h-4" /> Мессеж
-                      </button>
+                      {sms ? (
+                        <a href={sms} className={modalMessageClass}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </a>
+                      ) : (
+                        <button type="button" disabled className={`${modalMessageClass} cursor-not-allowed opacity-60`}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -613,9 +1256,15 @@ export default function EntityProfilePage() {
                       <button onClick={() => { setShowPhone(true); setSelectedListing(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
                         <Phone className="w-4 h-4" /> Залгах
                       </button>
-                      <button className="flex-1 h-12 bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[var(--esl-bg-card-hover)] transition">
-                        <MessageCircle className="w-4 h-4" /> Мессеж
-                      </button>
+                      {sms ? (
+                        <a href={sms} className={modalMessageClass}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </a>
+                      ) : (
+                        <button type="button" disabled className={`${modalMessageClass} cursor-not-allowed opacity-60`}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -627,14 +1276,38 @@ export default function EntityProfilePage() {
         {/* === COMPANY: Projects === */}
         {entityType === 'company' && activeTab === 0 && entity.projects && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-            {entity.projects.map(p => <ProjectCard key={p.id} p={p} onClick={() => setSelectedProject(p)} />)}
+            {entity.projects.map(p => <ProjectCard key={p.id} p={p} />)}
           </div>
         )}
 
         {/* === AGENT: Listings === */}
         {entityType === 'agent' && activeTab === 0 && entity.listings && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {entity.listings.map(l => <ListingCard key={l.id} l={l} onClick={() => setSelectedListing(l)} />)}
+            {entity.listings.map(l => <ListingCard key={l.id} l={l} />)}
+          </div>
+        )}
+
+        {/* === SERVICE: Offerings === */}
+        {entityType === 'service' && activeTab === 0 && (
+          <div className="space-y-5">
+            {entity.services && (
+              <div className="flex flex-wrap gap-2">
+                {entity.services.map((service) => (
+                  <span key={service} className="rounded-xl border border-[var(--esl-border)] bg-white/5 px-3 py-2 text-xs font-semibold text-[var(--esl-text-muted)]">
+                    {service}
+                  </span>
+                ))}
+              </div>
+            )}
+            {entity.serviceListings?.length ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {entity.serviceListings.map(s => <ServiceCard key={s.id} s={s} />)}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-[var(--esl-border)] bg-white/5 p-6 text-sm text-[var(--esl-text-muted)]">
+                Одоогоор нийтэлсэн үйлчилгээ алга.
+              </div>
+            )}
           </div>
         )}
 
@@ -650,7 +1323,7 @@ export default function EntityProfilePage() {
         )}
 
         {/* === Reviews === */}
-        {((entityType === 'auto_dealer' && activeTab === 2) || (entityType === 'company' && activeTab === 2) || (entityType === 'agent' && activeTab === 1)) && (
+        {((entityType === 'auto_dealer' && activeTab === 2) || (entityType === 'company' && activeTab === 2) || (entityType === 'agent' && activeTab === 1) || (entityType === 'service' && activeTab === 1)) && (
           <div>
             {/* Rating summary */}
             <div className="bg-white/5 border border-[var(--esl-border)] rounded-2xl p-6 mb-6 flex items-center gap-6 flex-wrap">
@@ -690,7 +1363,7 @@ export default function EntityProfilePage() {
         )}
 
         {/* === About === */}
-        {((entityType === 'auto_dealer' && activeTab === 3) || (entityType === 'company' && activeTab === 3) || (entityType === 'agent' && activeTab === 2)) && (
+        {((entityType === 'auto_dealer' && activeTab === 3) || (entityType === 'company' && activeTab === 3) || (entityType === 'agent' && activeTab === 2) || (entityType === 'service' && activeTab === 2)) && (
           <div className="space-y-6">
             <div className="bg-white/5 border border-[var(--esl-border)] rounded-2xl p-6">
               <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed">{entity.description}</p>
@@ -785,7 +1458,7 @@ export default function EntityProfilePage() {
                   <div className="h-full bg-gradient-to-r from-[#E8242C] to-[#FF6B6B] rounded-full" style={{ width: `${selectedProject.progress}%` }} />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="grid grid-cols-2 gap-3 mb-5 sm:grid-cols-4">
                 <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
                   <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedProject.units}</p>
                   <p className="text-[10px] text-[var(--esl-text-secondary)]">айл</p>
@@ -793,6 +1466,12 @@ export default function EntityProfilePage() {
                 <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
                   <p className="text-sm font-bold text-[#E8242C]">{formatPrice(selectedProject.priceFrom)}₮~</p>
                   <p className="text-[10px] text-[var(--esl-text-secondary)]">эхлэх үнэ</p>
+                </div>
+                <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
+                  <p className="text-sm font-bold text-[var(--esl-text-primary)]">
+                    {selectedProject.pricePerSqm ? `${formatPrice(selectedProject.pricePerSqm)}₮` : '—'}
+                  </p>
+                  <p className="text-[10px] text-[var(--esl-text-secondary)]">1м²</p>
                 </div>
                 <div className="bg-[var(--esl-bg-elevated)] rounded-xl p-3 text-center">
                   <p className="text-sm font-bold text-[var(--esl-text-primary)]">{selectedProject.year}</p>
@@ -843,9 +1522,15 @@ export default function EntityProfilePage() {
                 <button onClick={() => { setShowPhone(true); setSelectedListing(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
                   <Phone className="w-4 h-4" /> Залгах
                 </button>
-                <button className="flex-1 h-12 bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[var(--esl-bg-card-hover)] transition">
-                  <MessageCircle className="w-4 h-4" /> Мессеж
-                </button>
+                {sms ? (
+                  <a href={sms} className={modalMessageClass}>
+                    <MessageCircle className="w-4 h-4" /> Мессеж
+                  </a>
+                ) : (
+                  <button type="button" disabled className={`${modalMessageClass} cursor-not-allowed opacity-60`}>
+                    <MessageCircle className="w-4 h-4" /> Мессеж
+                  </button>
+                )}
               </div>
             </div>
           </div>

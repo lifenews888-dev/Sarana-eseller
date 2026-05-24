@@ -1,26 +1,40 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { json, errorJson, requireAuth } from '@/lib/api-auth';
+import { json, errorJson, requireAuth, signToken } from '@/lib/api-auth';
 
 // POST /api/entities/register
-// Auto-upsert (update if exists) for the given entity type per user —
-// prevents P2002 on Shop.userId @unique when seller auto-Shop already exists.
+// Auto-upsert the selected seller entity for the current user and refresh auth
+// so the dashboard immediately switches to the matching seller tools.
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof Response) return auth;
 
   const body = await req.json();
-  const { entityType, name, slug, phone, email, description, regNumber, licenseNumber, address, district, website, socialFb } = body;
+  const {
+    entityType,
+    name,
+    slug,
+    phone,
+    description,
+    regNumber,
+    licenseNumber,
+    address,
+    district,
+    website,
+    socialFb,
+    socialIg,
+    logo,
+    coverImage,
+  } = body;
 
   if (!entityType || !name || !slug) return errorJson('entityType, name, slug шаардлагатай');
 
   try {
-    // Slug uniqueness check (excluding current user's own entity)
     const slugExistsInShops = await prisma.shop.findFirst({
       where: { slug, NOT: { userId: auth.id } },
       select: { id: true },
     });
-    if (slugExistsInShops) return errorJson('Энэ slug аль хэдийн өөр хэрэглэгчид бүртгэлтэй');
+    if (slugExistsInShops) return errorJson('Энэ slug аль хэдийн бүртгэлтэй байна');
 
     let entity;
 
@@ -29,7 +43,6 @@ export async function POST(req: NextRequest) {
       case 'order_store':
       case 'digital':
       case 'pre_order': {
-        // All use Shop model — upsert by userId (one shop per user)
         const industryMap: Record<string, string> = {
           store: 'general',
           order_store: 'order',
@@ -39,41 +52,98 @@ export async function POST(req: NextRequest) {
         entity = await prisma.shop.upsert({
           where: { userId: auth.id },
           create: {
-            userId: auth.id, name, slug, phone, address, district,
+            userId: auth.id,
+            name,
+            slug,
+            logo: logo || null,
+            phone,
+            address,
+            district,
             industry: industryMap[entityType] || 'general',
             locationStatus: 'pending',
           },
           update: {
-            name, slug, phone: phone || undefined, address: address || undefined,
-            district: district || undefined, industry: industryMap[entityType] || 'general',
+            name,
+            slug,
+            logo: logo || undefined,
+            phone: phone || undefined,
+            address: address || undefined,
+            district: district || undefined,
+            industry: industryMap[entityType] || 'general',
           },
         });
         break;
       }
       case 'agent':
       case 'real_estate': {
-        // Upsert agent by userId
         const existing = await prisma.agent.findFirst({ where: { userId: auth.id } });
         entity = existing
           ? await prisma.agent.update({
               where: { id: existing.id },
-              data: { name, slug, phone, address, district, bio: description, licenseNumber },
+              data: {
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                bio: description,
+                licenseNumber,
+                profilePhoto: logo || undefined,
+                coverImage: coverImage || undefined,
+              },
             })
           : await prisma.agent.create({
-              data: { userId: auth.id, name, slug, phone, address, district, bio: description, licenseNumber, isVerified: false },
+              data: {
+                userId: auth.id,
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                bio: description,
+                licenseNumber,
+                profilePhoto: logo || null,
+                coverImage: coverImage || null,
+                isVerified: false,
+              },
             });
         break;
       }
       case 'company':
       case 'construction': {
         const existing = await prisma.company.findFirst({ where: { userId: auth.id } });
+        const socialLinks = { website, facebook: socialFb, instagram: socialIg };
         entity = existing
           ? await prisma.company.update({
               where: { id: existing.id },
-              data: { name, slug, phone, address, district, description, licenseNumber: regNumber },
+              data: {
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                description,
+                licenseNumber: regNumber,
+                logo: logo || undefined,
+                coverImage: coverImage || undefined,
+                socialLinks,
+              },
             })
           : await prisma.company.create({
-              data: { userId: auth.id, name, slug, phone, address, district, description, licenseNumber: regNumber, isVerified: false },
+              data: {
+                userId: auth.id,
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                description,
+                licenseNumber: regNumber,
+                logo: logo || null,
+                coverImage: coverImage || null,
+                socialLinks,
+                isVerified: false,
+              },
             });
         break;
       }
@@ -82,10 +152,30 @@ export async function POST(req: NextRequest) {
         entity = existing
           ? await prisma.autoDealer.update({
               where: { id: existing.id },
-              data: { name, slug, phone, address, district, description },
+              data: {
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                description,
+                logo: logo || undefined,
+                coverImage: coverImage || undefined,
+              },
             })
           : await prisma.autoDealer.create({
-              data: { userId: auth.id, name, slug, phone, address, district, description, isVerified: false },
+              data: {
+                userId: auth.id,
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                description,
+                logo: logo || null,
+                coverImage: coverImage || null,
+                isVerified: false,
+              },
             });
         break;
       }
@@ -94,10 +184,30 @@ export async function POST(req: NextRequest) {
         entity = existing
           ? await prisma.serviceProvider.update({
               where: { id: existing.id },
-              data: { name, slug, phone, address, district, description },
+              data: {
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                description,
+                logo: logo || undefined,
+                coverImage: coverImage || undefined,
+              },
             })
           : await prisma.serviceProvider.create({
-              data: { userId: auth.id, name, slug, phone, address, district, description, isVerified: false },
+              data: {
+                userId: auth.id,
+                name,
+                slug,
+                phone,
+                address,
+                district,
+                description,
+                logo: logo || null,
+                coverImage: coverImage || null,
+                isVerified: false,
+              },
             });
         break;
       }
@@ -105,14 +215,19 @@ export async function POST(req: NextRequest) {
         return errorJson('Буруу entityType: ' + entityType);
     }
 
-    // Update user role + entityType
-    await prisma.user.update({
+    const username = slug || `seller-${auth.id.slice(-8)}`;
+    const updatedUser = await prisma.user.update({
       where: { id: auth.id },
-      data: { role: 'seller', entityType },
+      data: { role: 'seller', entityType, username },
+      include: {
+        shop: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        agent: { select: { name: true, slug: true, profilePhoto: true, phone: true, address: true } },
+        company: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        autoDealer: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        serviceProvider: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+      },
     });
 
-    // Create/update SellerProfile for affiliate commission system
-    const username = slug || `seller-${auth.id.slice(-8)}`;
     await prisma.sellerProfile.upsert({
       where: { userId: auth.id },
       create: {
@@ -124,13 +239,61 @@ export async function POST(req: NextRequest) {
       update: { displayName: name },
     });
 
-    return json({ entity, message: 'Амжилттай бүртгэгдлээ' }, 201);
-  } catch (err: any) {
-    if (err.code === 'P2002') {
-      const target = err.meta?.target || 'field';
+    const token = signToken({
+      id: updatedUser.id,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      name: updatedUser.name,
+      entityType: updatedUser.entityType,
+    });
+    const entityStore =
+      updatedUser.shop ||
+      (updatedUser.agent
+        ? {
+            name: updatedUser.agent.name,
+            slug: updatedUser.agent.slug,
+            logo: updatedUser.agent.profilePhoto,
+            phone: updatedUser.agent.phone,
+            address: updatedUser.agent.address,
+          }
+        : null) ||
+      updatedUser.company ||
+      updatedUser.autoDealer ||
+      updatedUser.serviceProvider ||
+      updatedUser.store;
+
+    const res = json({
+      entity,
+      token,
+      user: {
+        _id: updatedUser.id,
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        username,
+        avatar: updatedUser.avatar,
+        entityType: updatedUser.entityType,
+        store: entityStore,
+      },
+      message: 'Амжилттай бүртгэгдлээ',
+    }, 201);
+    res.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+    });
+
+    return res;
+  } catch (err: unknown) {
+    const error = err as { code?: string; meta?: { target?: string }; message?: string };
+    if (error.code === 'P2002') {
+      const target = error.meta?.target || 'field';
       return errorJson(`Давхардсан утга: ${target}. Өөр нэр/slug ашиглана уу`);
     }
     console.error('Entity register error:', err);
-    return errorJson('Бүртгэл амжилтгүй: ' + (err.message || 'Unknown error'));
+    return errorJson('Бүртгэл амжилтгүй: ' + (error.message || 'Unknown error'));
   }
 }

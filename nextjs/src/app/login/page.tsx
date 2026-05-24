@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, roleHome } from '@/lib/auth';
-import { AuthAPI } from '@/lib/api';
-import { useToast } from '@/components/shared/Toast';
+import { AuthAPI, type AuthResponse } from '@/lib/api';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import { Store, Megaphone, ShoppingBag, Truck, AlertTriangle, CheckCircle, Hand, Rocket, Eye, EyeOff } from 'lucide-react';
@@ -17,6 +16,38 @@ const ROLES = [
   { value: 'delivery', icon: Truck, label: 'Жолооч', desc: 'Захиалга хүргэж орлого ол', badge: 'Хүргэлт бүрт', color: 'border-cyan-500/20' },
 ];
 
+type LoginEnvelope = Partial<AuthResponse> & {
+  success?: boolean;
+  data?: unknown;
+};
+
+function isAuthResponse(value: unknown): value is AuthResponse {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<AuthResponse>;
+  return typeof candidate.token === 'string' && Boolean(candidate.user);
+}
+
+function isSafeRelativePath(target: string | null): target is string {
+  return Boolean(target && target.startsWith('/') && !target.startsWith('//'));
+}
+
+function readRedirectTargetFromLocation(): string {
+  if (typeof window === 'undefined') return '';
+  const params = new URLSearchParams(window.location.search);
+  const target = params.get('redirect') || params.get('next');
+  return isSafeRelativePath(target) ? target : '';
+}
+
+function buildAuthHref(path: string, params: Record<string, string | undefined>, redirectTarget: string): string {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value) search.set(key, value);
+  });
+  if (redirectTarget) search.set('redirect', redirectTarget);
+  const query = search.toString();
+  return query ? `${path}?${query}` : path;
+}
+
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -27,26 +58,23 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [showPw, setShowPw] = useState(false);
+  const [redirectTarget, setRedirectTarget] = useState('');
 
   const { login, isLoggedIn, user } = useAuth();
   const router = useRouter();
-  const toast = useToast();
 
-  // Pull `?redirect=/some/path` from URL to override roleHome-based routing
-  function getRedirectTarget(role?: string): string {
-    if (typeof window === 'undefined') return roleHome(role);
-    const params = new URLSearchParams(window.location.search);
-    const target = params.get('redirect');
-    // Allow only safe relative paths
-    if (target && target.startsWith('/') && !target.startsWith('//')) return target;
-    return roleHome(role);
-  }
+  // Pull `?redirect=/some/path` or legacy `?next=/some/path` to preserve in-progress flows.
+  const getRedirectTarget = useCallback((role?: string): string => {
+    return redirectTarget || readRedirectTargetFromLocation() || roleHome(role);
+  }, [redirectTarget]);
 
   useEffect(() => {
     if (isLoggedIn && user) router.replace(getRedirectTarget(user.role));
-  }, [isLoggedIn, user, router]);
+  }, [isLoggedIn, user, router, getRedirectTarget]);
 
   useEffect(() => {
+    setRedirectTarget(readRedirectTargetFromLocation());
+
     if (window.location.hash === '#register') setMode('register');
 
     // Handle Google OAuth callback
@@ -74,7 +102,7 @@ export default function LoginPage() {
       };
       setError(msgs[googleError] || 'Google нэвтрэлтийн алдаа');
     }
-  }, []);
+  }, [getRedirectTarget, login, router]);
 
   const pwStrength = (v: string) => {
     if (!v) return { score: 0, label: '', color: '' };
@@ -92,19 +120,19 @@ export default function LoginPage() {
     setLoading(true); setError('');
     try {
       // Try Next.js API first (direct DB), then backend
-      let data: any = null;
+      let data: AuthResponse | null = null;
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
-        const json = await res.json();
+        const json = await res.json() as LoginEnvelope;
         // New envelope: { success: true, data: { token, user } }
         // Legacy:       { token, user }
         // Express backend fallback uses AuthAPI.login below.
-        if (json?.success && json.data?.token) data = json.data;
-        else if (json?.token) data = json;
+        if (json?.success && isAuthResponse(json.data)) data = json.data;
+        else if (isAuthResponse(json)) data = json;
       } catch {}
 
       if (!data) {
@@ -118,8 +146,8 @@ export default function LoginPage() {
       } else {
         setError('Имэйл эсвэл нууц үг буруу');
       }
-    } catch (e: any) {
-      setError(e.message || 'Холболтын алдаа');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Холболтын алдаа');
     } finally { setLoading(false); }
   };
 
@@ -134,8 +162,8 @@ export default function LoginPage() {
         setSuccess('Бүртгэл амжилттай!');
         setTimeout(() => router.push(getRedirectTarget(data.user.role)), 700);
       }
-    } catch (e: any) {
-      setError(e.message || 'Холболтын алдаа');
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Холболтын алдаа');
     } finally { setLoading(false); }
   };
 
@@ -268,7 +296,7 @@ export default function LoginPage() {
                     </button>
                   </div>
                   <div className="text-right">
-                    <a href="/forgot-password" className="text-xs font-semibold no-underline" style={{ color: 'var(--esl-text-muted)' }}>Нууц үг мартсан уу?</a>
+                    <Link href="/forgot-password" className="text-xs font-semibold no-underline" style={{ color: 'var(--esl-text-muted)' }}>Нууц үг мартсан уу?</Link>
                   </div>
                 </div>
 
@@ -289,7 +317,7 @@ export default function LoginPage() {
               </div>
 
               <a
-                href="/api/auth/google"
+                href={buildAuthHref('/api/auth/google', {}, redirectTarget)}
                 className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-bold text-sm border-none cursor-pointer transition-all hover:shadow-md no-underline"
                 style={{ background: 'var(--esl-bg-card)', border: '1.5px solid var(--esl-border)', color: 'var(--esl-text-primary)' }}
               >
@@ -302,6 +330,7 @@ export default function LoginPage() {
                 Google-ээр нэвтрэх
               </a>
 
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/api/auth/dan"
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-base text-white border-none cursor-pointer transition-all hover:opacity-90 no-underline mt-3"
@@ -435,7 +464,7 @@ export default function LoginPage() {
               </div>
 
               <a
-                href={`/api/auth/google?role=${role}`}
+                href={buildAuthHref('/api/auth/google', { role }, redirectTarget)}
                 className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl font-bold text-sm border-none cursor-pointer transition-all hover:shadow-md no-underline"
                 style={{ background: 'var(--esl-bg-card)', border: '1.5px solid var(--esl-border)', color: 'var(--esl-text-primary)' }}
               >
@@ -448,6 +477,7 @@ export default function LoginPage() {
                 Google-ээр бүртгүүлэх
               </a>
 
+              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
                 href="/api/auth/dan"
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-base text-white border-none cursor-pointer transition-all hover:opacity-90 no-underline mt-3"

@@ -1,39 +1,86 @@
 'use client';
-import { useRouter } from 'next/navigation';
+
+import Link from 'next/link';
 import {
-  Shirt,
+  Armchair,
+  Baby,
+  BookOpen,
+  BriefcaseBusiness,
+  Building2,
+  Camera,
+  Car,
+  Construction,
+  Dog,
+  Dumbbell,
+  Factory,
+  Gamepad2,
+  Gem,
+  Gift,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Laptop,
+  Mars,
+  Wrench,
+  Monitor,
+  Palette,
+  Plug,
+  Printer,
+  Scissors,
+  Shield,
   Smartphone,
   Sparkles,
-  Home,
+  TentTree,
   UtensilsCrossed,
-  Car,
-  Dumbbell,
-  Baby,
-  Building2,
-  Wrench,
-  HardHat,
-  Monitor,
+  Venus,
   type LucideIcon,
 } from 'lucide-react';
+import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 
-const CATS: { slug: string; icon: LucideIcon; name: string }[] = [
-  { slug: 'fashion', icon: Shirt, name: 'Хувцас' },
-  { slug: 'electronics', icon: Smartphone, name: 'Электроник' },
-  { slug: 'beauty-health', icon: Sparkles, name: 'Гоо сайхан' },
-  { slug: 'home-living', icon: Home, name: 'Гэр ахуй' },
-  { slug: 'food-beverage', icon: UtensilsCrossed, name: 'Хоол' },
-  { slug: 'auto-moto', icon: Car, name: 'Авто' },
-  { slug: 'sports-travel', icon: Dumbbell, name: 'Спорт' },
-  { slug: 'kids-toys', icon: Baby, name: 'Хүүхэд' },
-  { slug: 'real-estate-feed', icon: Building2, name: 'Үл хөдлөх' },
-  { slug: 'services-feed', icon: Wrench, name: 'Үйлчилгээ' },
-  { slug: 'construction', icon: HardHat, name: 'Барилга' },
-  { slug: 'digital-goods', icon: Monitor, name: 'Дижитал' },
+const ICON_MAP: Record<string, LucideIcon> = {
+  Armchair,
+  Baby,
+  BookOpen,
+  BriefcaseBusiness,
+  Building2,
+  Camera,
+  Car,
+  Construction,
+  Dog,
+  Dumbbell,
+  Factory,
+  Gamepad2,
+  Gem,
+  Gift,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Laptop,
+  Mars,
+  Monitor,
+  Palette,
+  Plug,
+  Printer,
+  Scissors,
+  Shield,
+  Smartphone,
+  Sparkles,
+  TentTree,
+  UtensilsCrossed,
+  Venus,
+  Wrench,
+};
+
+const CATS: { slug: string; icon: LucideIcon; name: string; href: string }[] = [
+  ...MARKETPLACE_CATEGORIES.map((cat) => ({
+    slug: cat.key,
+    icon: ICON_MAP[cat.icon] || Monitor,
+    name: cat.shortLabel || cat.label,
+    href: `/store?category=${cat.key}`,
+  })),
 ];
 
 export default function CategoryIcons() {
-  const router = useRouter();
-
   return (
     <section className="max-w-[1200px] mx-auto px-4 py-8">
       <h2 className="text-[var(--esl-text)] text-xl font-bold mb-5">
@@ -41,16 +88,16 @@ export default function CategoryIcons() {
       </h2>
       <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-3">
         {CATS.map((cat) => (
-          <button
+          <Link
             key={cat.slug}
-            onClick={() => router.push(`/store?category=${cat.slug}`)}
-            className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] hover:border-[#E8242C] hover:bg-[rgba(232,36,44,0.05)] hover:-translate-y-0.5 transition-all cursor-pointer"
+            href={cat.href}
+            className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] hover:border-[#E8242C] hover:bg-[rgba(232,36,44,0.05)] hover:-translate-y-0.5 transition-all cursor-pointer no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--esl-bg)]"
           >
             <cat.icon size={28} className="text-[var(--esl-text-muted)]" />
             <span className="text-[11px] font-medium text-[var(--esl-text-muted)] text-center">
               {cat.name}
             </span>
-          </button>
+          </Link>
         ))}
       </div>
     </section>

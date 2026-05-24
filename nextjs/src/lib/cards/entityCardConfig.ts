@@ -99,7 +99,7 @@ export function resolveEntityType(dbType: string): EntityType {
   const map: Record<string, EntityType> = {
     store: 'STORE',
     agent: 'REAL_ESTATE',
-    company: 'REAL_ESTATE',
+    company: 'CONSTRUCTION',
     auto_dealer: 'AUTO',
     service: 'SERVICE',
     construction: 'CONSTRUCTION',

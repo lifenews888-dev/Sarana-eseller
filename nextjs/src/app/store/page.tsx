@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { ProductsAPI, type Product } from '@/lib/api';
+import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
 import { DEMO_PRODUCTS, cn } from '@/lib/utils';
 import { useAuth, roleHome } from '@/lib/auth';
@@ -14,7 +14,7 @@ import EsellerLogo from '@/components/shared/EsellerLogo';
 import Toast, { useToast } from '@/components/shared/Toast';
 import MegaMenu from '@/components/store/MegaMenu';
 import HeroBanner from '@/components/store/HeroBanner';
-import ProductGrid from '@/components/store/ProductGrid';
+import ProductGrid, { type StoreSortKey } from '@/components/store/ProductGrid';
 import ProductModal from '@/components/store/ProductModal';
 import SaleSlider from '@/components/store/SaleSlider';
 import BannerSlot from '@/components/store/BannerSlot';
@@ -23,28 +23,67 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   Search, ShoppingCart, User, ChevronDown, Tag, ChevronRight,
   ShieldCheck, Truck, RefreshCw, Lock,
-  UtensilsCrossed, Shirt, Cpu, Sparkles, Home, Dumbbell, Scissors, Wrench,
+  Armchair, Baby, BookOpen, BriefcaseBusiness, Building2, Car, Camera, Construction, Cpu, Dog,
+  Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse, Home, Laptop,
+  Mars, Monitor, Palette, Plane, Plug, Printer, Scissors, Shield, Shirt, Sparkles,
+  Smartphone, TentTree, UtensilsCrossed, Venus, Wrench,
   Store, Newspaper, Crown,
+  type LucideIcon,
 } from 'lucide-react';
+import {
+  MARKETPLACE_CATEGORIES,
+  normalizeMarketplaceCategory,
+} from '@/lib/marketplaceCategories';
 
 /* ─── Constants ─── */
-const NAV_CATS = [
-  { key: 'food-beverage', label: 'Хоол хүнс' }, { key: 'fashion', label: 'Хувцас' },
-  { key: 'electronics', label: 'Электроник' }, { key: 'beauty-health', label: 'Гоо сайхан' },
-  { key: 'home-living', label: 'Гэр ахуй' }, { key: 'sports-travel', label: 'Спорт' },
-  { key: 'kids-toys', label: 'Хүүхдийн' }, { key: 'auto-moto', label: 'Авто' },
-];
+const CATEGORY_ICON_MAP: Record<string, LucideIcon> = {
+  Armchair,
+  Baby,
+  BookOpen,
+  BriefcaseBusiness,
+  Building2,
+  Car,
+  Camera,
+  Construction,
+  Cpu,
+  Dog,
+  Dumbbell,
+  Factory,
+  Gamepad2,
+  Gem,
+  Gift,
+  GraduationCap,
+  HeartPulse,
+  Home,
+  Laptop,
+  Mars,
+  Monitor,
+  Palette,
+  Plane,
+  Plug,
+  Printer,
+  Scissors,
+  Shield,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  TentTree,
+  UtensilsCrossed,
+  Venus,
+  Wrench,
+};
 
-const CATEGORY_ICONS = [
-  { key: 'food-beverage', label: 'Хоол хүнс', icon: UtensilsCrossed, color: '#059669' },
-  { key: 'fashion', label: 'Хувцас', icon: Shirt, color: '#7C3AED' },
-  { key: 'electronics', label: 'Электроник', icon: Cpu, color: '#0891B2' },
-  { key: 'beauty-health', label: 'Гоо сайхан', icon: Sparkles, color: '#DB2777' },
-  { key: 'home-living', label: 'Гэр ахуй', icon: Home, color: '#D97706' },
-  { key: 'sports-travel', label: 'Спорт', icon: Dumbbell, color: '#2563EB' },
-  { key: 'kids-toys', label: 'Хүүхдийн', icon: Scissors, color: '#9333EA' },
-  { key: 'auto-moto', label: 'Авто', icon: Wrench, color: '#DC2626' },
-];
+const NAV_CATS = MARKETPLACE_CATEGORIES.map((category) => ({
+  key: category.key,
+  label: category.shortLabel || category.label,
+}));
+
+const CATEGORY_ICONS = MARKETPLACE_CATEGORIES.map((category) => ({
+  key: category.key,
+  label: category.shortLabel || category.label,
+  icon: CATEGORY_ICON_MAP[category.icon] || Store,
+  color: category.color,
+}));
 
 const TRUST_ITEMS = [
   { icon: ShieldCheck, label: 'Баталгаат', sub: 'Бүх бараа баталгаатай', color: '#059669' },
@@ -64,6 +103,111 @@ const MARQUEE_ITEMS = [
 
 const WL_KEY = 'eseller_wishlist';
 function loadWL(): Set<string> { try { const r = localStorage.getItem(WL_KEY); return r ? new Set(JSON.parse(r)) : new Set(); } catch { return new Set(); } }
+function productId(product: Product): string {
+  return product._id || product.id || '';
+}
+
+function productShareUrl(product: Product, username?: string | null): string {
+  if (typeof window === 'undefined') return `/product/${productId(product)}`;
+  const url = new URL(`/product/${productId(product)}`, window.location.origin);
+  const ref = username?.trim();
+  if (ref) url.searchParams.set('ref', ref);
+  return url.toString();
+}
+
+async function copyStoreText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Embedded browsers can expose clipboard but reject writes.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
+const STORE_CATEGORY_KEYS = new Set([
+  'all',
+  ...MARKETPLACE_CATEGORIES.map((category) => category.key),
+]);
+const STORE_SORT_KEYS = new Set<StoreSortKey>(['newest', 'price_asc', 'price_desc', 'rating', 'discount']);
+
+function normalizeStoreCategory(value?: string | null): string {
+  if (!value) return 'all';
+  const canonical = normalizeMarketplaceCategory(value);
+  return STORE_CATEGORY_KEYS.has(canonical) ? canonical : 'all';
+}
+
+function normalizeStoreType(value?: string | null): 'all' | ItemType {
+  return value === 'product' || value === 'service' ? value : 'all';
+}
+
+function normalizeStoreSort(value?: string | null): StoreSortKey {
+  return STORE_SORT_KEYS.has(value as StoreSortKey) ? value as StoreSortKey : 'newest';
+}
+
+function normalizeProductCategory(category?: string): string | undefined {
+  if (!category) return undefined;
+  return normalizeMarketplaceCategory(category);
+}
+
+function serviceCategoryToStoreCategory(category?: string): string | undefined {
+  return normalizeProductCategory(category);
+}
+
+function normalizeProducts(items: Product[]): Product[] {
+  return items
+    .map((item) => ({ ...item, _id: productId(item), category: normalizeProductCategory(item.category) }))
+    .filter((item) => Boolean(item._id));
+}
+
+function serviceToProduct(service: Service): Product {
+  return {
+    _id: service._id,
+    id: service._id,
+    name: service.name,
+    price: service.price,
+    salePrice: service.salePrice,
+    description: service.description,
+    category: serviceCategoryToStoreCategory(service.category),
+    emoji: service.emoji,
+    images: service.images,
+    rating: service.rating,
+    reviewCount: service.reviewCount,
+    createdAt: service.createdAt,
+    duration: service.duration,
+    entityType: 'SERVICE',
+  };
+}
+
+function isSaleProduct(product: Product): boolean {
+  return typeof product.salePrice === 'number' && product.salePrice > 0 && product.salePrice < product.price;
+}
+
+function readDealParam(params: URLSearchParams): boolean {
+  return params.get('deal') === '1' || params.get('sale') === '1';
+}
+
+function productEffectivePrice(product: Product): number {
+  return product.salePrice && product.salePrice > 0 ? product.salePrice : product.price;
+}
+
+function productDiscountAmount(product: Product): number {
+  return product.salePrice && product.salePrice > 0 && product.salePrice < product.price
+    ? product.price - product.salePrice
+    : 0;
+}
 
 /* ─── Marquee component ─── */
 function AnnouncementMarquee() {
@@ -98,6 +242,8 @@ export default function StorePage() {
   const [debSearch, setDebSearch] = useState('');
   const [activeCat, setActiveCat] = useState('all');
   const [activeType, setActiveType] = useState<'all' | ItemType>('all');
+  const [dealOnly, setDealOnly] = useState(false);
+  const [activeSort, setActiveSort] = useState<StoreSortKey>('newest');
   const [cartOpen, setCartOpen] = useState(false);
   const [megaOpen, setMegaOpen] = useState(false);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
@@ -108,6 +254,68 @@ export default function StorePage() {
   const { user, isLoggedIn } = useAuth();
   const toast = useToast();
 
+  const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType, query: string, deals: boolean, sort: StoreSortKey) => {
+    if (typeof window === 'undefined') return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('verify');
+    if (category === 'all') url.searchParams.delete('category');
+    else url.searchParams.set('category', category);
+    if (type === 'all') url.searchParams.delete('type');
+    else url.searchParams.set('type', type);
+    if (query.trim()) url.searchParams.set('q', query.trim());
+    else url.searchParams.delete('q');
+    if (deals) url.searchParams.set('deal', '1');
+    else {
+      url.searchParams.delete('deal');
+      url.searchParams.delete('sale');
+    }
+    if (sort === 'newest') url.searchParams.delete('sort');
+    else url.searchParams.set('sort', sort);
+    window.history.replaceState(null, '', `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+
+  const handleCategoryChange = useCallback((category: string) => {
+    const nextCategory = normalizeStoreCategory(category);
+    setActiveCat(nextCategory);
+    setActiveType('all');
+    syncUrlFilters(nextCategory, 'all', search, dealOnly, activeSort);
+  }, [activeSort, dealOnly, search, syncUrlFilters]);
+
+  const handleTypeChange = useCallback((type: 'all' | ItemType) => {
+    const nextType = normalizeStoreType(type);
+    setActiveType(nextType);
+    syncUrlFilters(activeCat, nextType, search, dealOnly, activeSort);
+  }, [activeCat, activeSort, dealOnly, search, syncUrlFilters]);
+
+  const handleDealChange = useCallback((enabled: boolean) => {
+    setDealOnly(enabled);
+    syncUrlFilters(activeCat, activeType, search, enabled, activeSort);
+  }, [activeCat, activeSort, activeType, search, syncUrlFilters]);
+
+  const handleSortChange = useCallback((sort: StoreSortKey) => {
+    const nextSort = normalizeStoreSort(sort);
+    setActiveSort(nextSort);
+    syncUrlFilters(activeCat, activeType, search, dealOnly, nextSort);
+  }, [activeCat, activeType, dealOnly, search, syncUrlFilters]);
+
+  const clearFilters = useCallback(() => {
+    setActiveCat('all');
+    setActiveType('all');
+    setDealOnly(false);
+    setActiveSort('newest');
+    setSearch('');
+    setDebSearch('');
+    syncUrlFilters('all', 'all', '', false, 'newest');
+  }, [syncUrlFilters]);
+
+  const handleSearchChange = useCallback((query: string) => {
+    setSearch(query);
+    if (!query.trim()) {
+      setDebSearch('');
+      syncUrlFilters(activeCat, activeType, '', dealOnly, activeSort);
+    }
+  }, [activeCat, activeSort, activeType, dealOnly, syncUrlFilters]);
+
   useEffect(() => {
     cart.load(); setWishlist(loadWL());
     (async () => {
@@ -115,31 +323,79 @@ export default function StorePage() {
         const [pr, sv] = await Promise.allSettled([
           // Try Next.js marketplace API first (DB direct), then backend API
           fetch('/api/marketplace').then(r => r.json()).then(d => d.data?.items?.length ? { products: d.data.items } : null)
-            .then(r => r || ProductsAPI.list({ limit: '60' })),
+            .then(r => r || fetch('/api/products?limit=60').then(res => res.json()).then(d => ({ products: d.data?.products || d.products || [] }))),
           fetch('/api/services?shopId=all').then(r => r.json()).catch(() => ({ data: [] })),
         ]);
-        setProducts(pr.status === 'fulfilled' && pr.value.products?.length ? pr.value.products : DEMO_PRODUCTS as unknown as Product[]);
+        setProducts(normalizeProducts(pr.status === 'fulfilled' && pr.value.products?.length ? pr.value.products : DEMO_PRODUCTS as unknown as Product[]));
         setServices(sv.status === 'fulfilled' && Array.isArray(sv.value?.data) ? sv.value.data : DEMO_SERVICES as unknown as Service[]);
-      } catch { setProducts(DEMO_PRODUCTS as unknown as Product[]); setServices(DEMO_SERVICES as unknown as Service[]); }
+      } catch { setProducts(normalizeProducts(DEMO_PRODUCTS as unknown as Product[])); setServices(DEMO_SERVICES as unknown as Service[]); }
       finally { setLoading(false); }
     })();
   }, []); // eslint-disable-line
-  useEffect(() => { const t = setTimeout(() => setDebSearch(search), 300); return () => clearTimeout(t); }, [search]);
+
+  useEffect(() => {
+    const applyUrlFilters = () => {
+      const params = new URLSearchParams(window.location.search);
+      setActiveCat(normalizeStoreCategory(params.get('category')));
+      setActiveType(normalizeStoreType(params.get('type')));
+      setDealOnly(readDealParam(params));
+      setActiveSort(normalizeStoreSort(params.get('sort')));
+      setSearch(params.get('q') || '');
+    };
+
+    applyUrlFilters();
+    window.addEventListener('popstate', applyUrlFilters);
+    return () => window.removeEventListener('popstate', applyUrlFilters);
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebSearch(search);
+      syncUrlFilters(activeCat, activeType, search, dealOnly, activeSort);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [activeCat, activeSort, activeType, dealOnly, search, syncUrlFilters]);
+
+  const serviceProducts = useMemo(
+    () => services.filter((service) => service.isActive).map(serviceToProduct),
+    [services]
+  );
+
+  const catalogItems = useMemo(
+    () => [...products, ...serviceProducts],
+    [products, serviceProducts]
+  );
 
   const filtered = useMemo(() => {
     let list: Product[] = activeType === 'service'
-      ? services.filter(s => s.isActive).map(s => ({ _id: s._id, name: s.name, price: s.price, salePrice: s.salePrice, description: s.description, category: s.category, emoji: s.emoji, images: s.images, rating: s.rating, reviewCount: s.reviewCount } as unknown as Product))
+      ? serviceProducts
       : activeType === 'product' ? products
-      : [...products, ...services.filter(s => s.isActive).map(s => ({ _id: s._id, name: s.name, price: s.price, salePrice: s.salePrice, description: s.description, category: s.category, emoji: s.emoji, images: s.images, rating: s.rating, reviewCount: s.reviewCount } as unknown as Product))];
+      : catalogItems;
     if (activeCat !== 'all') list = list.filter(p => p.category === activeCat);
+    if (dealOnly) list = list.filter(isSaleProduct);
     if (debSearch.trim()) { const q = debSearch.toLowerCase(); list = list.filter(p => p.name.toLowerCase().includes(q) || (p.description || '').toLowerCase().includes(q)); }
-    return list;
-  }, [products, services, activeCat, debSearch, activeType]);
+    const sorted = [...list];
+    if (activeSort === 'price_asc') sorted.sort((a, b) => productEffectivePrice(a) - productEffectivePrice(b));
+    else if (activeSort === 'price_desc') sorted.sort((a, b) => productEffectivePrice(b) - productEffectivePrice(a));
+    else if (activeSort === 'rating') sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    else if (activeSort === 'discount') sorted.sort((a, b) => productDiscountAmount(b) - productDiscountAmount(a));
+    else sorted.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+    return sorted;
+  }, [activeCat, activeSort, activeType, catalogItems, dealOnly, debSearch, products, serviceProducts]);
 
-  const saleProducts = useMemo(() => products.filter(p => p.salePrice && p.salePrice < p.price), [products]);
+  const saleProducts = useMemo(() => catalogItems.filter(isSaleProduct), [catalogItems]);
+  const showSaleSlider = saleProducts.length > 0 && activeCat === 'all' && activeType === 'all' && !dealOnly && !debSearch.trim();
   const quickAdd = useCallback((p: Product) => { cart.add(p, 1); toast.show(`${p.name} нэмэгдлээ`, 'ok'); }, [cart, toast]);
-  const toggleWL = useCallback((id: string) => { setWishlist(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); localStorage.setItem(WL_KEY, JSON.stringify([...n])); return n; }); }, []);
-  const findProduct = (id: string) => products.find(p => p._id === id) || null;
+  const toggleWL = useCallback((id: string) => {
+    setWishlist(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      localStorage.setItem(WL_KEY, JSON.stringify([...n]));
+      return n;
+    });
+  }, []);
+  const findProduct = useCallback((id: string) => catalogItems.find(p => productId(p) === id) || null, [catalogItems]);
 
   return (
     <ErrorBoundary>
@@ -192,7 +448,13 @@ export default function StorePage() {
                 ref={searchRef}
                 type="text"
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => handleSearchChange(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setDebSearch(search);
+                    syncUrlFilters(activeCat, activeType, search, dealOnly, activeSort);
+                  }
+                }}
                 placeholder="Бараа, дэлгүүр хайх..."
                 className="w-full h-11 pl-4 pr-12 rounded-xl text-sm outline-none transition-all"
                 style={{
@@ -201,7 +463,14 @@ export default function StorePage() {
                   color: 'var(--esl-text-primary)',
                 }}
               />
-              <button className="absolute right-1 top-1 bottom-1 px-3 bg-[#E8242C] text-white rounded-lg border-none cursor-pointer hover:bg-[#D31E25] transition-colors">
+              <button
+                type="button"
+                onClick={() => {
+                  setDebSearch(search);
+                  syncUrlFilters(activeCat, activeType, search, dealOnly, activeSort);
+                }}
+                className="absolute right-1 top-1 bottom-1 px-3 bg-[#E8242C] text-white rounded-lg border-none cursor-pointer hover:bg-[#D31E25] transition-colors"
+              >
                 <Search className="w-4 h-4" />
               </button>
             </div>
@@ -244,7 +513,7 @@ export default function StorePage() {
               {NAV_CATS.map(c => (
                 <button
                   key={c.key}
-                  onClick={() => { setActiveCat(c.key); setMegaOpen(false); }}
+                  onClick={() => { handleCategoryChange(c.key); setMegaOpen(false); }}
                   className={cn(
                     'shrink-0 h-full px-4 text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-colors',
                     activeCat === c.key ? 'bg-white/20 text-white' : 'bg-transparent text-white/85 hover:bg-white/10'
@@ -255,13 +524,16 @@ export default function StorePage() {
               ))}
               <div className="flex-1" />
               <button
-                onClick={() => setActiveCat('all')}
-                className="shrink-0 h-full px-4 text-sm font-bold border-none cursor-pointer bg-transparent text-[#FCD34D] flex items-center gap-1.5 whitespace-nowrap"
+                onClick={() => handleDealChange(!dealOnly)}
+                className={cn(
+                  'shrink-0 h-full px-4 text-sm font-bold border-none cursor-pointer flex items-center gap-1.5 whitespace-nowrap transition-colors',
+                  dealOnly ? 'bg-white/20 text-white' : 'bg-transparent text-[#FCD34D] hover:bg-white/10'
+                )}
               >
                 <Tag className="w-3.5 h-3.5" />Хямдралтай
               </button>
             </div>
-            <MegaMenu open={megaOpen} onClose={() => setMegaOpen(false)} onSelectCategory={setActiveCat} onSelectType={setActiveType} />
+            <MegaMenu open={megaOpen} onClose={() => setMegaOpen(false)} onSelectCategory={handleCategoryChange} onSelectType={handleTypeChange} />
           </div>
         </header>
 
@@ -284,7 +556,7 @@ export default function StorePage() {
         </div>
 
         {/* ━━━ Sale slider ━━━ */}
-        {saleProducts.length > 0 && (
+        {showSaleSlider && (
           <SaleSlider
             products={saleProducts}
             quickAdd={quickAdd}
@@ -292,7 +564,7 @@ export default function StorePage() {
             setSelProduct={setSelProduct}
             wishlist={wishlist}
             toggleWL={toggleWL}
-            setActiveCat={setActiveCat}
+            onViewDeals={() => handleDealChange(true)}
           />
         )}
 
@@ -302,7 +574,7 @@ export default function StorePage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold m-0" style={{ color: 'var(--esl-text-primary)' }}>Ангилалаар хайх</h2>
               <button
-                onClick={() => setActiveCat('all')}
+                onClick={() => handleCategoryChange('all')}
                 className="text-xs font-semibold border-none bg-transparent cursor-pointer flex items-center gap-1 transition-colors"
                 style={{ color: '#E8242C' }}
               >
@@ -315,7 +587,7 @@ export default function StorePage() {
                 return (
                   <button
                     key={cat.key}
-                    onClick={() => setActiveCat(isActive ? 'all' : cat.key)}
+                    onClick={() => handleCategoryChange(isActive ? 'all' : cat.key)}
                     className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-none cursor-pointer transition-all group"
                     style={{
                       background: isActive ? cat.color + '14' : 'var(--esl-bg-card)',
@@ -355,12 +627,19 @@ export default function StorePage() {
               loading={loading}
               activeType={activeType}
               activeCat={activeCat}
-              onTypeChange={setActiveType}
-              onCatChange={setActiveCat}
+              onTypeChange={handleTypeChange}
+              onCatChange={handleCategoryChange}
+              onClearFilters={clearFilters}
+              onDealChange={handleDealChange}
+              onSearchChange={handleSearchChange}
+              activeSort={activeSort}
+              onSortChange={handleSortChange}
               onProductClick={id => setSelProduct(findProduct(id))}
               onQuickAdd={quickAdd}
               wishlist={wishlist}
               onToggleWish={toggleWL}
+              dealOnly={dealOnly}
+              searchQuery={search}
             />
           </div>
 
@@ -382,14 +661,15 @@ export default function StorePage() {
             onClose={() => setSelProduct(null)}
             isAffiliate={isLoggedIn && user?.role === 'affiliate'}
             onShare={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/store/${selProduct._id}?ref=${user?.username || ''}`)
-                .then(() => toast.show('Линк хуулагдлаа!', 'ok'));
+              copyStoreText(productShareUrl(selProduct, user?.username))
+                .then(() => toast.show('Линк хуулагдлаа!', 'ok'))
+                .catch(() => toast.show('Линк хуулахад алдаа гарлаа', 'error'));
             }}
-            hasPrev={(() => { const idx = products.findIndex(p => p._id === selProduct._id); return idx > 0; })()}
-            hasNext={(() => { const idx = products.findIndex(p => p._id === selProduct._id); return idx < products.length - 1; })()}
-            onPrev={() => { const idx = products.findIndex(p => p._id === selProduct._id); if (idx > 0) setSelProduct(products[idx - 1]); }}
-            onNext={() => { const idx = products.findIndex(p => p._id === selProduct._id); if (idx < products.length - 1) setSelProduct(products[idx + 1]); }}
-            allProducts={products}
+            hasPrev={(() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); return idx > 0; })()}
+            hasNext={(() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); return idx >= 0 && idx < filtered.length - 1; })()}
+            onPrev={() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); if (idx > 0) setSelProduct(filtered[idx - 1]); }}
+            onNext={() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); if (idx >= 0 && idx < filtered.length - 1) setSelProduct(filtered[idx + 1]); }}
+            allProducts={catalogItems}
             onProductClick={(id) => setSelProduct(findProduct(id))}
           />
         )}
@@ -441,7 +721,7 @@ export default function StorePage() {
                 <ul className="list-none p-0 m-0 space-y-2">
                   {[
                     { t: 'Бүх бараа', h: '/store' },
-                    { t: 'Хямдрал', h: '/store' },
+                    { t: 'Хямдрал', h: '/store?deal=1' },
                     { t: 'Шинэ ирэлт', h: '/store' },
                     { t: 'Зар сурталчилгаа', h: '/feed' },
                   ].map(l => (

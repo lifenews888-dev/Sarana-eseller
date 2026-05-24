@@ -37,11 +37,21 @@ async function apiFetch<T = Record<string, unknown>>(
 // ══════ AUTH ══════
 export interface User {
   _id: string;
+  id?: string;
   name: string;
   email: string;
+  phone?: string;
   role: 'buyer' | 'seller' | 'affiliate' | 'delivery' | 'admin';
   username?: string;
-  store?: { name: string };
+  entityType?: string;
+  avatar?: string | null;
+  store?: {
+    name?: string | null;
+    slug?: string | null;
+    logo?: string | null;
+    phone?: string | null;
+    address?: string | null;
+  } | null;
 }
 
 export interface AuthResponse {
@@ -66,6 +76,7 @@ export const AuthAPI = {
 // ══════ PRODUCTS ══════
 export interface Product {
   _id: string;
+  id?: string;
   name: string;
   price: number;
   salePrice?: number;
@@ -75,6 +86,8 @@ export interface Product {
   images?: string[];
   videoUrl?: string;
   stock?: number;
+  deliveryFee?: number;
+  estimatedMins?: number;
   commission?: number;
   rating?: number;
   reviewCount?: number;

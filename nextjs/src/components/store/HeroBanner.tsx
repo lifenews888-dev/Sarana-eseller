@@ -19,7 +19,7 @@ const DEMO_BANNERS = [
     subtitle: '70% хүртэл хөнгөлөлт · 500+ бараанд',
     bgColor: '#E8242C',
     gradient: 'from-[#E31E24] via-[#C41A1F] to-[#8B0000]',
-    linkUrl: '/store?category=sale',
+    linkUrl: '/store?deal=1',
     cta: 'Хямдралтай бараа',
   },
   {
