@@ -80,6 +80,13 @@ interface RoomChoiceDetail {
   notes: string | null;
 }
 
+type DetailQualityProfile = {
+  title: string;
+  minImages: number;
+  recommendedImages: number;
+  evidenceKeys: string[];
+};
+
 export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const router = useRouter();
   const et = resolveFeedDetailType(post.entityType, post.subcategory || post.category);
@@ -92,6 +99,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const media: MediaItem[] = post.media.length > 0
     ? post.media
     : post.images.map((url, i) => ({ type: 'IMAGE' as const, url, sortOrder: i }));
+  const imageCount = media.filter((item) => item.type === 'IMAGE').length || post.images.length;
 
   function handleBack() {
     if (canUseSameSiteBack()) router.back();
@@ -134,6 +142,8 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
         <ListingMetaBar post={post} />
 
         <EntityFields et={et} meta={meta} post={post} />
+
+        <ListingQualitySummary post={post} et={et} imageCount={imageCount} />
 
         {post.description ? (
           <section className="rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] p-4">
@@ -435,6 +445,190 @@ function DetailedSpecs({ et, meta, post }: { et: DetailEntityType; meta: FeedMet
   if (et === 'CONSTRUCTION') return <ConstructionDetails meta={meta} post={post} />;
   if (et === 'SERVICE') return <ServiceDetails meta={meta} post={post} />;
   return <GenericDetails meta={meta} post={post} category={post.category} subcategory={post.subcategory} />;
+}
+
+function ListingQualitySummary({
+  post,
+  et,
+  imageCount,
+}: {
+  post: FeedPost;
+  et: DetailEntityType;
+  imageCount: number;
+}) {
+  const selectedCategory = post.subcategory || post.category;
+  const meta = post.metadata || {};
+  const profile = detailQualityProfile(selectedCategory, et);
+  const fields = metadataFieldsForCategory(selectedCategory);
+  const requiredFields = fields.filter((field) => field.required);
+  const presentRequired = requiredFields.filter((field) => hasValue(meta[field.key]));
+  const missingRequired = requiredFields.filter((field) => !hasValue(meta[field.key])).map((field) => field.label);
+  const evidenceItems = profile.evidenceKeys
+    .map((key) => ({ key, value: meta[key] }))
+    .filter((item) => hasValue(item.value));
+  const contactReady = Boolean(post.owner?.phone || pick(meta, ['ownerPhone']));
+  const mediaReady = imageCount >= profile.minImages;
+  const coreReady = missingRequired.length === 0;
+  const readyCount = [mediaReady, coreReady, evidenceItems.length > 0, contactReady].filter(Boolean).length;
+  const statusLabel = readyCount >= 4 ? 'Бүрэн мэдээлэлтэй' : readyCount >= 3 ? 'Хангалттай мэдээлэлтэй' : 'Нэмэлт тодруулга хэрэгтэй';
+  const missingItems = [
+    !mediaReady ? `доод тал нь ${profile.minImages} зураг` : '',
+    ...missingRequired,
+    evidenceItems.length === 0 ? 'нотлох/давуу талын мэдээлэл' : '',
+    !contactReady ? 'холбоо барих утас' : '',
+  ].filter(Boolean);
+
+  return (
+    <section className="rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] p-4">
+      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h2 className="text-sm font-bold flex items-center gap-2">
+            <span className="text-[var(--esl-text-muted)]"><ShieldCheck size={16} /></span>
+            Мэдээллийн бүрэн байдал
+          </h2>
+          <p className="mt-1 text-xs leading-relaxed text-[var(--esl-text-muted)]">{profile.title}</p>
+        </div>
+        <span className={cn(
+          'inline-flex w-fit items-center rounded-full px-2.5 py-1 text-[11px] font-bold',
+          readyCount >= 4
+            ? 'bg-green-500/15 text-green-300'
+            : readyCount >= 3
+              ? 'bg-blue-500/15 text-blue-300'
+              : 'bg-amber-500/15 text-amber-200',
+        )}>
+          {statusLabel}
+        </span>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-4">
+        <QualityMetric
+          label="Зураг"
+          value={`${imageCount}/${profile.recommendedImages}`}
+          ready={mediaReady}
+          detail={`min ${profile.minImages}`}
+        />
+        <QualityMetric
+          label="Заавал мэдээлэл"
+          value={requiredFields.length > 0 ? `${presentRequired.length}/${requiredFields.length}` : '0/0'}
+          ready={coreReady}
+          detail={requiredFields.length > 0 ? 'одтой талбар' : 'шаардлагагүй'}
+        />
+        <QualityMetric
+          label="Нотолгоо"
+          value={`${evidenceItems.length}/${profile.evidenceKeys.length}`}
+          ready={evidenceItems.length > 0}
+          detail="баримт/давуу тал"
+        />
+        <QualityMetric
+          label="Холбоо"
+          value={contactReady ? 'Бэлэн' : 'Дутуу'}
+          ready={contactReady}
+          detail="залгах/мессеж"
+        />
+      </div>
+
+      {missingItems.length > 0 ? (
+        <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-3 py-2">
+          <p className="text-[11px] font-bold text-amber-100">Тодруулах зүйлс</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {missingItems.map((item) => (
+              <span key={item} className="rounded-full bg-[var(--esl-bg-card)] border border-amber-500/20 px-2.5 py-1 text-[11px] font-semibold text-amber-100">
+                {item}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div className="mt-3 rounded-xl border border-green-500/20 bg-green-500/10 px-3 py-2">
+          <p className="text-[11px] font-semibold text-green-100">
+            Энэ зар дээр худалдан авагч шийдвэр гаргахад хэрэгтэй үндсэн мэдээлэл бүрдсэн байна.
+          </p>
+        </div>
+      )}
+    </section>
+  );
+}
+
+function QualityMetric({
+  label,
+  value,
+  ready,
+  detail,
+}: {
+  label: string;
+  value: string;
+  ready: boolean;
+  detail: string;
+}) {
+  return (
+    <div className={cn(
+      'rounded-xl border px-3 py-2',
+      ready ? 'border-green-500/20 bg-green-500/10' : 'border-[var(--esl-border)] bg-[var(--esl-bg-muted)]',
+    )}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[11px] font-bold text-[var(--esl-text-muted)]">{label}</p>
+        {ready ? <CheckCircle2 size={14} className="text-green-400" /> : <X size={14} className="text-amber-300" />}
+      </div>
+      <p className="mt-1 text-sm font-black text-[var(--esl-text)]">{value}</p>
+      <p className="mt-0.5 text-[10px] text-[var(--esl-text-muted)]">{detail}</p>
+    </div>
+  );
+}
+
+function detailQualityProfile(category: string | undefined, et: DetailEntityType): DetailQualityProfile {
+  const root = normalizeMarketplaceCategory(category);
+
+  if (et === 'AUTO' || root === 'vehicles') {
+    return {
+      title: 'Машин авахад зураг, үндсэн үзүүлэлт, бичиг баримт, холбоо барих мэдээлэл нэг дор харагдана.',
+      minImages: 4,
+      recommendedImages: 8,
+      evidenceKeys: ['documents', 'features', 'inspectionValidUntil', 'registrationStatus', 'warranty'],
+    };
+  }
+
+  if (et === 'REAL_ESTATE' || root === 'real-estate') {
+    return {
+      title: 'Байр, үл хөдлөх дээр талбай, өрөө, байршил, бичиг баримт, ойр орчны мэдээллийг шалгана.',
+      minImages: 6,
+      recommendedImages: 10,
+      evidenceKeys: ['documents', 'highlights', 'nearby', 'certificateReady', 'mortgageAvailable', 'parking'],
+    };
+  }
+
+  if (et === 'CONSTRUCTION' || root === 'new-buildings') {
+    return {
+      title: 'Төслийн зар дээр өрөөний сонголт, м² үнэ, үлдэгдэл, ашиглалтад орох хугацаа, баримт бичгийг шалгана.',
+      minImages: 6,
+      recommendedImages: 10,
+      evidenceKeys: ['roomChoices', 'roomChoiceDetails', 'documents', 'amenities', 'paymentTerms', 'availableUnits'],
+    };
+  }
+
+  if (et === 'SERVICE') {
+    return {
+      title: 'Үйлчилгээ дээр багц, хугацаа, ажлын жишээ, баталгаа, холбоо барих мэдээллийг шалгана.',
+      minImages: 1,
+      recommendedImages: 3,
+      evidenceKeys: ['highlights', 'features', 'warranty', 'packageName', 'availableSlots'],
+    };
+  }
+
+  if (root === 'phones' || root === 'technology') {
+    return {
+      title: 'Төхөөрөмж дээр зураг, модель, төлөв, баталгаа, иж бүрдэл тодорхой байх шаардлагатай.',
+      minImages: 2,
+      recommendedImages: 4,
+      evidenceKeys: ['warranty', 'accessories', 'checks', 'features', 'batteryHealth'],
+    };
+  }
+
+  return {
+    title: 'Барааны бодит зураг, үндсэн үзүүлэлт, хүргэлт/авах нөхцөл, холбоо барих мэдээллийг шалгана.',
+    minImages: 2,
+    recommendedImages: 5,
+    evidenceKeys: ['includedItems', 'checks', 'features', 'deliveryOptions', 'warranty'],
+  };
 }
 
 function resolveFeedDetailType(entityType: string, category?: string): DetailEntityType {
