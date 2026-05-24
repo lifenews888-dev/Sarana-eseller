@@ -132,6 +132,12 @@ type PostQualityProfile = {
   tips: string[];
 };
 
+type DescriptionGuidance = {
+  title: string;
+  placeholder: string;
+  tips: string[];
+};
+
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
@@ -214,6 +220,137 @@ function suggestedTitleForCategory(
 
   if (category && root !== 'all') return trimSuggestedTitle([brand, model, productType]);
   return '';
+}
+
+function appendDetail(lines: string[], label: string, value?: string, suffix = '') {
+  const cleaned = cleanTitlePart(value);
+  if (cleaned) lines.push(`${label}: ${cleaned}${suffix}.`);
+}
+
+function descriptionGuidanceForCategory(category: string): DescriptionGuidance {
+  const root = normalizeMarketplaceCategory(category);
+
+  if (root === 'vehicles') {
+    return {
+      title: 'Машины зарын тайлбарт заавал оруулах зүйлс',
+      placeholder: 'Он, гүйлт, мотор, түлш, кроп, хөтлөгч, орж ирсэн улс, үзлэг/бичиг баримт, эвдрэл гэмтэл, дагалдах тоноглол...',
+      tips: ['Гүйлт, мотор, түлш, кропыг тодорхой бич', 'Үзлэг, гааль, бичиг баримтын төлөвөө оруул', 'Сэв гэмтэл, засвар хийсэн түүхээ нуухгүй бич'],
+    };
+  }
+
+  if (root === 'real-estate') {
+    return {
+      title: 'Байр, үл хөдлөх зарын тайлбарт заавал оруулах зүйлс',
+      placeholder: 'Өрөө, талбай, давхар, барилгын он, цонхны харц, засвар, тавилга, гэрчилгээ/ипотек, ойр орчны давуу тал...',
+      tips: ['Талбай, өрөө, давхар, барилгын оноо бич', 'Засвар, тавилга, цонхны харц, зогсоолоо тодорхойл', 'Гэрчилгээ, ипотек, нүүх боломжтой огноог оруул'],
+    };
+  }
+
+  if (root === 'new-buildings') {
+    return {
+      title: 'Шинэ орон сууц, төслийн тайлбарт заавал оруулах зүйлс',
+      placeholder: 'Төслийн төлөв, ашиглалтад орох хугацаа, м² үнэ, өрөөний сонголт, төлбөрийн нөхцөл, баримт бичиг...',
+      tips: ['Ашиглалтад орох хугацаа, үлдэгдэл айлаа бич', 'м² үнэ, төлбөрийн нөхцөлөө тодорхойл', 'Орчин, төлөвлөлт, давуу талаа жагсаа'],
+    };
+  }
+
+  if (root === 'phones' || root === 'technology') {
+    return {
+      title: 'Төхөөрөмжийн зарын тайлбарт заавал оруулах зүйлс',
+      placeholder: 'Брэнд, модель, багтаамж, баталгаа, хайрцаг/дагалдах хэрэгсэл, сэв гэмтэл, ажиллагааны төлөв...',
+      tips: ['Багтаамж, баталгаа, дагалдах зүйлээ бич', 'Дэлгэц, батарей, сэв гэмтлийг тодорхойл', 'Ажиллагаа шалгасан эсэхээ оруул'],
+    };
+  }
+
+  return {
+    title: 'Зарын тайлбарт заавал оруулах зүйлс',
+    placeholder: 'Бараа/үйлчилгээний онцлог, хэмжээ, өнгө, материал, нөхцөл, хүргэлт, баталгаа, хэрэглэгчийн мэдэх ёстой мэдээлэл...',
+    tips: ['Хэмжээ, өнгө, материал, нөхцөлөө тодорхой бич', 'Хүргэлт, баталгаа, буцаалт байгаа эсэхийг оруул', 'Худалдан авагчийн асуух магадлалтай зүйлсийг урьдчилж тайлбарла'],
+  };
+}
+
+function suggestedDescriptionForCategory(
+  category: string,
+  draft: Record<string, string>,
+  leafLabel?: string,
+) {
+  const root = normalizeMarketplaceCategory(category);
+  const lines: string[] = [];
+  const brand = cleanTitlePart(draft.brand);
+  const model = cleanTitlePart(draft.model);
+  const leaf = cleanTitlePart(leafLabel);
+
+  if (root === 'vehicles') {
+    const title = trimSuggestedTitle([brand, model, draft.year]);
+    if (title) lines.push(`${title} зарна.`);
+    appendDetail(lines, 'Гүйлт', draft.mileage, draft.mileage ? ' км' : '');
+    appendDetail(lines, 'Хөдөлгүүр', draft.engine);
+    appendDetail(lines, 'Түлш', draft.fuelType);
+    appendDetail(lines, 'Кроп', draft.transmission);
+    appendDetail(lines, 'Хөтлөгч', draft.drivetrain);
+    appendDetail(lines, 'Өнгө', draft.color);
+    appendDetail(lines, 'Орж ирсэн улс', draft.importedFrom);
+    appendDetail(lines, 'Бүртгэл', draft.registrationStatus);
+    appendDetail(lines, 'Үзлэг хүчинтэй', draft.inspectionValidUntil);
+    appendDetail(lines, 'Тоноглол', draft.features);
+    appendDetail(lines, 'Бичиг баримт', draft.documents);
+    return lines.join('\n');
+  }
+
+  if (root === 'real-estate') {
+    const roomText = cleanTitlePart(draft.rooms) ? `${cleanTitlePart(draft.rooms)} өрөө` : '';
+    const areaText = cleanTitlePart(draft.sqm) ? `${cleanTitlePart(draft.sqm)}м²` : '';
+    const buildingName = cleanTitlePart(draft.buildingName || draft.microDistrict || leaf);
+    const title = trimSuggestedTitle([roomText, areaText, buildingName]);
+    if (title) lines.push(`${title} зарна.`);
+    appendDetail(lines, 'Байршил', draft.address || draft.microDistrict);
+    appendDetail(lines, 'Давхар', draft.floor && draft.totalFloors ? `${draft.floor}/${draft.totalFloors}` : draft.floor);
+    appendDetail(lines, 'Барилгын он', draft.builtYear);
+    appendDetail(lines, 'Засвар', draft.condition);
+    appendDetail(lines, 'Тавилга', draft.furnishing);
+    appendDetail(lines, 'Цонхны харц', draft.orientation);
+    appendDetail(lines, 'Зогсоол', draft.parking);
+    appendDetail(lines, 'Гэрчилгээ', draft.certificateReady === 'true' ? 'Бэлэн' : draft.certificateReady === 'false' ? 'Тодруулах' : '');
+    appendDetail(lines, 'Ипотек', draft.mortgageAvailable === 'true' ? 'Боломжтой' : draft.mortgageAvailable === 'false' ? 'Боломжгүй' : '');
+    appendDetail(lines, 'Давуу тал', draft.highlights);
+    appendDetail(lines, 'Ойр орчим', draft.nearby);
+    return lines.join('\n');
+  }
+
+  if (root === 'new-buildings') {
+    const title = trimSuggestedTitle([leaf, draft.projectStatus]);
+    if (title) lines.push(`${title}.`);
+    appendDetail(lines, 'Байршил', draft.address);
+    appendDetail(lines, 'Ашиглалтад орох', draft.completionDate);
+    appendDetail(lines, 'Нийт айл', draft.totalUnits);
+    appendDetail(lines, 'Боломжит үлдэгдэл', draft.availableUnits);
+    appendDetail(lines, '1м² үнэ', draft.pricePerSqm, draft.pricePerSqm ? '₮' : '');
+    appendDetail(lines, 'Өрөөний сонголт', draft.roomChoices);
+    appendDetail(lines, 'Төлбөрийн нөхцөл', draft.paymentTerms);
+    appendDetail(lines, 'Давуу тал', draft.highlights);
+    return lines.join('\n');
+  }
+
+  if (root === 'phones' || root === 'technology') {
+    const title = trimSuggestedTitle([brand, model, draft.storage || leaf]);
+    if (title) lines.push(`${title} зарна.`);
+    appendDetail(lines, 'Төлөв', draft.deviceCondition || draft.condition);
+    appendDetail(lines, 'Баталгаа', draft.warranty);
+    appendDetail(lines, 'Дагалдах зүйлс', draft.accessories);
+    appendDetail(lines, 'Өнгө', draft.color);
+    appendDetail(lines, 'Онцлог', draft.features);
+    return lines.join('\n');
+  }
+
+  const title = trimSuggestedTitle([brand, model, draft.productType || leaf]);
+  if (title) lines.push(`${title}.`);
+  appendDetail(lines, 'Төлөв', draft.condition);
+  appendDetail(lines, 'Хэмжээ', draft.size);
+  appendDetail(lines, 'Өнгө', draft.color);
+  appendDetail(lines, 'Материал', draft.material);
+  appendDetail(lines, 'Баталгаа', draft.warranty);
+  appendDetail(lines, 'Дагалдах зүйлс', draft.includedItems);
+  return lines.join('\n');
 }
 
 function isGenericProductCategory(category: string) {
@@ -657,6 +794,9 @@ export default function PostAdPage() {
     .filter((item): item is { key: string; label: string; value: string } => Boolean(item));
   const suggestedTitle = suggestedTitleForCategory(category, metadataDraft, selectedCategoryPath?.leafLabel);
   const canApplySuggestedTitle = Boolean(suggestedTitle && title.trim() !== suggestedTitle);
+  const descriptionGuidance = descriptionGuidanceForCategory(category);
+  const suggestedDescription = suggestedDescriptionForCategory(category, metadataDraft, selectedCategoryPath?.leafLabel);
+  const canApplySuggestedDescription = Boolean(suggestedDescription && description.trim() !== suggestedDescription);
   const catInfo = selectedCategory
     ? {
         key: selectedCategory.key,
@@ -1316,10 +1456,44 @@ export default function PostAdPage() {
         {/* Description */}
         <div className="mb-6">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Дэлгэрэнгүй тайлбар</label>
+          <div className="mb-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-3">
+            <div className="flex items-start gap-2">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B72]" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black text-white">{descriptionGuidance.title}</p>
+                <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
+                  {descriptionGuidance.tips.map((tip) => (
+                    <p key={tip} className="rounded-lg bg-[var(--esl-bg-card)] px-2 py-1.5 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
+                      {tip}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {suggestedDescription && (
+              <div className="mt-3 rounded-xl border border-[#E8242C]/20 bg-[#E8242C]/10 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black uppercase tracking-wide text-[#FF9EA3]">Бөглөсөн мэдээллээс үүссэн тайлбар</p>
+                    <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs leading-relaxed text-white">{suggestedDescription}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setDescription(suggestedDescription)}
+                    disabled={!canApplySuggestedDescription}
+                    className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-white transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
+                  >
+                    Тайлбарт оруулах
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Барааны нөхцөл, онцлог, тоо ширхэг гэх мэт..."
+            placeholder={descriptionGuidance.placeholder}
             maxLength={1000}
             rows={5}
             className="w-full px-4 py-3 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all resize-y leading-relaxed"
