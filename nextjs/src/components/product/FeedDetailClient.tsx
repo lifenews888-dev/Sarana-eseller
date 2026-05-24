@@ -624,6 +624,10 @@ function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPos
   const availableUnits = explicitAvailableUnits ?? (
     totalUnits !== null && soldUnits !== null ? Math.max(totalUnits - soldUnits, 0) : null
   );
+  const highlights = listFromKeys(meta, ['highlights', 'amenities']);
+  const nearby = listFromKeys(meta, ['nearby', 'landmarks']);
+  const documents = listFromKeys(meta, ['documents', 'legalDocuments']);
+  const paymentTerms = listFromKeys(meta, ['paymentTerms', 'financing']);
 
   return (
     <div className="space-y-4">
@@ -656,8 +660,10 @@ function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPos
         listingTitle={post.title}
         refId={post.refId}
       />
-      <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['amenities']))} />
-      <ChipSection title="Төлбөрийн нөхцөл" icon={<Banknote size={16} />} items={toList(pick(meta, ['paymentTerms']))} />
+      <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={highlights} />
+      <ChipSection title="Ойр орчин" icon={<Navigation size={16} />} items={nearby} />
+      <ChipSection title="Баримт бичиг" icon={<ClipboardList size={16} />} items={documents} />
+      <ChipSection title="Төлбөрийн нөхцөл" icon={<Banknote size={16} />} items={paymentTerms} />
     </div>
   );
 }
@@ -1348,6 +1354,21 @@ function ChipSection({ title, icon, items }: { title: string; icon: ReactNode; i
       </div>
     </DetailSection>
   );
+}
+
+function listFromKeys(meta: FeedMetadata, keys: string[]): string[] {
+  const seen = new Set<string>();
+  const items: string[] = [];
+
+  for (const key of keys) {
+    for (const item of toList(meta[key])) {
+      if (seen.has(item)) continue;
+      seen.add(item);
+      items.push(item);
+    }
+  }
+
+  return items;
 }
 
 function pick(meta: FeedMetadata, keys: string[]): unknown {
