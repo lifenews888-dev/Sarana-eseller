@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -759,7 +759,15 @@ function ConstructionRoomChoices({
   const rooms = details.length > 0
     ? details
     : choices.map((choice) => parseRoomChoice(choice, pricePerSqm));
-  const activeRoom = selectedRoom ?? roomFromCurrentUrl(rooms);
+
+  useEffect(() => {
+    if (selectedRoom) return;
+    const room = roomFromCurrentUrl(rooms);
+    if (!room) return;
+
+    const timer = window.setTimeout(() => setSelectedRoom(room), 0);
+    return () => window.clearTimeout(timer);
+  }, [rooms, selectedRoom]);
 
   if (rooms.length === 0) return null;
 
@@ -840,9 +848,9 @@ function ConstructionRoomChoices({
         })}
       </div>
 
-      {activeRoom ? (
+      {selectedRoom ? (
         <RoomChoiceInquiryModal
-          room={activeRoom}
+          room={selectedRoom}
           ownerPhone={ownerPhone}
           listingTitle={listingTitle}
           refId={refId}
@@ -1048,7 +1056,7 @@ function roomChoiceDetailFrom(value: unknown, index: number, defaultPricePerSqm:
     ?? `Сонголт ${index + 1}`;
 
   return {
-    key: valueToText(pick(record, ['id', 'key'])) ?? `${label}-${index}`,
+    key: valueToText(pick(record, ['id', 'key'])) ?? label,
     label,
     area,
     estimatedPrice,
@@ -1107,7 +1115,7 @@ function roomFromCurrentUrl(rooms: RoomChoiceDetail[]): RoomChoiceDetail | null 
   if (typeof window === 'undefined') return null;
   const unit = new URLSearchParams(window.location.search).get('unit');
   if (!unit) return null;
-  return rooms.find((room) => roomUnitId(room) === unit || room.key === unit) ?? null;
+  return rooms.find((room) => roomUnitId(room) === unit || room.key === unit || room.label === unit) ?? null;
 }
 
 function updateRoomUnitParam(room: RoomChoiceDetail) {

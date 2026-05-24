@@ -233,6 +233,11 @@ function feedDetailHref(id: string): string {
   return `/feed/${encodeURIComponent(id)}`;
 }
 
+function feedDetailUnitHref(id: string, unit: string): string {
+  const params = new URLSearchParams({ unit });
+  return `${feedDetailHref(id)}?${params.toString()}`;
+}
+
 function numberFrom(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -558,13 +563,16 @@ function ProjectCard({ p }: { p: DemoProject }) {
   );
 
   return (
-    <Link
-      href={feedDetailHref(p.id)}
-      aria-label={`${p.title} дэлгэрэнгүй`}
+    <article
       data-testid={`entity-project-card-${p.id}`}
-      className="group block no-underline rounded-2xl overflow-hidden border border-[var(--esl-border)] bg-[var(--esl-bg-section)] hover:border-white/20 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+      className="group overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] transition-all hover:border-white/20"
     >
-      <div className="relative h-52 overflow-hidden">
+      <Link
+        href={feedDetailHref(p.id)}
+        aria-label={`${p.title} дэлгэрэнгүй`}
+        className="block no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+      >
+        <div className="relative h-52 overflow-hidden">
         <SafeImage src={p.image} alt={p.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--esl-bg-section)] via-transparent to-transparent" />
         <div className={cn('absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider', statusColor, 'bg-black/60')}>
@@ -605,17 +613,25 @@ function ProjectCard({ p }: { p: DemoProject }) {
             <p className="text-[9px] text-[var(--esl-text-secondary)]">он</p>
           </div>
         </div>
+      </div>
+      </Link>
         {roomChoices.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
+          <div className="px-5 pb-3 flex flex-wrap gap-1.5">
             {roomChoices.map((choice) => (
-              <span key={choice} className="rounded-lg bg-black/25 border border-white/10 px-2 py-1 text-[10px] font-semibold text-white/80">
+              <Link
+                key={choice}
+                href={feedDetailUnitHref(p.id, choice)}
+                className="rounded-lg bg-black/25 border border-white/10 px-2 py-1 text-[10px] font-semibold text-white/80 no-underline transition hover:border-[#E8242C]/60 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
+                aria-label={`${p.title} ${choice} сонголтыг харах`}
+              >
                 {choice}
-              </span>
+              </Link>
             ))}
           </div>
         )}
-        {specItems.length > 0 && (
-          <div className="mt-3 grid grid-cols-2 gap-1.5">
+        <div className="px-5 pb-5">
+          {specItems.length > 0 && (
+          <div className="grid grid-cols-2 gap-1.5">
             {specItems.map((item) => (
               <span key={item.key} className="min-w-0 rounded-lg bg-black/20 px-2 py-1 text-[10px] font-semibold text-[var(--esl-text-secondary)]">
                 <span className="block truncate text-white/80">{item.value}</span>
@@ -623,12 +639,12 @@ function ProjectCard({ p }: { p: DemoProject }) {
               </span>
             ))}
           </div>
-        )}
-        <div className="mt-4 inline-flex items-center gap-1 text-[11px] font-bold text-white/80 transition-colors group-hover:text-[#E8242C]">
+          )}
+        <Link href={feedDetailHref(p.id)} className="mt-4 inline-flex items-center gap-1 text-[11px] font-bold text-white/80 no-underline transition-colors hover:text-[#E8242C]">
           Дэлгэрэнгүй харах <ArrowRight className="h-3 w-3" />
-        </div>
+        </Link>
       </div>
-    </Link>
+    </article>
   );
 }
 
