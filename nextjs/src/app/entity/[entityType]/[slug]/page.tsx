@@ -32,7 +32,7 @@ interface DemoVehicle {
 interface DemoProject {
   id: string; title: string; status: string; progress: number;
   image: string; units: number; priceFrom: number; location: string; year: string;
-  pricePerSqm?: number; category?: string; metadata?: FeedCardMetadata;
+  pricePerSqm?: number; roomChoices?: string[]; category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoListing {
@@ -159,10 +159,10 @@ const DEMO: Record<string, Record<string, DemoEntity>> = {
         { label: 'Ажилтан', value: '120+' },
       ],
       projects: [
-        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 261000000, pricePerSqm: 4500000, location: 'ХУД, Зайсан', year: '2027' },
-        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 218400000, pricePerSqm: 5200000, location: 'СБД, 1-р хороолол', year: '2028' },
-        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 198000000, pricePerSqm: 3600000, location: 'БГД, 3-р хороолол', year: '2025' },
-        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 330000000, pricePerSqm: 6000000, location: 'СБД, Туул голын эрэг', year: '2029' },
+        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 261000000, pricePerSqm: 4500000, roomChoices: ['2 өрөө 58м²', '3 өрөө 92м²', '4 өрөө 128м²'], location: 'ХУД, Зайсан', year: '2027' },
+        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 218400000, pricePerSqm: 5200000, roomChoices: ['1 өрөө 42м²', '2 өрөө 68м²', '3 өрөө 105м²'], location: 'СБД, 1-р хороолол', year: '2028' },
+        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 198000000, pricePerSqm: 3600000, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²'], location: 'БГД, 3-р хороолол', year: '2025' },
+        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 330000000, pricePerSqm: 6000000, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²', 'Пентхаус 160м²'], location: 'СБД, Туул голын эрэг', year: '2029' },
       ],
       milestones: [
         { year: '2010', text: 'Компани үүсгэн байгуулагдсан' },
@@ -246,6 +246,13 @@ function stringFrom(value: unknown, fallback = ''): string {
   return typeof value === 'string' && value.trim() ? value.trim() : fallback;
 }
 
+function stringListFrom(value: unknown): string[] {
+  const values = Array.isArray(value) ? value : typeof value === 'string' ? value.split(/[\n,]/) : [];
+  return values
+    .map((item) => String(item).trim())
+    .filter(Boolean);
+}
+
 function firstImage(item: ApiFeedItem, seed: string): string {
   return (
     item.images?.find((url) => typeof url === 'string' && url.trim()) ||
@@ -291,6 +298,7 @@ function mapProject(item: ApiFeedItem): DemoProject {
     units: totalUnits,
     priceFrom: numberFrom(item.price, numberFrom(meta.pricePerSqm)),
     pricePerSqm: numberFrom(meta.pricePerSqm),
+    roomChoices: stringListFrom(meta.roomChoices),
     location: stringFrom(meta.address, item.district || ''),
     year: stringFrom(meta.completionDate, ''),
     category: item.category || undefined,
@@ -352,6 +360,7 @@ function projectFallbackMetadata(project: DemoProject): FeedCardMetadata {
     soldUnits,
     availableUnits,
     pricePerSqm: project.pricePerSqm,
+    roomChoices: project.roomChoices || [],
     completionDate: project.year,
   };
 }
@@ -530,11 +539,12 @@ function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
   const meta = { ...projectFallbackMetadata(p), ...(p.metadata || {}) };
   const pricePerSqm = numberFrom(meta.pricePerSqm);
+  const roomChoices = stringListFrom(meta.roomChoices).slice(0, 3);
   const specItems = compactMetadataPreviewItems(
     p.category || 'new-buildings',
     meta,
     4,
-    ['projectStatus', 'address', 'totalUnits', 'soldUnits', 'pricePerSqm', 'completionDate'],
+    ['projectStatus', 'address', 'totalUnits', 'soldUnits', 'pricePerSqm', 'completionDate', 'roomChoices'],
   );
 
   return (
@@ -582,6 +592,15 @@ function ProjectCard({ p }: { p: DemoProject }) {
             <p className="text-[9px] text-[var(--esl-text-secondary)]">он</p>
           </div>
         </div>
+        {roomChoices.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {roomChoices.map((choice) => (
+              <span key={choice} className="rounded-lg bg-black/25 border border-white/10 px-2 py-1 text-[10px] font-semibold text-white/80">
+                {choice}
+              </span>
+            ))}
+          </div>
+        )}
         {specItems.length > 0 && (
           <div className="mt-3 grid grid-cols-2 gap-1.5">
             {specItems.map((item) => (
