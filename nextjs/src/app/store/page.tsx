@@ -107,6 +107,36 @@ function productId(product: Product): string {
   return product._id || product.id || '';
 }
 
+function productShareUrl(product: Product, username?: string | null): string {
+  if (typeof window === 'undefined') return `/product/${productId(product)}`;
+  const url = new URL(`/product/${productId(product)}`, window.location.origin);
+  const ref = username?.trim();
+  if (ref) url.searchParams.set('ref', ref);
+  return url.toString();
+}
+
+async function copyStoreText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Embedded browsers can expose clipboard but reject writes.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
 const STORE_CATEGORY_KEYS = new Set([
   'all',
   ...MARKETPLACE_CATEGORIES.map((category) => category.key),
@@ -227,6 +257,7 @@ export default function StorePage() {
   const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType, query: string, deals: boolean, sort: StoreSortKey) => {
     if (typeof window === 'undefined') return;
     const url = new URL(window.location.href);
+    url.searchParams.delete('verify');
     if (category === 'all') url.searchParams.delete('category');
     else url.searchParams.set('category', category);
     if (type === 'all') url.searchParams.delete('type');
@@ -630,8 +661,9 @@ export default function StorePage() {
             onClose={() => setSelProduct(null)}
             isAffiliate={isLoggedIn && user?.role === 'affiliate'}
             onShare={() => {
-              navigator.clipboard.writeText(`${window.location.origin}/product/${productId(selProduct)}?ref=${user?.username || ''}`)
-                .then(() => toast.show('Линк хуулагдлаа!', 'ok'));
+              copyStoreText(productShareUrl(selProduct, user?.username))
+                .then(() => toast.show('Линк хуулагдлаа!', 'ok'))
+                .catch(() => toast.show('Линк хуулахад алдаа гарлаа', 'error'));
             }}
             hasPrev={(() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); return idx > 0; })()}
             hasNext={(() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); return idx >= 0 && idx < filtered.length - 1; })()}
