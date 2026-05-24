@@ -19,6 +19,7 @@ import StartSellingButton from './StartSellingButton';
 import ShareWishlistBar from './ShareWishlistBar';
 import ReviewSection from './ReviewSection';
 import SafeImage from '@/components/ui/SafeImage';
+import { useToast } from '@/components/shared/Toast';
 
 export type DetailProduct = Product & {
   media?: MediaItem[];
@@ -33,6 +34,8 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ product, relatedProducts = [] }: ProductDetailClientProps) {
   const router = useRouter();
+  const toast = useToast();
+  const [chatLoading, setChatLoading] = useState(false);
   const et = (product.entityType || 'STORE') as EntityType;
   const config = ENTITY_CARD_CONFIG[et] || ENTITY_CARD_CONFIG.STORE;
   const ownerPhoneHref = phoneHref(product.user?.phone);
@@ -45,6 +48,45 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
   const price = product.salePrice || product.price;
   const hasDiscount = product.salePrice && product.salePrice < product.price;
   const discount = discountPercent(product.price, product.salePrice);
+
+  const handleSellerChat = async () => {
+    const token = localStorage.getItem('token');
+    const returnTo = `${window.location.pathname}${window.location.search}`;
+
+    if (!token) {
+      toast.show('Чатлахын тулд нэвтэрнэ үү', 'warn');
+      router.push(`/login?redirect=${encodeURIComponent(returnTo)}`);
+      return;
+    }
+
+    if (!product.user?._id) {
+      toast.show('Борлуулагчийн чатны мэдээлэл олдсонгүй', 'warn');
+      return;
+    }
+
+    setChatLoading(true);
+    try {
+      const user = parseTokenUser(token);
+      const res = await fetch('/api/chat/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          shopId: product.user._id,
+          customerId: user.userId || user.id,
+          customerName: user.name || 'Хэрэглэгч',
+          productName: product.name,
+          productPrice: product.price,
+        }),
+      });
+      const data = await res.json().catch(() => ({})) as { error?: string; message?: string };
+      if (!res.ok) throw new Error(data.error || data.message || 'Чат үүсгэж чадсангүй');
+      router.push('/dashboard/chat');
+    } catch (error) {
+      toast.show(error instanceof Error ? error.message : 'Чат үүсгэж чадсангүй', 'error');
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[var(--esl-bg)]">
@@ -106,22 +148,16 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
             )}
 
             {/* Share / Wishlist */}
-            <ShareWishlistBar title={product.name} />
+            <ShareWishlistBar title={product.name} productId={product._id || product.id} />
 
             {/* Chat with seller */}
-            <button onClick={() => {
-              const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-              if (!token) { window.location.href = '/login'; return; }
-              const user = parseTokenUser(token);
-              fetch('/api/chat/conversations', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ shopId: product.user?._id || '', customerId: user.userId || user.id, customerName: user.name || 'Хэрэглэгч', productName: product.name, productPrice: product.price }),
-              }).then(r => r.json()).then(() => { window.location.href = `/dashboard/chat`; }).catch(() => { window.location.href = '/dashboard/chat'; });
-            }}
+            <button
+              type="button"
+              onClick={handleSellerChat}
+              disabled={chatLoading}
               className="w-full h-11 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all border cursor-pointer"
               style={{ borderColor: 'var(--esl-border)', color: 'var(--esl-text-primary)', background: 'var(--esl-bg-card)' }}>
-              <MessageCircle size={18} /> Борлуулагчтай чатлах
+              <MessageCircle size={18} /> {chatLoading ? 'Чат нээж байна...' : 'Борлуулагчтай чатлах'}
             </button>
 
             {/* Affiliate */}
