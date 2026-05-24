@@ -1,13 +1,13 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, Phone, MapPin, Star, Calendar, Gauge, Fuel, Settings2,
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
   ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
-  Smartphone, BatteryCharging, PackageCheck,
+  Smartphone, BatteryCharging, PackageCheck, X,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice, type EntityType as DetailEntityType } from '@/lib/cards/entityCardConfig';
 import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
@@ -651,6 +651,7 @@ function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPos
         choices={toList(pick(meta, ['roomChoices']))}
         pricePerSqm={numberValue(pick(meta, ['pricePerSqm']))}
         details={roomChoiceDetailsFrom(pick(meta, ['roomChoiceDetails', 'roomOptions', 'unitTypes']), numberValue(pick(meta, ['pricePerSqm'])))}
+        ownerPhone={post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone']))}
       />
       <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['amenities']))} />
       <ChipSection title="Төлбөрийн нөхцөл" icon={<Banknote size={16} />} items={toList(pick(meta, ['paymentTerms']))} />
@@ -741,11 +742,14 @@ function ConstructionRoomChoices({
   choices,
   pricePerSqm,
   details,
+  ownerPhone,
 }: {
   choices: string[];
   pricePerSqm: number | null;
   details: RoomChoiceDetail[];
+  ownerPhone?: string | null;
 }) {
+  const [selectedRoom, setSelectedRoom] = useState<RoomChoiceDetail | null>(null);
   const rooms = details.length > 0
     ? details
     : choices.map((choice) => parseRoomChoice(choice, pricePerSqm));
@@ -806,11 +810,124 @@ function ConstructionRoomChoices({
               ) : null}
 
               {room.notes ? <p className="mt-3 text-xs leading-relaxed text-[var(--esl-text-muted)]">{room.notes}</p> : null}
+
+              <button
+                type="button"
+                onClick={() => setSelectedRoom(room)}
+                className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#E8242C] px-3 text-xs font-bold text-white transition hover:bg-[#c91f26]"
+              >
+                Энэ сонголтыг сонирхох
+              </button>
             </article>
           );
         })}
       </div>
+
+      {selectedRoom ? (
+        <RoomChoiceInquiryModal
+          room={selectedRoom}
+          ownerPhone={ownerPhone}
+          onClose={() => setSelectedRoom(null)}
+        />
+      ) : null}
     </DetailSection>
+  );
+}
+
+function RoomChoiceInquiryModal({
+  room,
+  ownerPhone,
+  onClose,
+}: {
+  room: RoomChoiceDetail;
+  ownerPhone?: string | null;
+  onClose: () => void;
+}) {
+  const phone = ownerPhone ? formatPhoneLabel(ownerPhone) : null;
+  const href = phoneHref(ownerPhone || undefined);
+  const price = formatMoney(room.estimatedPrice);
+  const rows = [
+    { label: 'Талбай', value: formatArea(room.area) },
+    { label: 'Өрөө', value: formatRooms(room.rooms) },
+    { label: 'Унтлагын', value: suffixValue(room.bedrooms, 'унтлагын') },
+    { label: 'Ариун цэврийн', value: suffixValue(room.bathrooms, 'сан') },
+    { label: 'Үлдэгдэл', value: suffixValue(room.availableUnits, 'айл') },
+    { label: 'Давхар', value: room.floorRange },
+    { label: 'Цонх', value: room.orientation },
+    { label: 'Тагт', value: room.balcony },
+    { label: 'Засал', value: room.finish },
+    { label: 'Нүүх боломж', value: room.moveInDate },
+  ].filter((item): item is { label: string; value: string } => Boolean(item.value));
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 px-4 py-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label={`${room.label} лавлагаа`}>
+      <div className="w-full max-w-lg rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl">
+        <div className="flex items-start justify-between gap-3 border-b border-[var(--esl-border)] p-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--esl-text-muted)]">Өрөөний лавлагаа</p>
+            <h3 className="mt-1 text-lg font-black leading-tight">{room.label}</h3>
+            {price ? <p className="mt-1 text-base font-black text-[#E8242C]">{price}</p> : null}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-[var(--esl-text-muted)] hover:text-[var(--esl-text)]"
+            aria-label="Хаах"
+          >
+            <X size={16} />
+          </button>
+        </div>
+
+        <div className="space-y-4 p-4">
+          {rows.length > 0 ? (
+            <div className="grid grid-cols-2 gap-2">
+              {rows.map((item) => (
+                <div key={`${room.key}-modal-${item.label}`} className="rounded-lg bg-[var(--esl-bg-muted)] px-3 py-2">
+                  <p className="text-[10px] text-[var(--esl-text-muted)]">{item.label}</p>
+                  <p className="mt-0.5 text-xs font-semibold leading-tight">{item.value}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+
+          {room.paymentTerms.length > 0 ? (
+            <div>
+              <p className="text-xs font-bold">Төлбөрийн боломж</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {room.paymentTerms.map((term) => (
+                  <span key={`${room.key}-modal-${term}`} className="rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] px-2.5 py-1 text-[11px] font-medium">
+                    {term}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {room.notes ? <p className="rounded-lg bg-[var(--esl-bg-muted)] p-3 text-xs leading-relaxed text-[var(--esl-text-muted)]">{room.notes}</p> : null}
+
+          <div className="grid gap-2 sm:grid-cols-2">
+            {href ? (
+              <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
+                <Phone size={16} /> Залгаж лавлах
+              </a>
+            ) : (
+              <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
+                <Phone size={16} /> Утас алга
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-11 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
+            >
+              Буцах
+            </button>
+          </div>
+
+          {phone ? <p className="text-center text-[11px] text-[var(--esl-text-muted)]">Холбогдох утас: {phone}</p> : null}
+        </div>
+      </div>
+    </div>
   );
 }
 
