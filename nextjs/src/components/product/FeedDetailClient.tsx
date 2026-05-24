@@ -8,7 +8,7 @@ import {
   ArrowLeft, Phone, MapPin, Star, Calendar, Gauge, Fuel, Settings2,
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
   ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
-  Smartphone, BatteryCharging, PackageCheck, Share2, X,
+  Smartphone, BatteryCharging, PackageCheck, Share2, X, MessageCircle,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice, type EntityType as DetailEntityType } from '@/lib/cards/entityCardConfig';
 import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
@@ -280,6 +280,13 @@ function phoneHref(phone?: string): string | null {
   if (!phone) return null;
   const normalized = phone.replace(/[^\d+]/g, '');
   return normalized ? `tel:${normalized}` : null;
+}
+
+function smsHref(phone?: string, body?: string): string | null {
+  if (!phone) return null;
+  const normalized = phone.replace(/[^\d+]/g, '');
+  if (!normalized) return null;
+  return body ? `sms:${normalized}?&body=${encodeURIComponent(body)}` : `sms:${normalized}`;
 }
 
 function formatPhoneLabel(phone?: string): string | null {
@@ -726,10 +733,12 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
   const [copied, setCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
-  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
+  const href = phoneHref(rawPhone);
   const questions = realEstateInquiryQuestions(meta);
   const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
   const inquiryText = buildRealEstateInquiryText({ meta, post, phone });
+  const sms = smsHref(rawPhone, inquiryText);
 
   function copyInquiryText() {
     setCopied(true);
@@ -787,7 +796,7 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-3">
           {href ? (
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
@@ -795,6 +804,15 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
           ) : (
             <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
               <Phone size={16} /> Утас алга
+            </button>
+          )}
+          {sms ? (
+            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
+              <MessageCircle size={16} /> Мессеж
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
+              <MessageCircle size={16} /> Мессеж алга
             </button>
           )}
           <button
