@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import {
   ArrowLeft, Phone, MapPin, Star, Calendar, Gauge, Fuel, Settings2,
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
@@ -851,9 +852,11 @@ function ConstructionRoomChoices({
       {selectedRoom ? (
         <RoomChoiceInquiryModal
           room={selectedRoom}
+          rooms={rooms}
           ownerPhone={ownerPhone}
           listingTitle={listingTitle}
           refId={refId}
+          onSelectRoom={openRoom}
           onClose={closeRoom}
         />
       ) : null}
@@ -863,15 +866,19 @@ function ConstructionRoomChoices({
 
 function RoomChoiceInquiryModal({
   room,
+  rooms,
   ownerPhone,
   listingTitle,
   refId,
+  onSelectRoom,
   onClose,
 }: {
   room: RoomChoiceDetail;
+  rooms: RoomChoiceDetail[];
   ownerPhone?: string | null;
   listingTitle: string;
   refId?: string;
+  onSelectRoom: (room: RoomChoiceDetail) => void;
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
@@ -905,6 +912,12 @@ function RoomChoiceInquiryModal({
     window.setTimeout(() => setLinkCopied(false), 1800);
   }
 
+  function selectRoom(nextRoom: RoomChoiceDetail) {
+    setCopied(false);
+    setLinkCopied(false);
+    onSelectRoom(nextRoom);
+  }
+
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 px-4 py-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label={`${room.label} лавлагаа`}>
       <div className="w-full max-w-lg rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl">
@@ -925,6 +938,36 @@ function RoomChoiceInquiryModal({
         </div>
 
         <div className="space-y-4 p-4">
+          {rooms.length > 1 ? (
+            <div>
+              <p className="mb-2 text-xs font-bold">Сонголт солих</p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {rooms.map((option) => {
+                  const selected = roomUnitId(option) === roomUnitId(room);
+                  const optionPrice = formatMoney(option.estimatedPrice);
+
+                  return (
+                    <button
+                      key={`${option.key}-switcher`}
+                      type="button"
+                      onClick={() => selectRoom(option)}
+                      aria-pressed={selected}
+                      className={cn(
+                        'min-w-[132px] rounded-xl border px-3 py-2 text-left transition',
+                        selected
+                          ? 'border-[#E8242C] bg-[#E8242C]/15 text-white'
+                          : 'border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-[var(--esl-text-muted)] hover:text-[var(--esl-text)]',
+                      )}
+                    >
+                      <span className="block text-xs font-black leading-tight">{option.label}</span>
+                      {optionPrice ? <span className="mt-1 block text-[11px] font-bold text-[#E8242C]">{optionPrice}</span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
+
           {rows.length > 0 ? (
             <div className="grid grid-cols-2 gap-2">
               {rows.map((item) => (
