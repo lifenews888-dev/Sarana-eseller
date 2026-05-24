@@ -7,7 +7,7 @@ import type { ItemType } from '@/lib/marketplace';
 import { categoryChildOptions, categoryPathInfo, descendantCategoryPreview, MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 import ProductCard from './ProductCard';
 import ProductCardSkeleton from '../shared/Skeleton';
-import { ArrowDownNarrowWide, ArrowUpNarrowWide, Sparkles, Package, Scissors, Search, Star, Tag, X } from 'lucide-react';
+import { ArrowDownNarrowWide, ArrowUpNarrowWide, ChevronRight, Sparkles, Package, Scissors, Search, Star, Tag, X } from 'lucide-react';
 
 export type StoreSortKey = 'newest' | 'price_asc' | 'price_desc' | 'rating' | 'discount';
 
@@ -62,6 +62,10 @@ export default function ProductGrid({
   const activeRootKey = activeCategoryPath?.rootKey || activeCat;
   const activeCategory = MARKETPLACE_CATEGORIES.find((category) => category.key === activeRootKey);
   const activeCategoryLabel = activeCategoryPath?.label || activeCategory?.label || activeCat;
+  const activeCategorySegments = activeCategoryPath?.segments || [];
+  const parentCategorySegment = activeCategorySegments.length > 1
+    ? activeCategorySegments[activeCategorySegments.length - 2]
+    : undefined;
   const activeCategoryChildren = activeCat === 'all' ? [] : categoryChildOptions(activeCat);
   const isNestedCategory = Boolean(activeCategoryPath && activeCategoryPath.value !== activeCategoryPath.rootKey);
   const sectionTitle = dealOnly
@@ -147,13 +151,39 @@ export default function ProductGrid({
               {isNestedCategory && activeCategoryPath ? (
                 <button
                   type="button"
-                  onClick={() => onCatChange(activeCategoryPath.rootKey)}
+                  onClick={() => onCatChange(parentCategorySegment?.value || activeCategoryPath.rootKey)}
                   className="rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] px-2 py-1 text-[11px] font-semibold text-[var(--esl-text-muted)] transition hover:text-[var(--esl-text-primary)]"
                 >
                   Дээд ангилал
                 </button>
               ) : null}
             </div>
+            {activeCategorySegments.length > 0 ? (
+              <div className="mb-3 flex flex-wrap items-center gap-1.5" aria-label="Ангиллын зам">
+                {activeCategorySegments.map((segment, index) => {
+                  const isCurrent = index === activeCategorySegments.length - 1;
+                  return (
+                    <span key={`${segment.value}-${index}`} className="inline-flex items-center gap-1.5">
+                      {index > 0 ? <ChevronRight className="h-3.5 w-3.5 text-[var(--esl-text-muted)]" /> : null}
+                      <button
+                        type="button"
+                        aria-current={isCurrent ? 'page' : undefined}
+                        disabled={isCurrent}
+                        onClick={() => onCatChange(segment.value)}
+                        className={cn(
+                          'rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition',
+                          isCurrent
+                            ? 'cursor-default border-[#E8242C]/40 bg-[rgba(232,36,44,0.16)] text-[#FF6B70]'
+                            : 'border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-[var(--esl-text-muted)] hover:border-[#E8242C]/60 hover:text-[var(--esl-text-primary)]'
+                        )}
+                      >
+                        {segment.label}
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            ) : null}
             {activeCategoryChildren.length > 0 ? (
               <div className="flex flex-wrap gap-2">
                 {activeCategoryChildren.map((option) => (
