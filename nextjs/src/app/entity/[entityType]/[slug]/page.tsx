@@ -32,7 +32,7 @@ interface DemoVehicle {
 interface DemoProject {
   id: string; title: string; status: string; progress: number;
   image: string; units: number; priceFrom: number; location: string; year: string;
-  pricePerSqm?: number; roomChoices?: string[]; category?: string; metadata?: FeedCardMetadata;
+  pricePerSqm?: number; availableUnits?: number; roomChoices?: string[]; category?: string; metadata?: FeedCardMetadata;
 }
 
 interface DemoListing {
@@ -159,10 +159,10 @@ const DEMO: Record<string, Record<string, DemoEntity>> = {
         { label: 'Ажилтан', value: '120+' },
       ],
       projects: [
-        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 261000000, pricePerSqm: 4500000, roomChoices: ['2 өрөө 58м²', '3 өрөө 92м²', '4 өрөө 128м²'], location: 'ХУД, Зайсан', year: '2027' },
-        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 218400000, pricePerSqm: 5200000, roomChoices: ['1 өрөө 42м²', '2 өрөө 68м²', '3 өрөө 105м²'], location: 'СБД, 1-р хороолол', year: '2028' },
-        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 100, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 198000000, pricePerSqm: 3600000, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²'], location: 'БГД, 3-р хороолол', year: '2025' },
-        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 330000000, pricePerSqm: 6000000, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²', 'Пентхаус 160м²'], location: 'СБД, Туул голын эрэг', year: '2029' },
+        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 261000000, pricePerSqm: 4500000, availableUnits: 60, roomChoices: ['2 өрөө 58м²', '3 өрөө 92м²', '4 өрөө 128м²'], location: 'ХУД, Зайсан', year: '2027' },
+        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 218400000, pricePerSqm: 5200000, availableUnits: 99, roomChoices: ['1 өрөө 42м²', '2 өрөө 68м²', '3 өрөө 105м²'], location: 'СБД, 1-р хороолол', year: '2028' },
+        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 99, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 198000000, pricePerSqm: 3600000, availableUnits: 4, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²'], location: 'БГД, 3-р хороолол', year: '2025' },
+        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 330000000, pricePerSqm: 6000000, availableUnits: 135, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²', 'Пентхаус 160м²'], location: 'СБД, Туул голын эрэг', year: '2029' },
       ],
       milestones: [
         { year: '2010', text: 'Компани үүсгэн байгуулагдсан' },
@@ -287,7 +287,9 @@ function mapVehicle(item: ApiFeedItem): DemoVehicle {
 function mapProject(item: ApiFeedItem): DemoProject {
   const meta = item.metadata || {};
   const totalUnits = numberFrom(meta.totalUnits, numberFrom(meta.units));
-  const soldUnits = numberFrom(meta.soldUnits);
+  const fallbackSoldUnits = numberFrom(meta.soldUnits);
+  const availableUnits = numberFrom(meta.availableUnits, Math.max(totalUnits - fallbackSoldUnits, 0));
+  const soldUnits = Math.max(totalUnits - availableUnits, 0);
   const progress = totalUnits > 0 ? Math.min(100, Math.round((soldUnits / totalUnits) * 100)) : 0;
   return {
     id: item.id,
@@ -298,6 +300,7 @@ function mapProject(item: ApiFeedItem): DemoProject {
     units: totalUnits,
     priceFrom: numberFrom(item.price, numberFrom(meta.pricePerSqm)),
     pricePerSqm: numberFrom(meta.pricePerSqm),
+    availableUnits,
     roomChoices: stringListFrom(meta.roomChoices),
     location: stringFrom(meta.address, item.district || ''),
     year: stringFrom(meta.completionDate, ''),
@@ -350,8 +353,10 @@ function vehicleFallbackMetadata(vehicle: DemoVehicle): FeedCardMetadata {
 }
 
 function projectFallbackMetadata(project: DemoProject): FeedCardMetadata {
-  const soldUnits = Math.round((project.units * project.progress) / 100);
-  const availableUnits = Math.max(project.units - soldUnits, 0);
+  const availableUnits = typeof project.availableUnits === 'number'
+    ? Math.max(project.availableUnits, 0)
+    : Math.max(project.units - Math.round((project.units * project.progress) / 100), 0);
+  const soldUnits = Math.max(project.units - availableUnits, 0);
 
   return {
     projectStatus: project.status,
@@ -539,12 +544,17 @@ function ProjectCard({ p }: { p: DemoProject }) {
   const statusColor = p.progress === 100 ? 'text-green-400' : p.progress > 50 ? 'text-blue-400' : 'text-amber-400';
   const meta = { ...projectFallbackMetadata(p), ...(p.metadata || {}) };
   const pricePerSqm = numberFrom(meta.pricePerSqm);
+  const availableUnits = numberFrom(meta.availableUnits);
+  const availabilityLabel = availableUnits > 0 ? `${availableUnits} айл боломжтой` : 'Хүлээлгийн жагсаалт';
+  const availabilityClass = availableUnits > 0
+    ? 'border-emerald-400/25 bg-emerald-500/15 text-emerald-200'
+    : 'border-amber-400/25 bg-amber-500/15 text-amber-200';
   const roomChoices = stringListFrom(meta.roomChoices).slice(0, 3);
   const specItems = compactMetadataPreviewItems(
     p.category || 'new-buildings',
     meta,
     4,
-    ['projectStatus', 'address', 'totalUnits', 'soldUnits', 'pricePerSqm', 'completionDate', 'roomChoices'],
+    ['projectStatus', 'address', 'totalUnits', 'soldUnits', 'availableUnits', 'pricePerSqm', 'completionDate', 'roomChoices'],
   );
 
   return (
@@ -559,6 +569,9 @@ function ProjectCard({ p }: { p: DemoProject }) {
         <div className="absolute inset-0 bg-gradient-to-t from-[var(--esl-bg-section)] via-transparent to-transparent" />
         <div className={cn('absolute top-3 left-3 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider', statusColor, 'bg-black/60')}>
           {p.status}
+        </div>
+        <div className={cn('absolute top-3 right-3 rounded-lg border px-2.5 py-1 text-[10px] font-black', availabilityClass)}>
+          {availabilityLabel}
         </div>
       </div>
       <div className="p-5">
