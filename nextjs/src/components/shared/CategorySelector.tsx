@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
-import { categoryTreeFallback } from '@/lib/marketplaceCategories';
+import { categoryPathInfo, categoryTreeFallback } from '@/lib/marketplaceCategories';
 
 interface Category {
   id: string;
@@ -21,6 +21,56 @@ function flattenCategories(categories: Category[]): Category[] {
   return categories.flatMap((category) => [category, ...flattenCategories(category.children || [])]);
 }
 
+const FALLBACK_FLAT = flattenCategories(FALLBACK_ROOTS);
+const FALLBACK_DEPTH = maxCategoryDepth(FALLBACK_ROOTS);
+
+type CategoryTreeResponse = {
+  data?: Category[];
+};
+
+function maxCategoryDepth(categories: Category[], level = 0): number {
+  if (categories.length === 0) return level;
+  return Math.max(
+    ...categories.map((category) =>
+      (category.children || []).length > 0
+        ? maxCategoryDepth(category.children || [], level + 1)
+        : level
+    )
+  );
+}
+
+function isCompleteCategoryTree(categories?: Category[]): categories is Category[] {
+  if (!categories || categories.length === 0) return false;
+  const flat = flattenCategories(categories);
+  return categories.length >= FALLBACK_ROOTS.length
+    && flat.length >= FALLBACK_FLAT.length
+    && maxCategoryDepth(categories) >= FALLBACK_DEPTH;
+}
+
+function categoryValueCandidates(value?: string): string[] {
+  if (!value) return [];
+  const path = categoryPathInfo(value);
+  return Array.from(new Set([value, path?.value].filter(Boolean) as string[]));
+}
+
+function selectedPathForValue(value: string | undefined, all: Category[]): string[] {
+  const candidates = categoryValueCandidates(value);
+  if (candidates.length === 0) return [];
+
+  const cat = all.find((category) =>
+    candidates.includes(category.id) || candidates.includes(category.slug)
+  );
+  if (!cat) return [];
+
+  const path: string[] = [];
+  let current: Category | undefined = cat;
+  while (current) {
+    path.unshift(current.id);
+    current = current.parentId ? all.find((candidate) => candidate.id === current?.parentId) : undefined;
+  }
+  return path;
+}
+
 interface CategorySelectorProps {
   entityType?: string;
   value?: string;
@@ -30,46 +80,38 @@ interface CategorySelectorProps {
 
 export default function CategorySelector({ value, onChange, label }: CategorySelectorProps) {
   const [categories, setCategories] = useState<Category[]>(FALLBACK_ROOTS);
-  const [flat, setFlat] = useState<Category[]>(flattenCategories(FALLBACK_ROOTS));
+  const [flat, setFlat] = useState<Category[]>(FALLBACK_FLAT);
   const [loading, setLoading] = useState(true);
   const [selectedPath, setSelectedPath] = useState<string[]>([]);
 
   useEffect(() => {
-    const applySelection = (all: Category[]) => {
-      if (!value) {
-        setSelectedPath([]);
-        return;
-      }
-      const cat = all.find((c: Category) => c.id === value || c.slug === value);
-      if (!cat) return;
-
-      const path: string[] = [];
-      let current: Category | undefined = cat;
-      while (current) {
-        path.unshift(current.id);
-        current = current.parentId ? all.find((candidate) => candidate.id === current?.parentId) : undefined;
-      }
-      setSelectedPath(path);
-    };
-
+    let cancelled = false;
     fetch('/api/categories/tree')
       .then((r) => r.json())
-      .then((d) => {
-        const nextCategories = d.data?.length ? d.data : FALLBACK_ROOTS;
+      .then((d: CategoryTreeResponse) => {
+        const nextCategories = isCompleteCategoryTree(d.data) ? d.data : FALLBACK_ROOTS;
         const nextFlat = flattenCategories(nextCategories);
+        if (cancelled) return;
         setCategories(nextCategories);
         setFlat(nextFlat);
-        applySelection(nextFlat);
       })
       .catch(() => {
-        const nextCategories = categoryTreeFallback() as Category[];
-        const nextFlat = flattenCategories(nextCategories);
-        setCategories(nextCategories);
-        setFlat(nextFlat);
-        applySelection(nextFlat);
+        if (cancelled) return;
+        setCategories(FALLBACK_ROOTS);
+        setFlat(FALLBACK_FLAT);
       })
-      .finally(() => setLoading(false));
-  }, [value]);
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    setSelectedPath(selectedPathForValue(value, flat));
+  }, [value, flat]);
 
   const roots = categories;
   const selectedNodes = selectedPath

@@ -363,7 +363,7 @@ export async function POST(req: NextRequest) {
     const normalizedDescription = cleanString(description);
     const normalizedDistrict = cleanString(district);
     const normalizedProvince = cleanString(province);
-    const normalizedSubcategory = cleanString(subcategory);
+    const requestedSubcategory = cleanString(subcategory);
     const normalizedTier = VALID_TIERS.has(cleanString(tier)) ? cleanString(tier) : 'normal';
     const normalizedPrice = toOptionalNumber(price);
     const normalizedOriginalPrice = toOptionalNumber(originalPrice);
@@ -384,6 +384,13 @@ export async function POST(req: NextRequest) {
       normalizedPrice
     );
     const rawCategory = cleanString(category) || defaultCategory(normalizedEntityType, normalizedMetadata);
+    const rawCategoryPath = categoryPathInfo(rawCategory);
+    const normalizedSubcategory = requestedSubcategory
+      || (
+        rawCategoryPath && rawCategoryPath.value !== rawCategoryPath.rootKey
+          ? rawCategoryPath.value
+          : ''
+      );
     const categoryRoot = normalizeMarketplaceCategory(rawCategory);
     const normalizedCategory = categoryRoot === 'all' ? rawCategory : categoryRoot;
     const categoryPath = categoryPathInfo(normalizedSubcategory || rawCategory || normalizedCategory);
