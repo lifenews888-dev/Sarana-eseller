@@ -9,6 +9,7 @@ import { useUserLocation } from '@/hooks/useUserLocation';
 import LocationBar from '@/components/location/LocationBar';
 import CategoryBar from '@/components/shared/CategoryBar';
 import SafeImage from '@/components/ui/SafeImage';
+import { MONGOLIA_LOCATIONS } from '@/lib/location/mongolia';
 import {
   Search, MapPin, Eye, Clock, Plus,
   X, Heart, Phone, MessageCircle, Share2, ChevronLeft, ChevronRight,
@@ -54,6 +55,16 @@ const ENTITY_LABELS: Record<EntityType, { label: string; icon: LucideIcon }> = {
   service: { label: 'Үйлчилгээ', icon: BellRing },
   user: { label: 'Хэрэглэгч', icon: User },
 };
+
+const ENTITY_FILTER_OPTIONS = [
+  { key: '' as const, label: 'Бүгд', icon: Sparkles },
+  { key: 'store' as const, ...ENTITY_LABELS.store },
+  { key: 'agent' as const, ...ENTITY_LABELS.agent },
+  { key: 'company' as const, ...ENTITY_LABELS.company },
+  { key: 'auto_dealer' as const, ...ENTITY_LABELS.auto_dealer },
+  { key: 'service' as const, ...ENTITY_LABELS.service },
+  { key: 'user' as const, ...ENTITY_LABELS.user },
+] satisfies Array<{ key: EntityType | ''; label: string; icon: LucideIcon }>;
 
 const DISTRICTS = ['Бүгд', 'СБД', 'ХУД', 'БЗД', 'ЧД', 'БГД', 'СХД', 'НД', 'БНД'];
 const SORT_OPTIONS = [
@@ -873,6 +884,38 @@ export default function FeedPageClient({
   const activeCategoryChildren = activeCat === 'all' ? [] : categoryChildOptions(activeCat);
   const activeCategoryLabel = activeCategoryPath?.label || (activeCat === 'all' ? '' : marketplaceCategoryLabel(activeCat));
   const isNestedCategory = Boolean(activeCategoryPath && activeCategoryPath.value !== activeCategoryPath.rootKey);
+  const activeProvinceLabel = activeProvince ? MONGOLIA_LOCATIONS.provinces[activeProvince]?.name || activeProvince : '';
+  const activeSortLabel = SORT_OPTIONS.find((option) => option.key === activeSort)?.label || activeSort;
+  const clearAllFeedFilters = () => {
+    applyFeedRouteFilters({
+      category: 'all',
+      entityType: '',
+      search: '',
+      district: 'Бүгд',
+      province: '',
+      sort: 'newest',
+    });
+  };
+  const activeFilters = [
+    activeCat !== 'all'
+      ? { key: 'category', label: activeCategoryLabel, onClear: () => applyFeedRouteFilters({ category: 'all' }) }
+      : null,
+    activeEntityType
+      ? { key: 'entityType', label: ENTITY_LABELS[activeEntityType].label, onClear: () => applyFeedRouteFilters({ entityType: '' }) }
+      : null,
+    activeDistrict !== 'Бүгд'
+      ? { key: 'district', label: `Дүүрэг: ${activeDistrict}`, onClear: () => applyFeedRouteFilters({ district: 'Бүгд' }) }
+      : null,
+    activeProvince
+      ? { key: 'province', label: `Аймаг: ${activeProvinceLabel}`, onClear: () => applyFeedRouteFilters({ province: '' }) }
+      : null,
+    activeSort !== 'newest'
+      ? { key: 'sort', label: `Эрэмбэ: ${activeSortLabel}`, onClear: () => applyFeedRouteFilters({ sort: 'newest' }) }
+      : null,
+    search.trim()
+      ? { key: 'search', label: `Хайлт: ${search.trim()}`, onClear: () => applyFeedRouteFilters({ search: '' }, 'replace') }
+      : null,
+  ].filter((item): item is { key: string; label: string; onClear: () => void } => Boolean(item));
 
   return (
     <div className="min-h-screen" style={{ background: "var(--esl-bg-page)" }}>
@@ -1019,6 +1062,32 @@ export default function FeedPageClient({
           </select>
         </div>
 
+        {/* Entity type filters */}
+        <div className="mb-4 flex items-center gap-2 overflow-x-auto scrollbar-none pb-1">
+          <span className="shrink-0 text-xs font-semibold text-[var(--esl-text-muted)]">Төрөл:</span>
+          {ENTITY_FILTER_OPTIONS.map((option) => {
+            const Icon = option.icon;
+            const isActive = activeEntityType === option.key;
+
+            return (
+              <button
+                key={option.key || 'all'}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => applyFeedRouteFilters({ entityType: option.key })}
+                className={`shrink-0 inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                  isActive
+                    ? 'border-[#E8242C] bg-[rgba(232,36,44,0.16)] text-[#FF6B70]'
+                    : 'border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-[var(--esl-text-muted)] hover:border-[#E8242C]/60 hover:text-[var(--esl-text)]'
+                }`}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {option.label}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Category pills — DB-ээс авна */}
         <div className="mb-6">
           <CategoryBar value={activeCat} onChange={(slug) => {
@@ -1072,6 +1141,30 @@ export default function FeedPageClient({
           )}
         </div>
 
+        {activeFilters.length > 0 && (
+          <div className="mb-6 flex flex-wrap items-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">
+            <span className="text-xs font-semibold text-[var(--esl-text-muted)]">Идэвхтэй:</span>
+            {activeFilters.map((filter) => (
+              <button
+                key={filter.key}
+                type="button"
+                onClick={filter.onClear}
+                className="inline-flex h-8 max-w-full items-center gap-1.5 rounded-lg border border-[#E8242C]/30 bg-[rgba(232,36,44,0.14)] px-2.5 text-xs font-semibold text-[#FF6B70] transition hover:bg-[rgba(232,36,44,0.24)]"
+              >
+                <span className="max-w-[220px] truncate">{filter.label}</span>
+                <X className="h-3.5 w-3.5 shrink-0" />
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={clearAllFeedFilters}
+              className="ml-0 sm:ml-auto h-8 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 text-xs font-semibold text-[var(--esl-text-muted)] transition hover:text-[var(--esl-text)]"
+            >
+              Бүгдийг цэвэрлэх
+            </button>
+          </div>
+        )}
+
         {/* Result bar */}
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-[var(--esl-text-muted)]">
@@ -1096,16 +1189,7 @@ export default function FeedPageClient({
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               <button
-                onClick={() => {
-                  applyFeedRouteFilters({
-                    category: 'all',
-                    entityType: '',
-                    search: '',
-                    district: 'Бүгд',
-                    province: '',
-                    sort: 'newest',
-                  });
-                }}
+                onClick={clearAllFeedFilters}
                 className="px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold hover:bg-[#c91f26] transition border-none cursor-pointer"
               >
                 Шүүлтүүр арилгах
