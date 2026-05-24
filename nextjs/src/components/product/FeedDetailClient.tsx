@@ -652,6 +652,8 @@ function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPos
         pricePerSqm={numberValue(pick(meta, ['pricePerSqm']))}
         details={roomChoiceDetailsFrom(pick(meta, ['roomChoiceDetails', 'roomOptions', 'unitTypes']), numberValue(pick(meta, ['pricePerSqm'])))}
         ownerPhone={post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone']))}
+        listingTitle={post.title}
+        refId={post.refId}
       />
       <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['amenities']))} />
       <ChipSection title="Төлбөрийн нөхцөл" icon={<Banknote size={16} />} items={toList(pick(meta, ['paymentTerms']))} />
@@ -743,11 +745,15 @@ function ConstructionRoomChoices({
   pricePerSqm,
   details,
   ownerPhone,
+  listingTitle,
+  refId,
 }: {
   choices: string[];
   pricePerSqm: number | null;
   details: RoomChoiceDetail[];
   ownerPhone?: string | null;
+  listingTitle: string;
+  refId?: string;
 }) {
   const [selectedRoom, setSelectedRoom] = useState<RoomChoiceDetail | null>(null);
   const rooms = details.length > 0
@@ -827,6 +833,8 @@ function ConstructionRoomChoices({
         <RoomChoiceInquiryModal
           room={selectedRoom}
           ownerPhone={ownerPhone}
+          listingTitle={listingTitle}
+          refId={refId}
           onClose={() => setSelectedRoom(null)}
         />
       ) : null}
@@ -837,12 +845,17 @@ function ConstructionRoomChoices({
 function RoomChoiceInquiryModal({
   room,
   ownerPhone,
+  listingTitle,
+  refId,
   onClose,
 }: {
   room: RoomChoiceDetail;
   ownerPhone?: string | null;
+  listingTitle: string;
+  refId?: string;
   onClose: () => void;
 }) {
+  const [copied, setCopied] = useState(false);
   const phone = ownerPhone ? formatPhoneLabel(ownerPhone) : null;
   const href = phoneHref(ownerPhone || undefined);
   const price = formatMoney(room.estimatedPrice);
@@ -858,6 +871,13 @@ function RoomChoiceInquiryModal({
     { label: 'Засал', value: room.finish },
     { label: 'Нүүх боломж', value: room.moveInDate },
   ].filter((item): item is { label: string; value: string } => Boolean(item.value));
+  const inquiryText = buildRoomInquiryText({ room, listingTitle, refId, phone });
+
+  function copyInquiryText() {
+    setCopied(true);
+    void copyTextToClipboard(inquiryText).catch(() => setCopied(false));
+    window.setTimeout(() => setCopied(false), 1800);
+  }
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 px-4 py-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label={`${room.label} лавлагаа`}>
@@ -904,6 +924,24 @@ function RoomChoiceInquiryModal({
           ) : null}
 
           {room.notes ? <p className="rounded-lg bg-[var(--esl-bg-muted)] p-3 text-xs leading-relaxed text-[var(--esl-text-muted)]">{room.notes}</p> : null}
+
+          <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold">Бэлэн лавлагаа</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
+                  {inquiryText}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={copyInquiryText}
+                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+              >
+                <ClipboardList size={14} /> {copied ? 'Хуулагдлаа' : 'Хуулах'}
+              </button>
+            </div>
+          </div>
 
           <div className="grid gap-2 sm:grid-cols-2">
             {href ? (
@@ -1006,6 +1044,53 @@ function buildRoomChoiceLabel(record: FeedMetadata, area: number | null): string
   const areaText = formatArea(area);
   if (roomText && areaText) return `${roomText} ${areaText}`;
   return roomText ?? areaText;
+}
+
+function buildRoomInquiryText({
+  room,
+  listingTitle,
+  refId,
+  phone,
+}: {
+  room: RoomChoiceDetail;
+  listingTitle: string;
+  refId?: string;
+  phone: string | null;
+}): string {
+  const parts = [
+    `Сайн байна уу, ${listingTitle} төслийн ${room.label} сонголтын талаар лавлаж байна.`,
+    refId ? `Зарын дугаар: ${refId}.` : null,
+    formatMoney(room.estimatedPrice) ? `Үнэ: ${formatMoney(room.estimatedPrice)}.` : null,
+    formatArea(room.area) ? `Талбай: ${formatArea(room.area)}.` : null,
+    suffixValue(room.availableUnits, 'айл үлдсэн') ? `Үлдэгдэл: ${suffixValue(room.availableUnits, 'айл үлдсэн')}.` : null,
+    room.floorRange ? `Давхар: ${room.floorRange}.` : null,
+    room.orientation ? `Цонхны харц: ${room.orientation}.` : null,
+    room.moveInDate ? `Нүүх боломж: ${room.moveInDate}.` : null,
+    phone ? `Холбогдох утас: ${phone}.` : null,
+  ];
+
+  return parts.filter(Boolean).join(' ');
+}
+
+async function copyTextToClipboard(text: string) {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall back for embedded browsers that expose clipboard but deny writeText.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
 }
 
 function ServiceDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
