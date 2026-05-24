@@ -403,6 +403,8 @@ export default function StorePage() {
 
   const saleProducts = useMemo(() => catalogItems.filter(isSaleProduct), [catalogItems]);
   const showSaleSlider = saleProducts.length > 0 && activeCat === 'all' && activeType === 'all' && !dealOnly && !debSearch.trim();
+  const activeCategoryPath = categoryPathInfo(activeCat);
+  const activeRootCategory = activeCategoryPath?.rootKey || activeCat;
   const quickAdd = useCallback((p: Product) => { cart.add(p, 1); toast.show(`${p.name} нэмэгдлээ`, 'ok'); }, [cart, toast]);
   const toggleWL = useCallback((id: string) => {
     setWishlist(prev => {
@@ -531,10 +533,11 @@ export default function StorePage() {
               {NAV_CATS.map(c => (
                 <button
                   key={c.key}
+                  aria-pressed={activeRootCategory === c.key}
                   onClick={() => { handleCategoryChange(c.key); setMegaOpen(false); }}
                   className={cn(
                     'shrink-0 h-full px-4 text-sm font-semibold border-none cursor-pointer whitespace-nowrap transition-colors',
-                    activeCat === c.key ? 'bg-white/20 text-white' : 'bg-transparent text-white/85 hover:bg-white/10'
+                    activeRootCategory === c.key ? 'bg-white/20 text-white' : 'bg-transparent text-white/85 hover:bg-white/10'
                   )}
                 >
                   {c.label}
@@ -601,21 +604,23 @@ export default function StorePage() {
             </div>
             <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
               {CATEGORY_ICONS.map(cat => {
-                const isActive = activeCat === cat.key;
+                const isRootActive = activeRootCategory === cat.key;
+                const isExactActive = activeCat === cat.key;
                 return (
                   <button
                     key={cat.key}
-                    onClick={() => handleCategoryChange(isActive ? 'all' : cat.key)}
+                    aria-pressed={isRootActive}
+                    onClick={() => handleCategoryChange(isExactActive ? 'all' : cat.key)}
                     className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-none cursor-pointer transition-all group"
                     style={{
-                      background: isActive ? cat.color + '14' : 'var(--esl-bg-card)',
-                      border: isActive ? `1.5px solid ${cat.color}40` : '1.5px solid var(--esl-border)',
+                      background: isRootActive ? cat.color + '14' : 'var(--esl-bg-card)',
+                      border: isRootActive ? `1.5px solid ${cat.color}40` : '1.5px solid var(--esl-border)',
                     }}
                   >
                     <div
                       className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
                       style={{
-                        background: isActive ? cat.color + '22' : cat.color + '10',
+                        background: isRootActive ? cat.color + '22' : cat.color + '10',
                         color: cat.color,
                       }}
                     >
@@ -623,7 +628,7 @@ export default function StorePage() {
                     </div>
                     <span
                       className="text-xs font-semibold text-center leading-tight"
-                      style={{ color: isActive ? cat.color : 'var(--esl-text-primary)' }}
+                      style={{ color: isRootActive ? cat.color : 'var(--esl-text-primary)' }}
                     >
                       {cat.label}
                     </span>
