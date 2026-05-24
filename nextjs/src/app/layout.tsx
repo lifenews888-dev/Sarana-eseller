@@ -50,7 +50,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="mn" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="mn" className="h-full antialiased" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <Script id="theme-init" strategy="beforeInteractive">{`
           (function(){

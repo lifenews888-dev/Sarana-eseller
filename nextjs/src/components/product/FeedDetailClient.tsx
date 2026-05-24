@@ -587,6 +587,7 @@ function ProductInquiryPanel({
   subcategory?: string;
 }) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
   const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
@@ -606,6 +607,12 @@ function ProductInquiryPanel({
     setQuestionsCopied(true);
     void copyTextToClipboard(questionText).catch(() => undefined);
     window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  function copyListingLink() {
+    setLinkCopied(true);
+    void copyTextToClipboard(publicListingUrl()).catch(() => setLinkCopied(false));
+    window.setTimeout(() => setLinkCopied(false), 1800);
   }
 
   return (
@@ -673,12 +680,10 @@ function ProductInquiryPanel({
           )}
           <button
             type="button"
-            onClick={() => {
-              void copyTextToClipboard(window.location.href).catch(() => undefined);
-            }}
+            onClick={copyListingLink}
             className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
           >
-            <Share2 size={16} /> Зарын линк
+            <Share2 size={16} /> {linkCopied ? 'Хуулагдлаа' : 'Зарын линк'}
           </button>
         </div>
       </div>
@@ -742,6 +747,7 @@ function RealEstateDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost 
 
 function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
   const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
@@ -761,6 +767,12 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
     setQuestionsCopied(true);
     void copyTextToClipboard(questionText).catch(() => undefined);
     window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  function copyListingLink() {
+    setLinkCopied(true);
+    void copyTextToClipboard(publicListingUrl()).catch(() => setLinkCopied(false));
+    window.setTimeout(() => setLinkCopied(false), 1800);
   }
 
   return (
@@ -828,12 +840,10 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
           )}
           <button
             type="button"
-            onClick={() => {
-              void copyTextToClipboard(window.location.href).catch(() => undefined);
-            }}
+            onClick={copyListingLink}
             className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
           >
-            <Share2 size={16} /> Зарын линк
+            <Share2 size={16} /> {linkCopied ? 'Хуулагдлаа' : 'Зарын линк'}
           </button>
         </div>
       </div>
@@ -879,6 +889,7 @@ function AutoDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
 
 function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
   const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
@@ -898,6 +909,12 @@ function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }
     setQuestionsCopied(true);
     void copyTextToClipboard(questionText).catch(() => undefined);
     window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  function copyListingLink() {
+    setLinkCopied(true);
+    void copyTextToClipboard(publicListingUrl()).catch(() => setLinkCopied(false));
+    window.setTimeout(() => setLinkCopied(false), 1800);
   }
 
   return (
@@ -965,12 +982,10 @@ function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }
           )}
           <button
             type="button"
-            onClick={() => {
-              void copyTextToClipboard(window.location.href).catch(() => undefined);
-            }}
+            onClick={copyListingLink}
             className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
           >
-            <Share2 size={16} /> Зарын линк
+            <Share2 size={16} /> {linkCopied ? 'Хуулагдлаа' : 'Зарын линк'}
           </button>
         </div>
       </div>
@@ -1883,6 +1898,14 @@ function clearRoomUnitParam() {
 function roomUnitUrl(room: RoomChoiceDetail): string {
   const url = new URL(window.location.href);
   url.searchParams.set('unit', roomUnitId(room));
+  url.searchParams.delete('verify');
+  return url.toString();
+}
+
+function publicListingUrl(): string {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('verify');
+  url.searchParams.delete('unit');
   return url.toString();
 }
 
@@ -1929,6 +1952,7 @@ function ServiceDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) 
 
 function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
   const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
@@ -1948,6 +1972,12 @@ function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPos
     setQuestionsCopied(true);
     void copyTextToClipboard(questionText).catch(() => undefined);
     window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  function copyListingLink() {
+    setLinkCopied(true);
+    void copyTextToClipboard(publicListingUrl()).catch(() => setLinkCopied(false));
+    window.setTimeout(() => setLinkCopied(false), 1800);
   }
 
   return (
@@ -2015,12 +2045,10 @@ function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPos
           )}
           <button
             type="button"
-            onClick={() => {
-              void copyTextToClipboard(window.location.href).catch(() => undefined);
-            }}
+            onClick={copyListingLink}
             className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
           >
-            <Share2 size={16} /> Зарын линк
+            <Share2 size={16} /> {linkCopied ? 'Хуулагдлаа' : 'Зарын линк'}
           </button>
         </div>
       </div>
