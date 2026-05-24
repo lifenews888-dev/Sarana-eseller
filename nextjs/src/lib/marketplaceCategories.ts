@@ -43,6 +43,13 @@ export type MarketplaceCategoryPath = {
   labels: string[];
   label: string;
   leafLabel: string;
+  segments: MarketplaceCategoryPathSegment[];
+};
+
+export type MarketplaceCategoryPathSegment = {
+  value: string;
+  label: string;
+  isRoot: boolean;
 };
 
 export type MarketplaceCategoryOption = {
@@ -833,6 +840,7 @@ function categoryPathEntry(
   category: MarketplaceCategory,
   value: string,
   branchLabels: string[],
+  branchValues: string[] = [],
 ): MarketplaceCategoryPath {
   const labels = [category.label, ...branchLabels];
   return {
@@ -842,6 +850,14 @@ function categoryPathEntry(
     labels,
     label: labels.join(' / '),
     leafLabel: branchLabels[branchLabels.length - 1] || category.label,
+    segments: [
+      { value: category.key, label: category.label, isRoot: true },
+      ...branchLabels.map((label, index) => ({
+        value: branchValues[index] || value,
+        label,
+        isRoot: false,
+      })),
+    ],
   };
 }
 
@@ -850,17 +866,19 @@ function branchPathPairs(
   branches: MarketplaceCategoryBranch[],
   parentSlug = category.key,
   parentLabels: string[] = [],
+  parentValues: string[] = [],
 ): Array<readonly [string, MarketplaceCategoryPath]> {
   return branches.flatMap((branch, index) => {
     const name = categoryBranchLabel(branch);
     const slug = branchValue(parentSlug, branch, index);
     const labels = [...parentLabels, name];
-    const entry = categoryPathEntry(category, slug, labels);
+    const values = [...parentValues, slug];
+    const entry = categoryPathEntry(category, slug, labels, values);
     return [
       [`${parentSlug}-${index + 1}`, entry] as const,
       [slug, entry] as const,
       ...branchAliases(branch).map((alias) => [alias, entry] as const),
-      ...branchPathPairs(category, branchChildren(branch), slug, labels),
+      ...branchPathPairs(category, branchChildren(branch), slug, labels, values),
     ];
   });
 }
