@@ -125,6 +125,13 @@ type MetadataFieldGroup = {
   fields: ListingMetadataField[];
 };
 
+type PostQualityProfile = {
+  title: string;
+  minImages: number;
+  recommendedImages: number;
+  tips: string[];
+};
+
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
@@ -186,6 +193,97 @@ function isGenericProductCategory(category: string) {
     ].includes(root);
 }
 
+function postQualityProfileForCategory(category: string): PostQualityProfile {
+  const root = normalizeMarketplaceCategory(category);
+
+  if (root === 'vehicles') {
+    return {
+      title: 'Машины зарын чанарын checklist',
+      minImages: 4,
+      recommendedImages: 8,
+      tips: [
+        'Гадна урд, хойд, хоёр хажуугийн зураг',
+        'Салон, гүйлтийн заалт, моторын хэсэг',
+        'Бичиг баримт, үзлэг, дугуй/тоноглолын мэдээлэл',
+      ],
+    };
+  }
+
+  if (root === 'real-estate') {
+    return {
+      title: 'Байр, үл хөдлөх зарын checklist',
+      minImages: 6,
+      recommendedImages: 10,
+      tips: [
+        'Өрөө бүр, гал тогоо, ариун цэврийн өрөө',
+        'Цонхны харц, орц, гадна орчны зураг',
+        'Талбай, давхар, гэрчилгээ/ипотекийн боломж',
+      ],
+    };
+  }
+
+  if (root === 'new-buildings') {
+    return {
+      title: 'Төслийн зарын checklist',
+      minImages: 6,
+      recommendedImages: 10,
+      tips: [
+        'Фасад, орчин, төлөвлөлт, давхарын план',
+        'Өрөөний сонголт, м² үнэ, ашиглалтад орох хугацаа',
+        'Баримт бичиг, төлбөрийн нөхцөл, үлдэгдэл айл',
+      ],
+    };
+  }
+
+  if (root === 'phones' || root === 'technology') {
+    return {
+      title: 'Төхөөрөмжийн зарын checklist',
+      minImages: 2,
+      recommendedImages: 4,
+      tips: [
+        'Урд/арын зураг, дэлгэц асаалттай байдал',
+        'Дагалдах хэрэгсэл, баталгаа, сэв гэмтэл',
+        'Брэнд, модель, багтаамж, төлөвийг тодорхой оруулах',
+      ],
+    };
+  }
+
+  if ([
+    'education-training',
+    'beauty-services',
+    'tech-it-services',
+    'professional-consulting',
+    'auto-services',
+    'repair-services',
+    'printing-services',
+    'manufacturing-custom',
+    'photo-video',
+    'design-creative',
+  ].includes(root)) {
+    return {
+      title: 'Үйлчилгээний зарын checklist',
+      minImages: 1,
+      recommendedImages: 3,
+      tips: [
+        'Ажлын жишээ, багц үйлчилгээ, үнэ/хугацаа',
+        'Байршил эсвэл онлайнаар авах боломж',
+        'Баталгаа, давуу тал, захиалга авах цаг',
+      ],
+    };
+  }
+
+  return {
+    title: 'Барааны зарын checklist',
+    minImages: 2,
+    recommendedImages: 5,
+    tips: [
+      'Бодит нүүр зураг болон ойроос авсан зураг',
+      'Брэнд, модель, төлөв, хэмжээ/иж бүрдэл',
+      'Хүргэлт, авах байршил, үнэ тохиролцох эсэх',
+    ],
+  };
+}
+
 export default function PostAdPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -218,6 +316,10 @@ export default function PostAdPage() {
   const videoCount = mediaFiles.filter(m => m.type === 'video').length;
   const metadataFields = metadataFieldsForCategory(category);
   const metadataComplete = requiredMetadataComplete(metadataFields, metadataDraft);
+  const qualityProfile = postQualityProfileForCategory(category);
+  const mediaRequirementSatisfied = !category || imageCount >= qualityProfile.minImages;
+  const missingRequiredMetadata = metadataFields.filter((field) => field.required && !(metadataDraft[field.key] || '').trim());
+  const completedMetadataCount = metadataFields.filter((field) => (metadataDraft[field.key] || '').trim()).length;
   const previewMetadataItems = listingMetadataPreviewItems(metadataFields, previewMetadata, 8);
   const previewMetadataTitle = metadataPreviewTitle(category);
   const metadataGroups = isGenericProductCategory(category)
@@ -229,7 +331,15 @@ export default function PostAdPage() {
       items: listingMetadataPreviewItems(group.fields, previewMetadata, group.fields.length),
     }))
     .filter((group) => group.items.length > 0);
-  const canSubmit = title.trim() && price.trim() && category && (district || province) && metadataComplete;
+  const canSubmit = title.trim() && price.trim() && category && (district || province) && metadataComplete && mediaRequirementSatisfied;
+  const submitMissingItems = [
+    !title.trim() ? 'гарчиг' : '',
+    !price.trim() ? 'үнэ' : '',
+    !category ? 'ангилал' : '',
+    category && !mediaRequirementSatisfied ? `${qualityProfile.minImages} бодит зураг` : '',
+    !(district || province) ? 'байршил' : '',
+    missingRequiredMetadata.length > 0 ? 'одтой үзүүлэлтүүд' : '',
+  ].filter(Boolean);
 
   const clearSavedDraft = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -957,6 +1067,51 @@ export default function PostAdPage() {
           {dragOver && (
             <p className="text-xs text-[#E8242C] mt-2 font-semibold">Файлуудаа энд тавина уу...</p>
           )}
+
+          {category && (
+            <div className="mt-4 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E8242C]/10 text-[#E8242C]">
+                  <Shield className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-sm font-black text-white">{qualityProfile.title}</p>
+                    <p className="text-xs font-bold text-[var(--esl-text-muted)]">
+                      Зураг {imageCount}/{qualityProfile.recommendedImages}
+                    </p>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    <div className={`rounded-xl border px-3 py-2 ${mediaRequirementSatisfied ? 'border-green-500/25 bg-green-500/10' : 'border-amber-500/25 bg-amber-500/10'}`}>
+                      <div className="flex items-center gap-2">
+                        {mediaRequirementSatisfied ? <CheckCircle2 className="h-4 w-4 text-green-400" /> : <AlertCircle className="h-4 w-4 text-amber-300" />}
+                        <span className="text-xs font-bold text-white">Доод тал нь {qualityProfile.minImages} зураг</span>
+                      </div>
+                    </div>
+                    <div className={`rounded-xl border px-3 py-2 ${missingRequiredMetadata.length === 0 ? 'border-green-500/25 bg-green-500/10' : 'border-amber-500/25 bg-amber-500/10'}`}>
+                      <div className="flex items-center gap-2">
+                        {missingRequiredMetadata.length === 0 ? <CheckCircle2 className="h-4 w-4 text-green-400" /> : <AlertCircle className="h-4 w-4 text-amber-300" />}
+                        <span className="text-xs font-bold text-white">Заавал талбар {metadataFields.length - missingRequiredMetadata.length}/{metadataFields.length}</span>
+                      </div>
+                    </div>
+                    <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <Info className="h-4 w-4 text-blue-300" />
+                        <span className="text-xs font-bold text-white">Дэлгэрэнгүй {completedMetadataCount}/{metadataFields.length}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                    {qualityProfile.tips.map((tip) => (
+                      <p key={tip} className="rounded-xl bg-[var(--esl-bg-card)] px-3 py-2 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
+                        {tip}
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Title */}
@@ -1141,11 +1296,20 @@ export default function PostAdPage() {
             <p className="text-xs text-[#888] leading-relaxed">
               • Хуурамч зар оруулахыг хориглоно<br />
               • Зураг бодит байх шаардлагатай<br />
+              • Ангиллаас хамаарч доод хэмжээний бодит зураг шаардлагатай<br />
               • Видео: MP4, WebM (50MB хүртэл, 3 хүртэл)<br />
               • Админ шалгасны дараа нийтлэгдэнэ
             </p>
           </div>
         </div>
+
+        {submitMissingItems.length > 0 && (
+          <div className="mb-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
+            <p className="text-xs font-bold text-amber-100">
+              Урьдчилж харахын өмнө дутуу: {submitMissingItems.join(', ')}
+            </p>
+          </div>
+        )}
 
         {/* Submit */}
         <div className="flex gap-3">
