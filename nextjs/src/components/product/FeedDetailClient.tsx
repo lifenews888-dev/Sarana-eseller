@@ -400,7 +400,7 @@ function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post
 
 function DetailedSpecs({ et, meta, post }: { et: DetailEntityType; meta: FeedMetadata; post: FeedPost }) {
   if (et === 'REAL_ESTATE') return <RealEstateDetails meta={meta} post={post} />;
-  if (et === 'AUTO') return <AutoDetails meta={meta} />;
+  if (et === 'AUTO') return <AutoDetails meta={meta} post={post} />;
   if (et === 'CONSTRUCTION') return <ConstructionDetails meta={meta} post={post} />;
   if (et === 'SERVICE') return <ServiceDetails meta={meta} post={post} />;
   return <GenericDetails meta={meta} category={post.category} subcategory={post.subcategory} />;
@@ -673,7 +673,7 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
   );
 }
 
-function AutoDetails({ meta }: { meta: FeedMetadata }) {
+function AutoDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
   return (
     <div className="space-y-4">
       <DetailSection title="Машины мэдээлэл" icon={<Car size={16} />}>
@@ -704,7 +704,98 @@ function AutoDetails({ meta }: { meta: FeedMetadata }) {
 
       <ChipSection title="Тоноглол" icon={<Settings2 size={16} />} items={toList(pick(meta, ['features']))} />
       <ChipSection title="Бичиг баримт" icon={<ClipboardList size={16} />} items={toList(pick(meta, ['documents']))} />
+      <AutoInquiryPanel meta={meta} post={post} />
     </div>
+  );
+}
+
+function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
+  const [copied, setCopied] = useState(false);
+  const [questionsCopied, setQuestionsCopied] = useState(false);
+  const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const questions = autoInquiryQuestions(meta);
+  const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
+  const inquiryText = buildAutoInquiryText({ meta, post, phone });
+
+  function copyInquiryText() {
+    setCopied(true);
+    void copyTextToClipboard(inquiryText).catch(() => undefined);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  function copyQuestions() {
+    setQuestionsCopied(true);
+    void copyTextToClipboard(questionText).catch(() => undefined);
+    window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  return (
+    <DetailSection title="Машин үзэхэд бэлдэх" icon={<ClipboardList size={16} />}>
+      <div className="space-y-3">
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold">Бэлэн лавлагаа</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
+                {inquiryText}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyInquiryText}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={14} /> {copied ? 'Хуулагдлаа' : 'Текст'}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold">Лавлах асуултууд</p>
+            <button
+              type="button"
+              onClick={copyQuestions}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2.5 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={13} /> {questionsCopied ? 'Хуулагдлаа' : 'Хуулах'}
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {questions.map((question, index) => (
+              <div key={`auto-question-${question}`} className="flex gap-2 rounded-lg bg-[var(--esl-bg-card)] px-3 py-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E8242C]/15 text-[10px] font-black text-[#E8242C]">
+                  {index + 1}
+                </span>
+                <p className="text-xs leading-relaxed text-[var(--esl-text-muted)]">{question}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {href ? (
+            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
+              <Phone size={16} /> Залгаж лавлах
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
+              <Phone size={16} /> Утас алга
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              void copyTextToClipboard(window.location.href).catch(() => undefined);
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
+          >
+            <Share2 size={16} /> Зарын линк
+          </button>
+        </div>
+      </div>
+    </DetailSection>
   );
 }
 
@@ -1427,6 +1518,56 @@ function realEstateInquiryQuestions(meta: FeedMetadata): string[] {
   if (toList(pick(meta, ['nearby'])).length > 0) questions.push('Ойр орчны сургууль, цэцэрлэг, үйлчилгээ, зогсоолын нөхцөлийг тайлбарлаж өгнө үү.');
 
   questions.push('Байрыг үзэх боломжтой өдөр, цагийг тохирч болох уу?');
+
+  return questions;
+}
+
+function buildAutoInquiryText({
+  meta,
+  post,
+  phone,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  phone: string | null;
+}): string {
+  const vehicleName = [
+    formatPlainNumber(pick(meta, ['year'])),
+    valueToText(pick(meta, ['brand'])),
+    valueToText(pick(meta, ['model'])),
+  ].filter(Boolean).join(' ') || post.title;
+  const parts = [
+    `Сайн байна уу, ${vehicleName} машины зарын талаар лавлаж байна.`,
+    post.refId ? `Зарын дугаар: ${post.refId}.` : null,
+    formatMoney(post.price) ? `Үнэ: ${formatMoney(post.price)}.` : null,
+    formatMileage(pick(meta, ['mileage'])) ? `Гүйлт: ${formatMileage(pick(meta, ['mileage']))}.` : null,
+    valueToText(pick(meta, ['engine'])) ? `Хөдөлгүүр: ${valueToText(pick(meta, ['engine']))}.` : null,
+    valueToText(pick(meta, ['fuelType', 'fuel'])) ? `Түлш: ${valueToText(pick(meta, ['fuelType', 'fuel']))}.` : null,
+    valueToText(pick(meta, ['registrationStatus'])) ? `Бүртгэл: ${valueToText(pick(meta, ['registrationStatus']))}.` : null,
+    phone ? `Холбогдох утас: ${phone}.` : null,
+  ];
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function autoInquiryQuestions(meta: FeedMetadata): string[] {
+  const questions = [
+    'Үнэ тохиролцох боломж болон лизинг/зээлийн нөхцөл байгаа юу?',
+  ];
+  const mileage = formatMileage(pick(meta, ['mileage']));
+  const inspection = valueToText(pick(meta, ['inspectionValidUntil']));
+  const vin = valueToText(pick(meta, ['vinLast4']));
+  const documents = toList(pick(meta, ['documents']));
+
+  if (mileage) questions.push(`${mileage} гүйлтийг сервисийн түүх, оношилгоогоор баталгаажуулж болох уу?`);
+  if (inspection) questions.push(`Үзлэг ${inspection} хүртэл хүчинтэй эсэх, сүүлийн оношилгооны хариуг үзэж болох уу?`);
+  if (vin) questions.push(`VIN сүүлийн 4 (${vin}) болон арлын дугаараар түүх шалгах боломжтой юу?`);
+  if (documents.length > 0) questions.push(`${documents.join(', ')} бичиг баримтыг газар дээр нь үзэж болох уу?`);
+  if (pick(meta, ['engine', 'transmission', 'drivetrain'])) questions.push('Хөдөлгүүр, кроп, хөтлөгчийн ажиллагааг тест драйваар шалгаж болох уу?');
+  if (toList(pick(meta, ['features'])).length > 0) questions.push('Зарын тоноглолууд бүгд хэвийн ажиллаж байгаа эсэхийг шалгаж болох уу?');
+
+  questions.push('Осол, будалт, сольсон эд анги, засварын түүх байгаа юу?');
+  questions.push('Машиныг үзэх болон тест драйв хийх боломжтой өдөр, цагийг тохирч болох уу?');
 
   return questions;
 }
