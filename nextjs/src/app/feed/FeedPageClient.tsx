@@ -28,10 +28,15 @@ import {
 /* ═══ Types ═══ */
 type ItemTier = 'vip' | 'featured' | 'discounted' | 'normal';
 export type EntityType = 'store' | 'agent' | 'company' | 'auto_dealer' | 'service' | 'user';
+export type FeedSortKey = 'newest' | 'price_asc' | 'price_desc' | 'popular';
 
 type FeedPageClientProps = {
   initialCategory?: string;
   initialEntityType?: EntityType | '';
+  initialSearch?: string;
+  initialDistrict?: string;
+  initialProvince?: string;
+  initialSort?: FeedSortKey;
 };
 
 const TIER_CONFIG: Record<ItemTier, { label: string; badge: LucideIcon | null; color: string; border: string; bg: string }> = {
@@ -56,7 +61,7 @@ const SORT_OPTIONS = [
   { key: 'price_asc', label: 'Үнэ ↑' },
   { key: 'price_desc', label: 'Үнэ ↓' },
   { key: 'popular', label: 'Эрэлттэй' },
-];
+] satisfies Array<{ key: FeedSortKey; label: string }>;
 
 /* ═══ Media type ═══ */
 type MediaItem = { type: 'image'; url: string } | { type: 'video'; url: string; thumb?: string };
@@ -708,22 +713,43 @@ function FeedCard({ item, onClick }: { item: FeedItem; onClick: () => void }) {
 export default function FeedPageClient({
   initialCategory = 'all',
   initialEntityType = '',
+  initialSearch = '',
+  initialDistrict = 'Бүгд',
+  initialProvince = '',
+  initialSort = 'newest',
 }: FeedPageClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const [feedItems, setFeedItems] = useState<FeedItem[]>(DEMO_FEED);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   const [activeCat, setActiveCat] = useState(initialCategory || 'all');
   const [activeEntityType, setActiveEntityType] = useState<EntityType | ''>(initialEntityType);
-  const [activeDistrict, setActiveDistrict] = useState('Бүгд');
-  const [activeProvince, setActiveProvince] = useState('');
-  const [activeSort, setActiveSort] = useState('newest');
+  const [activeDistrict, setActiveDistrict] = useState(initialDistrict || 'Бүгд');
+  const [activeProvince, setActiveProvince] = useState(initialProvince);
+  const [activeSort, setActiveSort] = useState<FeedSortKey>(initialSort);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  const applyFeedRouteFilters = useCallback((nextCategory: string, nextEntityType: EntityType | '' = '') => {
-    const category = nextCategory || 'all';
+  const applyFeedRouteFilters = useCallback((next: {
+    category?: string;
+    entityType?: EntityType | '';
+    search?: string;
+    district?: string;
+    province?: string;
+    sort?: FeedSortKey;
+  }, mode: 'push' | 'replace' = 'push') => {
+    const category = next.category ?? activeCat;
+    const entityType = next.entityType ?? activeEntityType;
+    const nextSearch = next.search ?? search;
+    const district = next.district ?? activeDistrict;
+    const province = next.province ?? activeProvince;
+    const sort = next.sort ?? activeSort;
+
     setActiveCat(category);
-    setActiveEntityType(nextEntityType);
+    setActiveEntityType(entityType);
+    setSearch(nextSearch);
+    setActiveDistrict(district);
+    setActiveProvince(province);
+    setActiveSort(sort);
 
     if (typeof window === 'undefined') return;
 
@@ -735,26 +761,59 @@ export default function FeedPageClient({
       params.set('category', category);
     }
 
-    if (nextEntityType) {
-      params.set('entityType', nextEntityType);
+    if (entityType) {
+      params.set('entityType', entityType);
     } else {
       params.delete('entityType');
+    }
+
+    const trimmedSearch = nextSearch.trim();
+    if (trimmedSearch) {
+      params.set('q', trimmedSearch);
+    } else {
+      params.delete('q');
+    }
+
+    if (district && district !== 'Бүгд') {
+      params.set('district', district);
+    } else {
+      params.delete('district');
+    }
+
+    if (province) {
+      params.set('province', province);
+    } else {
+      params.delete('province');
+    }
+
+    if (sort !== 'newest') {
+      params.set('sort', sort);
+    } else {
+      params.delete('sort');
     }
 
     const query = params.toString();
     const nextUrl = query ? `${pathname}?${query}` : pathname;
     const currentUrl = `${window.location.pathname}${window.location.search}`;
     if (currentUrl !== nextUrl) {
-      router.push(nextUrl, { scroll: false });
+      if (mode === 'replace') {
+        router.replace(nextUrl, { scroll: false });
+      } else {
+        router.push(nextUrl, { scroll: false });
+      }
     }
-  }, [pathname, router]);
+  }, [activeCat, activeDistrict, activeEntityType, activeProvince, activeSort, pathname, router, search]);
 
   useEffect(() => {
     window.setTimeout(() => {
       setActiveCat(initialCategory || 'all');
       setActiveEntityType(initialEntityType);
+      setSearch(initialSearch);
+      setActiveDistrict(initialDistrict || 'Бүгд');
+      setActiveProvince(initialProvince);
+      setActiveSort(initialSort);
     }, 0);
-  }, [initialCategory, initialEntityType]);
+  }, [initialCategory, initialDistrict, initialEntityType, initialProvince, initialSearch, initialSort]);
 
   // Fetch real feed data from API, fallback to DEMO_FEED
   useEffect(() => {
@@ -775,7 +834,7 @@ export default function FeedPageClient({
 
   // Auto-set district from GPS
   useEffect(() => {
-    if (userDistrict && activeDistrict === 'Бүгд') {
+    if (userDistrict && activeDistrict === 'Бүгд' && !activeProvince) {
       const shortMap: Record<string, string> = {
         'khan-uul': 'ХУД', 'sukhbaatar': 'СБД', 'bayangol': 'БГД',
         'bayanzurkh': 'БЗД', 'chingeltei': 'ЧД', 'songinokhairkhan': 'СХД',
@@ -784,7 +843,7 @@ export default function FeedPageClient({
       const short = shortMap[userDistrict.key];
       if (short) window.setTimeout(() => setActiveDistrict(short), 0);
     }
-  }, [activeDistrict, userDistrict]);
+  }, [activeDistrict, activeProvince, userDistrict]);
 
   const filtered = useMemo(() => {
     let list = [...feedItems];
@@ -860,12 +919,10 @@ export default function FeedPageClient({
               };
               if (ubShortMap[key]) {
                 // УБ дүүрэг сонгосон
-                setActiveDistrict(ubShortMap[key]);
-                setActiveProvince('');
+                applyFeedRouteFilters({ district: ubShortMap[key], province: '' });
               } else {
                 // Аймаг сонгосон
-                setActiveDistrict('Бүгд');
-                setActiveProvince(key);
+                applyFeedRouteFilters({ district: 'Бүгд', province: key });
               }
             }}
             onRefresh={refreshLoc}
@@ -930,12 +987,16 @@ export default function FeedPageClient({
             <input
               type="text"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => applyFeedRouteFilters({ search: e.target.value }, 'replace')}
               placeholder="Зар хайх..."
               className="w-full h-11 pl-11 pr-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text)] text-sm outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)] transition-all"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--esl-text-disabled)] bg-transparent border-none cursor-pointer">
+              <button
+                type="button"
+                onClick={() => applyFeedRouteFilters({ search: '' }, 'replace')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--esl-text-disabled)] bg-transparent border-none cursor-pointer"
+              >
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -943,7 +1004,7 @@ export default function FeedPageClient({
           {/* District */}
           <select
             value={activeDistrict}
-            onChange={(e) => setActiveDistrict(e.target.value)}
+            onChange={(e) => applyFeedRouteFilters({ district: e.target.value, province: '' })}
             className="h-11 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text-secondary)] text-sm outline-none cursor-pointer"
           >
             {DISTRICTS.map(d => <option key={d} value={d}>{d === 'Бүгд' ? '📍 Бүх дүүрэг' : d}</option>)}
@@ -951,7 +1012,7 @@ export default function FeedPageClient({
           {/* Sort */}
           <select
             value={activeSort}
-            onChange={(e) => setActiveSort(e.target.value)}
+            onChange={(e) => applyFeedRouteFilters({ sort: e.target.value as FeedSortKey })}
             className="h-11 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text-secondary)] text-sm outline-none cursor-pointer"
           >
             {SORT_OPTIONS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
@@ -961,7 +1022,7 @@ export default function FeedPageClient({
         {/* Category pills — DB-ээс авна */}
         <div className="mb-6">
           <CategoryBar value={activeCat} onChange={(slug) => {
-            applyFeedRouteFilters(slug);
+            applyFeedRouteFilters({ category: slug, entityType: '' });
           }} />
           {activeCat !== 'all' && (activeCategoryChildren.length > 0 || isNestedCategory) && (
             <div className="mt-3 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-4 py-3">
@@ -978,7 +1039,7 @@ export default function FeedPageClient({
                   <button
                     type="button"
                     onClick={() => {
-                      applyFeedRouteFilters(activeCategoryPath.rootKey);
+                      applyFeedRouteFilters({ category: activeCategoryPath.rootKey, entityType: '' });
                     }}
                     className="self-start sm:self-auto px-3 py-1.5 rounded-full border border-[var(--esl-border)] text-xs font-semibold text-[var(--esl-text-secondary)] hover:text-[var(--esl-text)] hover:border-[#E8242C] transition"
                   >
@@ -994,7 +1055,7 @@ export default function FeedPageClient({
                       key={option.value}
                       type="button"
                       onClick={() => {
-                        applyFeedRouteFilters(option.value);
+                        applyFeedRouteFilters({ category: option.value, entityType: '' });
                       }}
                       className="px-3 py-1.5 rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-xs font-semibold text-[var(--esl-text-secondary)] hover:text-white hover:bg-[#E8242C] hover:border-[#E8242C] transition"
                     >
@@ -1036,11 +1097,14 @@ export default function FeedPageClient({
             <div className="flex flex-wrap gap-2 justify-center">
               <button
                 onClick={() => {
-                  setSearch('');
-                  applyFeedRouteFilters('all');
-                  setActiveDistrict('Бүгд');
-                  setActiveProvince('');
-                  setActiveSort('newest');
+                  applyFeedRouteFilters({
+                    category: 'all',
+                    entityType: '',
+                    search: '',
+                    district: 'Бүгд',
+                    province: '',
+                    sort: 'newest',
+                  });
                 }}
                 className="px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold hover:bg-[#c91f26] transition border-none cursor-pointer"
               >
