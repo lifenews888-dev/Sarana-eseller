@@ -175,6 +175,47 @@ function metadataPreviewTitle(category: string) {
   return 'Үзүүлэлт';
 }
 
+function cleanTitlePart(value?: string) {
+  return (value || '').trim().replace(/\s+/g, ' ');
+}
+
+function trimSuggestedTitle(parts: string[]) {
+  return parts.map(cleanTitlePart).filter(Boolean).join(' ').slice(0, 100).trim();
+}
+
+function suggestedTitleForCategory(
+  category: string,
+  draft: Record<string, string>,
+  leafLabel?: string,
+) {
+  const root = normalizeMarketplaceCategory(category);
+  const brand = cleanTitlePart(draft.brand);
+  const model = cleanTitlePart(draft.model);
+  const year = cleanTitlePart(draft.year);
+  const storage = cleanTitlePart(draft.storage);
+  const rooms = cleanTitlePart(draft.rooms);
+  const sqm = cleanTitlePart(draft.sqm);
+  const projectStatus = cleanTitlePart(draft.projectStatus);
+  const buildingName = cleanTitlePart(draft.buildingName || draft.microDistrict);
+  const productType = cleanTitlePart(draft.productType || leafLabel);
+
+  if (root === 'vehicles') return trimSuggestedTitle([brand, model, year]);
+  if (root === 'phones') return trimSuggestedTitle([brand, model, storage]);
+
+  if (root === 'real-estate') {
+    const roomText = rooms ? `${rooms} өрөө` : '';
+    const areaText = sqm ? `${sqm}м²` : '';
+    return trimSuggestedTitle([roomText, areaText, buildingName || cleanTitlePart(leafLabel)]);
+  }
+
+  if (root === 'new-buildings') {
+    return trimSuggestedTitle([cleanTitlePart(leafLabel), projectStatus]);
+  }
+
+  if (category && root !== 'all') return trimSuggestedTitle([brand, model, productType]);
+  return '';
+}
+
 function isGenericProductCategory(category: string) {
   const root = normalizeMarketplaceCategory(category);
   return Boolean(category)
@@ -604,6 +645,18 @@ export default function PostAdPage() {
   const selectedCategory = findMarketplaceCategory(category);
   const selectedCategoryPath = categoryPathInfo(category);
   const selectedCategoryPathLabel = selectedCategoryPath?.label || selectedCategory?.label || '';
+  const inferredMetadataDraft = inferListingMetadataDraftFromCategory(category);
+  const autoFilledMetadataItems = Object.entries(inferredMetadataDraft)
+    .map(([key, value]) => {
+      const field = metadataFields.find((item) => item.key === key);
+      const currentValue = metadataDraft[key]?.trim();
+      const inferredValue = value.trim();
+      if (!field || !inferredValue || currentValue !== inferredValue) return null;
+      return { key, label: field.label, value: inferredValue };
+    })
+    .filter((item): item is { key: string; label: string; value: string } => Boolean(item));
+  const suggestedTitle = suggestedTitleForCategory(category, metadataDraft, selectedCategoryPath?.leafLabel);
+  const canApplySuggestedTitle = Boolean(suggestedTitle && title.trim() !== suggestedTitle);
   const catInfo = selectedCategory
     ? {
         key: selectedCategory.key,
@@ -1125,6 +1178,25 @@ export default function PostAdPage() {
             maxLength={100}
             className="w-full h-12 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all"
           />
+          {suggestedTitle && (
+            <div className="mt-3 flex flex-col gap-3 rounded-xl border border-[#E8242C]/25 bg-[#E8242C]/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex min-w-0 items-start gap-2">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B72]" />
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-[#FF9EA3]">Ангиллаас санал болгосон гарчиг</p>
+                  <p className="mt-0.5 truncate text-sm font-bold text-white">{suggestedTitle}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTitle(suggestedTitle)}
+                disabled={!canApplySuggestedTitle}
+                className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-white transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
+              >
+                Ашиглах
+              </button>
+            </div>
+          )}
           <p className="text-right text-[11px] text-[#555] mt-1">{title.length}/100</p>
         </div>
 
@@ -1140,6 +1212,15 @@ export default function PostAdPage() {
             <div className="mt-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2">
               <p className="text-[11px] font-bold text-[var(--esl-text-muted)]">Сонгосон ангилал</p>
               <p className="mt-0.5 text-sm font-semibold text-white">{selectedCategoryPathLabel}</p>
+              {autoFilledMetadataItems.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {autoFilledMetadataItems.map((item) => (
+                    <span key={item.key} className="rounded-lg bg-[var(--esl-bg-card)] px-2 py-1 text-[11px] font-bold text-[var(--esl-text-secondary)]">
+                      {item.label}: <span className="text-white">{item.value}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
