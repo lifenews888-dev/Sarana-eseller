@@ -403,7 +403,7 @@ function DetailedSpecs({ et, meta, post }: { et: DetailEntityType; meta: FeedMet
   if (et === 'AUTO') return <AutoDetails meta={meta} post={post} />;
   if (et === 'CONSTRUCTION') return <ConstructionDetails meta={meta} post={post} />;
   if (et === 'SERVICE') return <ServiceDetails meta={meta} post={post} />;
-  return <GenericDetails meta={meta} category={post.category} subcategory={post.subcategory} />;
+  return <GenericDetails meta={meta} post={post} category={post.category} subcategory={post.subcategory} />;
 }
 
 function resolveFeedDetailType(entityType: string, category?: string): DetailEntityType {
@@ -428,14 +428,24 @@ function resolveFeedDetailType(entityType: string, category?: string): DetailEnt
   return resolveEntityType(entityType);
 }
 
-function GenericDetails({ meta, category, subcategory }: { meta: FeedMetadata; category?: string; subcategory?: string }) {
+function GenericDetails({
+  meta,
+  post,
+  category,
+  subcategory,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  category?: string;
+  subcategory?: string;
+}) {
   const selectedCategory = subcategory || category;
   if (normalizeMarketplaceCategory(selectedCategory) === 'phones') {
-    return <PhoneDetails meta={meta} />;
+    return <PhoneDetails meta={meta} post={post} category={category} subcategory={subcategory} />;
   }
 
   if (selectedCategory && normalizeMarketplaceCategory(selectedCategory) !== 'all') {
-    return <ProductDetails meta={meta} category={category} subcategory={subcategory} />;
+    return <ProductDetails meta={meta} post={post} category={category} subcategory={subcategory} />;
   }
 
   const fields = metadataFieldsForCategory(selectedCategory);
@@ -450,7 +460,17 @@ function GenericDetails({ meta, category, subcategory }: { meta: FeedMetadata; c
   );
 }
 
-function ProductDetails({ meta, category, subcategory }: { meta: FeedMetadata; category?: string; subcategory?: string }) {
+function ProductDetails({
+  meta,
+  post,
+  category,
+  subcategory,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  category?: string;
+  subcategory?: string;
+}) {
   const productItems: DetailItem[] = [
     { label: 'Ангилал', value: listingCategoryLabel(category, subcategory, meta) },
     { label: 'Брэнд', value: pick(meta, ['brand']) },
@@ -496,11 +516,22 @@ function ProductDetails({ meta, category, subcategory }: { meta: FeedMetadata; c
       <ChipSection title="Онцлог" icon={<CheckCircle2 size={16} />} items={features} />
       <ChipSection title="Иж бүрдэл" icon={<PackageCheck size={16} />} items={includedItems} />
       <ChipSection title="Шалгасан зүйлс" icon={<ShieldCheck size={16} />} items={checks} />
+      <ProductInquiryPanel meta={meta} post={post} category={category} subcategory={subcategory} />
     </div>
   );
 }
 
-function PhoneDetails({ meta }: { meta: FeedMetadata }) {
+function PhoneDetails({
+  meta,
+  post,
+  category,
+  subcategory,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  category?: string;
+  subcategory?: string;
+}) {
   return (
     <div className="space-y-4">
       <DetailSection title="Утасны мэдээлэл" icon={<Smartphone size={16} />}>
@@ -525,7 +556,108 @@ function PhoneDetails({ meta }: { meta: FeedMetadata }) {
 
       <ChipSection title="Дагалдах хэрэгсэл" icon={<PackageCheck size={16} />} items={toList(pick(meta, ['accessories']))} />
       <ChipSection title="Шалгасан зүйлс" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['checks', 'features']))} />
+      <ProductInquiryPanel meta={meta} post={post} category={category} subcategory={subcategory} />
     </div>
+  );
+}
+
+function ProductInquiryPanel({
+  meta,
+  post,
+  category,
+  subcategory,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  category?: string;
+  subcategory?: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const [questionsCopied, setQuestionsCopied] = useState(false);
+  const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const questions = productInquiryQuestions(meta, category, subcategory);
+  const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
+  const inquiryText = buildProductInquiryText({ meta, post, phone, category, subcategory });
+
+  function copyInquiryText() {
+    setCopied(true);
+    void copyTextToClipboard(inquiryText).catch(() => undefined);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  function copyQuestions() {
+    setQuestionsCopied(true);
+    void copyTextToClipboard(questionText).catch(() => undefined);
+    window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  return (
+    <DetailSection title="Бараа авахад бэлдэх" icon={<ClipboardList size={16} />}>
+      <div className="space-y-3">
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold">Бэлэн лавлагаа</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
+                {inquiryText}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyInquiryText}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={14} /> {copied ? 'Хуулагдлаа' : 'Текст'}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold">Лавлах асуултууд</p>
+            <button
+              type="button"
+              onClick={copyQuestions}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2.5 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={13} /> {questionsCopied ? 'Хуулагдлаа' : 'Хуулах'}
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {questions.map((question, index) => (
+              <div key={`product-question-${question}`} className="flex gap-2 rounded-lg bg-[var(--esl-bg-card)] px-3 py-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E8242C]/15 text-[10px] font-black text-[#E8242C]">
+                  {index + 1}
+                </span>
+                <p className="text-xs leading-relaxed text-[var(--esl-text-muted)]">{question}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {href ? (
+            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
+              <Phone size={16} /> Залгаж лавлах
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
+              <Phone size={16} /> Утас алга
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              void copyTextToClipboard(window.location.href).catch(() => undefined);
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
+          >
+            <Share2 size={16} /> Зарын линк
+          </button>
+        </div>
+      </div>
+    </DetailSection>
   );
 }
 
@@ -1568,6 +1700,58 @@ function autoInquiryQuestions(meta: FeedMetadata): string[] {
 
   questions.push('Осол, будалт, сольсон эд анги, засварын түүх байгаа юу?');
   questions.push('Машиныг үзэх болон тест драйв хийх боломжтой өдөр, цагийг тохирч болох уу?');
+
+  return questions;
+}
+
+function buildProductInquiryText({
+  meta,
+  post,
+  phone,
+  category,
+  subcategory,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  phone: string | null;
+  category?: string;
+  subcategory?: string;
+}): string {
+  const parts = [
+    `Сайн байна уу, ${post.title} барааны талаар лавлаж байна.`,
+    post.refId ? `Зарын дугаар: ${post.refId}.` : null,
+    listingCategoryLabel(category, subcategory, meta) ? `Ангилал: ${listingCategoryLabel(category, subcategory, meta)}.` : null,
+    formatMoney(post.price) ? `Үнэ: ${formatMoney(post.price)}.` : null,
+    valueToText(pick(meta, ['condition'])) ? `Төлөв: ${valueToText(pick(meta, ['condition']))}.` : null,
+    valueToText(pick(meta, ['brand'])) ? `Брэнд: ${valueToText(pick(meta, ['brand']))}.` : null,
+    valueToText(pick(meta, ['model'])) ? `Загвар: ${valueToText(pick(meta, ['model']))}.` : null,
+    listSummary(pick(meta, ['deliveryOptions', 'delivery'])) ? `Хүргэлт: ${listSummary(pick(meta, ['deliveryOptions', 'delivery']))}.` : null,
+    phone ? `Холбогдох утас: ${phone}.` : null,
+  ];
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function productInquiryQuestions(meta: FeedMetadata, category?: string, subcategory?: string): string[] {
+  const questions = [
+    'Бараа одоо бэлэн байгаа юу, үнэ тохиролцох боломжтой юу?',
+  ];
+  const normalizedCategory = normalizeMarketplaceCategory(subcategory || category);
+  const delivery = listSummary(pick(meta, ['deliveryOptions', 'delivery']));
+  const warranty = valueToText(pick(meta, ['warranty']));
+  const condition = valueToText(pick(meta, ['condition']));
+  const accessories = listFromKeys(meta, ['includedItems', 'accessories']);
+  const checks = listFromKeys(meta, ['checks', 'features']);
+
+  if (condition) questions.push(`${condition} төлөвийг зураг/видео эсвэл газар дээр нь шалгаж болох уу?`);
+  if (warranty) questions.push(`${warranty} нөхцөлд яг юу хамрагдах, буцаалт/солилцоо байгаа эсэхийг тодруулж өгнө үү.`);
+  if (delivery) questions.push(`${delivery} нөхцөлөөр хүргэлтийн үнэ, хугацаа, байршлын хязгаар байгаа юу?`);
+  if (accessories.length > 0) questions.push(`${accessories.join(', ')} бүгд иж бүрэн дагалдах уу?`);
+  if (checks.length > 0) questions.push(`${checks.slice(0, 4).join(', ')} шалгалтуудыг газар дээр нь дахин шалгаж болох уу?`);
+  if (normalizedCategory === 'phones') questions.push('IMEI/серийн дугаар, батарей, дэлгэц, камер, Face ID/Touch ID-г хамт шалгаж болох уу?');
+  if (pick(meta, ['pickupLocation', 'address', 'location'])) questions.push('Үзэх/авах байршил, боломжтой өдөр цагийг тохирч болох уу?');
+
+  questions.push('Төлбөрийн хэлбэр болон баримт/баталгааны бичиг авах боломжтой юу?');
 
   return questions;
 }
