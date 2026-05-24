@@ -45,6 +45,13 @@ export type MarketplaceCategoryPath = {
   leafLabel: string;
 };
 
+export type MarketplaceCategoryOption = {
+  value: string;
+  label: string;
+  hasChildren: boolean;
+  aliases: string[];
+};
+
 export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
   {
     key: 'women',
@@ -646,6 +653,13 @@ const CATEGORY_DESCENDANT_VALUE_MAP = new Map<string, string[]>(
   ),
 );
 
+const CATEGORY_CHILD_OPTION_MAP = new Map<string, MarketplaceCategoryOption[]>(
+  MARKETPLACE_CATEGORIES.flatMap((category) => [
+    [category.key, branchOptions(category.subcategories, category.key)] as const,
+    ...branchChildOptionPairs(category.subcategories, category.key),
+  ]),
+);
+
 export function normalizeMarketplaceCategory(value?: string | null): string {
   if (!value) return 'all';
   return CATEGORY_ALIAS_MAP.get(value) || value;
@@ -666,6 +680,12 @@ export function categoryPathInfo(value?: string | null): MarketplaceCategoryPath
   return CATEGORY_PATH_MAP.get(key) || CATEGORY_PATH_MAP.get(normalizeMarketplaceCategory(key));
 }
 
+export function isMarketplaceCategoryValue(value?: string | null): boolean {
+  const key = typeof value === 'string' ? value.trim() : '';
+  if (!key) return false;
+  return CATEGORY_PATH_MAP.has(key) || CATEGORY_PATH_MAP.has(normalizeMarketplaceCategory(key));
+}
+
 export function categoryPathLabel(value?: string | null): string | undefined {
   return categoryPathInfo(value)?.label;
 }
@@ -674,6 +694,12 @@ export function categoryDescendantValues(value?: string | null): string[] {
   const key = typeof value === 'string' ? value.trim() : '';
   if (!key) return [];
   return Array.from(new Set(CATEGORY_DESCENDANT_VALUE_MAP.get(key) || [key]));
+}
+
+export function categoryChildOptions(value?: string | null): MarketplaceCategoryOption[] {
+  const path = categoryPathInfo(value);
+  const key = path?.value || normalizeMarketplaceCategory(value);
+  return CATEGORY_CHILD_OPTION_MAP.get(key) || [];
 }
 
 export function categoryBranchLabel(branch: MarketplaceCategoryBranch): string {
@@ -746,14 +772,54 @@ function branchDescendantNames(branch: MarketplaceCategoryBranch): string[] {
   return children.flatMap(branchDescendantNames);
 }
 
+function branchValue(parentSlug: string, branch: MarketplaceCategoryBranch, index: number): string {
+  const name = categoryBranchLabel(branch);
+  return `${parentSlug}-${slugifyCategoryName(name) || `item-${index + 1}`}`;
+}
+
+function branchOption(
+  branch: MarketplaceCategoryBranch,
+  parentSlug: string,
+  index: number,
+): MarketplaceCategoryOption {
+  return {
+    value: branchValue(parentSlug, branch, index),
+    label: categoryBranchLabel(branch),
+    hasChildren: branchChildren(branch).length > 0,
+    aliases: branchAliases(branch),
+  };
+}
+
+function branchOptions(
+  branches: MarketplaceCategoryBranch[],
+  parentSlug: string,
+): MarketplaceCategoryOption[] {
+  return branches.map((branch, index) => branchOption(branch, parentSlug, index));
+}
+
+function branchChildOptionPairs(
+  branches: MarketplaceCategoryBranch[],
+  parentSlug: string,
+): Array<readonly [string, MarketplaceCategoryOption[]]> {
+  return branches.flatMap((branch, index) => {
+    const value = branchValue(parentSlug, branch, index);
+    const children = branchChildren(branch);
+    const childOptions = branchOptions(children, value);
+    return [
+      [value, childOptions] as const,
+      ...branchAliases(branch).map((alias) => [alias, childOptions] as const),
+      ...branchChildOptionPairs(children, value),
+    ];
+  });
+}
+
 function branchAliasPairs(
   rootKey: string,
   branches: MarketplaceCategoryBranch[],
   parentSlug = rootKey,
 ): Array<readonly [string, string]> {
   return branches.flatMap((branch, index) => {
-    const name = categoryBranchLabel(branch);
-    const slug = `${parentSlug}-${slugifyCategoryName(name) || `item-${index + 1}`}`;
+    const slug = branchValue(parentSlug, branch, index);
     return [
       [`${parentSlug}-${index + 1}`, rootKey] as const,
       [slug, rootKey] as const,
@@ -787,7 +853,7 @@ function branchPathPairs(
 ): Array<readonly [string, MarketplaceCategoryPath]> {
   return branches.flatMap((branch, index) => {
     const name = categoryBranchLabel(branch);
-    const slug = `${parentSlug}-${slugifyCategoryName(name) || `item-${index + 1}`}`;
+    const slug = branchValue(parentSlug, branch, index);
     const labels = [...parentLabels, name];
     const entry = categoryPathEntry(category, slug, labels);
     return [
@@ -805,8 +871,7 @@ function branchDescendantValuePairs(
   parentSlug = category.key,
 ): Array<readonly [string, string[]]> {
   return branches.flatMap((branch, index) => {
-    const name = categoryBranchLabel(branch);
-    const slug = `${parentSlug}-${slugifyCategoryName(name) || `item-${index + 1}`}`;
+    const slug = branchValue(parentSlug, branch, index);
     const directValues = [
       `${parentSlug}-${index + 1}`,
       slug,
@@ -834,7 +899,7 @@ function branchToTreeNode(
   sortOrder: number,
 ): CategoryTreeNode {
   const name = categoryBranchLabel(branch);
-  const slug = `${parentSlug}-${slugifyCategoryName(name) || `item-${sortOrder + 1}`}`;
+  const slug = branchValue(parentSlug, branch, sortOrder);
 
   return {
     id: slug,
