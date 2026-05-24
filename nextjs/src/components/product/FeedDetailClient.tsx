@@ -61,6 +61,24 @@ interface DetailItem {
   value: unknown;
 }
 
+interface RoomChoiceDetail {
+  key: string;
+  label: string;
+  area: number | null;
+  estimatedPrice: number | null;
+  availableUnits: number | null;
+  rooms: unknown;
+  bedrooms: unknown;
+  bathrooms: unknown;
+  floorRange: string | null;
+  orientation: string | null;
+  balcony: string | null;
+  finish: string | null;
+  moveInDate: string | null;
+  paymentTerms: string[];
+  notes: string | null;
+}
+
 export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const router = useRouter();
   const et = resolveFeedDetailType(post.entityType, post.subcategory || post.category);
@@ -632,6 +650,7 @@ function ConstructionDetails({ meta, post }: { meta: FeedMetadata; post: FeedPos
       <ConstructionRoomChoices
         choices={toList(pick(meta, ['roomChoices']))}
         pricePerSqm={numberValue(pick(meta, ['pricePerSqm']))}
+        details={roomChoiceDetailsFrom(pick(meta, ['roomChoiceDetails', 'roomOptions', 'unitTypes']), numberValue(pick(meta, ['pricePerSqm'])))}
       />
       <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['amenities']))} />
       <ChipSection title="Төлбөрийн нөхцөл" icon={<Banknote size={16} />} items={toList(pick(meta, ['paymentTerms']))} />
@@ -721,34 +740,73 @@ function ConstructionProgressSummary({
 function ConstructionRoomChoices({
   choices,
   pricePerSqm,
+  details,
 }: {
   choices: string[];
   pricePerSqm: number | null;
+  details: RoomChoiceDetail[];
 }) {
-  if (choices.length === 0) return null;
+  const rooms = details.length > 0
+    ? details
+    : choices.map((choice) => parseRoomChoice(choice, pricePerSqm));
+
+  if (rooms.length === 0) return null;
 
   return (
     <DetailSection title="Өрөөний сонголт" icon={<Home size={16} />}>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {choices.map((choice) => {
-          const room = parseRoomChoice(choice, pricePerSqm);
+      <div className="space-y-3">
+        {rooms.map((room) => {
+          const specs = [
+            { label: 'Талбай', value: formatArea(room.area) },
+            { label: 'Өрөө', value: formatRooms(room.rooms) },
+            { label: 'Унтлагын', value: suffixValue(room.bedrooms, 'унтлагын') },
+            { label: 'Ариун цэврийн', value: suffixValue(room.bathrooms, 'сан') },
+            { label: 'Давхар', value: room.floorRange },
+            { label: 'Цонх', value: room.orientation },
+            { label: 'Тагт', value: room.balcony },
+            { label: 'Засал', value: room.finish },
+            { label: 'Нүүх', value: room.moveInDate },
+          ].filter((item): item is { label: string; value: string } => Boolean(item.value));
+          const price = formatMoney(room.estimatedPrice);
+          const available = suffixValue(room.availableUnits, 'айл үлдсэн');
 
           return (
-            <div key={choice} className="rounded-lg bg-[var(--esl-bg-muted)] border border-[var(--esl-border)] px-3 py-3">
-              <p className="text-sm font-bold leading-tight">{room.label}</p>
-              <div className="mt-2 space-y-1">
-                {room.area !== null ? (
-                  <p className="text-[11px] text-[var(--esl-text-muted)]">
-                    Талбай: <span className="font-semibold text-[var(--esl-text)]">{formatArea(room.area)}</span>
-                  </p>
-                ) : null}
-                {room.estimatedPrice !== null ? (
-                  <p className="text-[11px] text-[var(--esl-text-muted)]">
-                    Ойролцоо үнэ: <span className="font-semibold text-[#E8242C]">{formatMoney(room.estimatedPrice)}</span>
-                  </p>
+            <article key={room.key} className="rounded-lg bg-[var(--esl-bg-muted)] border border-[var(--esl-border)] p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold leading-tight">{room.label}</p>
+                  {price ? <p className="mt-1 text-sm font-black text-[#E8242C]">{price}</p> : null}
+                </div>
+                {available ? (
+                  <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[11px] font-bold text-emerald-300">
+                    {available}
+                  </span>
                 ) : null}
               </div>
-            </div>
+
+              {specs.length > 0 ? (
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                  {specs.map((item) => (
+                    <div key={`${room.key}-${item.label}`} className="rounded-md bg-[var(--esl-bg)]/40 px-2.5 py-2">
+                      <p className="text-[10px] text-[var(--esl-text-muted)]">{item.label}</p>
+                      <p className="mt-0.5 text-xs font-semibold leading-tight">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {room.paymentTerms.length > 0 ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {room.paymentTerms.map((term) => (
+                    <span key={`${room.key}-${term}`} className="rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2 py-1 text-[11px] font-medium text-[var(--esl-text-muted)]">
+                      {term}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+
+              {room.notes ? <p className="mt-3 text-xs leading-relaxed text-[var(--esl-text-muted)]">{room.notes}</p> : null}
+            </article>
           );
         })}
       </div>
@@ -756,7 +814,7 @@ function ConstructionRoomChoices({
   );
 }
 
-function parseRoomChoice(choice: string, pricePerSqm: number | null) {
+function parseRoomChoice(choice: string, pricePerSqm: number | null): RoomChoiceDetail {
   const areaMatch = choice.match(/(\d+(?:[.,]\d+)?)\s*(?:м²|м2|мкв|m²|m2)/i);
   const area = areaMatch ? numberValue(areaMatch[1].replace(',', '.')) : null;
   const estimatedPrice = area !== null && pricePerSqm !== null
@@ -764,10 +822,73 @@ function parseRoomChoice(choice: string, pricePerSqm: number | null) {
     : null;
 
   return {
+    key: choice,
     label: choice,
     area,
     estimatedPrice,
+    availableUnits: null,
+    rooms: choice.match(/(\d+)\s*өрөө/i)?.[1],
+    bedrooms: null,
+    bathrooms: null,
+    floorRange: null,
+    orientation: null,
+    balcony: null,
+    finish: null,
+    moveInDate: null,
+    paymentTerms: [],
+    notes: null,
   };
+}
+
+function roomChoiceDetailsFrom(value: unknown, defaultPricePerSqm: number | null): RoomChoiceDetail[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((item, index) => roomChoiceDetailFrom(item, index, defaultPricePerSqm))
+    .filter((item): item is RoomChoiceDetail => Boolean(item));
+}
+
+function roomChoiceDetailFrom(value: unknown, index: number, defaultPricePerSqm: number | null): RoomChoiceDetail | null {
+  const record = recordFrom(value);
+  if (!record) {
+    const label = valueToText(value);
+    return label ? parseRoomChoice(label, defaultPricePerSqm) : null;
+  }
+
+  const area = numberValue(pick(record, ['area', 'sqm', 'sizeSqm']));
+  const pricePerSqm = numberValue(pick(record, ['pricePerSqm'])) ?? defaultPricePerSqm;
+  const explicitPrice = numberValue(pick(record, ['priceMnt', 'price', 'estimatedPrice']));
+  const estimatedPrice = explicitPrice ?? (
+    area !== null && pricePerSqm !== null ? Math.round(area * pricePerSqm) : null
+  );
+  const label = valueToText(pick(record, ['label', 'title', 'name']))
+    ?? buildRoomChoiceLabel(record, area)
+    ?? `Сонголт ${index + 1}`;
+
+  return {
+    key: valueToText(pick(record, ['id', 'key'])) ?? `${label}-${index}`,
+    label,
+    area,
+    estimatedPrice,
+    availableUnits: numberValue(pick(record, ['availableUnits', 'remainingUnits', 'stock'])),
+    rooms: pick(record, ['rooms', 'roomCount']),
+    bedrooms: pick(record, ['bedrooms', 'bedroomCount']),
+    bathrooms: pick(record, ['bathrooms', 'bathroomCount']),
+    floorRange: valueToText(pick(record, ['floorRange', 'floor', 'availableFloors'])),
+    orientation: valueToText(pick(record, ['orientation', 'windowView', 'view'])),
+    balcony: valueToText(pick(record, ['balcony'])),
+    finish: valueToText(pick(record, ['finish', 'condition'])),
+    moveInDate: valueToText(pick(record, ['moveInDate', 'moveIn', 'availableFrom'])),
+    paymentTerms: toList(pick(record, ['paymentTerms', 'terms'])),
+    notes: valueToText(pick(record, ['notes', 'description'])),
+  };
+}
+
+function buildRoomChoiceLabel(record: FeedMetadata, area: number | null): string | null {
+  const roomText = formatRooms(pick(record, ['rooms', 'roomCount']));
+  const areaText = formatArea(area);
+  if (roomText && areaText) return `${roomText} ${areaText}`;
+  return roomText ?? areaText;
 }
 
 function ServiceDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
@@ -840,6 +961,12 @@ function pick(meta: FeedMetadata, keys: string[]): unknown {
     if (hasValue(value)) return value;
   }
   return undefined;
+}
+
+function recordFrom(value: unknown): FeedMetadata | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? value as FeedMetadata
+    : null;
 }
 
 function hasValue(value: unknown): boolean {
