@@ -920,7 +920,7 @@ function RoomChoiceInquiryModal({
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 px-4 py-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label={`${room.label} лавлагаа`}>
-      <div className="w-full max-w-lg rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl">
+      <div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl">
         <div className="flex items-start justify-between gap-3 border-b border-[var(--esl-border)] p-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--esl-text-muted)]">Өрөөний лавлагаа</p>
@@ -966,6 +966,14 @@ function RoomChoiceInquiryModal({
                 })}
               </div>
             </div>
+          ) : null}
+
+          {rooms.length > 1 ? (
+            <RoomChoiceComparison
+              rooms={rooms}
+              activeRoom={room}
+              onSelectRoom={selectRoom}
+            />
           ) : null}
 
           {rows.length > 0 ? (
@@ -1045,6 +1053,84 @@ function RoomChoiceInquiryModal({
       </div>
     </div>
   );
+}
+
+function RoomChoiceComparison({
+  rooms,
+  activeRoom,
+  onSelectRoom,
+}: {
+  rooms: RoomChoiceDetail[];
+  activeRoom: RoomChoiceDetail;
+  onSelectRoom: (room: RoomChoiceDetail) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-xs font-bold">Сонголтуудын харьцуулалт</p>
+        <span className="text-[10px] font-semibold text-[var(--esl-text-muted)]">
+          {rooms.length} хувилбар
+        </span>
+      </div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {rooms.map((option) => {
+          const selected = roomUnitId(option) === roomUnitId(activeRoom);
+          const facts = roomComparisonFacts(option);
+
+          return (
+            <button
+              key={`${option.key}-comparison`}
+              type="button"
+              onClick={() => onSelectRoom(option)}
+              aria-pressed={selected}
+              className={cn(
+                'w-full rounded-xl border p-3 text-left transition',
+                selected
+                  ? 'border-[#E8242C] bg-[#E8242C]/15 text-white'
+                  : 'border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-[var(--esl-text)] hover:border-[#E8242C]/60',
+              )}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-black leading-tight">{option.label}</p>
+                  <p className="mt-1 text-sm font-black text-[#E8242C]">
+                    {formatMoney(option.estimatedPrice) || 'Үнэ тохирно'}
+                  </p>
+                </div>
+                <span className={cn(
+                  'rounded-full px-2 py-0.5 text-[10px] font-bold',
+                  selected ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-muted)]',
+                )}>
+                  {selected ? 'Сонгосон' : 'Сонгох'}
+                </span>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-1.5">
+                {facts.map((fact) => (
+                  <div key={`${option.key}-comparison-${fact.label}`} className="rounded-md bg-[var(--esl-bg)]/40 px-2 py-1.5">
+                    <p className="text-[9px] text-[var(--esl-text-muted)]">{fact.label}</p>
+                    <p className="mt-0.5 text-[11px] font-semibold leading-tight">{fact.value}</p>
+                  </div>
+                ))}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function roomComparisonFacts(room: RoomChoiceDetail): { label: string; value: string }[] {
+  return [
+    { label: 'Талбай', value: formatArea(room.area) },
+    { label: 'Үлдэгдэл', value: suffixValue(room.availableUnits, 'айл') },
+    { label: 'Давхар', value: room.floorRange },
+    { label: 'Цонх', value: room.orientation },
+    { label: 'Тагт', value: room.balcony },
+    { label: 'Засал', value: room.finish },
+    { label: 'Нүүх', value: room.moveInDate },
+    { label: 'Төлбөр', value: room.paymentTerms[0] },
+  ].filter((item): item is { label: string; value: string } => Boolean(item.value));
 }
 
 function parseRoomChoice(choice: string, pricePerSqm: number | null): RoomChoiceDetail {
