@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/auth';
 import { MediaUploader } from '@/components/shared/MediaUploader';
 import CategorySelector from '@/components/shared/CategorySelector';
 import { ENTITY_CARD_CONFIG, type EntityType as CardEntityType } from '@/lib/cards/entityCardConfig';
+import { categoryPathInfo, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
 
 type FieldType = 'text' | 'number' | 'textarea' | 'select' | 'boolean' | 'list';
 type MetadataValue = string | number | boolean | string[];
@@ -37,6 +38,7 @@ type FeedListItem = {
   originalPrice?: number | null;
   images?: string[];
   category?: string | null;
+  subcategory?: string | null;
   entityType?: string | null;
   district?: string | null;
   tier?: string | null;
@@ -327,7 +329,7 @@ export default function NewListingPage() {
           description: item.description || '',
           price: item.price ? String(item.price) : '',
           originalPrice: item.originalPrice ? String(item.originalPrice) : '',
-          category: item.category || '',
+          category: item.subcategory || item.category || '',
           district: item.district || '',
           tier: item.tier || 'normal',
         });
@@ -370,8 +372,21 @@ export default function NewListingPage() {
     setError('');
 
     const price = form.price ? Number(form.price) : undefined;
-    const cleanMetadata = normalizeMetadata(config.fields, metadata, entityType, form.district, price);
     const category = form.category.trim() || defaultCategory(entityType);
+    const selectedCategoryPath = categoryPathInfo(category);
+    const categoryRoot = selectedCategoryPath?.rootKey || normalizeMarketplaceCategory(category);
+    const normalizedCategory = categoryRoot === 'all' ? category : categoryRoot;
+    const subcategory = selectedCategoryPath && selectedCategoryPath.value !== selectedCategoryPath.rootKey
+      ? selectedCategoryPath.value
+      : undefined;
+    const cleanMetadata = normalizeMetadata(config.fields, metadata, entityType, form.district, price);
+    if (selectedCategoryPath) {
+      cleanMetadata.categoryRoot = selectedCategoryPath.rootKey;
+      cleanMetadata.categorySelection = selectedCategoryPath.value;
+      cleanMetadata.categoryPath = selectedCategoryPath.labels;
+      cleanMetadata.categoryPathLabel = selectedCategoryPath.label;
+      cleanMetadata.categoryLeafLabel = selectedCategoryPath.leafLabel;
+    }
     const token = localStorage.getItem('token');
 
     const res = await fetch(editId ? `/api/feed/${editId}` : '/api/feed', {
@@ -379,7 +394,8 @@ export default function NewListingPage() {
       headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
       body: JSON.stringify({
         ...form,
-        category,
+        category: normalizedCategory,
+        subcategory,
         price,
         originalPrice: form.originalPrice ? Number(form.originalPrice) : undefined,
         images,
