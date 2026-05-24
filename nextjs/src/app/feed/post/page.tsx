@@ -189,6 +189,7 @@ function isGenericProductCategory(category: string) {
 export default function PostAdPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const urlCategoryAppliedRef = useRef(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -238,6 +239,28 @@ export default function PostAdPage() {
     setDraftRestored(false);
   }, []);
 
+  const applyCategorySelection = useCallback((slug: string) => {
+    const previousRoot = normalizeMarketplaceCategory(category);
+    const nextRoot = normalizeMarketplaceCategory(slug);
+    const previousInferredDraft = inferListingMetadataDraftFromCategory(category);
+    const inferredDraft = inferListingMetadataDraftFromCategory(slug);
+
+    setCategory(slug);
+    setMetadataDraft((prev) => {
+      const base = previousRoot === nextRoot && previousRoot !== 'all' ? prev : {};
+      const next = { ...base };
+
+      for (const [key, value] of Object.entries(inferredDraft)) {
+        const currentValue = next[key]?.trim();
+        const wasAutoFilled = Boolean(previousInferredDraft[key]) && currentValue === previousInferredDraft[key];
+        if ((!currentValue || wasAutoFilled) && value.trim()) next[key] = value;
+      }
+
+      return next;
+    });
+    setPreviewMetadata({});
+  }, [category]);
+
   useEffect(() => {
     try {
       const rawDraft = window.localStorage.getItem(FEED_POST_DRAFT_KEY);
@@ -267,6 +290,20 @@ export default function PostAdPage() {
       setDraftLoaded(true);
     }
   }, []);
+
+  useEffect(() => {
+    if (!draftLoaded || urlCategoryAppliedRef.current) return;
+
+    const requestedCategory = new URLSearchParams(window.location.search).get('category');
+    const requestedPath = categoryPathInfo(requestedCategory);
+    if (!requestedPath) {
+      urlCategoryAppliedRef.current = true;
+      return;
+    }
+
+    urlCategoryAppliedRef.current = true;
+    if (category !== requestedPath.value) applyCategorySelection(requestedPath.value);
+  }, [applyCategorySelection, category, draftLoaded]);
 
   useEffect(() => {
     if (!draftLoaded) return;
@@ -464,28 +501,6 @@ export default function PostAdPage() {
         icon: CATEGORY_ICON_MAP[selectedCategory.icon] || Package,
       }
     : null;
-
-  const applyCategorySelection = (slug: string) => {
-    const previousRoot = normalizeMarketplaceCategory(category);
-    const nextRoot = normalizeMarketplaceCategory(slug);
-    const previousInferredDraft = inferListingMetadataDraftFromCategory(category);
-    const inferredDraft = inferListingMetadataDraftFromCategory(slug);
-
-    setCategory(slug);
-    setMetadataDraft((prev) => {
-      const base = previousRoot === nextRoot && previousRoot !== 'all' ? prev : {};
-      const next = { ...base };
-
-      for (const [key, value] of Object.entries(inferredDraft)) {
-        const currentValue = next[key]?.trim();
-        const wasAutoFilled = Boolean(previousInferredDraft[key]) && currentValue === previousInferredDraft[key];
-        if ((!currentValue || wasAutoFilled) && value.trim()) next[key] = value;
-      }
-
-      return next;
-    });
-    setPreviewMetadata({});
-  };
 
   const renderMetadataField = (field: ListingMetadataField) => {
     const value = metadataDraft[field.key] || '';
