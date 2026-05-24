@@ -291,6 +291,43 @@ function feedDetailUnitHref(id: string, unit: string): string {
   return `${feedDetailHref(id)}?${params.toString()}`;
 }
 
+function normalizePhone(phone?: string | null): string | null {
+  const digits = phone?.replace(/[^\d+]/g, '') || '';
+  return digits.length >= 6 ? digits : null;
+}
+
+function telHref(phone?: string | null): string | null {
+  const normalized = normalizePhone(phone);
+  return normalized ? `tel:${normalized}` : null;
+}
+
+function smsHref(phone?: string | null): string | null {
+  const normalized = normalizePhone(phone);
+  return normalized ? `sms:${normalized}` : null;
+}
+
+async function copyText(text: string): Promise<void> {
+  if (navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return;
+    } catch {
+      // Fall through to the textarea fallback for older or stricter browsers.
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textarea);
+}
+
 function numberFrom(value: unknown, fallback = 0): number {
   if (typeof value === 'number' && Number.isFinite(value)) return value;
   if (typeof value === 'string') {
@@ -894,6 +931,8 @@ export default function EntityProfilePage() {
   const [selectedListing, setSelectedListing] = useState<DemoListing | null>(null);
   const [liveEntity, setLiveEntity] = useState<DemoEntity | null>(null);
   const [loadingEntity, setLoadingEntity] = useState(() => !demoEntity);
+  const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const entity = liveEntity || demoEntity;
@@ -956,6 +995,18 @@ export default function EntityProfilePage() {
     : ['Зарууд', 'Үнэлгээ', 'Тухай'];
 
   const coverImages = entity.coverImages || [entity.coverImage];
+  const tel = telHref(entity.phone);
+  const sms = smsHref(entity.phone);
+  const actionButtonClass = 'flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition cursor-pointer no-underline';
+  const iconButtonClass = 'w-10 h-10 rounded-xl bg-white/10 border border-[var(--esl-border)] flex items-center justify-center transition cursor-pointer';
+  const modalMessageClass = 'flex-1 h-12 bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] text-sm flex items-center justify-center gap-2 hover:opacity-80 transition no-underline';
+
+  const copyProfileLink = async () => {
+    const url = window.location.href;
+    await copyText(url);
+    setCopied(true);
+    window.setTimeout(() => setCopied(false), 1800);
+  };
 
   return (
     <div className="min-h-screen bg-[var(--esl-bg-page)]">
@@ -1012,22 +1063,65 @@ export default function EntityProfilePage() {
       {/* ── Action bar ── */}
       <div className="sticky top-14 z-40 bg-[var(--esl-bg-page)]/95 backdrop-blur-xl border-b border-white/5">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
+          {showPhone && tel ? (
+            <a
+              href={tel}
+              className={`${actionButtonClass} bg-[#E8242C] text-white hover:bg-[#CC0000] border border-[#E8242C]`}
+              aria-label={`${entity.name} руу залгах`}
+            >
+              <Phone className="w-4 h-4" />
+              {entity.phone}
+            </a>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowPhone(true)}
+              disabled={!tel}
+              className={`${actionButtonClass} border-none ${tel ? 'bg-[#E8242C] text-white hover:bg-[#CC0000]' : 'bg-white/10 text-[var(--esl-text-muted)] cursor-not-allowed'}`}
+            >
+              <Phone className="w-4 h-4" />
+              Залгах
+            </button>
+          )}
+          {sms ? (
+            <a
+              href={sms}
+              className={`${actionButtonClass} bg-white/10 text-white hover:bg-white/15 border border-[var(--esl-border)]`}
+              aria-label={`${entity.name} руу мессеж бичих`}
+            >
+              <MessageCircle className="w-4 h-4" /> Мессеж
+            </a>
+          ) : (
+            <button
+              type="button"
+              disabled
+              className={`${actionButtonClass} bg-white/10 text-[var(--esl-text-muted)] border border-[var(--esl-border)] cursor-not-allowed`}
+            >
+              <MessageCircle className="w-4 h-4" /> Мессеж
+            </button>
+          )}
           <button
-            onClick={() => setShowPhone(!showPhone)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-[#E8242C] text-white rounded-xl text-sm font-bold hover:bg-[#CC0000] transition cursor-pointer border-none"
+            type="button"
+            onClick={() => setSaved((value) => !value)}
+            aria-pressed={saved}
+            aria-label={saved ? 'Хадгалсан жагсаалтаас хасах' : 'Хадгалах'}
+            title={saved ? 'Хадгалсан' : 'Хадгалах'}
+            className={`${iconButtonClass} ${saved ? 'text-[#E8242C] border-[#E8242C]/70 bg-[#E8242C]/10' : 'text-[var(--esl-text-muted)] hover:text-[#E8242C]'}`}
           >
-            <Phone className="w-4 h-4" />
-            {showPhone ? entity.phone : 'Залгах'}
+            <Heart className={cn('w-4 h-4', saved && 'fill-current')} />
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-white/10 text-white rounded-xl text-sm font-semibold hover:bg-white/15 transition cursor-pointer border border-[var(--esl-border)]">
-            <MessageCircle className="w-4 h-4" /> Мессеж
-          </button>
-          <button className="w-10 h-10 rounded-xl bg-white/10 border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] hover:text-[#E8242C] transition cursor-pointer">
-            <Heart className="w-4 h-4" />
-          </button>
-          <button className="w-10 h-10 rounded-xl bg-white/10 border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] hover:text-white transition cursor-pointer">
+          <button
+            type="button"
+            onClick={copyProfileLink}
+            aria-label={copied ? 'Профайлын линк хуулагдлаа' : 'Профайлын линк хуулах'}
+            title={copied ? 'Линк хуулагдлаа' : 'Хуваалцах'}
+            className={`${iconButtonClass} ${copied ? 'text-emerald-300 border-emerald-300/60 bg-emerald-400/10' : 'text-[var(--esl-text-muted)] hover:text-white'}`}
+          >
             <Share2 className="w-4 h-4" />
           </button>
+          {copied && (
+            <span className="text-xs font-semibold text-emerald-300">Линк хуулагдлаа</span>
+          )}
           <div className="flex-1" />
           {entity.website && (
             <a href={`https://${entity.website}`} target="_blank" rel="noopener" className="text-xs text-[var(--esl-text-muted)] hover:text-white transition no-underline flex items-center gap-1">
@@ -1115,9 +1209,15 @@ export default function EntityProfilePage() {
                       <button onClick={() => { setShowPhone(true); setSelectedVehicle(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
                         <Phone className="w-4 h-4" /> Залгах
                       </button>
-                      <button className="flex-1 h-12 bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:opacity-80 transition">
-                        <MessageCircle className="w-4 h-4" /> Мессеж
-                      </button>
+                      {sms ? (
+                        <a href={sms} className={modalMessageClass}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </a>
+                      ) : (
+                        <button type="button" disabled className={`${modalMessageClass} cursor-not-allowed opacity-60`}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1156,9 +1256,15 @@ export default function EntityProfilePage() {
                       <button onClick={() => { setShowPhone(true); setSelectedListing(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
                         <Phone className="w-4 h-4" /> Залгах
                       </button>
-                      <button className="flex-1 h-12 bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[var(--esl-bg-card-hover)] transition">
-                        <MessageCircle className="w-4 h-4" /> Мессеж
-                      </button>
+                      {sms ? (
+                        <a href={sms} className={modalMessageClass}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </a>
+                      ) : (
+                        <button type="button" disabled className={`${modalMessageClass} cursor-not-allowed opacity-60`}>
+                          <MessageCircle className="w-4 h-4" /> Мессеж
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1416,9 +1522,15 @@ export default function EntityProfilePage() {
                 <button onClick={() => { setShowPhone(true); setSelectedListing(null); }} className="flex-1 h-12 bg-[#E8242C] text-white font-bold rounded-xl border-none cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[#CC0000] transition">
                   <Phone className="w-4 h-4" /> Залгах
                 </button>
-                <button className="flex-1 h-12 bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] cursor-pointer text-sm flex items-center justify-center gap-2 hover:bg-[var(--esl-bg-card-hover)] transition">
-                  <MessageCircle className="w-4 h-4" /> Мессеж
-                </button>
+                {sms ? (
+                  <a href={sms} className={modalMessageClass}>
+                    <MessageCircle className="w-4 h-4" /> Мессеж
+                  </a>
+                ) : (
+                  <button type="button" disabled className={`${modalMessageClass} cursor-not-allowed opacity-60`}>
+                    <MessageCircle className="w-4 h-4" /> Мессеж
+                  </button>
+                )}
               </div>
             </div>
           </div>

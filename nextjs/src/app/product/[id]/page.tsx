@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import JsonLdScript from '@/components/shared/JsonLdScript';
 import ProductDetailClient, { type DetailProduct } from '@/components/product/ProductDetailClient';
 import type { Product } from '@/lib/api';
 import type { Metadata } from 'next';
@@ -53,6 +54,44 @@ function demoRelatedProducts(id: string) {
     }));
 }
 
+interface ProductJsonLdInput {
+  id: string;
+  name: string;
+  description?: string | null;
+  images?: string[] | null;
+  price: number;
+  salePrice?: number | null;
+  stock?: number | null;
+  rating?: number | null;
+  reviewCount?: number | null;
+}
+
+function buildProductJsonLd(product: ProductJsonLdInput): Record<string, unknown> {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.description || product.name,
+    image: product.images?.[0] || undefined,
+    offers: {
+      '@type': 'Offer',
+      price: product.salePrice || product.price,
+      priceCurrency: 'MNT',
+      availability: (product.stock ?? 0) > 0
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      url: `https://eseller.mn/product/${product.id}`,
+    },
+    ...(product.rating ? {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.rating,
+        reviewCount: product.reviewCount || 1,
+      },
+    } : {}),
+  };
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   if (!isValidObjectId(id)) {
@@ -83,11 +122,17 @@ export default async function ProductPage({ params }: Props) {
   if (!isValidObjectId(id)) {
     const product = demoProduct(id);
     if (!product) notFound();
+    const clientProduct = demoDetailProduct(product);
+    const relatedProducts = demoRelatedProducts(product._id);
+
     return (
-      <ProductDetailClient
-        product={demoDetailProduct(product) as unknown as DetailProduct}
-        relatedProducts={demoRelatedProducts(product._id) as unknown as Product[]}
-      />
+      <>
+        <JsonLdScript id={`product-jsonld-${clientProduct.id}`} data={buildProductJsonLd(clientProduct)} />
+        <ProductDetailClient
+          product={clientProduct as unknown as DetailProduct}
+          relatedProducts={relatedProducts as unknown as Product[]}
+        />
+      </>
     );
   }
 
@@ -152,36 +197,9 @@ export default async function ProductPage({ params }: Props) {
     _id: r.id,
   }));
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    name: product.name,
-    description: product.description || product.name,
-    image: product.images?.[0] || undefined,
-    offers: {
-      '@type': 'Offer',
-      price: product.salePrice || product.price,
-      priceCurrency: 'MNT',
-      availability: (product.stock ?? 0) > 0
-        ? 'https://schema.org/InStock'
-        : 'https://schema.org/OutOfStock',
-      url: `https://eseller.mn/product/${product.id}`,
-    },
-    ...(product.rating ? {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: product.rating,
-        reviewCount: product.reviewCount || 1,
-      },
-    } : {}),
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLdScript id={`product-jsonld-${product.id}`} data={buildProductJsonLd(product)} />
       <ProductDetailClient product={clientProduct as unknown as DetailProduct} relatedProducts={relatedProducts as unknown as Product[]} />
     </>
   );
