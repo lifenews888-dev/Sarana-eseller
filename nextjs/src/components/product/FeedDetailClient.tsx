@@ -7,7 +7,7 @@ import {
   ArrowLeft, Phone, MapPin, Star, Calendar, Gauge, Fuel, Settings2,
   Tag, Clock, Timer, Building2, Ruler, Home, Car, ShieldCheck,
   ClipboardList, Banknote, CheckCircle2, Navigation, Eye, Hash,
-  Smartphone, BatteryCharging, PackageCheck, X,
+  Smartphone, BatteryCharging, PackageCheck, Share2, X,
 } from 'lucide-react';
 import { resolveEntityType, ENTITY_CARD_CONFIG, formatPrice as entityFormatPrice, type EntityType as DetailEntityType } from '@/lib/cards/entityCardConfig';
 import { categoryPathInfo, categoryLabel as marketplaceCategoryLabel, normalizeMarketplaceCategory } from '@/lib/marketplaceCategories';
@@ -759,8 +759,19 @@ function ConstructionRoomChoices({
   const rooms = details.length > 0
     ? details
     : choices.map((choice) => parseRoomChoice(choice, pricePerSqm));
+  const activeRoom = selectedRoom ?? roomFromCurrentUrl(rooms);
 
   if (rooms.length === 0) return null;
+
+  function openRoom(room: RoomChoiceDetail) {
+    setSelectedRoom(room);
+    updateRoomUnitParam(room);
+  }
+
+  function closeRoom() {
+    setSelectedRoom(null);
+    clearRoomUnitParam();
+  }
 
   return (
     <DetailSection title="Өрөөний сонголт" icon={<Home size={16} />}>
@@ -819,7 +830,7 @@ function ConstructionRoomChoices({
 
               <button
                 type="button"
-                onClick={() => setSelectedRoom(room)}
+                onClick={() => openRoom(room)}
                 className="mt-3 inline-flex h-9 w-full items-center justify-center rounded-lg bg-[#E8242C] px-3 text-xs font-bold text-white transition hover:bg-[#c91f26]"
               >
                 Энэ сонголтыг сонирхох
@@ -829,13 +840,13 @@ function ConstructionRoomChoices({
         })}
       </div>
 
-      {selectedRoom ? (
+      {activeRoom ? (
         <RoomChoiceInquiryModal
-          room={selectedRoom}
+          room={activeRoom}
           ownerPhone={ownerPhone}
           listingTitle={listingTitle}
           refId={refId}
-          onClose={() => setSelectedRoom(null)}
+          onClose={closeRoom}
         />
       ) : null}
     </DetailSection>
@@ -856,6 +867,7 @@ function RoomChoiceInquiryModal({
   onClose: () => void;
 }) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
   const phone = ownerPhone ? formatPhoneLabel(ownerPhone) : null;
   const href = phoneHref(ownerPhone || undefined);
   const price = formatMoney(room.estimatedPrice);
@@ -877,6 +889,12 @@ function RoomChoiceInquiryModal({
     setCopied(true);
     void copyTextToClipboard(inquiryText).catch(() => setCopied(false));
     window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  function copyRoomLink() {
+    setLinkCopied(true);
+    void copyTextToClipboard(roomUnitUrl(room)).catch(() => setLinkCopied(false));
+    window.setTimeout(() => setLinkCopied(false), 1800);
   }
 
   return (
@@ -933,13 +951,22 @@ function RoomChoiceInquiryModal({
                   {inquiryText}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={copyInquiryText}
-                className="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
-              >
-                <ClipboardList size={14} /> {copied ? 'Хуулагдлаа' : 'Хуулах'}
-              </button>
+              <div className="flex shrink-0 flex-col gap-1.5">
+                <button
+                  type="button"
+                  onClick={copyInquiryText}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+                >
+                  <ClipboardList size={14} /> {copied ? 'Хуулагдлаа' : 'Текст'}
+                </button>
+                <button
+                  type="button"
+                  onClick={copyRoomLink}
+                  className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+                >
+                  <Share2 size={14} /> {linkCopied ? 'Хуулагдлаа' : 'Линк'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1070,6 +1097,35 @@ function buildRoomInquiryText({
   ];
 
   return parts.filter(Boolean).join(' ');
+}
+
+function roomUnitId(room: RoomChoiceDetail): string {
+  return room.key || room.label;
+}
+
+function roomFromCurrentUrl(rooms: RoomChoiceDetail[]): RoomChoiceDetail | null {
+  if (typeof window === 'undefined') return null;
+  const unit = new URLSearchParams(window.location.search).get('unit');
+  if (!unit) return null;
+  return rooms.find((room) => roomUnitId(room) === unit || room.key === unit) ?? null;
+}
+
+function updateRoomUnitParam(room: RoomChoiceDetail) {
+  const url = new URL(window.location.href);
+  url.searchParams.set('unit', roomUnitId(room));
+  window.history.replaceState(null, '', url.toString());
+}
+
+function clearRoomUnitParam() {
+  const url = new URL(window.location.href);
+  url.searchParams.delete('unit');
+  window.history.replaceState(null, '', url.toString());
+}
+
+function roomUnitUrl(room: RoomChoiceDetail): string {
+  const url = new URL(window.location.href);
+  url.searchParams.set('unit', roomUnitId(room));
+  return url.toString();
 }
 
 async function copyTextToClipboard(text: string) {
