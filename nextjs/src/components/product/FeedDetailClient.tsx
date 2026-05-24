@@ -889,6 +889,7 @@ function RoomChoiceInquiryModal({
 }) {
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = ownerPhone ? formatPhoneLabel(ownerPhone) : null;
   const href = phoneHref(ownerPhone || undefined);
   const price = formatMoney(room.estimatedPrice);
@@ -905,6 +906,10 @@ function RoomChoiceInquiryModal({
     { label: 'Нүүх боломж', value: room.moveInDate },
   ].filter((item): item is { label: string; value: string } => Boolean(item.value));
   const inquiryText = buildRoomInquiryText({ room, listingTitle, refId, phone });
+  const inquiryQuestions = roomInquiryQuestions(room);
+  const inquiryQuestionText = inquiryQuestions
+    .map((question, index) => `${index + 1}. ${question}`)
+    .join('\n');
 
   function copyInquiryText() {
     setCopied(true);
@@ -918,9 +923,16 @@ function RoomChoiceInquiryModal({
     window.setTimeout(() => setLinkCopied(false), 1800);
   }
 
+  function copyInquiryQuestions() {
+    setQuestionsCopied(true);
+    void copyTextToClipboard(inquiryQuestionText).catch(() => undefined);
+    window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
   function selectRoom(nextRoom: RoomChoiceDetail) {
     setCopied(false);
     setLinkCopied(false);
+    setQuestionsCopied(false);
     onSelectRoom(nextRoom);
   }
 
@@ -1007,6 +1019,31 @@ function RoomChoiceInquiryModal({
           ) : null}
 
           {room.notes ? <p className="rounded-lg bg-[var(--esl-bg-muted)] p-3 text-xs leading-relaxed text-[var(--esl-text-muted)]">{room.notes}</p> : null}
+
+          {inquiryQuestions.length > 0 ? (
+            <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <p className="text-xs font-bold">Лавлах асуултууд</p>
+                <button
+                  type="button"
+                  onClick={copyInquiryQuestions}
+                  className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2.5 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+                >
+                  <ClipboardList size={13} /> {questionsCopied ? 'Хуулагдлаа' : 'Хуулах'}
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {inquiryQuestions.map((question, index) => (
+                  <div key={`${room.key}-question-${question}`} className="flex gap-2 rounded-lg bg-[var(--esl-bg-card)] px-3 py-2">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E8242C]/15 text-[10px] font-black text-[#E8242C]">
+                      {index + 1}
+                    </span>
+                    <p className="text-xs leading-relaxed text-[var(--esl-text-muted)]">{question}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
             <div className="flex items-start justify-between gap-3">
@@ -1137,6 +1174,24 @@ function roomComparisonFacts(room: RoomChoiceDetail): { label: string; value: st
     { label: 'Нүүх', value: room.moveInDate },
     { label: 'Төлбөр', value: room.paymentTerms[0] },
   ].filter((item): item is { label: string; value: string } => Boolean(item.value));
+}
+
+function roomInquiryQuestions(room: RoomChoiceDetail): string[] {
+  const questions = [
+    `${room.label} сонголтын одоогийн үлдэгдэл болон захиалга баталгаатай юу?`,
+  ];
+  const available = suffixValue(room.availableUnits, 'айл');
+
+  if (available) questions.push(`${available} үлдсэнээс ямар давхар, ямар цонхны харцтай байр сонгох боломжтой вэ?`);
+  if (room.floorRange || room.orientation) questions.push('Сонгож болох давхар, цонхны харц, байрлалын ялгааг зураг/планаар баталгаажуулж болох уу?');
+  if (room.balcony) questions.push(`${room.balcony} хэсгийн хэмжээ, хаашаа харсан байршлыг тодруулж өгнө үү.`);
+  if (room.finish) questions.push(`${room.finish} багцад ямар материал, тоноглол, баталгаа багтсан бэ?`);
+  if (room.moveInDate) questions.push(`${room.moveInDate} гэдэг нь түлхүүр хүлээлцэх бодит боломжит хугацаа мөн үү?`);
+  if (room.paymentTerms.length > 0) questions.push(`${room.paymentTerms.join(', ')} нөхцөлөөр урьдчилгаа, сарын төлөлт, шаардлагатай бичиг баримт юу вэ?`);
+
+  questions.push('Гэрчилгээ, захиалгын гэрээ, СӨХ/ашиглалтын зардлын мэдээллийг үзэж болох уу?');
+
+  return questions;
 }
 
 function parseRoomChoice(choice: string, pricePerSqm: number | null): RoomChoiceDetail {
