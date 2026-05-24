@@ -112,7 +112,7 @@ export default function ProductCard({
           type="button"
           aria-label={isWished ? `${p.name} хадгалснаас хасах` : `${p.name} хадгалах`}
           aria-pressed={Boolean(isWished)}
-          className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/85 flex items-center justify-center border border-[var(--esl-border)]/50 cursor-pointer transition-all hover:bg-white hover:scale-110"
+          className="absolute top-2.5 right-2.5 z-10 w-7 h-7 rounded-full bg-white/85 flex items-center justify-center border border-[var(--esl-border)]/50 cursor-pointer transition-all hover:bg-white hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]"
           onClick={() => { if (productId) onToggleWish(productId); }}
         >
           <Heart className="w-3.5 h-3.5" fill={isWished ? '#E24B4A' : 'none'} color={isWished ? '#E24B4A' : '#666'} strokeWidth={1.5} />
@@ -130,7 +130,7 @@ export default function ProductCard({
           type="button"
           onClick={handleOpen}
           aria-label={`${p.name} дэлгэрэнгүй харах`}
-          className="block h-full w-full cursor-pointer border-0 bg-transparent p-0 text-left"
+          className="block h-full w-full cursor-pointer border-0 bg-transparent p-0 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E8242C]"
         >
           {images.length > 0 ? (
             <div
@@ -168,7 +168,7 @@ export default function ProductCard({
                 type="button"
                 key={i}
                 aria-label={`${p.name} зураг ${i + 1}`}
-                className="w-1.5 h-1.5 rounded-full border-none cursor-pointer transition-all"
+                className="w-1.5 h-1.5 rounded-full border-none cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
                 style={{ background: i === activeImg ? '#fff' : 'rgba(255,255,255,0.5)' }}
                 onClick={() => setActiveImg(i)}
               />
@@ -180,7 +180,8 @@ export default function ProductCard({
         {onQuickAdd && (
           <button
             type="button"
-            className="absolute bottom-0 left-0 right-0 z-10 border-0 bg-black/85 py-2.5 text-center text-xs font-medium tracking-wide text-white translate-y-full transition-transform duration-200 group-hover:translate-y-0 cursor-pointer"
+            aria-label={`${p.name} сагсанд нэмэх`}
+            className="absolute bottom-0 left-0 right-0 z-10 border-0 bg-black/85 py-2.5 text-center text-xs font-medium tracking-wide text-white translate-y-0 transition-transform duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#E8242C] md:translate-y-full md:group-hover:translate-y-0 md:group-focus-within:translate-y-0"
             onClick={() => onQuickAdd(p)}
           >
             + Сагсанд нэмэх
@@ -194,7 +195,7 @@ export default function ProductCard({
           type="button"
           onClick={handleOpen}
           aria-label={`${p.name} дэлгэрэнгүй харах`}
-          className="block w-full cursor-pointer border-0 bg-transparent p-0 text-left [font:inherit]"
+          className="block w-full cursor-pointer rounded-lg border-0 bg-transparent p-0 text-left [font:inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]/70"
         >
           {/* Seller name */}
           {p.store?.name && (
@@ -240,7 +241,7 @@ export default function ProductCard({
         <Link
           href={productHref}
           onClick={(e) => e.stopPropagation()}
-          className="block mt-2 text-center text-[11px] font-medium py-1.5 rounded-lg border border-[var(--esl-border)] hover:bg-[var(--esl-bg-muted)] transition-colors"
+          className="block mt-2 text-center text-[11px] font-medium py-1.5 rounded-lg border border-[var(--esl-border)] hover:bg-[var(--esl-bg-muted)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C]/70"
           style={{ color: 'var(--esl-text-muted)' }}
         >
           Дэлгэрэнгүй →
