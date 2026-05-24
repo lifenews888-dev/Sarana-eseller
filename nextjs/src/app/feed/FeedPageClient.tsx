@@ -209,16 +209,20 @@ function normalizeFeedItem(item: ApiFeedItem): FeedItem {
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
-  return n.toLocaleString() + '₮';
+  return n.toLocaleString('mn-MN') + '₮';
 }
 
 function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const days = Math.floor(diff / 86400000);
-  if (days === 0) return 'Өнөөдөр';
-  if (days === 1) return 'Өчигдөр';
-  if (days < 7) return `${days} өдрийн өмнө`;
-  return dateStr;
+  const dateOnly = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dateOnly) return `${dateOnly[1]}.${dateOnly[2]}.${dateOnly[3]}`;
+
+  const date = new Date(dateStr);
+  if (Number.isNaN(date.getTime())) return dateStr;
+
+  const year = String(date.getUTCFullYear()).padStart(4, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
 }
 
 function categoryIcon(cat: string): LucideIcon {
