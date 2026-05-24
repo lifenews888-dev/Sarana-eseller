@@ -93,11 +93,16 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
     ? post.media
     : post.images.map((url, i) => ({ type: 'IMAGE' as const, url, sortOrder: i }));
 
+  function handleBack() {
+    if (canUseSameSiteBack()) router.back();
+    else router.push('/feed');
+  }
+
   return (
     <div className="min-h-screen bg-[var(--esl-bg)]">
       <div className="sticky top-0 z-50 bg-[var(--esl-bg)]/80 backdrop-blur-xl border-b border-[var(--esl-border)]">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-          <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center hover:bg-[var(--esl-bg-muted)] transition-colors" aria-label="Буцах">
+          <button onClick={handleBack} className="w-9 h-9 rounded-full bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center hover:bg-[var(--esl-bg-muted)] transition-colors" aria-label="Буцах">
             <ArrowLeft size={18} />
           </button>
           <div className="flex-1 min-w-0">
@@ -280,6 +285,18 @@ function phoneHref(phone?: string): string | null {
   if (!phone) return null;
   const normalized = phone.replace(/[^\d+]/g, '');
   return normalized ? `tel:${normalized}` : null;
+}
+
+function canUseSameSiteBack(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.history.length <= 1) return false;
+  if (!document.referrer) return false;
+
+  try {
+    return new URL(document.referrer).origin === window.location.origin;
+  } catch {
+    return false;
+  }
 }
 
 function smsHref(phone?: string, body?: string): string | null {

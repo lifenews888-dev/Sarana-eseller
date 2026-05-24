@@ -49,6 +49,11 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
   const hasDiscount = product.salePrice && product.salePrice < product.price;
   const discount = discountPercent(product.price, product.salePrice);
 
+  function handleBack() {
+    if (canUseSameSiteBack()) router.back();
+    else router.push('/store');
+  }
+
   const handleSellerChat = async () => {
     const token = localStorage.getItem('token');
     const returnTo = `${window.location.pathname}${window.location.search}`;
@@ -93,7 +98,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
       {/* Header */}
       <div className="sticky top-0 z-50 bg-[var(--esl-bg)]/80 backdrop-blur-xl border-b border-[var(--esl-border)]">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-3">
-          <button onClick={() => router.back()} className="w-9 h-9 rounded-full bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center hover:bg-[var(--esl-bg-muted)] transition-colors">
+          <button onClick={handleBack} className="w-9 h-9 rounded-full bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center hover:bg-[var(--esl-bg-muted)] transition-colors" aria-label="Буцах">
             <ArrowLeft size={18} />
           </button>
           <Link href="/" className="flex items-center gap-1 no-underline shrink-0">
@@ -580,6 +585,18 @@ function phoneHref(phone?: string | null): string | null {
   if (!phone) return null;
   const normalized = phone.replace(/[^\d+]/g, '');
   return normalized ? `tel:${normalized}` : null;
+}
+
+function canUseSameSiteBack(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (window.history.length <= 1) return false;
+  if (!document.referrer) return false;
+
+  try {
+    return new URL(document.referrer).origin === window.location.origin;
+  } catch {
+    return false;
+  }
 }
 
 function SpecCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
