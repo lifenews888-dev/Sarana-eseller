@@ -329,7 +329,7 @@ function relatedFacts(post: RelatedFeedPost): string[] {
     values.push(valueToText(pick(meta, ['completionDate'])));
     values.push(post.district);
   } else if (et === 'SERVICE') {
-    values.push(suffixValue(pick(meta, ['duration']), 'мин'));
+    values.push(formatServiceDuration(pick(meta, ['duration'])));
     values.push(valueToText(pick(meta, ['rating'])));
     values.push(post.district);
   } else {
@@ -375,7 +375,7 @@ function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post
     add(<Settings2 size={14} />, pick(meta, ['transmission']));
     add(<Tag size={14} />, pick(meta, ['brand']));
   } else if (et === 'SERVICE') {
-    add(<Timer size={14} />, suffixValue(pick(meta, ['duration']), 'мин'));
+    add(<Timer size={14} />, formatServiceDuration(pick(meta, ['duration'])));
     add(<Star size={14} className="text-amber-400" />, pick(meta, ['rating']));
     add(<MapPin size={14} />, post.district);
   } else if (et === 'CONSTRUCTION') {
