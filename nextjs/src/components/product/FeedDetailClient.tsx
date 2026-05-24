@@ -589,10 +589,12 @@ function ProductInquiryPanel({
   const [copied, setCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
-  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
+  const href = phoneHref(rawPhone);
   const questions = productInquiryQuestions(meta, category, subcategory);
   const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
   const inquiryText = buildProductInquiryText({ meta, post, phone, category, subcategory });
+  const sms = smsHref(rawPhone, inquiryText);
 
   function copyInquiryText() {
     setCopied(true);
@@ -650,7 +652,7 @@ function ProductInquiryPanel({
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-3">
           {href ? (
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
@@ -658,6 +660,15 @@ function ProductInquiryPanel({
           ) : (
             <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
               <Phone size={16} /> Утас алга
+            </button>
+          )}
+          {sms ? (
+            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
+              <MessageCircle size={16} /> Мессеж
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
+              <MessageCircle size={16} /> Мессеж алга
             </button>
           )}
           <button
@@ -870,10 +881,12 @@ function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }
   const [copied, setCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
-  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
+  const href = phoneHref(rawPhone);
   const questions = autoInquiryQuestions(meta);
   const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
   const inquiryText = buildAutoInquiryText({ meta, post, phone });
+  const sms = smsHref(rawPhone, inquiryText);
 
   function copyInquiryText() {
     setCopied(true);
@@ -931,7 +944,7 @@ function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-3">
           {href ? (
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
@@ -939,6 +952,15 @@ function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }
           ) : (
             <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
               <Phone size={16} /> Утас алга
+            </button>
+          )}
+          {sms ? (
+            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
+              <MessageCircle size={16} /> Мессеж
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
+              <MessageCircle size={16} /> Мессеж алга
             </button>
           )}
           <button
@@ -1245,6 +1267,7 @@ function RoomChoiceInquiryModal({
     { label: 'Нүүх боломж', value: room.moveInDate },
   ].filter((item): item is { label: string; value: string } => Boolean(item.value));
   const inquiryText = buildRoomInquiryText({ room, listingTitle, refId, phone });
+  const sms = smsHref(ownerPhone || undefined, inquiryText);
   const inquiryQuestions = roomInquiryQuestions(room);
   const inquiryQuestionText = inquiryQuestions
     .map((question, index) => `${index + 1}. ${question}`)
@@ -1411,7 +1434,7 @@ function RoomChoiceInquiryModal({
             </div>
           </div>
 
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid gap-2 sm:grid-cols-3">
             {href ? (
               <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
                 <Phone size={16} /> Залгаж лавлах
@@ -1419,6 +1442,15 @@ function RoomChoiceInquiryModal({
             ) : (
               <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
                 <Phone size={16} /> Утас алга
+              </button>
+            )}
+            {sms ? (
+              <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
+                <MessageCircle size={16} /> Мессеж
+              </a>
+            ) : (
+              <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
+                <MessageCircle size={16} /> Мессеж алга
               </button>
             )}
             <button
@@ -1899,10 +1931,12 @@ function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPos
   const [copied, setCopied] = useState(false);
   const [questionsCopied, setQuestionsCopied] = useState(false);
   const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
-  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const rawPhone = post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined;
+  const href = phoneHref(rawPhone);
   const questions = serviceInquiryQuestions(meta);
   const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
   const inquiryText = buildServiceInquiryText({ meta, post, phone });
+  const sms = smsHref(rawPhone, inquiryText);
 
   function copyInquiryText() {
     setCopied(true);
@@ -1960,7 +1994,7 @@ function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPos
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-2">
+        <div className="grid gap-2 sm:grid-cols-3">
           {href ? (
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
@@ -1968,6 +2002,15 @@ function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPos
           ) : (
             <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
               <Phone size={16} /> Утас алга
+            </button>
+          )}
+          {sms ? (
+            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
+              <MessageCircle size={16} /> Мессеж
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
+              <MessageCircle size={16} /> Мессеж алга
             </button>
           )}
           <button
