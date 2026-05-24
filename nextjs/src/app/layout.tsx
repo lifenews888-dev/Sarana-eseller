@@ -3,7 +3,7 @@ import Script from 'next/script';
 import './globals.css';
 import AuthProvider from '@/components/shared/AuthProvider';
 import Toast from '@/components/shared/Toast';
-import { ThemeProvider, ThemeScript } from '@/providers/ThemeProvider';
+import { ThemeProvider } from '@/providers/ThemeProvider';
 import InstallPrompt from '@/components/pwa/InstallPrompt';
 import ChatWidget from '@/components/chat/ChatWidget';
 import AIShopperWidget from '@/components/AIShopperWidget';
@@ -52,7 +52,15 @@ export default function RootLayout({
   return (
     <html lang="mn" className="h-full antialiased" suppressHydrationWarning>
       <head>
-        <ThemeScript />
+        <Script id="theme-init" strategy="beforeInteractive">{`
+          (function(){
+            var s=localStorage.getItem('esl-theme');
+            var d=window.matchMedia('(prefers-color-scheme: dark)').matches;
+            var t=s==='dark'||((!s||s==='system')&&d)?'dark':'light';
+            document.documentElement.setAttribute('data-theme',t);
+            document.documentElement.classList.toggle('dark',t==='dark');
+          })();
+        `}</Script>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://images.unsplash.com" />

@@ -343,9 +343,16 @@ function relatedFacts(post: RelatedFeedPost): string[] {
 
 function formatDateLabel(value?: string): string | null {
   if (!value) return null;
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dateOnly) return `${dateOnly[1]}.${dateOnly[2]}.${dateOnly[3]}`;
+
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString('mn-MN', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  if (Number.isNaN(date.getTime())) return value;
+
+  const year = String(date.getUTCFullYear()).padStart(4, '0');
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}.${month}.${day}`;
 }
 
 function EntityFields({ et, meta, post }: { et: string; meta: FeedMetadata; post: FeedPost }) {
@@ -1756,6 +1763,50 @@ function productInquiryQuestions(meta: FeedMetadata, category?: string, subcateg
   return questions;
 }
 
+function buildServiceInquiryText({
+  meta,
+  post,
+  phone,
+}: {
+  meta: FeedMetadata;
+  post: FeedPost;
+  phone: string | null;
+}): string {
+  const parts = [
+    `Сайн байна уу, ${post.title} үйлчилгээний талаар лавлаж байна.`,
+    post.refId ? `Зарын дугаар: ${post.refId}.` : null,
+    formatMoney(post.price) ? `Үнэ: ${formatMoney(post.price)}.` : null,
+    valueToText(pick(meta, ['packageName'])) ? `Багц: ${valueToText(pick(meta, ['packageName']))}.` : null,
+    formatServiceDuration(pick(meta, ['duration'])) ? `Хугацаа: ${formatServiceDuration(pick(meta, ['duration']))}.` : null,
+    valueToText(pick(meta, ['address', 'location'])) || post.district ? `Байршил: ${valueToText(pick(meta, ['address', 'location'])) || post.district}.` : null,
+    phone ? `Холбогдох утас: ${phone}.` : null,
+  ];
+
+  return parts.filter(Boolean).join(' ');
+}
+
+function serviceInquiryQuestions(meta: FeedMetadata): string[] {
+  const questions = [
+    'Үнэ, ажлын хүрээ, эхлэх хугацаа яг ямар нөхцөлтэй вэ?',
+  ];
+  const packageName = valueToText(pick(meta, ['packageName']));
+  const duration = formatServiceDuration(pick(meta, ['duration']));
+  const warranty = valueToText(pick(meta, ['warranty']));
+  const slots = suffixValue(pick(meta, ['availableSlots']), 'сул цаг');
+  const highlights = listFromKeys(meta, ['highlights', 'features']);
+
+  if (packageName) questions.push(`${packageName} багцад ямар ажил, deliverable, revision багтах вэ?`);
+  if (duration) questions.push(`${duration} хугацаа нь эхлэхээс дуусах хүртэлх бодит хугацаа мөн үү?`);
+  if (slots) questions.push(`${slots} байгаа бол хамгийн ойрын боломжит өдөр, цаг хэзээ вэ?`);
+  if (warranty) questions.push(`${warranty} баталгаанд ямар засвар, нэмэлт өөрчлөлт хамрагдах вэ?`);
+  if (highlights.length > 0) questions.push(`${highlights.slice(0, 4).join(', ')} хэсгүүдийн жишээ ажил эсвэл портфолио үзэж болох уу?`);
+
+  questions.push('Ажил эхлэхэд ямар мэдээлэл, материал, урьдчилгаа шаардлагатай вэ?');
+  questions.push('Гэрээ, нэхэмжлэл, баримт авах боломжтой юу?');
+
+  return questions;
+}
+
 function roomUnitId(room: RoomChoiceDetail): string {
   return room.key || room.label;
 }
@@ -1808,13 +1859,110 @@ async function copyTextToClipboard(text: string) {
 
 function ServiceDetails({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
   return (
-    <DetailSection title="Үйлчилгээний мэдээлэл" icon={<Timer size={16} />}>
-      <InfoGrid items={[
-        { label: 'Байршил', value: pick(meta, ['address', 'location']) || post.district },
-        { label: 'Хугацаа', value: suffixValue(pick(meta, ['duration']), 'мин') },
-        { label: 'Үнэлгээ', value: pick(meta, ['rating']) },
-        { label: 'Багц', value: pick(meta, ['packageName']) },
-      ]} />
+    <div className="space-y-4">
+      <DetailSection title="Үйлчилгээний мэдээлэл" icon={<Timer size={16} />}>
+        <InfoGrid items={[
+          { label: 'Байршил', value: pick(meta, ['address', 'location']) || post.district },
+          { label: 'Хугацаа', value: formatServiceDuration(pick(meta, ['duration'])) },
+          { label: 'Үнэлгээ', value: pick(meta, ['rating']) },
+          { label: 'Багц', value: pick(meta, ['packageName']) },
+          { label: 'Сул цаг', value: suffixValue(pick(meta, ['availableSlots']), 'цаг') },
+          { label: 'Баталгаа', value: pick(meta, ['warranty']) },
+        ]} />
+      </DetailSection>
+
+      <ChipSection title="Давуу тал" icon={<CheckCircle2 size={16} />} items={toList(pick(meta, ['highlights', 'features']))} />
+      <ServiceInquiryPanel meta={meta} post={post} />
+    </div>
+  );
+}
+
+function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }) {
+  const [copied, setCopied] = useState(false);
+  const [questionsCopied, setQuestionsCopied] = useState(false);
+  const phone = formatPhoneLabel(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const href = phoneHref(post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined);
+  const questions = serviceInquiryQuestions(meta);
+  const questionText = questions.map((question, index) => `${index + 1}. ${question}`).join('\n');
+  const inquiryText = buildServiceInquiryText({ meta, post, phone });
+
+  function copyInquiryText() {
+    setCopied(true);
+    void copyTextToClipboard(inquiryText).catch(() => undefined);
+    window.setTimeout(() => setCopied(false), 1800);
+  }
+
+  function copyQuestions() {
+    setQuestionsCopied(true);
+    void copyTextToClipboard(questionText).catch(() => undefined);
+    window.setTimeout(() => setQuestionsCopied(false), 1800);
+  }
+
+  return (
+    <DetailSection title="Үйлчилгээ авахад бэлдэх" icon={<ClipboardList size={16} />}>
+      <div className="space-y-3">
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-bold">Бэлэн лавлагаа</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
+                {inquiryText}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={copyInquiryText}
+              className="inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={14} /> {copied ? 'Хуулагдлаа' : 'Текст'}
+            </button>
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] p-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold">Лавлах асуултууд</p>
+            <button
+              type="button"
+              onClick={copyQuestions}
+              className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2.5 text-[11px] font-bold hover:bg-[var(--esl-bg)]"
+            >
+              <ClipboardList size={13} /> {questionsCopied ? 'Хуулагдлаа' : 'Хуулах'}
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {questions.map((question, index) => (
+              <div key={`service-question-${question}`} className="flex gap-2 rounded-lg bg-[var(--esl-bg-card)] px-3 py-2">
+                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#E8242C]/15 text-[10px] font-black text-[#E8242C]">
+                  {index + 1}
+                </span>
+                <p className="text-xs leading-relaxed text-[var(--esl-text-muted)]">{question}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          {href ? (
+            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
+              <Phone size={16} /> Залгаж лавлах
+            </a>
+          ) : (
+            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
+              <Phone size={16} /> Утас алга
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              void copyTextToClipboard(window.location.href).catch(() => undefined);
+            }}
+            className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold"
+          >
+            <Share2 size={16} /> Зарын линк
+          </button>
+        </div>
+      </div>
     </DetailSection>
   );
 }
@@ -1956,6 +2104,22 @@ function formatFloor(floor: unknown, totalFloors?: unknown): string | null {
 function formatMileage(value: unknown): string | null {
   const n = numberValue(value);
   return n === null ? valueToText(value) : `${n.toLocaleString('mn-MN')} км`;
+}
+
+function formatServiceDuration(value: unknown): string | null {
+  const minutes = numberValue(value);
+  if (minutes === null) return valueToText(value);
+  if (minutes < 60) return `${minutes.toLocaleString('mn-MN')} мин`;
+
+  const hours = minutes / 60;
+  if (hours < 24) {
+    const label = Number.isInteger(hours) ? hours.toFixed(0) : hours.toFixed(1);
+    return `${label} цаг`;
+  }
+
+  const days = hours / 24;
+  const label = Number.isInteger(days) ? days.toFixed(0) : days.toFixed(1);
+  return `${label} өдөр`;
 }
 
 function formatPlainNumber(value: unknown): string | null {
