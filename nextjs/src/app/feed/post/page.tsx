@@ -602,10 +602,18 @@ export default function PostAdPage() {
   const readinessScore = Math.round((requiredReadyCount / requiredReadinessItems.length) * 100);
   const firstIncompleteRequiredItem = requiredReadinessItems.find((item) => !item.complete);
 
-  const scrollToSection = useCallback((targetId: string) => {
+  const focusSectionControl = useCallback((section: HTMLElement) => {
+    const control = section.querySelector<HTMLElement>(
+      '[data-metadata-required-empty="true"], input:not([type="hidden"]), textarea, select, button:not(:disabled), [tabindex]:not([tabindex="-1"])',
+    );
+    control?.focus({ preventScroll: true });
+  }, []);
+
+  const scrollToSection = useCallback((targetId: string, focusField = false) => {
     const section = document.getElementById(targetId);
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, []);
+    if (section && focusField) window.setTimeout(() => focusSectionControl(section), 450);
+  }, [focusSectionControl]);
 
   useEffect(() => {
     if (canSubmit && submitGuidance) setSubmitGuidance('');
@@ -792,7 +800,7 @@ export default function PostAdPage() {
     if (!canSubmit) {
       if (firstIncompleteRequiredItem) {
         setSubmitGuidance(`${firstIncompleteRequiredItem.label} хэсгийг бөглөөд үргэлжлүүлнэ.`);
-        scrollToSection(firstIncompleteRequiredItem.targetId);
+        scrollToSection(firstIncompleteRequiredItem.targetId, true);
       }
       return;
     }
@@ -913,6 +921,7 @@ export default function PostAdPage() {
         {field.type === 'select' ? (
           <select
             name={field.key}
+            data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
             className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
@@ -925,6 +934,7 @@ export default function PostAdPage() {
         ) : field.type === 'boolean' ? (
           <select
             name={field.key}
+            data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
             className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
@@ -936,6 +946,7 @@ export default function PostAdPage() {
         ) : field.type === 'list' ? (
           <textarea
             name={field.key}
+            data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
             placeholder={field.placeholder}
@@ -945,6 +956,7 @@ export default function PostAdPage() {
         ) : (
           <input
             name={field.key}
+            data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
             type="text"
             inputMode={field.type === 'number' ? 'decimal' : 'text'}
             value={value}
@@ -1693,7 +1705,7 @@ export default function PostAdPage() {
                 type="button"
                 aria-label={`${item.label} хэсэг рүү очих`}
                 data-section-target={item.targetId}
-                onClick={() => scrollToSection(item.targetId)}
+                onClick={() => scrollToSection(item.targetId, true)}
                 className="flex min-h-[64px] w-full cursor-pointer items-start gap-2 rounded-xl border border-transparent bg-[var(--esl-bg-card)] px-3 py-2 text-left transition hover:border-[#E8242C]/30 hover:bg-[var(--esl-bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               >
                 {item.complete ? (
@@ -1716,7 +1728,7 @@ export default function PostAdPage() {
                 type="button"
                 aria-label={`${item.label} хэсэг рүү очих`}
                 data-section-target={item.targetId}
-                onClick={() => scrollToSection(item.targetId)}
+                onClick={() => scrollToSection(item.targetId, true)}
                 className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-left text-[11px] font-bold transition hover:border-[#E8242C]/30 focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 ${
                 item.complete
                   ? 'border-green-500/20 bg-green-500/10 text-green-100'
