@@ -1714,7 +1714,7 @@ export default function PostAdPage() {
 
         {/* Description */}
         <div id="feed-post-description" className={jumpTargetClass('feed-post-description', 'mb-6 scroll-mt-24')}>
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Дэлгэрэнгүй тайлбар</label>
+          <label htmlFor="feed-post-description-input" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Дэлгэрэнгүй тайлбар</label>
           <div className="mb-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-3">
             <div className="flex items-start gap-2">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B72]" />
