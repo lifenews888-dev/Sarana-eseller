@@ -1692,9 +1692,12 @@ export default function PostAdPage() {
           </div>
         </div>
 
-        <section className={`mb-5 rounded-2xl border p-4 ${
+        <section
+          aria-label="Нийтлэх бэлэн байдлын checklist"
+          className={`mb-5 rounded-2xl border p-4 ${
           canSubmit ? 'border-green-500/25 bg-green-500/10' : 'border-amber-500/25 bg-amber-500/10'
-        }`}>
+        }`}
+        >
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
@@ -1717,7 +1720,14 @@ export default function PostAdPage() {
             </div>
           </div>
 
-          <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/30">
+          <div
+            aria-label="Нийтлэх бэлэн байдлын хувь"
+            aria-valuemax={100}
+            aria-valuemin={0}
+            aria-valuenow={readinessScore}
+            className="mt-3 h-2 overflow-hidden rounded-full bg-black/30"
+            role="progressbar"
+          >
             <div
               className={`h-full rounded-full transition-all ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`}
               style={{ width: `${readinessScore}%` }}
@@ -1793,8 +1803,11 @@ export default function PostAdPage() {
       </div>
 
       <div
+        aria-label="Зар оруулах бэлэн байдлын доод самбар"
+        aria-live="polite"
         data-feed-post-sticky-readiness
         className="fixed inset-x-0 bottom-0 z-[1101] border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.35)] backdrop-blur lg:hidden"
+        role="region"
       >
         <div className="mx-auto flex max-w-3xl items-center gap-3">
           <div className="min-w-0 flex-1">
@@ -1821,6 +1834,7 @@ export default function PostAdPage() {
                   <button
                     key={item.key}
                     type="button"
+                    aria-current={firstIncompleteRequiredItem?.key === item.key ? 'step' : undefined}
                     aria-label={`${item.label} хэсэг рүү очих`}
                     onClick={() => scrollToSection(item.targetId, true)}
                     className="shrink-0 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-black text-amber-50 transition hover:border-amber-200/40 hover:bg-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35"
@@ -1830,7 +1844,15 @@ export default function PostAdPage() {
                 ))}
               </div>
             )}
-            <div className="h-1.5 overflow-hidden rounded-full bg-black/35">
+            <div
+              aria-label="Доод самбарын бэлэн байдлын хувь"
+              aria-valuemax={100}
+              aria-valuemin={0}
+              aria-valuenow={readinessScore}
+              className="h-1.5 overflow-hidden rounded-full bg-black/35"
+              data-feed-post-sticky-progress
+              role="progressbar"
+            >
               <div
                 className={`h-full rounded-full transition-all ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`}
                 style={{ width: `${readinessScore}%` }}
