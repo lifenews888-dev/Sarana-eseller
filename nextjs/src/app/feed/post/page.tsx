@@ -1825,10 +1825,13 @@ export default function PostAdPage() {
         </button>
 
         {/* Rules */}
-        <div className="p-4 rounded-xl bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.2)] flex gap-3 mb-8">
+        <aside
+          aria-labelledby="feed-post-rules-title"
+          className="p-4 rounded-xl bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.2)] flex gap-3 mb-8"
+        >
           <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-bold text-blue-400 mb-1">Зар оруулах дүрэм</p>
+            <p id="feed-post-rules-title" className="text-sm font-bold text-blue-400 mb-1">Зар оруулах дүрэм</p>
             <p className="text-xs text-[#888] leading-relaxed">
               • Хуурамч зар оруулахыг хориглоно<br />
               • Зураг бодит байх шаардлагатай<br />
@@ -1837,7 +1840,7 @@ export default function PostAdPage() {
               • Админ шалгасны дараа нийтлэгдэнэ
             </p>
           </div>
-        </div>
+        </aside>
 
         <section
           id="feed-post-submit-readiness"
