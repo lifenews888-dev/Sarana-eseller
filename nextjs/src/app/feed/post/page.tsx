@@ -525,6 +525,11 @@ export default function PostAdPage() {
     }))
     .filter((group) => group.items.length > 0);
   const canSubmit = Boolean(title.trim() && price.trim() && category && (district || province) && metadataComplete && mediaRequirementSatisfied);
+  const mediaDescriptionId = [
+    'feed-post-media-help',
+    category ? 'feed-post-media-requirement' : '',
+    dragOver ? 'feed-post-media-drag-status' : '',
+  ].filter(Boolean).join(' ');
   const submitMissingItems = [
     !title.trim() ? 'гарчиг' : '',
     !price.trim() ? 'үнэ' : '',
@@ -1346,7 +1351,7 @@ export default function PostAdPage() {
         type="file"
         multiple
         accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
-        aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
+        aria-describedby={mediaDescriptionId}
         className="hidden"
         onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }}
       />
@@ -1414,7 +1419,7 @@ export default function PostAdPage() {
           id="feed-post-media"
           role="group"
           aria-labelledby="feed-post-media-label"
-          aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
+          aria-describedby={mediaDescriptionId}
           aria-invalid={category && !mediaRequirementSatisfied ? true : undefined}
           className={jumpTargetClass('feed-post-media', 'mb-8 scroll-mt-24')}
         >
@@ -1426,7 +1431,7 @@ export default function PostAdPage() {
           <div
             role="group"
             aria-labelledby="feed-post-media-label"
-            aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
+            aria-describedby={mediaDescriptionId}
             className={`flex gap-3 flex-wrap p-4 rounded-2xl border-2 border-dashed transition-colors ${
               dragOver ? 'border-[#E8242C] bg-[rgba(232,36,44,0.05)]' : 'border-[var(--esl-border)] bg-transparent'
             }`}
@@ -1440,7 +1445,7 @@ export default function PostAdPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 aria-controls="feed-post-media-input"
-                aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
+                aria-describedby={mediaDescriptionId}
                 aria-label="Зураг эсвэл видео файл нэмэх"
                 className="w-28 h-28 rounded-xl border-2 border-dashed border-[var(--esl-border)] bg-[var(--esl-bg-card)] flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-[#E8242C] transition-colors text-[var(--esl-text-muted)]"
               >
@@ -1508,7 +1513,15 @@ export default function PostAdPage() {
           </div>
 
           {dragOver && (
-            <p className="text-xs text-[#E8242C] mt-2 font-semibold">Файлуудаа энд тавина уу...</p>
+            <p
+              id="feed-post-media-drag-status"
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="text-xs text-[#E8242C] mt-2 font-semibold"
+            >
+              Файлуудаа энд тавина уу...
+            </p>
           )}
 
           {category && (
