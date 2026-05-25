@@ -1662,8 +1662,13 @@ export default function PostAdPage() {
         </div>
 
         {/* Condition */}
-        <div className="mb-6">
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Нөхцөл байдал</label>
+        <div
+          id="feed-post-condition"
+          role="group"
+          aria-labelledby="feed-post-condition-label"
+          className="mb-6"
+        >
+          <label id="feed-post-condition-label" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Нөхцөл байдал</label>
           <div className="flex flex-wrap gap-2">
             {CONDITIONS.map((c) => (
               <button
