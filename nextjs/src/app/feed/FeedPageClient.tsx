@@ -857,8 +857,19 @@ export default function FeedPageClient({
     if (activeCat !== 'all') params.set('category', activeCat);
     if (activeEntityType) params.set('entityType', activeEntityType);
     if (activeTier) params.set('tier', activeTier);
+    if (search.trim()) params.set('search', search.trim());
+    if (activeDistrict !== 'Бүгд') params.set('district', activeDistrict);
+    if (activeProvince) params.set('province', activeProvince);
+    if (activeSort !== 'newest') params.set('sort', activeSort);
     const query = params.toString();
-    const canUseDemoFeed = activeCat === 'all' && !activeEntityType;
+    const canUseDemoFeed =
+      activeCat === 'all'
+      && !activeEntityType
+      && !activeTier
+      && !search.trim()
+      && activeDistrict === 'Бүгд'
+      && !activeProvince
+      && activeSort === 'newest';
     fetch(`/api/feed${query ? `?${query}` : ''}`).then(r => r.json()).then(res => {
       const d = res.data || res;
       const all = [...(d.vip || []), ...(d.featured || []), ...(d.discounted || []), ...(d.normal || [])];
@@ -866,7 +877,7 @@ export default function FeedPageClient({
     }).catch(() => {
       setFeedItems(canUseDemoFeed ? DEMO_FEED : []);
     });
-  }, [activeCat, activeEntityType, activeTier]);
+  }, [activeCat, activeEntityType, activeTier, search, activeDistrict, activeProvince, activeSort]);
   const { district: userDistrict, loading: locLoading, permissionDenied, refresh: refreshLoc, setManualDistrict } = useUserLocation();
 
   // Auto-set district from GPS
