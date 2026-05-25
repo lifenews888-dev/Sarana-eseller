@@ -1692,11 +1692,11 @@ export default function PostAdPage() {
         <div
           id="feed-post-location"
           aria-invalid={!(district || province) || undefined}
-          aria-label="Байршил сонгох"
+          aria-labelledby="feed-post-location-label"
           className={jumpTargetClass('feed-post-location', 'mb-6 scroll-mt-24')}
           role="group"
         >
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Байршил <span className="text-[#E8242C]">*</span></label>
+          <label id="feed-post-location-label" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Байршил <span className="text-[#E8242C]">*</span></label>
           <p className="text-xs text-[var(--esl-text-muted)] mb-2">УБ дүүрэг:</p>
           <div className="flex flex-wrap gap-2 mb-3">
             {DISTRICTS.map((d) => (
