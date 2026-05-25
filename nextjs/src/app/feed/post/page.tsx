@@ -1250,11 +1250,16 @@ export default function PostAdPage() {
           </div>
 
           {publishError && (
-            <div role="alert" className="mb-4 flex gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+            <div
+              role="alert"
+              aria-labelledby="feed-post-publish-error-title"
+              aria-describedby="feed-post-publish-error-message"
+              className="mb-4 flex gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200"
+            >
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
               <div className="flex-1">
-                <p className="font-bold text-red-100">Нийтлэх боломжгүй байна</p>
-                <p className="mt-1 text-xs leading-relaxed text-red-200/90">{publishError}</p>
+                <p id="feed-post-publish-error-title" className="font-bold text-red-100">Нийтлэх боломжгүй байна</p>
+                <p id="feed-post-publish-error-message" className="mt-1 text-xs leading-relaxed text-red-200/90">{publishError}</p>
                 {publishError.includes('Нэвтэрч') && (
                   <button
                     type="button"
