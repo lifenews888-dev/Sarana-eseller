@@ -1470,7 +1470,8 @@ export default function PostAdPage() {
                     type="button"
                     onClick={() => setCover(m.id)}
                     aria-label={`Сонгосон зураг ${i + 1}-г нүүр зураг болгох`}
-                    className="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-black/70 text-white px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none"
+                    aria-pressed={i === 0}
+                    className="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-black/70 text-white px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-white/70 transition-opacity cursor-pointer border-none"
                   >
                     Нүүр болгох
                   </button>
