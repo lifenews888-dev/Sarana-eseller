@@ -1006,6 +1006,9 @@ export default function FeedPageClient({
             <Link href="/entity/auto_dealer/autocity" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
               <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="AutoCity Mongolia" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <span className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white/80">
+                Жишээ
+              </span>
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-bold bg-[#E8242C] text-white px-2 py-0.5 rounded">Авто</span>
@@ -1020,6 +1023,9 @@ export default function FeedPageClient({
             <Link href="/entity/company/mongolian-properties" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
               <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="Mongolian Properties" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <span className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white/80">
+                Жишээ
+              </span>
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-bold bg-blue-500 text-white px-2 py-0.5 rounded">Барилга</span>
@@ -1034,6 +1040,9 @@ export default function FeedPageClient({
             <Link href="/entity/agent/erdenbat" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
               <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="Real estate agent" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <span className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white/80">
+                Жишээ
+              </span>
               <div className="absolute bottom-0 left-0 right-0 p-5">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="text-xs font-bold bg-[#D4AF37] text-black px-2 py-0.5 rounded">Агент</span>
