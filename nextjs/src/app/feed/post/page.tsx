@@ -474,6 +474,7 @@ export default function PostAdPage() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const urlCategoryAppliedRef = useRef(false);
+  const highlightTimerRef = useRef<number | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -485,6 +486,7 @@ export default function PostAdPage() {
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitGuidance, setSubmitGuidance] = useState('');
+  const [highlightedSectionId, setHighlightedSectionId] = useState('');
   const [isVip, setIsVip] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewMediaIdx, setPreviewMediaIdx] = useState(0);
@@ -613,11 +615,28 @@ export default function PostAdPage() {
     const section = document.getElementById(targetId);
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (section && focusField) window.setTimeout(() => focusSectionControl(section), 450);
+    setHighlightedSectionId(targetId);
+    if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+    highlightTimerRef.current = window.setTimeout(() => {
+      setHighlightedSectionId((current) => (current === targetId ? '' : current));
+    }, 1800);
   }, [focusSectionControl]);
+
+  const jumpTargetClass = (targetId: string, baseClassName: string) => [
+    baseClassName,
+    'transition-[background-color,border-color,box-shadow] duration-500',
+    highlightedSectionId === targetId
+      ? 'rounded-2xl bg-[#E8242C]/5 ring-2 ring-[#E8242C]/60 shadow-[0_0_0_4px_rgba(232,36,44,0.08)]'
+      : '',
+  ].filter(Boolean).join(' ');
 
   useEffect(() => {
     if (canSubmit && submitGuidance) setSubmitGuidance('');
   }, [canSubmit, submitGuidance]);
+
+  useEffect(() => () => {
+    if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+  }, []);
 
   const clearSavedDraft = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -1287,7 +1306,7 @@ export default function PostAdPage() {
         )}
 
         {/* Media Upload */}
-        <div id="feed-post-media" className="mb-8 scroll-mt-24">
+        <div id="feed-post-media" className={jumpTargetClass('feed-post-media', 'mb-8 scroll-mt-24')}>
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-1 block">
             Зураг & Видео <span className="text-[#888] font-normal">({mediaFiles.length}/10)</span>
           </label>
@@ -1416,7 +1435,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Title */}
-        <div id="feed-post-title" className="mb-6 scroll-mt-24">
+        <div id="feed-post-title" className={jumpTargetClass('feed-post-title', 'mb-6 scroll-mt-24')}>
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Гарчиг <span className="text-[#E8242C]">*</span></label>
           <input
             type="text"
@@ -1449,7 +1468,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Category */}
-        <div id="feed-post-category" className="mb-6 scroll-mt-24">
+        <div id="feed-post-category" className={jumpTargetClass('feed-post-category', 'mb-6 scroll-mt-24')}>
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Ангилал <span className="text-[#E8242C]">*</span></label>
           <CategorySelector
             value={category}
@@ -1474,7 +1493,7 @@ export default function PostAdPage() {
         </div>
 
         {metadataFields.length > 0 && (
-          <section id="feed-post-metadata" className="mb-6 scroll-mt-24 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4">
+          <section id="feed-post-metadata" className={jumpTargetClass('feed-post-metadata', 'mb-6 scroll-mt-24 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4')}>
             <div className="mb-4">
               <h2 className="text-sm font-black text-white">{previewMetadataTitle}</h2>
               <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
@@ -1499,7 +1518,7 @@ export default function PostAdPage() {
         )}
 
         {/* Price */}
-        <div id="feed-post-price" className="mb-6 scroll-mt-24">
+        <div id="feed-post-price" className={jumpTargetClass('feed-post-price', 'mb-6 scroll-mt-24')}>
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Үнэ <span className="text-[#E8242C]">*</span></label>
           <div className="flex">
             <input
@@ -1539,7 +1558,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Location: District or Province */}
-        <div id="feed-post-location" className="mb-6 scroll-mt-24">
+        <div id="feed-post-location" className={jumpTargetClass('feed-post-location', 'mb-6 scroll-mt-24')}>
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Байршил <span className="text-[#E8242C]">*</span></label>
           <p className="text-xs text-[var(--esl-text-muted)] mb-2">УБ дүүрэг:</p>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -1562,7 +1581,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Description */}
-        <div id="feed-post-description" className="mb-6 scroll-mt-24">
+        <div id="feed-post-description" className={jumpTargetClass('feed-post-description', 'mb-6 scroll-mt-24')}>
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Дэлгэрэнгүй тайлбар</label>
           <div className="mb-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-3">
             <div className="flex items-start gap-2">
@@ -1610,7 +1629,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Phone */}
-        <div id="feed-post-phone" className="mb-8 scroll-mt-24">
+        <div id="feed-post-phone" className={jumpTargetClass('feed-post-phone', 'mb-8 scroll-mt-24')}>
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Холбоо барих утас</label>
           <div className="flex">
             <div className="h-12 px-4 bg-[var(--esl-bg-elevated)] border border-r-0 border-[var(--esl-border)] rounded-l-xl flex items-center">
