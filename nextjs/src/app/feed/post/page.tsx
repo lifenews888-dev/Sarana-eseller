@@ -1584,11 +1584,11 @@ export default function PostAdPage() {
         <div
           id="feed-post-category"
           aria-invalid={!category || undefined}
-          aria-label="Ангилал сонгох"
+          aria-labelledby="feed-post-category-label"
           className={jumpTargetClass('feed-post-category', 'mb-6 scroll-mt-24')}
           role="group"
         >
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Ангилал <span className="text-[#E8242C]">*</span></label>
+          <label id="feed-post-category-label" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Ангилал <span className="text-[#E8242C]">*</span></label>
           <CategorySelector
             value={category}
             onChange={(_id, slug) => applyCategorySelection(slug)}
