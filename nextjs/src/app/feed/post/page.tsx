@@ -608,6 +608,7 @@ export default function PostAdPage() {
     .slice(0, 3)
     .map((item) => item.label)
     .join(', ');
+  const missingRequiredQuickLinks = missingRequiredItems.slice(0, 4);
   const firstIncompleteRequiredItem = requiredReadinessItems.find((item) => !item.complete);
 
   const focusSectionControl = useCallback((section: HTMLElement) => {
@@ -1287,7 +1288,7 @@ export default function PostAdPage() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-8">
+      <div className="max-w-3xl mx-auto px-4 pt-8 pb-40 lg:pb-8">
         {!draftNoticeDismissed && (draftRestored || draftSavedAt) && (
           <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 sm:flex-row sm:items-center">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300">
@@ -1813,6 +1814,21 @@ export default function PostAdPage() {
               <p className="mb-1 truncate text-[11px] font-bold text-[var(--esl-text-muted)]">
                 Дутуу: {missingRequiredSummary}{missingRequiredCount > 3 ? '...' : ''}
               </p>
+            )}
+            {!canSubmit && missingRequiredQuickLinks.length > 0 && (
+              <div className="mb-2 flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {missingRequiredQuickLinks.map((item) => (
+                  <button
+                    key={item.key}
+                    type="button"
+                    aria-label={`${item.label} хэсэг рүү очих`}
+                    onClick={() => scrollToSection(item.targetId, true)}
+                    className="shrink-0 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-black text-amber-50 transition hover:border-amber-200/40 hover:bg-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35"
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             )}
             <div className="h-1.5 overflow-hidden rounded-full bg-black/35">
               <div
