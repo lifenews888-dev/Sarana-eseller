@@ -1375,6 +1375,7 @@ export default function PostAdPage() {
             role="status"
             aria-live="polite"
             aria-labelledby="feed-post-draft-notice-title"
+            aria-describedby="feed-post-draft-notice-message"
             className="mb-6 flex flex-col gap-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 sm:flex-row sm:items-center"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300">
@@ -1384,7 +1385,7 @@ export default function PostAdPage() {
               <p id="feed-post-draft-notice-title" className="text-sm font-extrabold text-blue-100">
                 {draftRestored ? 'Өмнөх ноорог сэргээгдлээ' : 'Ноорог автоматаар хадгалагдлаа'}
               </p>
-              <p className="mt-1 text-xs leading-relaxed text-blue-100/70">
+              <p id="feed-post-draft-notice-message" className="mt-1 text-xs leading-relaxed text-blue-100/70">
                 Нэвтрэх шаардлага гарсан ч бөглөсөн талбарууд хадгалагдана. Зураг, видео файлыг хөтөч дахин сэргээдэггүй тул нийтлэхийн өмнө дахин сонгоно.
                 {draftSavedAt && (
                   <>
