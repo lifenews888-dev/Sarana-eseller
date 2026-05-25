@@ -1946,7 +1946,13 @@ export default function PostAdPage() {
 
         {/* Submit */}
         {submitGuidance && (
-          <p id="feed-post-submit-guidance" role="status" className="mb-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-bold text-amber-100">
+          <p
+            id="feed-post-submit-guidance"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+            className="mb-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-bold text-amber-100"
+          >
             {submitGuidance}
           </p>
         )}
