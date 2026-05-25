@@ -1750,14 +1750,16 @@ export default function PostAdPage() {
             )}
           </div>
           <textarea
+            id="feed-post-description-input"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
+            aria-describedby="feed-post-description-count"
             placeholder={descriptionGuidance.placeholder}
             maxLength={1000}
             rows={5}
             className="w-full px-4 py-3 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all resize-y leading-relaxed"
           />
-          <p className="text-right text-[11px] text-[#555] mt-1">{description.length}/1000</p>
+          <p id="feed-post-description-count" className="text-right text-[11px] text-[#555] mt-1">{description.length}/1000</p>
         </div>
 
         {/* Phone */}
