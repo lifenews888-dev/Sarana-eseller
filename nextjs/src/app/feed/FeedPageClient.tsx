@@ -929,6 +929,9 @@ export default function FeedPageClient({
   const activeProvinceLabel = activeProvince ? MONGOLIA_LOCATIONS.provinces[activeProvince]?.name || activeProvince : '';
   const activeSortLabel = SORT_OPTIONS.find((option) => option.key === activeSort)?.label || activeSort;
   const activeTierLabel = activeTier ? TIER_CONFIG[activeTier].label : '';
+  const postHref = activeCat !== 'all'
+    ? `/feed/post?category=${encodeURIComponent(activeCat)}`
+    : '/feed/post';
   const clearAllFeedFilters = () => {
     applyFeedRouteFilters({
       category: 'all',
@@ -1254,7 +1257,9 @@ export default function FeedPageClient({
             <p className="text-sm text-[var(--esl-text-muted)] mt-2 mb-5">
               {canRelaxLocationFilter
                 ? `Байршлын шүүлтүүрийг авахад ${filteredWithoutLocation.length} зар харагдана.`
-                : 'Бүх дүүргийн бүх зарыг шалгана уу'}
+                : activeCat !== 'all'
+                  ? `${activeCategoryLabel} ангилалд одоогоор зар алга.`
+                  : 'Бүх дүүргийн бүх зарыг шалгана уу'}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
               {canRelaxLocationFilter && (
@@ -1266,6 +1271,21 @@ export default function FeedPageClient({
                   Байршлын шүүлтүүргүй харах
                 </button>
               )}
+              {isNestedCategory && activeCategoryPath && (
+                <button
+                  type="button"
+                  onClick={() => applyFeedRouteFilters({ category: activeCategoryPath.rootKey, entityType: '' })}
+                  className="px-5 py-2.5 rounded-xl text-sm font-semibold transition border border-[var(--esl-border)] text-[var(--esl-text)] hover:bg-[var(--esl-bg-section)]"
+                >
+                  {activeCategoryPath.rootLabel} руу буцах
+                </button>
+              )}
+              <Link
+                href={postHref}
+                className="px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold no-underline hover:bg-[#c91f26] transition"
+              >
+                Энэ ангилалд зар оруулах
+              </Link>
               <button
                 type="button"
                 onClick={clearAllFeedFilters}
