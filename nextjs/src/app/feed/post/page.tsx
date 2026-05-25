@@ -1215,11 +1215,11 @@ export default function PostAdPage() {
                       >
                         {m.type === 'video' ? (
                           <div className="w-full h-full bg-black/80 flex items-center justify-center relative">
-                            <video src={m.preview} className="w-full h-full object-cover absolute inset-0" />
+                            <video src={m.preview} aria-hidden="true" className="w-full h-full object-cover absolute inset-0" />
                             <Play className="w-3 h-3 text-white relative z-10" fill="white" />
                           </div>
                         ) : (
-                          <img loading="lazy" src={m.preview} alt={`Preview зураг ${i + 1}`} className="w-full h-full object-cover" />
+                          <img loading="lazy" src={m.preview} alt="" aria-hidden="true" className="w-full h-full object-cover" />
                         )}
                       </button>
                     ))}
