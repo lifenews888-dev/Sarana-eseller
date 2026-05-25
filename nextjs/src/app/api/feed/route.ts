@@ -325,9 +325,11 @@ export async function GET(req: NextRequest) {
     }
     if (entityType) items = items.filter((i) => normalizeListingEntityType(i.entityType) === entityType);
     if (requestedTier) items = items.filter((i) => i.tier === requestedTier);
+    if (district) items = items.filter((i) => i.district === district);
+    if (province) items = items.filter((i) => 'province' in i && i.province === province);
     if (search) {
       const q = search.toLowerCase();
-      items = items.filter((i) => i.title.toLowerCase().includes(q));
+      items = items.filter((i) => i.title.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q));
     }
 
     return json({
