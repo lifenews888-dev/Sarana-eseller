@@ -1197,7 +1197,10 @@ export default function PostAdPage() {
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>
-                  <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold bg-black/60 text-white">
+                  <div
+                    aria-hidden="true"
+                    className="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg text-xs font-bold bg-black/60 text-white"
+                  >
                     {previewMediaIdx + 1} / {mediaFiles.length}
                   </div>
                   <div className="absolute bottom-3 left-3 flex gap-1.5">
