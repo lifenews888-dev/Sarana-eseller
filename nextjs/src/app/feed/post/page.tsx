@@ -501,6 +501,7 @@ export default function PostAdPage() {
   const [draftSavedAt, setDraftSavedAt] = useState<number | null>(null);
   const [draftNoticeDismissed, setDraftNoticeDismissed] = useState(false);
   const [draftLoaded, setDraftLoaded] = useState(false);
+  const [prefilledCategory, setPrefilledCategory] = useState('');
 
   const imageCount = mediaFiles.filter(m => m.type === 'image').length;
   const videoCount = mediaFiles.filter(m => m.type === 'video').length;
@@ -510,6 +511,11 @@ export default function PostAdPage() {
   const selectedCategory = findMarketplaceCategory(category);
   const selectedCategoryPath = categoryPathInfo(category);
   const selectedCategoryPathLabel = selectedCategoryPath?.label || selectedCategory?.label || '';
+  const showCategoryPrefillNotice = Boolean(
+    prefilledCategory
+    && category === prefilledCategory
+    && selectedCategoryPathLabel,
+  );
   const mediaRequirementSatisfied = !category || imageCount >= qualityProfile.minImages;
   const missingRequiredMetadata = metadataFields.filter((field) => field.required && !(metadataDraft[field.key] || '').trim());
   const completedMetadataCount = metadataFields.filter((field) => (metadataDraft[field.key] || '').trim()).length;
@@ -749,6 +755,7 @@ export default function PostAdPage() {
     }
 
     urlCategoryAppliedRef.current = true;
+    setPrefilledCategory(requestedPath.value);
     if (category !== requestedPath.value) applyCategorySelection(requestedPath.value);
   }, [applyCategorySelection, category, draftLoaded]);
 
@@ -1660,6 +1667,17 @@ export default function PostAdPage() {
             onChange={(_id, slug) => applyCategorySelection(slug)}
             label=""
           />
+          {showCategoryPrefillNotice && (
+            <div
+              data-feed-post-prefill-notice="true"
+              className="mt-3 rounded-xl border border-[#E8242C]/30 bg-[#E8242C]/10 px-3 py-2"
+              role="status"
+            >
+              <p className="text-xs font-bold leading-relaxed text-[#FFB4B8]">
+                Feed-ээс ирсэн тул энэ зарын ангилал урьдчилан сонгогдлоо. Хүсвэл доороос өөр ангилал сонгож болно.
+              </p>
+            </div>
+          )}
           {selectedCategoryPathLabel && (
             <div className="mt-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2">
               <p className="text-[11px] font-bold text-[var(--esl-text-muted)]">Сонгосон ангилал</p>
