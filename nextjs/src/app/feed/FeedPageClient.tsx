@@ -288,6 +288,18 @@ function feedItemMatchesCategory(item: FeedItem, activeCategory: string): boolea
   });
 }
 
+function sortFeedItemsByTierAndOption(items: FeedItem[], activeSort: FeedSortKey): FeedItem[] {
+  const tierOrder: Record<ItemTier, number> = { vip: 0, featured: 1, discounted: 2, normal: 3 };
+  return [...items].sort((a, b) => {
+    const tierDiff = tierOrder[a.tier] - tierOrder[b.tier];
+    if (tierDiff !== 0) return tierDiff;
+    if (activeSort === 'price_asc') return (a.price || 0) - (b.price || 0);
+    if (activeSort === 'price_desc') return (b.price || 0) - (a.price || 0);
+    if (activeSort === 'popular') return (b.viewCount || 0) - (a.viewCount || 0);
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+}
+
 function feedCategoryLabel(item: FeedItem): string | null {
   const meta = feedItemMeta(item);
   const metaPath = Array.isArray(meta.categoryPath)
@@ -866,20 +878,23 @@ export default function FeedPageClient({
       const q = search.toLowerCase();
       list = list.filter(i => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q));
     }
-    // Sort: VIP first always, then by sort option
-    const tierOrder: Record<ItemTier, number> = { vip: 0, featured: 1, discounted: 2, normal: 3 };
-    list.sort((a, b) => {
-      const tierDiff = tierOrder[a.tier] - tierOrder[b.tier];
-      if (tierDiff !== 0) return tierDiff;
-      if (activeSort === 'price_asc') return (a.price || 0) - (b.price || 0);
-      if (activeSort === 'price_desc') return (b.price || 0) - (a.price || 0);
-      if (activeSort === 'popular') return (b.viewCount || 0) - (a.viewCount || 0);
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-    return list;
+    return sortFeedItemsByTierAndOption(list, activeSort);
   }, [feedItems, search, activeCat, activeEntityType, activeDistrict, activeProvince, activeSort]);
 
+  const filteredWithoutLocation = useMemo(() => {
+    let list = [...feedItems];
+    if (activeCat !== 'all') list = list.filter(i => feedItemMatchesCategory(i, activeCat));
+    if (activeEntityType) list = list.filter(i => i.entityType === activeEntityType);
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      list = list.filter(i => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q));
+    }
+    return sortFeedItemsByTierAndOption(list, activeSort);
+  }, [feedItems, search, activeCat, activeEntityType, activeSort]);
+
   const vipCount = filtered.filter(i => i.tier === 'vip').length;
+  const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
+  const canRelaxLocationFilter = filtered.length === 0 && hasLocationFilter && filteredWithoutLocation.length > 0;
   const activeCategoryPath = activeCat === 'all' ? undefined : categoryPathInfo(activeCat);
   const activeCategoryChildren = activeCat === 'all' ? [] : categoryChildOptions(activeCat);
   const activeCategoryLabel = activeCategoryPath?.label || (activeCat === 'all' ? '' : marketplaceCategoryLabel(activeCat));
@@ -974,9 +989,17 @@ export default function FeedPageClient({
 
         {/* ═══ Featured Businesses ═══ */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-black text-[var(--esl-text)]">Онцлох бизнесүүд</h2>
-            <Link href="/shops" className="text-xs font-semibold text-[#E8242C] no-underline hover:underline">Бүгдийг харах →</Link>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-black text-[var(--esl-text)]">Онцлох бизнесүүд</h2>
+              <p className="text-xs text-[var(--esl-text-muted)]">
+                Одоогоор жишээ байршуулалт. Production-д төлбөртэй онцлох эрх, админ баталгаажуулалттай бизнесүүд энд эрэмбэлэгдэнэ.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/partner" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-[var(--esl-text)]">Онцлох эрх авах</Link>
+              <Link href="/shops" className="text-xs font-semibold text-[#E8242C] no-underline hover:underline">Бүгдийг харах →</Link>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Auto Dealer */}
@@ -1185,12 +1208,28 @@ export default function FeedPageClient({
             <span className="text-5xl block mb-4">📋</span>
             <p className="text-lg font-bold text-[var(--esl-text)]">Энэ шүүлтүүрээр зар олдсонгүй</p>
             <p className="text-sm text-[var(--esl-text-muted)] mt-2 mb-5">
-              Бүх дүүргийн бүх зарыг шалгана уу
+              {canRelaxLocationFilter
+                ? `Байршлын шүүлтүүрийг авахад ${filteredWithoutLocation.length} зар харагдана.`
+                : 'Бүх дүүргийн бүх зарыг шалгана уу'}
             </p>
             <div className="flex flex-wrap gap-2 justify-center">
+              {canRelaxLocationFilter && (
+                <button
+                  type="button"
+                  onClick={() => applyFeedRouteFilters({ district: 'Бүгд', province: '' })}
+                  className="px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold hover:bg-[#c91f26] transition border-none cursor-pointer"
+                >
+                  Байршлын шүүлтүүргүй харах
+                </button>
+              )}
               <button
+                type="button"
                 onClick={clearAllFeedFilters}
-                className="px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold hover:bg-[#c91f26] transition border-none cursor-pointer"
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition border-none cursor-pointer ${
+                  canRelaxLocationFilter
+                    ? 'bg-[var(--esl-bg-section)] text-[var(--esl-text)] hover:bg-[var(--esl-bg-elevated)]'
+                    : 'bg-[#E8242C] text-white hover:bg-[#c91f26]'
+                }`}
               >
                 Шүүлтүүр арилгах
               </button>
