@@ -609,6 +609,9 @@ export default function PostAdPage() {
     .slice(0, 3)
     .map((item) => item.label)
     .join(', ');
+  const readinessProgressText = canSubmit
+    ? `Нийтлэхэд бэлэн. ${requiredReadyCount}/${requiredReadinessItems.length} шаардлага хангагдсан.`
+    : `${readinessScore}% бэлэн. ${missingRequiredCount} шаардлага дутуу.`;
   const missingRequiredQuickLinks = missingRequiredItems.slice(0, 4);
   const firstIncompleteRequiredItem = requiredReadinessItems.find((item) => !item.complete);
   const submitDescriptionId = submitGuidance
@@ -1891,6 +1894,7 @@ export default function PostAdPage() {
             aria-valuemax={100}
             aria-valuemin={0}
             aria-valuenow={readinessScore}
+            aria-valuetext={readinessProgressText}
             className="mt-3 h-2 overflow-hidden rounded-full bg-black/30"
             role="progressbar"
           >
@@ -2031,6 +2035,7 @@ export default function PostAdPage() {
               aria-valuemax={100}
               aria-valuemin={0}
               aria-valuenow={readinessScore}
+              aria-valuetext={readinessProgressText}
               className="h-1.5 overflow-hidden rounded-full bg-black/35"
               data-feed-post-sticky-progress
               role="progressbar"
