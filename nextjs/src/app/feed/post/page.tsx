@@ -619,6 +619,8 @@ export default function PostAdPage() {
     : canSubmit
       ? 'Зарыг урьдчилж харах'
       : `Дутуу хэсэг рүү очих: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`;
+  const feedPostReturnPath = `/feed/post${category ? `?category=${encodeURIComponent(category)}` : ''}`;
+  const loginRedirectHref = `/login?redirect=${encodeURIComponent(feedPostReturnPath)}`;
 
   const focusSectionControl = useCallback((section: HTMLElement) => {
     const control = section.querySelector<HTMLElement>(
@@ -1253,7 +1255,11 @@ export default function PostAdPage() {
                 {publishError.includes('Нэвтэрч') && (
                   <button
                     type="button"
-                    onClick={() => router.push('/login?redirect=/feed/post')}
+                    onClick={() => {
+                      setDraftNoticeDismissed(false);
+                      router.push(loginRedirectHref);
+                    }}
+                    aria-label="Нэвтэрч ороод энэ зарын ноорог руу буцах"
                     className="mt-3 rounded-lg bg-[#E8242C] px-4 py-2 text-xs font-bold text-white"
                   >
                     Нэвтрэх
