@@ -1287,10 +1287,12 @@ export default function PostAdPage() {
     <div className="min-h-screen bg-[var(--esl-bg-page)]">
       {/* Hidden file input */}
       <input
+        id="feed-post-media-input"
         ref={fileInputRef}
         type="file"
         multiple
         accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime"
+        aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
         className="hidden"
         onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }}
       />
@@ -1336,13 +1338,22 @@ export default function PostAdPage() {
         )}
 
         {/* Media Upload */}
-        <div id="feed-post-media" className={jumpTargetClass('feed-post-media', 'mb-8 scroll-mt-24')}>
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-1 block">
+        <div
+          id="feed-post-media"
+          role="group"
+          aria-labelledby="feed-post-media-label"
+          aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
+          aria-invalid={category && !mediaRequirementSatisfied ? true : undefined}
+          className={jumpTargetClass('feed-post-media', 'mb-8 scroll-mt-24')}
+        >
+          <label id="feed-post-media-label" htmlFor="feed-post-media-input" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-1 block">
             Зураг & Видео <span className="text-[#888] font-normal">({mediaFiles.length}/10)</span>
           </label>
-          <p className="text-xs text-[#555] mb-3">Зураг: JPG, PNG, WebP (10MB хүртэл) · Видео: MP4, WebM (50MB хүртэл, 3 хүртэл)</p>
+          <p id="feed-post-media-help" className="text-xs text-[#555] mb-3">Зураг: JPG, PNG, WebP (10MB хүртэл) · Видео: MP4, WebM (50MB хүртэл, 3 хүртэл)</p>
 
           <div
+            role="group"
+            aria-label="Зураг эсвэл видео сонгох хэсэг"
             className={`flex gap-3 flex-wrap p-4 rounded-2xl border-2 border-dashed transition-colors ${
               dragOver ? 'border-[#E8242C] bg-[rgba(232,36,44,0.05)]' : 'border-[var(--esl-border)] bg-transparent'
             }`}
@@ -1353,7 +1364,11 @@ export default function PostAdPage() {
             {/* Add button */}
             {mediaFiles.length < 10 && (
               <button
+                type="button"
                 onClick={() => fileInputRef.current?.click()}
+                aria-controls="feed-post-media-input"
+                aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
+                aria-label="Зураг эсвэл видео файл нэмэх"
                 className="w-28 h-28 rounded-xl border-2 border-dashed border-[var(--esl-border)] bg-[var(--esl-bg-card)] flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-[#E8242C] transition-colors text-[var(--esl-text-muted)]"
               >
                 <Camera className="w-6 h-6" />
@@ -1373,12 +1388,14 @@ export default function PostAdPage() {
                     </div>
                   </div>
                 ) : (
-                  <img loading="lazy" src={m.preview} alt="" className="w-full h-full object-cover" />
+                  <img loading="lazy" src={m.preview} alt={`Сонгосон зураг ${i + 1}`} className="w-full h-full object-cover" />
                 )}
 
                 {/* Remove */}
                 <button
+                  type="button"
                   onClick={() => removeMedia(m.id)}
+                  aria-label={`Медиа ${i + 1}-г устгах`}
                   className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-[#E8242C] text-white flex items-center justify-center border-2 border-[var(--esl-bg-page)] cursor-pointer z-10"
                 >
                   <X className="w-3 h-3" />
@@ -1392,7 +1409,9 @@ export default function PostAdPage() {
                 {/* Set as cover */}
                 {i > 0 && m.type === 'image' && (
                   <button
+                    type="button"
                     onClick={() => setCover(m.id)}
+                    aria-label={`Сонгосон зураг ${i + 1}-г нүүр зураг болгох`}
                     className="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-black/70 text-white px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer border-none"
                   >
                     Нүүр болгох
@@ -1427,8 +1446,8 @@ export default function PostAdPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm font-black text-white">{qualityProfile.title}</p>
-                    <p className="text-xs font-bold text-[var(--esl-text-muted)]">
-                      Зураг {imageCount}/{qualityProfile.recommendedImages}
+                    <p id="feed-post-media-requirement" aria-live="polite" className="text-xs font-bold text-[var(--esl-text-muted)]">
+                      Зураг {imageCount}/{qualityProfile.recommendedImages} · доод тал нь {qualityProfile.minImages} зураг {mediaRequirementSatisfied ? 'хангагдсан' : 'дутуу'}
                     </p>
                   </div>
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
