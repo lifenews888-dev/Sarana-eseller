@@ -1341,7 +1341,12 @@ export default function PostAdPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[var(--esl-bg-section)] border-b border-[var(--esl-border)]">
         <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
-          <button onClick={() => router.back()} className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-white cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Өмнөх хуудас руу буцах"
+            className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-white cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition"
+          >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
