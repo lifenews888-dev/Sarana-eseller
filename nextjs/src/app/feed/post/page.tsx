@@ -533,6 +533,11 @@ export default function PostAdPage() {
   const previewMediaStatus = mediaFiles.length > 0
     ? `Медиа ${previewMediaIdx + 1}/${mediaFiles.length}`
     : 'Медиа сонгоогүй';
+  const previewMediaButtonLabel = (media: MediaFile, index: number) => {
+    const mediaType = media.type === 'video' ? 'Видео' : 'Зураг';
+    const selectedText = index === previewMediaIdx ? ', одоо сонгогдсон' : '';
+    return `${mediaType} ${index + 1}/${mediaFiles.length}-г харах${selectedText}`;
+  };
   const submitMissingItems = [
     !title.trim() ? 'гарчиг' : '',
     !price.trim() ? 'үнэ' : '',
@@ -1199,7 +1204,7 @@ export default function PostAdPage() {
                         key={m.id}
                         type="button"
                         onClick={() => setPreviewMediaIdx(i)}
-                        aria-label={`Медиа ${i + 1}-г харах`}
+                        aria-label={previewMediaButtonLabel(m, i)}
                         aria-current={i === previewMediaIdx ? 'true' : undefined}
                         className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${i === previewMediaIdx ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
                       >
