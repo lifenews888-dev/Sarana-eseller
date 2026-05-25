@@ -530,6 +530,9 @@ export default function PostAdPage() {
     category ? 'feed-post-media-requirement' : '',
     dragOver ? 'feed-post-media-drag-status' : '',
   ].filter(Boolean).join(' ');
+  const previewMediaStatus = mediaFiles.length > 0
+    ? `Медиа ${previewMediaIdx + 1}/${mediaFiles.length}`
+    : 'Медиа сонгоогүй';
   const submitMissingItems = [
     !title.trim() ? 'гарчиг' : '',
     !price.trim() ? 'үнэ' : '',
@@ -1142,7 +1145,22 @@ export default function PostAdPage() {
             role="region"
           >
             {/* Media carousel */}
-            <div className={`relative h-64 sm:h-80 ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`} aria-label="Зураг болон видео харах хэсэг" role="group">
+            <div
+              className={`relative h-64 sm:h-80 ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`}
+              aria-labelledby="feed-post-preview-media-title"
+              aria-describedby="feed-post-preview-media-status"
+              role="group"
+            >
+              <p id="feed-post-preview-media-title" className="sr-only">Зураг болон видео харах хэсэг</p>
+              <p
+                id="feed-post-preview-media-status"
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="sr-only"
+              >
+                {previewMediaStatus}
+              </p>
               {mediaFiles.length > 0 ? (
                 mediaFiles[previewMediaIdx]?.type === 'video' ? (
                   <video src={mediaFiles[previewMediaIdx].preview} controls className="w-full h-full object-contain bg-black" />
