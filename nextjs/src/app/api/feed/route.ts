@@ -220,6 +220,7 @@ export async function GET(req: NextRequest) {
   const mine = ['1', 'true', 'yes'].includes((sp.get('mine') || '').toLowerCase());
   const priceMin = sp.get('priceMin') ? Number(sp.get('priceMin')) : undefined;
   const priceMax = sp.get('priceMax') ? Number(sp.get('priceMax')) : undefined;
+  const requestedTier = tier && VALID_TIERS.has(tier) ? tier : null;
 
   let ownedWhere: Prisma.FeedItemWhereInput | null = null;
   if (mine) {
@@ -244,7 +245,6 @@ export async function GET(req: NextRequest) {
           : { category };
       where.AND = [...(Array.isArray(where.AND) ? where.AND : []), categoryWhere];
     }
-    if (tier && tier !== 'all') where.tier = tier;
     if (entityType && !mine) where.entityType = entityType;
     if (district) where.district = district;
     if (province) where.province = province;
@@ -270,18 +270,27 @@ export async function GET(req: NextRequest) {
           ? { price: 'desc' as const }
           : { createdAt: 'desc' as const };
 
+    const shouldQueryTier = (candidate: string) => !requestedTier || requestedTier === candidate;
     const [vip, featured, discounted, normalItems, total] = await Promise.all([
-      prisma.feedItem.findMany({ where: { ...where, tier: 'vip' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 6, include: mediaInclude }),
-      prisma.feedItem.findMany({ where: { ...where, tier: 'featured' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 12, include: mediaInclude }),
-      prisma.feedItem.findMany({ where: { ...where, tier: 'discounted' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 10, include: mediaInclude }),
-      prisma.feedItem.findMany({
-        where: { ...where, tier: 'normal' },
-        orderBy: normalOrder,
-        skip: (page - 1) * limit,
-        take: limit,
-        include: mediaInclude,
-      }),
-      prisma.feedItem.count({ where: { ...where, tier: 'normal' } }),
+      shouldQueryTier('vip')
+        ? prisma.feedItem.findMany({ where: { ...where, tier: 'vip' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 6, include: mediaInclude })
+        : Promise.resolve([]),
+      shouldQueryTier('featured')
+        ? prisma.feedItem.findMany({ where: { ...where, tier: 'featured' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 12, include: mediaInclude })
+        : Promise.resolve([]),
+      shouldQueryTier('discounted')
+        ? prisma.feedItem.findMany({ where: { ...where, tier: 'discounted' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 10, include: mediaInclude })
+        : Promise.resolve([]),
+      shouldQueryTier('normal')
+        ? prisma.feedItem.findMany({
+            where: { ...where, tier: 'normal' },
+            orderBy: normalOrder,
+            skip: (page - 1) * limit,
+            take: limit,
+            include: mediaInclude,
+          })
+        : Promise.resolve([]),
+      prisma.feedItem.count({ where: { ...where, tier: requestedTier || 'normal' } }),
     ]);
 
     return json({
@@ -315,6 +324,7 @@ export async function GET(req: NextRequest) {
       });
     }
     if (entityType) items = items.filter((i) => normalizeListingEntityType(i.entityType) === entityType);
+    if (requestedTier) items = items.filter((i) => i.tier === requestedTier);
     if (search) {
       const q = search.toLowerCase();
       items = items.filter((i) => i.title.toLowerCase().includes(q));
