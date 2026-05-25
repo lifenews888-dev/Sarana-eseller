@@ -621,6 +621,9 @@ export default function PostAdPage() {
       : `Дутуу хэсэг рүү очих: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`;
   const feedPostReturnPath = `/feed/post${category ? `?category=${encodeURIComponent(category)}` : ''}`;
   const loginRedirectHref = `/login?redirect=${encodeURIComponent(feedPostReturnPath)}`;
+  const draftSavedLabel = draftSavedAt
+    ? new Date(draftSavedAt).toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' })
+    : '';
 
   const focusSectionControl = useCallback((section: HTMLElement) => {
     const control = section.querySelector<HTMLElement>(
@@ -1353,21 +1356,33 @@ export default function PostAdPage() {
 
       <div className="max-w-3xl mx-auto px-4 pt-8 pb-40 lg:pb-8">
         {!draftNoticeDismissed && (draftRestored || draftSavedAt) && (
-          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 sm:flex-row sm:items-center">
+          <div
+            role="status"
+            aria-live="polite"
+            aria-labelledby="feed-post-draft-notice-title"
+            className="mb-6 flex flex-col gap-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 sm:flex-row sm:items-center"
+          >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300">
               <Clock className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-extrabold text-blue-100">
+              <p id="feed-post-draft-notice-title" className="text-sm font-extrabold text-blue-100">
                 {draftRestored ? 'Өмнөх ноорог сэргээгдлээ' : 'Ноорог автоматаар хадгалагдлаа'}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-blue-100/70">
                 Нэвтрэх шаардлага гарсан ч бөглөсөн талбарууд хадгалагдана. Зураг, видео файлыг хөтөч дахин сэргээдэггүй тул нийтлэхийн өмнө дахин сонгоно.
+                {draftSavedAt && (
+                  <>
+                    {' '}Сүүлд хадгалсан:{' '}
+                    <time dateTime={new Date(draftSavedAt).toISOString()}>{draftSavedLabel}</time>.
+                  </>
+                )}
               </p>
             </div>
             <button
               type="button"
               onClick={() => setDraftNoticeDismissed(true)}
+              aria-label="Ноорог хадгалалтын мэдэгдлийг хаах"
               className="h-9 rounded-xl border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-bold text-blue-100 transition hover:bg-blue-500/20"
             >
               Мэдэгдлийг хаах
