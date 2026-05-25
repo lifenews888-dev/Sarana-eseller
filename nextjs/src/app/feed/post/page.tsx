@@ -1425,7 +1425,8 @@ export default function PostAdPage() {
 
           <div
             role="group"
-            aria-label="Зураг эсвэл видео сонгох хэсэг"
+            aria-labelledby="feed-post-media-label"
+            aria-describedby={category ? 'feed-post-media-help feed-post-media-requirement' : 'feed-post-media-help'}
             className={`flex gap-3 flex-wrap p-4 rounded-2xl border-2 border-dashed transition-colors ${
               dragOver ? 'border-[#E8242C] bg-[rgba(232,36,44,0.05)]' : 'border-[var(--esl-border)] bg-transparent'
             }`}
