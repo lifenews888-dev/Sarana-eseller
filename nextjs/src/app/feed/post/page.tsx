@@ -1764,19 +1764,23 @@ export default function PostAdPage() {
 
         {/* Phone */}
         <div id="feed-post-phone" className={jumpTargetClass('feed-post-phone', 'mb-8 scroll-mt-24')}>
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Холбоо барих утас</label>
+          <label htmlFor="feed-post-phone-input" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Холбоо барих утас</label>
           <div className="flex">
             <div className="h-12 px-4 bg-[var(--esl-bg-elevated)] border border-r-0 border-[var(--esl-border)] rounded-l-xl flex items-center">
               <span className="text-sm text-[var(--esl-text-muted)]">+976</span>
             </div>
             <input
+              id="feed-post-phone-input"
               type="tel"
+              aria-describedby="feed-post-phone-help"
+              aria-invalid={phone.length > 0 && phone.length !== 8 ? true : undefined}
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 8))}
               placeholder="9911 2233"
               className="flex-1 h-12 px-4 rounded-r-xl bg-[var(--esl-bg-card)] border border-l-0 border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all"
             />
           </div>
+          <p id="feed-post-phone-help" className="mt-1 text-xs text-[var(--esl-text-muted)]">8 оронтой Монгол утасны дугаар оруулна.</p>
         </div>
 
         {/* VIP Upgrade */}
