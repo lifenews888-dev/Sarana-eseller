@@ -138,6 +138,13 @@ type DescriptionGuidance = {
   tips: string[];
 };
 
+type ReadinessItem = {
+  key: string;
+  label: string;
+  complete: boolean;
+  detail: string;
+};
+
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
@@ -495,6 +502,9 @@ export default function PostAdPage() {
   const metadataFields = metadataFieldsForCategory(category);
   const metadataComplete = requiredMetadataComplete(metadataFields, metadataDraft);
   const qualityProfile = postQualityProfileForCategory(category);
+  const selectedCategory = findMarketplaceCategory(category);
+  const selectedCategoryPath = categoryPathInfo(category);
+  const selectedCategoryPathLabel = selectedCategoryPath?.label || selectedCategory?.label || '';
   const mediaRequirementSatisfied = !category || imageCount >= qualityProfile.minImages;
   const missingRequiredMetadata = metadataFields.filter((field) => field.required && !(metadataDraft[field.key] || '').trim());
   const completedMetadataCount = metadataFields.filter((field) => (metadataDraft[field.key] || '').trim()).length;
@@ -518,6 +528,68 @@ export default function PostAdPage() {
     !(district || province) ? 'байршил' : '',
     missingRequiredMetadata.length > 0 ? 'одтой үзүүлэлтүүд' : '',
   ].filter(Boolean);
+  const missingMetadataLabels = missingRequiredMetadata
+    .slice(0, 3)
+    .map((field) => field.label)
+    .join(', ');
+  const requiredReadinessItems: ReadinessItem[] = [
+    {
+      key: 'title',
+      label: 'Гарчиг',
+      complete: Boolean(title.trim()),
+      detail: title.trim() ? `${Math.min(title.trim().length, 100)}/100 тэмдэгт` : 'Зарын гол нэрийг оруулна',
+    },
+    {
+      key: 'category',
+      label: 'Ангилал',
+      complete: Boolean(category),
+      detail: selectedCategoryPathLabel || 'Нэг үндсэн урсгалаас ангилал сонгоно',
+    },
+    {
+      key: 'price',
+      label: 'Үнэ',
+      complete: Boolean(price.trim()),
+      detail: price.trim() ? formatPrice(Number(price)) : '₮ үнэ оруулна',
+    },
+    {
+      key: 'location',
+      label: 'Байршил',
+      complete: Boolean(district || province),
+      detail: district || province || 'Дүүрэг эсвэл аймаг сонгоно',
+    },
+    {
+      key: 'media',
+      label: 'Зураг',
+      complete: Boolean(category) && mediaRequirementSatisfied,
+      detail: category ? `${imageCount}/${qualityProfile.minImages} бодит зураг` : 'Ангилал сонгосны дараа зургийн шаардлага гарна',
+    },
+    {
+      key: 'metadata',
+      label: 'Үзүүлэлт',
+      complete: Boolean(category) && metadataComplete,
+      detail: !category
+        ? 'Ангилал сонгосны дараа талбарууд гарна'
+        : missingRequiredMetadata.length > 0
+          ? `Дутуу: ${missingMetadataLabels}${missingRequiredMetadata.length > 3 ? '...' : ''}`
+          : `Бэлэн ${completedMetadataCount}/${metadataFields.length}`,
+    },
+  ];
+  const recommendedReadinessItems: ReadinessItem[] = [
+    {
+      key: 'description',
+      label: 'Тайлбар',
+      complete: description.trim().length >= 30,
+      detail: description.trim().length >= 30 ? `${description.trim().length}/1000 тэмдэгт` : '30+ тэмдэгттэй тайлбар илүү найдвартай',
+    },
+    {
+      key: 'phone',
+      label: 'Холбоо барих',
+      complete: phone.length === 8,
+      detail: phone.length === 8 ? `+976 ${phone}` : '8 оронтой утас оруулбал холбоо барихад амар',
+    },
+  ];
+  const requiredReadyCount = requiredReadinessItems.filter((item) => item.complete).length;
+  const readinessScore = Math.round((requiredReadyCount / requiredReadinessItems.length) * 100);
 
   const clearSavedDraft = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -779,9 +851,6 @@ export default function PostAdPage() {
     }
   };
 
-  const selectedCategory = findMarketplaceCategory(category);
-  const selectedCategoryPath = categoryPathInfo(category);
-  const selectedCategoryPathLabel = selectedCategoryPath?.label || selectedCategory?.label || '';
   const inferredMetadataDraft = inferListingMetadataDraftFromCategory(category);
   const autoFilledMetadataItems = Object.entries(inferredMetadataDraft)
     .map(([key, value]) => {
@@ -1558,13 +1627,67 @@ export default function PostAdPage() {
           </div>
         </div>
 
-        {submitMissingItems.length > 0 && (
-          <div className="mb-4 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3">
-            <p className="text-xs font-bold text-amber-100">
-              Урьдчилж харахын өмнө дутуу: {submitMissingItems.join(', ')}
-            </p>
+        <section className={`mb-5 rounded-2xl border p-4 ${
+          canSubmit ? 'border-green-500/25 bg-green-500/10' : 'border-amber-500/25 bg-amber-500/10'
+        }`}>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
+                canSubmit ? 'bg-green-500/15 text-green-300' : 'bg-amber-500/15 text-amber-300'
+              }`}>
+                {canSubmit ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+              </div>
+              <div>
+                <p className="text-sm font-black text-white">Нийтлэх бэлэн байдал</p>
+                <p className="mt-1 text-xs leading-relaxed text-[var(--esl-text-muted)]">
+                  {canSubmit
+                    ? 'Шаардлагатай мэдээлэл бүрэн байна. Урьдчилж хараад нийтэлж болно.'
+                    : `Дутуу: ${submitMissingItems.join(', ')}`}
+                </p>
+              </div>
+            </div>
+            <div className="shrink-0 text-left sm:text-right">
+              <p className="text-2xl font-black text-white">{readinessScore}%</p>
+              <p className="text-[11px] font-bold text-[var(--esl-text-muted)]">{requiredReadyCount}/{requiredReadinessItems.length} шаардлага</p>
+            </div>
           </div>
-        )}
+
+          <div className="mt-3 h-2 overflow-hidden rounded-full bg-black/30">
+            <div
+              className={`h-full rounded-full transition-all ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`}
+              style={{ width: `${readinessScore}%` }}
+            />
+          </div>
+
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            {requiredReadinessItems.map((item) => (
+              <div key={item.key} className="flex min-h-[64px] items-start gap-2 rounded-xl bg-[var(--esl-bg-card)] px-3 py-2">
+                {item.complete ? (
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+                ) : (
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-black text-white">{item.label}</p>
+                  <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2">
+            {recommendedReadinessItems.map((item) => (
+              <div key={item.key} className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-bold ${
+                item.complete
+                  ? 'border-green-500/20 bg-green-500/10 text-green-100'
+                  : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
+              }`}>
+                {item.complete ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
+                <span>{item.label}: {item.detail}</span>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Submit */}
         <div className="flex gap-3">
