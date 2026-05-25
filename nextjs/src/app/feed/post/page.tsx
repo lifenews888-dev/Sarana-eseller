@@ -475,6 +475,7 @@ export default function PostAdPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const urlCategoryAppliedRef = useRef(false);
   const highlightTimerRef = useRef<number | null>(null);
+  const submitTimerRef = useRef<number | null>(null);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -613,6 +614,11 @@ export default function PostAdPage() {
   const submitDescriptionId = submitGuidance
     ? 'feed-post-submit-summary feed-post-submit-guidance'
     : 'feed-post-submit-summary';
+  const submitButtonLabel = submitting
+    ? 'Урьдчилан харах бэлтгэж байна'
+    : canSubmit
+      ? 'Зарыг урьдчилж харах'
+      : `Дутуу хэсэг рүү очих: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`;
 
   const focusSectionControl = useCallback((section: HTMLElement) => {
     const control = section.querySelector<HTMLElement>(
@@ -646,6 +652,7 @@ export default function PostAdPage() {
 
   useEffect(() => () => {
     if (highlightTimerRef.current) window.clearTimeout(highlightTimerRef.current);
+    if (submitTimerRef.current) window.clearTimeout(submitTimerRef.current);
   }, []);
 
   const clearSavedDraft = useCallback(() => {
@@ -826,6 +833,8 @@ export default function PostAdPage() {
   };
 
   const handleSubmit = () => {
+    if (submitting) return;
+
     if (!canSubmit) {
       if (firstIncompleteRequiredItem) {
         setSubmitGuidance(`${firstIncompleteRequiredItem.label}: ${firstIncompleteRequiredItem.detail}. Энэ хэсгийг бөглөөд үргэлжлүүлнэ.`);
@@ -838,7 +847,9 @@ export default function PostAdPage() {
     setPublishError('');
     setPublishedItemId('');
     setSubmitting(true);
-    setTimeout(() => {
+    if (submitTimerRef.current) window.clearTimeout(submitTimerRef.current);
+    submitTimerRef.current = window.setTimeout(() => {
+      submitTimerRef.current = null;
       setSubmitting(false);
       setShowPreview(true);
     }, 1500);
@@ -1763,6 +1774,7 @@ export default function PostAdPage() {
         <section
           id="feed-post-submit-readiness"
           aria-label="Нийтлэх бэлэн байдлын checklist"
+          aria-busy={submitting || undefined}
           aria-describedby="feed-post-submit-summary"
           aria-live="polite"
           className={`mb-5 rounded-2xl border p-4 ${
@@ -1864,8 +1876,9 @@ export default function PostAdPage() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
+            aria-busy={submitting || undefined}
             aria-describedby={submitDescriptionId}
-            aria-label={canSubmit ? 'Зарыг урьдчилж харах' : `Дутуу хэсэг рүү очих: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`}
+            aria-label={submitButtonLabel}
             className={`flex-1 h-12 rounded-xl text-white text-sm font-bold border-none cursor-pointer flex items-center justify-center gap-2 transition-all ${
               canSubmit ? 'bg-[#E8242C] hover:bg-[#CC0000]' : 'bg-[#3D3D3D] hover:bg-[#4A4A4A]'
             }`}
@@ -1878,6 +1891,7 @@ export default function PostAdPage() {
 
       <div
         aria-label="Зар оруулах бэлэн байдлын доод самбар"
+        aria-busy={submitting || undefined}
         aria-live="polite"
         data-feed-post-sticky-readiness
         className="fixed inset-x-0 bottom-0 z-[1101] border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.35)] backdrop-blur lg:hidden"
@@ -1937,8 +1951,9 @@ export default function PostAdPage() {
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
+            aria-busy={submitting || undefined}
             aria-describedby={submitDescriptionId}
-            aria-label={canSubmit ? 'Зарыг урьдчилж харах' : `Дутуу хэсэг рүү очих: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`}
+            aria-label={submitButtonLabel}
             className={`flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black text-white transition disabled:cursor-wait disabled:opacity-70 ${
               canSubmit ? 'bg-[#E8242C] hover:bg-[#CC0000]' : 'bg-[#3D3D3D] hover:bg-[#4A4A4A]'
             }`}
