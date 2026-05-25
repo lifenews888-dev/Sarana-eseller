@@ -484,6 +484,7 @@ export default function PostAdPage() {
   const [phone, setPhone] = useState('');
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [submitGuidance, setSubmitGuidance] = useState('');
   const [isVip, setIsVip] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [previewMediaIdx, setPreviewMediaIdx] = useState(0);
@@ -520,7 +521,7 @@ export default function PostAdPage() {
       items: listingMetadataPreviewItems(group.fields, previewMetadata, group.fields.length),
     }))
     .filter((group) => group.items.length > 0);
-  const canSubmit = title.trim() && price.trim() && category && (district || province) && metadataComplete && mediaRequirementSatisfied;
+  const canSubmit = Boolean(title.trim() && price.trim() && category && (district || province) && metadataComplete && mediaRequirementSatisfied);
   const submitMissingItems = [
     !title.trim() ? 'гарчиг' : '',
     !price.trim() ? 'үнэ' : '',
@@ -599,11 +600,16 @@ export default function PostAdPage() {
   ];
   const requiredReadyCount = requiredReadinessItems.filter((item) => item.complete).length;
   const readinessScore = Math.round((requiredReadyCount / requiredReadinessItems.length) * 100);
+  const firstIncompleteRequiredItem = requiredReadinessItems.find((item) => !item.complete);
 
   const scrollToSection = useCallback((targetId: string) => {
     const section = document.getElementById(targetId);
     section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
+
+  useEffect(() => {
+    if (canSubmit && submitGuidance) setSubmitGuidance('');
+  }, [canSubmit, submitGuidance]);
 
   const clearSavedDraft = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -783,8 +789,15 @@ export default function PostAdPage() {
   };
 
   const handleSubmit = () => {
-    if (!canSubmit) return;
+    if (!canSubmit) {
+      if (firstIncompleteRequiredItem) {
+        setSubmitGuidance(`${firstIncompleteRequiredItem.label} хэсгийг бөглөөд үргэлжлүүлнэ.`);
+        scrollToSection(firstIncompleteRequiredItem.targetId);
+      }
+      return;
+    }
     setPreviewMetadata(normalizeListingMetadata(metadataFields, metadataDraft));
+    setSubmitGuidance('');
     setPublishError('');
     setPublishedItemId('');
     setSubmitting(true);
@@ -1717,19 +1730,24 @@ export default function PostAdPage() {
         </section>
 
         {/* Submit */}
+        {submitGuidance && (
+          <p role="status" className="mb-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-bold text-amber-100">
+            {submitGuidance}
+          </p>
+        )}
         <div className="flex gap-3">
           <button onClick={() => router.back()} className="h-12 px-8 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition">
             Болих
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!canSubmit || submitting}
+            disabled={submitting}
             className={`flex-1 h-12 rounded-xl text-white text-sm font-bold border-none cursor-pointer flex items-center justify-center gap-2 transition-all ${
-              canSubmit ? 'bg-[#E8242C] hover:bg-[#CC0000]' : 'bg-[#3D3D3D] opacity-50 cursor-not-allowed'
+              canSubmit ? 'bg-[#E8242C] hover:bg-[#CC0000]' : 'bg-[#3D3D3D] hover:bg-[#4A4A4A]'
             }`}
           >
             <Send className="w-4 h-4" />
-            {submitting ? 'Бэлтгэж байна...' : 'Урьдчилж харах'}
+            {submitting ? 'Бэлтгэж байна...' : canSubmit ? 'Урьдчилж харах' : 'Дутуу хэсэг рүү очих'}
           </button>
         </div>
       </div>
