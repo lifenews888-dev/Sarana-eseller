@@ -1278,11 +1278,16 @@ export default function PostAdPage() {
           )}
 
           {publishedItemId && (
-            <div role="status" className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-100">
+            <div
+              role="status"
+              aria-labelledby="feed-post-publish-success-title"
+              aria-describedby="feed-post-publish-success-message"
+              className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-100"
+            >
               <CheckCircle2 className="h-5 w-5 shrink-0 text-green-400" />
               <div>
-                <p className="font-bold">Зар нийтлэгдлээ</p>
-                <p className="mt-1 text-xs text-green-100/80">Одоо хэрэглэгчид зарын буланд харах боломжтой.</p>
+                <p id="feed-post-publish-success-title" className="font-bold">Зар нийтлэгдлээ</p>
+                <p id="feed-post-publish-success-message" className="mt-1 text-xs text-green-100/80">Одоо хэрэглэгчид зарын буланд харах боломжтой.</p>
               </div>
             </div>
           )}
