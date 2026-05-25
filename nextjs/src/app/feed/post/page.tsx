@@ -1841,7 +1841,7 @@ export default function PostAdPage() {
 
         <section
           id="feed-post-submit-readiness"
-          aria-label="Нийтлэх бэлэн байдлын checklist"
+          aria-labelledby="feed-post-submit-readiness-title"
           aria-busy={submitting || undefined}
           aria-describedby="feed-post-submit-summary"
           aria-live="polite"
@@ -1857,7 +1857,7 @@ export default function PostAdPage() {
                 {canSubmit ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
               </div>
               <div>
-                <p className="text-sm font-black text-white">Нийтлэх бэлэн байдал</p>
+                <p id="feed-post-submit-readiness-title" className="text-sm font-black text-white">Нийтлэх бэлэн байдал</p>
                 <p id="feed-post-submit-summary" className="mt-1 text-xs leading-relaxed text-[var(--esl-text-muted)]">
                   {canSubmit
                     ? 'Шаардлагатай мэдээлэл бүрэн байна. Урьдчилж хараад нийтэлж болно.'
