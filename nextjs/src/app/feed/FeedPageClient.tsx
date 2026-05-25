@@ -984,6 +984,9 @@ export default function FeedPageClient({
               }
             }}
             onRefresh={refreshLoc}
+            onClearLocation={() => {
+              applyFeedRouteFilters({ district: 'Бүгд', province: '' });
+            }}
           />
         </div>
 
