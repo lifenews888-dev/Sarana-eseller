@@ -1281,7 +1281,7 @@ export default function PostAdPage() {
         </div>
       </header>
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-3xl mx-auto px-4 pt-8 pb-32 lg:pb-8">
         {!draftNoticeDismissed && (draftRestored || draftSavedAt) && (
           <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 sm:flex-row sm:items-center">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300">
@@ -1781,6 +1781,40 @@ export default function PostAdPage() {
           >
             <Send className="w-4 h-4" />
             {submitting ? 'Бэлтгэж байна...' : canSubmit ? 'Урьдчилж харах' : 'Дутуу хэсэг рүү очих'}
+          </button>
+        </div>
+      </div>
+
+      <div
+        data-feed-post-sticky-readiness
+        className="fixed inset-x-0 bottom-0 z-[1101] border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]/95 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.35)] backdrop-blur lg:hidden"
+      >
+        <div className="mx-auto flex max-w-3xl items-center gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-center gap-2">
+              <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`} />
+              <p className="truncate text-xs font-black text-white">
+                {canSubmit ? 'Нийтлэхэд бэлэн' : `Дутуу: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`}
+              </p>
+              <span className="shrink-0 text-xs font-black text-[var(--esl-text-muted)]">{readinessScore}%</span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-black/35">
+              <div
+                className={`h-full rounded-full transition-all ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`}
+                style={{ width: `${readinessScore}%` }}
+              />
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            disabled={submitting}
+            className={`flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black text-white transition disabled:cursor-wait disabled:opacity-70 ${
+              canSubmit ? 'bg-[#E8242C] hover:bg-[#CC0000]' : 'bg-[#3D3D3D] hover:bg-[#4A4A4A]'
+            }`}
+          >
+            <Send className="h-4 w-4" />
+            <span>{submitting ? 'Бэлтгэж байна...' : canSubmit ? 'Харах' : 'Очих'}</span>
           </button>
         </div>
       </div>
