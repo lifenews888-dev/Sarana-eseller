@@ -1135,8 +1135,12 @@ export default function PostAdPage() {
           </div>
 
           {/* Preview detail — what users see when they click */}
-          <p className="text-xs font-bold text-[var(--esl-text-muted)] mb-3 uppercase tracking-wider">Дарахад ийм харагдана</p>
-          <div className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] overflow-hidden mb-8" aria-label="Зарын дэлгэрэнгүй харагдац" role="region">
+          <p id="feed-post-preview-detail-title" className="text-xs font-bold text-[var(--esl-text-muted)] mb-3 uppercase tracking-wider">Дарахад ийм харагдана</p>
+          <div
+            className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] overflow-hidden mb-8"
+            aria-labelledby="feed-post-preview-detail-title"
+            role="region"
+          >
             {/* Media carousel */}
             <div className={`relative h-64 sm:h-80 ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`} aria-label="Зураг болон видео харах хэсэг" role="group">
               {mediaFiles.length > 0 ? (
