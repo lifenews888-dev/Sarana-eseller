@@ -140,6 +140,7 @@ type DescriptionGuidance = {
 
 type ReadinessItem = {
   key: string;
+  targetId: string;
   label: string;
   complete: boolean;
   detail: string;
@@ -535,36 +536,42 @@ export default function PostAdPage() {
   const requiredReadinessItems: ReadinessItem[] = [
     {
       key: 'title',
+      targetId: 'feed-post-title',
       label: 'Гарчиг',
       complete: Boolean(title.trim()),
       detail: title.trim() ? `${Math.min(title.trim().length, 100)}/100 тэмдэгт` : 'Зарын гол нэрийг оруулна',
     },
     {
       key: 'category',
+      targetId: 'feed-post-category',
       label: 'Ангилал',
       complete: Boolean(category),
       detail: selectedCategoryPathLabel || 'Нэг үндсэн урсгалаас ангилал сонгоно',
     },
     {
       key: 'price',
+      targetId: 'feed-post-price',
       label: 'Үнэ',
       complete: Boolean(price.trim()),
       detail: price.trim() ? formatPrice(Number(price)) : '₮ үнэ оруулна',
     },
     {
       key: 'location',
+      targetId: 'feed-post-location',
       label: 'Байршил',
       complete: Boolean(district || province),
       detail: district || province || 'Дүүрэг эсвэл аймаг сонгоно',
     },
     {
       key: 'media',
+      targetId: 'feed-post-media',
       label: 'Зураг',
       complete: Boolean(category) && mediaRequirementSatisfied,
       detail: category ? `${imageCount}/${qualityProfile.minImages} бодит зураг` : 'Ангилал сонгосны дараа зургийн шаардлага гарна',
     },
     {
       key: 'metadata',
+      targetId: 'feed-post-metadata',
       label: 'Үзүүлэлт',
       complete: Boolean(category) && metadataComplete,
       detail: !category
@@ -577,12 +584,14 @@ export default function PostAdPage() {
   const recommendedReadinessItems: ReadinessItem[] = [
     {
       key: 'description',
+      targetId: 'feed-post-description',
       label: 'Тайлбар',
       complete: description.trim().length >= 30,
       detail: description.trim().length >= 30 ? `${description.trim().length}/1000 тэмдэгт` : '30+ тэмдэгттэй тайлбар илүү найдвартай',
     },
     {
       key: 'phone',
+      targetId: 'feed-post-phone',
       label: 'Холбоо барих',
       complete: phone.length === 8,
       detail: phone.length === 8 ? `+976 ${phone}` : '8 оронтой утас оруулбал холбоо барихад амар',
@@ -590,6 +599,11 @@ export default function PostAdPage() {
   ];
   const requiredReadyCount = requiredReadinessItems.filter((item) => item.complete).length;
   const readinessScore = Math.round((requiredReadyCount / requiredReadinessItems.length) * 100);
+
+  const scrollToSection = useCallback((targetId: string) => {
+    const section = document.getElementById(targetId);
+    section?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   const clearSavedDraft = useCallback(() => {
     if (typeof window !== 'undefined') {
@@ -1248,7 +1262,7 @@ export default function PostAdPage() {
         )}
 
         {/* Media Upload */}
-        <div className="mb-8">
+        <div id="feed-post-media" className="mb-8 scroll-mt-24">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-1 block">
             Зураг & Видео <span className="text-[#888] font-normal">({mediaFiles.length}/10)</span>
           </label>
@@ -1377,7 +1391,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Title */}
-        <div className="mb-6">
+        <div id="feed-post-title" className="mb-6 scroll-mt-24">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Гарчиг <span className="text-[#E8242C]">*</span></label>
           <input
             type="text"
@@ -1410,7 +1424,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Category */}
-        <div className="mb-6">
+        <div id="feed-post-category" className="mb-6 scroll-mt-24">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Ангилал <span className="text-[#E8242C]">*</span></label>
           <CategorySelector
             value={category}
@@ -1435,7 +1449,7 @@ export default function PostAdPage() {
         </div>
 
         {metadataFields.length > 0 && (
-          <section className="mb-6 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4">
+          <section id="feed-post-metadata" className="mb-6 scroll-mt-24 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4">
             <div className="mb-4">
               <h2 className="text-sm font-black text-white">{previewMetadataTitle}</h2>
               <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
@@ -1460,7 +1474,7 @@ export default function PostAdPage() {
         )}
 
         {/* Price */}
-        <div className="mb-6">
+        <div id="feed-post-price" className="mb-6 scroll-mt-24">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Үнэ <span className="text-[#E8242C]">*</span></label>
           <div className="flex">
             <input
@@ -1500,7 +1514,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Location: District or Province */}
-        <div className="mb-6">
+        <div id="feed-post-location" className="mb-6 scroll-mt-24">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Байршил <span className="text-[#E8242C]">*</span></label>
           <p className="text-xs text-[var(--esl-text-muted)] mb-2">УБ дүүрэг:</p>
           <div className="flex flex-wrap gap-2 mb-3">
@@ -1523,7 +1537,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Description */}
-        <div className="mb-6">
+        <div id="feed-post-description" className="mb-6 scroll-mt-24">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Дэлгэрэнгүй тайлбар</label>
           <div className="mb-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-3">
             <div className="flex items-start gap-2">
@@ -1571,7 +1585,7 @@ export default function PostAdPage() {
         </div>
 
         {/* Phone */}
-        <div className="mb-8">
+        <div id="feed-post-phone" className="mb-8 scroll-mt-24">
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Холбоо барих утас</label>
           <div className="flex">
             <div className="h-12 px-4 bg-[var(--esl-bg-elevated)] border border-r-0 border-[var(--esl-border)] rounded-l-xl flex items-center">
@@ -1661,7 +1675,14 @@ export default function PostAdPage() {
 
           <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {requiredReadinessItems.map((item) => (
-              <div key={item.key} className="flex min-h-[64px] items-start gap-2 rounded-xl bg-[var(--esl-bg-card)] px-3 py-2">
+              <button
+                key={item.key}
+                type="button"
+                aria-label={`${item.label} хэсэг рүү очих`}
+                data-section-target={item.targetId}
+                onClick={() => scrollToSection(item.targetId)}
+                className="flex min-h-[64px] w-full cursor-pointer items-start gap-2 rounded-xl border border-transparent bg-[var(--esl-bg-card)] px-3 py-2 text-left transition hover:border-[#E8242C]/30 hover:bg-[var(--esl-bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
+              >
                 {item.complete ? (
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
                 ) : (
@@ -1671,20 +1692,26 @@ export default function PostAdPage() {
                   <p className="text-xs font-black text-white">{item.label}</p>
                   <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{item.detail}</p>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
 
           <div className="mt-3 flex flex-wrap gap-2">
             {recommendedReadinessItems.map((item) => (
-              <div key={item.key} className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-[11px] font-bold ${
+              <button
+                key={item.key}
+                type="button"
+                aria-label={`${item.label} хэсэг рүү очих`}
+                data-section-target={item.targetId}
+                onClick={() => scrollToSection(item.targetId)}
+                className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-left text-[11px] font-bold transition hover:border-[#E8242C]/30 focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 ${
                 item.complete
                   ? 'border-green-500/20 bg-green-500/10 text-green-100'
                   : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
               }`}>
                 {item.complete ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
                 <span>{item.label}: {item.detail}</span>
-              </div>
+              </button>
             ))}
           </div>
         </section>
