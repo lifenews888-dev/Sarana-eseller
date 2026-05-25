@@ -1043,7 +1043,12 @@ export default function PostAdPage() {
       <div className="min-h-screen bg-[var(--esl-bg-page)]">
         <header className="sticky top-0 z-50 bg-[var(--esl-bg-section)] border-b border-[var(--esl-border)]">
           <div className="max-w-3xl mx-auto px-4 h-16 flex items-center gap-4">
-            <button onClick={() => setShowPreview(false)} className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-white cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition">
+            <button
+              type="button"
+              onClick={() => setShowPreview(false)}
+              aria-label="Засварлах горим руу буцах"
+              className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-white cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition"
+            >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex-1">
@@ -1118,9 +1123,9 @@ export default function PostAdPage() {
 
           {/* Preview detail — what users see when they click */}
           <p className="text-xs font-bold text-[var(--esl-text-muted)] mb-3 uppercase tracking-wider">Дарахад ийм харагдана</p>
-          <div className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] overflow-hidden mb-8">
+          <div className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] overflow-hidden mb-8" aria-label="Зарын дэлгэрэнгүй харагдац" role="region">
             {/* Media carousel */}
-            <div className={`relative h-64 sm:h-80 ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`}>
+            <div className={`relative h-64 sm:h-80 ${isVip ? 'bg-[#1A1500]' : 'bg-[var(--esl-bg-elevated)]'}`} aria-label="Зураг болон видео харах хэсэг" role="group">
               {mediaFiles.length > 0 ? (
                 mediaFiles[previewMediaIdx]?.type === 'video' ? (
                   <video src={mediaFiles[previewMediaIdx].preview} controls className="w-full h-full object-contain bg-black" />
@@ -1135,13 +1140,17 @@ export default function PostAdPage() {
               {mediaFiles.length > 1 && (
                 <>
                   <button
+                    type="button"
                     onClick={() => setPreviewMediaIdx(i => i > 0 ? i - 1 : mediaFiles.length - 1)}
+                    aria-label="Өмнөх медиа харах"
                     className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition cursor-pointer border-none"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => setPreviewMediaIdx(i => i < mediaFiles.length - 1 ? i + 1 : 0)}
+                    aria-label="Дараагийн медиа харах"
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition cursor-pointer border-none"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -1153,7 +1162,10 @@ export default function PostAdPage() {
                     {mediaFiles.map((m, i) => (
                       <button
                         key={m.id}
+                        type="button"
                         onClick={() => setPreviewMediaIdx(i)}
+                        aria-label={`Медиа ${i + 1}-г харах`}
+                        aria-current={i === previewMediaIdx ? 'true' : undefined}
                         className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${i === previewMediaIdx ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100'}`}
                       >
                         {m.type === 'video' ? (
@@ -1162,7 +1174,7 @@ export default function PostAdPage() {
                             <Play className="w-3 h-3 text-white relative z-10" fill="white" />
                           </div>
                         ) : (
-                          <img loading="lazy" src={m.preview} alt="" className="w-full h-full object-cover" />
+                          <img loading="lazy" src={m.preview} alt={`Preview зураг ${i + 1}`} className="w-full h-full object-cover" />
                         )}
                       </button>
                     ))}
@@ -1233,13 +1245,14 @@ export default function PostAdPage() {
           </div>
 
           {publishError && (
-            <div className="mb-4 flex gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
+            <div role="alert" className="mb-4 flex gap-3 rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-200">
               <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-red-400" />
               <div className="flex-1">
                 <p className="font-bold text-red-100">Нийтлэх боломжгүй байна</p>
                 <p className="mt-1 text-xs leading-relaxed text-red-200/90">{publishError}</p>
                 {publishError.includes('Нэвтэрч') && (
                   <button
+                    type="button"
                     onClick={() => router.push('/login?redirect=/feed/post')}
                     className="mt-3 rounded-lg bg-[#E8242C] px-4 py-2 text-xs font-bold text-white"
                   >
@@ -1251,7 +1264,7 @@ export default function PostAdPage() {
           )}
 
           {publishedItemId && (
-            <div className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-100">
+            <div role="status" className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-100">
               <CheckCircle2 className="h-5 w-5 shrink-0 text-green-400" />
               <div>
                 <p className="font-bold">Зар нийтлэгдлээ</p>
@@ -1265,15 +1278,20 @@ export default function PostAdPage() {
             {!publishedItemId ? (
               <>
                 <button
+                  type="button"
                   onClick={() => { setShowPreview(false); }}
                   disabled={publishing}
+                  aria-label="Зарыг засах"
                   className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <ArrowLeft className="w-4 h-4" /> Засах
                 </button>
                 <button
+                  type="button"
                   onClick={handlePublish}
                   disabled={publishing}
+                  aria-busy={publishing || undefined}
+                  aria-label={publishing ? 'Зар нийтэлж байна' : 'Зарыг нийтлэх'}
                   className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#CC0000] transition flex items-center justify-center gap-2 disabled:opacity-60"
                 >
                   <Send className="w-4 h-4" />
@@ -1285,7 +1303,7 @@ export default function PostAdPage() {
                 <Link href={`/feed/${publishedItemId}`} className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold no-underline hover:bg-[#CC0000] transition flex items-center justify-center gap-2">
                   Дэлгэрэнгүй харах
                 </Link>
-                <button onClick={() => router.push('/feed')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2">
+                <button type="button" onClick={() => router.push('/feed')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2">
                   Зарын булан
                 </button>
               </>
