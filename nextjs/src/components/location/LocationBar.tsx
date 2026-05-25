@@ -11,11 +11,12 @@ interface LocationBarProps {
   permissionDenied: boolean;
   nearbyCount?: number;
   onDistrictChange: (key: string) => void;
+  onClearLocation?: () => void;
   onRefresh: () => void;
 }
 
 export default function LocationBar({
-  district, loading, permissionDenied, nearbyCount, onDistrictChange, onRefresh,
+  district, loading, permissionDenied, nearbyCount, onDistrictChange, onClearLocation, onRefresh,
 }: LocationBarProps) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerLevel, setPickerLevel] = useState<'main' | 'ub'>('main');
@@ -45,7 +46,17 @@ export default function LocationBar({
             </p>
           )}
         </div>
-        <button onClick={() => setPickerOpen(true)}
+        {onClearLocation && (
+          <button
+            type="button"
+            onClick={onClearLocation}
+            className="hidden sm:inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer transition"
+            style={{ background: 'rgba(232,36,44,0.08)', borderColor: 'rgba(232,36,44,0.18)', color: '#E8242C' }}
+          >
+            Бүх байршил
+          </button>
+        )}
+        <button type="button" onClick={() => setPickerOpen(true)}
           className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border-none cursor-pointer transition"
           style={{ background: 'var(--esl-bg-section)', color: 'var(--esl-text-secondary)' }}>
           Өөрчлөх <ChevronDown className="w-3 h-3" />
@@ -60,13 +71,29 @@ export default function LocationBar({
             style={{ background: 'var(--esl-bg-card)', borderColor: 'var(--esl-border)' }}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold" style={{ color: 'var(--esl-text-primary)' }}>Байршил сонгох</h3>
-              <button onClick={() => setPickerOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center border-none cursor-pointer" style={{ background: 'var(--esl-bg-section)', color: 'var(--esl-text-muted)' }}>
+              <button type="button" onClick={() => setPickerOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center border-none cursor-pointer" style={{ background: 'var(--esl-bg-section)', color: 'var(--esl-text-muted)' }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
 
+            {onClearLocation && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClearLocation();
+                  setPickerOpen(false);
+                  setPickerLevel('main');
+                }}
+                className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl border mb-3 cursor-pointer transition hover:border-[var(--esl-border-strong)]"
+                style={{ background: 'var(--esl-bg-section)', borderColor: 'var(--esl-border)', color: 'var(--esl-text-primary)' }}
+              >
+                <MapPin className="w-4 h-4" />
+                <span className="text-sm font-semibold">Бүх байршил харах</span>
+              </button>
+            )}
+
             {/* GPS button */}
-            <button onClick={() => { onRefresh(); setPickerOpen(false); }}
+            <button type="button" onClick={() => { onRefresh(); setPickerOpen(false); }}
               className="w-full flex items-center gap-2.5 px-4 py-3 rounded-xl border mb-3 cursor-pointer transition hover:border-[#E8242C]"
               style={{ background: 'rgba(232,36,44,0.05)', borderColor: 'rgba(232,36,44,0.2)', color: '#E8242C' }}>
               <Navigation className="w-4 h-4" />
