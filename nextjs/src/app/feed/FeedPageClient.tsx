@@ -27,13 +27,14 @@ import {
 } from '@/lib/marketplaceCategories';
 
 /* ═══ Types ═══ */
-type ItemTier = 'vip' | 'featured' | 'discounted' | 'normal';
+export type ItemTier = 'vip' | 'featured' | 'discounted' | 'normal';
 export type EntityType = 'store' | 'agent' | 'company' | 'auto_dealer' | 'service' | 'user';
 export type FeedSortKey = 'newest' | 'price_asc' | 'price_desc' | 'popular';
 
 type FeedPageClientProps = {
   initialCategory?: string;
   initialEntityType?: EntityType | '';
+  initialTier?: ItemTier | '';
   initialSearch?: string;
   initialDistrict?: string;
   initialProvince?: string;
@@ -736,6 +737,7 @@ function FeedCard({ item, onClick }: { item: FeedItem; onClick: () => void }) {
 export default function FeedPageClient({
   initialCategory = 'all',
   initialEntityType = '',
+  initialTier = '',
   initialSearch = '',
   initialDistrict = 'Бүгд',
   initialProvince = '',
@@ -747,6 +749,7 @@ export default function FeedPageClient({
   const [search, setSearch] = useState(initialSearch);
   const [activeCat, setActiveCat] = useState(initialCategory || 'all');
   const [activeEntityType, setActiveEntityType] = useState<EntityType | ''>(initialEntityType);
+  const [activeTier, setActiveTier] = useState<ItemTier | ''>(initialTier);
   const [activeDistrict, setActiveDistrict] = useState(initialDistrict || 'Бүгд');
   const [activeProvince, setActiveProvince] = useState(initialProvince);
   const [activeSort, setActiveSort] = useState<FeedSortKey>(initialSort);
@@ -755,6 +758,7 @@ export default function FeedPageClient({
   const applyFeedRouteFilters = useCallback((next: {
     category?: string;
     entityType?: EntityType | '';
+    tier?: ItemTier | '';
     search?: string;
     district?: string;
     province?: string;
@@ -762,6 +766,7 @@ export default function FeedPageClient({
   }, mode: 'push' | 'replace' = 'push') => {
     const category = next.category ?? activeCat;
     const entityType = next.entityType ?? activeEntityType;
+    const tier = next.tier ?? activeTier;
     const nextSearch = next.search ?? search;
     const district = next.district ?? activeDistrict;
     const province = next.province ?? activeProvince;
@@ -769,6 +774,7 @@ export default function FeedPageClient({
 
     setActiveCat(category);
     setActiveEntityType(entityType);
+    setActiveTier(tier);
     setSearch(nextSearch);
     setActiveDistrict(district);
     setActiveProvince(province);
@@ -788,6 +794,12 @@ export default function FeedPageClient({
       params.set('entityType', entityType);
     } else {
       params.delete('entityType');
+    }
+
+    if (tier) {
+      params.set('tier', tier);
+    } else {
+      params.delete('tier');
     }
 
     const trimmedSearch = nextSearch.trim();
@@ -825,24 +837,26 @@ export default function FeedPageClient({
         router.push(nextUrl, { scroll: false });
       }
     }
-  }, [activeCat, activeDistrict, activeEntityType, activeProvince, activeSort, pathname, router, search]);
+  }, [activeCat, activeDistrict, activeEntityType, activeProvince, activeSort, activeTier, pathname, router, search]);
 
   useEffect(() => {
     window.setTimeout(() => {
       setActiveCat(initialCategory || 'all');
       setActiveEntityType(initialEntityType);
+      setActiveTier(initialTier);
       setSearch(initialSearch);
       setActiveDistrict(initialDistrict || 'Бүгд');
       setActiveProvince(initialProvince);
       setActiveSort(initialSort);
     }, 0);
-  }, [initialCategory, initialDistrict, initialEntityType, initialProvince, initialSearch, initialSort]);
+  }, [initialCategory, initialDistrict, initialEntityType, initialProvince, initialSearch, initialSort, initialTier]);
 
   // Fetch real feed data from API, fallback to DEMO_FEED
   useEffect(() => {
     const params = new URLSearchParams();
     if (activeCat !== 'all') params.set('category', activeCat);
     if (activeEntityType) params.set('entityType', activeEntityType);
+    if (activeTier) params.set('tier', activeTier);
     const query = params.toString();
     const canUseDemoFeed = activeCat === 'all' && !activeEntityType;
     fetch(`/api/feed${query ? `?${query}` : ''}`).then(r => r.json()).then(res => {
@@ -852,7 +866,7 @@ export default function FeedPageClient({
     }).catch(() => {
       setFeedItems(canUseDemoFeed ? DEMO_FEED : []);
     });
-  }, [activeCat, activeEntityType]);
+  }, [activeCat, activeEntityType, activeTier]);
   const { district: userDistrict, loading: locLoading, permissionDenied, refresh: refreshLoc, setManualDistrict } = useUserLocation();
 
   // Auto-set district from GPS
@@ -872,6 +886,7 @@ export default function FeedPageClient({
     let list = [...feedItems];
     if (activeCat !== 'all') list = list.filter(i => feedItemMatchesCategory(i, activeCat));
     if (activeEntityType) list = list.filter(i => i.entityType === activeEntityType);
+    if (activeTier) list = list.filter(i => i.tier === activeTier);
     if (activeDistrict !== 'Бүгд') list = list.filter(i => i.district === activeDistrict);
     if (activeProvince) list = list.filter(i => i.province === activeProvince);
     if (search.trim()) {
@@ -879,18 +894,19 @@ export default function FeedPageClient({
       list = list.filter(i => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q));
     }
     return sortFeedItemsByTierAndOption(list, activeSort);
-  }, [feedItems, search, activeCat, activeEntityType, activeDistrict, activeProvince, activeSort]);
+  }, [feedItems, search, activeCat, activeEntityType, activeTier, activeDistrict, activeProvince, activeSort]);
 
   const filteredWithoutLocation = useMemo(() => {
     let list = [...feedItems];
     if (activeCat !== 'all') list = list.filter(i => feedItemMatchesCategory(i, activeCat));
     if (activeEntityType) list = list.filter(i => i.entityType === activeEntityType);
+    if (activeTier) list = list.filter(i => i.tier === activeTier);
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter(i => i.title.toLowerCase().includes(q) || i.description.toLowerCase().includes(q));
     }
     return sortFeedItemsByTierAndOption(list, activeSort);
-  }, [feedItems, search, activeCat, activeEntityType, activeSort]);
+  }, [feedItems, search, activeCat, activeEntityType, activeTier, activeSort]);
 
   const vipCount = filtered.filter(i => i.tier === 'vip').length;
   const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
@@ -901,10 +917,12 @@ export default function FeedPageClient({
   const isNestedCategory = Boolean(activeCategoryPath && activeCategoryPath.value !== activeCategoryPath.rootKey);
   const activeProvinceLabel = activeProvince ? MONGOLIA_LOCATIONS.provinces[activeProvince]?.name || activeProvince : '';
   const activeSortLabel = SORT_OPTIONS.find((option) => option.key === activeSort)?.label || activeSort;
+  const activeTierLabel = activeTier ? TIER_CONFIG[activeTier].label : '';
   const clearAllFeedFilters = () => {
     applyFeedRouteFilters({
       category: 'all',
       entityType: '',
+      tier: '',
       search: '',
       district: 'Бүгд',
       province: '',
@@ -917,6 +935,9 @@ export default function FeedPageClient({
       : null,
     activeEntityType
       ? { key: 'entityType', label: ENTITY_LABELS[activeEntityType].label, onClear: () => applyFeedRouteFilters({ entityType: '' }) }
+      : null,
+    activeTier
+      ? { key: 'tier', label: `Төрөл: ${activeTierLabel}`, onClear: () => applyFeedRouteFilters({ tier: '' }) }
       : null,
     activeDistrict !== 'Бүгд'
       ? { key: 'district', label: `Дүүрэг: ${activeDistrict}`, onClear: () => applyFeedRouteFilters({ district: 'Бүгд' }) }
@@ -1001,7 +1022,7 @@ export default function FeedPageClient({
             </div>
             <div className="flex items-center gap-3">
               <Link href="/partner" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-[var(--esl-text)]">Онцлох эрх авах</Link>
-              <Link href="/shops" className="text-xs font-semibold text-[#E8242C] no-underline hover:underline">Бүгдийг харах →</Link>
+              <Link href="/feed?tier=featured" className="text-xs font-semibold text-[#E8242C] no-underline hover:underline">Бүгдийг харах →</Link>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
