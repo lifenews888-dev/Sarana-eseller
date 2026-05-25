@@ -1625,17 +1625,21 @@ export default function PostAdPage() {
             </div>
 
             <div className="space-y-5">
-              {metadataGroups.map((group) => (
-                <div key={group.title}>
-                  <div className="mb-3">
-                    <p className="text-xs font-black text-white">{group.title}</p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{group.description}</p>
+              {metadataGroups.map((group, groupIndex) => {
+                const groupTitleId = `feed-post-metadata-group-${groupIndex}-title`;
+
+                return (
+                  <div key={group.title} role="group" aria-labelledby={groupTitleId}>
+                    <div className="mb-3">
+                      <p id={groupTitleId} className="text-xs font-black text-white">{group.title}</p>
+                      <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{group.description}</p>
+                    </div>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      {group.fields.map(renderMetadataField)}
+                    </div>
                   </div>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    {group.fields.map(renderMetadataField)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
