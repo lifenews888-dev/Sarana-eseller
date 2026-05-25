@@ -538,6 +538,8 @@ export default function PostAdPage() {
     const selectedText = index === previewMediaIdx ? ', одоо сонгогдсон' : '';
     return `${mediaType} ${index + 1}/${mediaFiles.length}-г харах${selectedText}`;
   };
+  const previewPreviousMediaLabel = `Өмнөх медиа харах, одоо ${previewMediaIdx + 1}/${mediaFiles.length}`;
+  const previewNextMediaLabel = `Дараагийн медиа харах, одоо ${previewMediaIdx + 1}/${mediaFiles.length}`;
   const submitMissingItems = [
     !title.trim() ? 'гарчиг' : '',
     !price.trim() ? 'үнэ' : '',
@@ -1182,7 +1184,7 @@ export default function PostAdPage() {
                   <button
                     type="button"
                     onClick={() => setPreviewMediaIdx(i => i > 0 ? i - 1 : mediaFiles.length - 1)}
-                    aria-label="Өмнөх медиа харах"
+                    aria-label={previewPreviousMediaLabel}
                     className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition cursor-pointer border-none"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -1190,7 +1192,7 @@ export default function PostAdPage() {
                   <button
                     type="button"
                     onClick={() => setPreviewMediaIdx(i => i < mediaFiles.length - 1 ? i + 1 : 0)}
-                    aria-label="Дараагийн медиа харах"
+                    aria-label={previewNextMediaLabel}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center text-white hover:bg-black/80 transition cursor-pointer border-none"
                   >
                     <ChevronRight className="w-4 h-4" />
