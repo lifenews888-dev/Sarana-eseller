@@ -1913,7 +1913,12 @@ export default function PostAdPage() {
           </p>
         )}
         <div className="flex gap-3">
-          <button type="button" onClick={() => router.back()} className="h-12 px-8 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            aria-label="Зар оруулахыг болиод өмнөх хуудас руу буцах"
+            className="h-12 px-8 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition"
+          >
             Болих
           </button>
           <button
