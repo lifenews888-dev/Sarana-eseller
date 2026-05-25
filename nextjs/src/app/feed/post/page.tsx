@@ -1725,17 +1725,18 @@ export default function PostAdPage() {
                 aria-label={`${item.label} хэсэг рүү очих`}
                 data-section-target={item.targetId}
                 onClick={() => scrollToSection(item.targetId, true)}
-                className="flex min-h-[64px] w-full cursor-pointer items-start gap-2 rounded-xl border border-transparent bg-[var(--esl-bg-card)] px-3 py-2 text-left transition hover:border-[#E8242C]/30 hover:bg-[var(--esl-bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
+                className="group flex min-h-[64px] w-full cursor-pointer items-start gap-2 rounded-xl border border-transparent bg-[var(--esl-bg-card)] px-3 py-2 text-left transition hover:border-[#E8242C]/30 hover:bg-[var(--esl-bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               >
                 {item.complete ? (
                   <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
                 ) : (
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
                 )}
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-black text-white">{item.label}</p>
                   <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{item.detail}</p>
                 </div>
+                <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--esl-text-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#FF6B72]" />
               </button>
             ))}
           </div>
@@ -1748,13 +1749,14 @@ export default function PostAdPage() {
                 aria-label={`${item.label} хэсэг рүү очих`}
                 data-section-target={item.targetId}
                 onClick={() => scrollToSection(item.targetId, true)}
-                className={`flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-left text-[11px] font-bold transition hover:border-[#E8242C]/30 focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 ${
+                className={`group flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-left text-[11px] font-bold transition hover:border-[#E8242C]/30 focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 ${
                 item.complete
                   ? 'border-green-500/20 bg-green-500/10 text-green-100'
                   : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
               }`}>
                 {item.complete ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
                 <span>{item.label}: {item.detail}</span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 transition-transform group-hover:translate-x-0.5" />
               </button>
             ))}
           </div>
