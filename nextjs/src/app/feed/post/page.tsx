@@ -1569,6 +1569,7 @@ export default function PostAdPage() {
                 type="button"
                 onClick={() => setTitle(suggestedTitle)}
                 disabled={!canApplySuggestedTitle}
+                aria-label="Санал болгосон гарчгийг зарын гарчигт ашиглах"
                 className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-white transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Ашиглах
@@ -1739,6 +1740,7 @@ export default function PostAdPage() {
                     type="button"
                     onClick={() => setDescription(suggestedDescription)}
                     disabled={!canApplySuggestedDescription}
+                    aria-label="Санал болгосон тайлбарыг зарын тайлбарт оруулах"
                     className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-white transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     Тайлбарт оруулах
