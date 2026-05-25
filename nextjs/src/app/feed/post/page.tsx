@@ -937,6 +937,9 @@ export default function PostAdPage() {
 
   const renderMetadataField = (field: ListingMetadataField) => {
     const value = metadataDraft[field.key] || '';
+    const fieldInputId = `metadata-${field.key}`;
+    const fieldHintId = `${fieldInputId}-hint`;
+    const fieldInvalid = field.required && !value.trim();
 
     return (
       <label key={field.key} className={field.type === 'list' ? 'sm:col-span-2' : ''}>
@@ -946,8 +949,13 @@ export default function PostAdPage() {
 
         {field.type === 'select' ? (
           <select
+            id={fieldInputId}
             name={field.key}
+            aria-describedby={field.hint ? fieldHintId : undefined}
+            aria-invalid={fieldInvalid || undefined}
+            aria-required={field.required || undefined}
             data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
+            required={field.required}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
             className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
@@ -959,8 +967,13 @@ export default function PostAdPage() {
           </select>
         ) : field.type === 'boolean' ? (
           <select
+            id={fieldInputId}
             name={field.key}
+            aria-describedby={field.hint ? fieldHintId : undefined}
+            aria-invalid={fieldInvalid || undefined}
+            aria-required={field.required || undefined}
             data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
+            required={field.required}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
             className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
@@ -971,8 +984,13 @@ export default function PostAdPage() {
           </select>
         ) : field.type === 'list' ? (
           <textarea
+            id={fieldInputId}
             name={field.key}
+            aria-describedby={field.hint ? fieldHintId : undefined}
+            aria-invalid={fieldInvalid || undefined}
+            aria-required={field.required || undefined}
             data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
+            required={field.required}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
             placeholder={field.placeholder}
@@ -981,8 +999,13 @@ export default function PostAdPage() {
           />
         ) : (
           <input
+            id={fieldInputId}
             name={field.key}
+            aria-describedby={field.hint ? fieldHintId : undefined}
+            aria-invalid={fieldInvalid || undefined}
+            aria-required={field.required || undefined}
             data-metadata-required-empty={field.required && !value.trim() ? 'true' : undefined}
+            required={field.required}
             type="text"
             inputMode={field.type === 'number' ? 'decimal' : 'text'}
             value={value}
@@ -995,7 +1018,7 @@ export default function PostAdPage() {
           />
         )}
 
-        {field.hint && <span className="mt-1 block text-[11px] text-[var(--esl-text-muted)]">{field.hint}</span>}
+        {field.hint && <span id={fieldHintId} className="mt-1 block text-[11px] text-[var(--esl-text-muted)]">{field.hint}</span>}
       </label>
     );
   };
@@ -1443,13 +1466,17 @@ export default function PostAdPage() {
 
         {/* Title */}
         <div id="feed-post-title" className={jumpTargetClass('feed-post-title', 'mb-6 scroll-mt-24')}>
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Гарчиг <span className="text-[#E8242C]">*</span></label>
+          <label htmlFor="feed-post-title-input" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Гарчиг <span className="text-[#E8242C]">*</span></label>
           <input
+            id="feed-post-title-input"
             type="text"
+            aria-describedby="feed-post-title-count"
+            aria-invalid={!title.trim() || undefined}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Жишээ: iPhone 15 Pro, бараг шинэ"
             maxLength={100}
+            required
             className="w-full h-12 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all"
           />
           {suggestedTitle && (
@@ -1471,11 +1498,17 @@ export default function PostAdPage() {
               </button>
             </div>
           )}
-          <p className="text-right text-[11px] text-[#555] mt-1">{title.length}/100</p>
+          <p id="feed-post-title-count" className="text-right text-[11px] text-[#555] mt-1">{title.length}/100</p>
         </div>
 
         {/* Category */}
-        <div id="feed-post-category" className={jumpTargetClass('feed-post-category', 'mb-6 scroll-mt-24')}>
+        <div
+          id="feed-post-category"
+          aria-invalid={!category || undefined}
+          aria-label="Ангилал сонгох"
+          className={jumpTargetClass('feed-post-category', 'mb-6 scroll-mt-24')}
+          role="group"
+        >
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Ангилал <span className="text-[#E8242C]">*</span></label>
           <CategorySelector
             value={category}
@@ -1526,13 +1559,18 @@ export default function PostAdPage() {
 
         {/* Price */}
         <div id="feed-post-price" className={jumpTargetClass('feed-post-price', 'mb-6 scroll-mt-24')}>
-          <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Үнэ <span className="text-[#E8242C]">*</span></label>
+          <label htmlFor="feed-post-price-input" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Үнэ <span className="text-[#E8242C]">*</span></label>
           <div className="flex">
             <input
+              id="feed-post-price-input"
               type="text"
+              aria-describedby={price && Number(price) >= 1000000 ? 'feed-post-price-readable' : undefined}
+              aria-invalid={!price.trim() || undefined}
+              inputMode="numeric"
               value={price ? Number(price).toLocaleString() : ''}
               onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ''))}
               placeholder="0"
+              required
               className="flex-1 h-12 px-4 rounded-l-xl bg-[var(--esl-bg-card)] border border-r-0 border-[var(--esl-border)] text-white text-lg font-bold outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all"
             />
             <div className="h-12 px-5 bg-[var(--esl-bg-elevated)] border border-l-0 border-[var(--esl-border)] rounded-r-xl flex items-center">
@@ -1540,7 +1578,7 @@ export default function PostAdPage() {
             </div>
           </div>
           {price && Number(price) >= 1000000 && (
-            <p className="text-xs text-[#888] mt-1">{formatPrice(Number(price))}</p>
+            <p id="feed-post-price-readable" className="text-xs text-[#888] mt-1">{formatPrice(Number(price))}</p>
           )}
         </div>
 
@@ -1551,6 +1589,8 @@ export default function PostAdPage() {
             {CONDITIONS.map((c) => (
               <button
                 key={c.key}
+                type="button"
+                aria-pressed={condition === c.key}
                 onClick={() => setCondition(condition === c.key ? '' : c.key)}
                 className={`px-5 py-2.5 rounded-xl text-sm font-semibold border cursor-pointer transition-all ${
                   condition === c.key
@@ -1565,12 +1605,18 @@ export default function PostAdPage() {
         </div>
 
         {/* Location: District or Province */}
-        <div id="feed-post-location" className={jumpTargetClass('feed-post-location', 'mb-6 scroll-mt-24')}>
+        <div
+          id="feed-post-location"
+          aria-invalid={!(district || province) || undefined}
+          aria-label="Байршил сонгох"
+          className={jumpTargetClass('feed-post-location', 'mb-6 scroll-mt-24')}
+          role="group"
+        >
           <label className="text-sm font-bold text-[var(--esl-text-secondary)] mb-3 block">Байршил <span className="text-[#E8242C]">*</span></label>
           <p className="text-xs text-[var(--esl-text-muted)] mb-2">УБ дүүрэг:</p>
           <div className="flex flex-wrap gap-2 mb-3">
             {DISTRICTS.map((d) => (
-              <button key={d} onClick={() => { setDistrict(d); setProvince(''); }}
+              <button key={d} type="button" aria-pressed={district === d} onClick={() => { setDistrict(d); setProvince(''); }}
                 className={`px-4 py-2 rounded-xl text-sm font-semibold border cursor-pointer transition-all ${
                   district === d ? 'bg-[#E8242C] border-[#E8242C] text-white' : 'bg-[var(--esl-bg-section)] border-[var(--esl-border)] text-[var(--esl-text-primary)] hover:border-[#E8242C]'
                 }`}>{d}</button>
@@ -1579,7 +1625,7 @@ export default function PostAdPage() {
           <p className="text-xs text-[var(--esl-text-muted)] mb-2">Аймаг:</p>
           <div className="flex flex-wrap gap-2">
             {['Архангай', 'Баян-Өлгий', 'Баянхонгор', 'Булган', 'Говь-Алтай', 'Дорноговь', 'Дорнод', 'Дундговь', 'Завхан', 'Орхон', 'Өвөрхангай', 'Өмнөговь', 'Сүхбаатар', 'Сэлэнгэ', 'Төв', 'Увс', 'Ховд', 'Хөвсгөл', 'Хэнтий', 'Дархан-Уул', 'Говьсүмбэр'].map((p) => (
-              <button key={p} onClick={() => { setProvince(p); setDistrict(''); }}
+              <button key={p} type="button" aria-pressed={province === p} onClick={() => { setProvince(p); setDistrict(''); }}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold border cursor-pointer transition-all ${
                   province === p ? 'bg-[#E8242C] border-[#E8242C] text-white' : 'bg-[var(--esl-bg-section)] border-[var(--esl-border)] text-[var(--esl-text-primary)] hover:border-[#E8242C]'
                 }`}>{p}</button>
