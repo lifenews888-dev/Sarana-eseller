@@ -1612,9 +1612,13 @@ export default function PostAdPage() {
         </div>
 
         {metadataFields.length > 0 && (
-          <section id="feed-post-metadata" className={jumpTargetClass('feed-post-metadata', 'mb-6 scroll-mt-24 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4')}>
+          <section
+            id="feed-post-metadata"
+            aria-labelledby="feed-post-metadata-title"
+            className={jumpTargetClass('feed-post-metadata', 'mb-6 scroll-mt-24 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4')}
+          >
             <div className="mb-4">
-              <h2 className="text-sm font-black text-white">{previewMetadataTitle}</h2>
+              <h2 id="feed-post-metadata-title" className="text-sm font-black text-white">{previewMetadataTitle}</h2>
               <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
                 Сонгосон ангилалд хэрэгтэй мэдээллээ бөглөнө. Одтой талбарууд зарын чанарт заавал хэрэгтэй.
               </p>
