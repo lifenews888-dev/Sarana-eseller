@@ -602,6 +602,12 @@ export default function PostAdPage() {
   ];
   const requiredReadyCount = requiredReadinessItems.filter((item) => item.complete).length;
   const readinessScore = Math.round((requiredReadyCount / requiredReadinessItems.length) * 100);
+  const missingRequiredItems = requiredReadinessItems.filter((item) => !item.complete);
+  const missingRequiredCount = missingRequiredItems.length;
+  const missingRequiredSummary = missingRequiredItems
+    .slice(0, 3)
+    .map((item) => item.label)
+    .join(', ');
   const firstIncompleteRequiredItem = requiredReadinessItems.find((item) => !item.complete);
 
   const focusSectionControl = useCallback((section: HTMLElement) => {
@@ -1794,10 +1800,20 @@ export default function PostAdPage() {
             <div className="mb-1 flex items-center gap-2">
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`} />
               <p className="truncate text-xs font-black text-white">
-                {canSubmit ? 'Нийтлэхэд бэлэн' : `Дутуу: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`}
+                {canSubmit ? 'Нийтлэхэд бэлэн' : `Дараагийнх: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`}
               </p>
+              <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${
+                canSubmit ? 'bg-green-500/15 text-green-200' : 'bg-amber-400/15 text-amber-100'
+              }`}>
+                {canSubmit ? `${requiredReadyCount}/${requiredReadinessItems.length}` : `${missingRequiredCount} дутуу`}
+              </span>
               <span className="shrink-0 text-xs font-black text-[var(--esl-text-muted)]">{readinessScore}%</span>
             </div>
+            {!canSubmit && missingRequiredSummary && (
+              <p className="mb-1 truncate text-[11px] font-bold text-[var(--esl-text-muted)]">
+                Дутуу: {missingRequiredSummary}{missingRequiredCount > 3 ? '...' : ''}
+              </p>
+            )}
             <div className="h-1.5 overflow-hidden rounded-full bg-black/35">
               <div
                 className={`h-full rounded-full transition-all ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`}
