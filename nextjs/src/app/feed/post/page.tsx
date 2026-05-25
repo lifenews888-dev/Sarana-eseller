@@ -1519,7 +1519,13 @@ export default function PostAdPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                     <p className="text-sm font-black text-white">{qualityProfile.title}</p>
-                    <p id="feed-post-media-requirement" aria-live="polite" className="text-xs font-bold text-[var(--esl-text-muted)]">
+                    <p
+                      id="feed-post-media-requirement"
+                      role="status"
+                      aria-live="polite"
+                      aria-atomic="true"
+                      className="text-xs font-bold text-[var(--esl-text-muted)]"
+                    >
                       Зураг {imageCount}/{qualityProfile.recommendedImages} · доод тал нь {qualityProfile.minImages} зураг {mediaRequirementSatisfied ? 'хангагдсан' : 'дутуу'}
                     </p>
                   </div>
