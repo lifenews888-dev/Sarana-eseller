@@ -1984,7 +1984,7 @@ export default function PostAdPage() {
       </div>
 
       <div
-        aria-label="Зар оруулах бэлэн байдлын доод самбар"
+        aria-labelledby="feed-post-sticky-readiness-title"
         aria-busy={submitting || undefined}
         aria-live="polite"
         data-feed-post-sticky-readiness
@@ -1995,7 +1995,7 @@ export default function PostAdPage() {
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center gap-2">
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`} />
-              <p className="truncate text-xs font-black text-white">
+              <p id="feed-post-sticky-readiness-title" className="truncate text-xs font-black text-white">
                 {canSubmit ? 'Нийтлэхэд бэлэн' : `Дараагийнх: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`}
               </p>
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${
