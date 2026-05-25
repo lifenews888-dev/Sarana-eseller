@@ -1784,9 +1784,11 @@ export default function PostAdPage() {
         </div>
 
         {/* VIP Upgrade */}
-        <div
+        <button
+          type="button"
           onClick={() => setIsVip(!isVip)}
-          className={`p-5 rounded-2xl border flex items-center gap-4 mb-6 cursor-pointer transition-colors ${
+          aria-pressed={isVip}
+          className={`w-full p-5 rounded-2xl border flex items-center gap-4 mb-6 text-left cursor-pointer transition-colors focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50 ${
             isVip
               ? 'bg-[rgba(212,175,55,0.08)] border-[rgba(212,175,55,0.5)]'
               : 'bg-[var(--esl-bg-card)] border-[rgba(212,175,55,0.25)] hover:border-[rgba(212,175,55,0.5)]'
@@ -1806,7 +1808,7 @@ export default function PostAdPage() {
               <div className={`w-5 h-5 rounded-full bg-[var(--esl-bg-card)] transition-transform ${isVip ? 'translate-x-5' : 'translate-x-0'}`} />
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Rules */}
         <div className="p-4 rounded-xl bg-[rgba(59,130,246,0.08)] border border-[rgba(59,130,246,0.2)] flex gap-3 mb-8">
