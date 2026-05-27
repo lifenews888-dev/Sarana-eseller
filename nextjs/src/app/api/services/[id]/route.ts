@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireSeller, getShopForUser } from '@/lib/api-auth';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -28,7 +29,7 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
       ...(price !== undefined && { price: Number(price) }),
       ...(duration !== undefined && { duration: duration ? Number(duration) : null }),
       ...(category !== undefined && { category }),
-      ...(images !== undefined && { images }),
+      ...(images !== undefined && { images: sanitizeImageUrls(images) }),
       ...(isActive !== undefined && { isActive }),
     },
   });

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 // GET /api/pre-order — list pre-order products
 export async function GET(req: NextRequest) {
@@ -62,7 +63,7 @@ export async function POST(req: NextRequest) {
         refId,
         name,
         description,
-        images: images || [],
+        images: sanitizeImageUrls(images),
         emoji,
         sourceCountry,
         priceEstimate,

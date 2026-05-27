@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
 import { checkShopLimit } from '@/lib/subscription-server';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 // POST /api/seller/products — create product with plan enforcement
 export async function POST(req: NextRequest) {
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
         description: body.description || null,
         category: body.category || null,
         emoji: body.emoji || null,
-        images: body.images || [],
+        images: sanitizeImageUrls(body.images),
         stock: body.stock ?? 0,
         commission: body.commission ?? 15,
         deliveryFee: body.deliveryFee || null,

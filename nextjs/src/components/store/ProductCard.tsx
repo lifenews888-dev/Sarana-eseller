@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { formatPrice, discountPercent } from '@/lib/utils';
+import { isValidPublicImageUrl, PLACEHOLDER_IMAGE } from '@/lib/image-url';
 import type { Product } from '@/lib/api';
 import { Heart } from 'lucide-react';
 
@@ -25,7 +26,7 @@ export default function ProductCard({
   const disc = discountPercent(p.price, p.salePrice);
   const isNew = p.createdAt && Date.now() - new Date(p.createdAt).getTime() < 7 * 864e5;
   const stars = p.rating ? Math.min(5, Math.round(p.rating)) : 0;
-  const images = p.images?.length ? p.images : [];
+  const images = (p.images || []).filter(isValidPublicImageUrl);
   const hasMultipleImages = images.length > 1;
 
   // ─── Multi-image hover slideshow ───
@@ -126,6 +127,7 @@ export default function ProductCard({
                   alt={p.name}
                   className="w-full h-full object-cover"
                   loading={i === 0 ? 'eager' : 'lazy'}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }}
                 />
               </div>
             ))}

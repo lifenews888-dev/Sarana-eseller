@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
+import { sanitizeImageUrls } from '@/lib/image-url'
 
 function parseCSV(text: string) {
   const lines = text.split('\n').filter(l => l.trim())
@@ -56,10 +57,12 @@ export async function POST(req: NextRequest) {
     const rawSalePrice = parseInt(String(row.saleprice || row.sale_price || '0').replace(/[^\d]/g, ''))
     const salePrice = rawSalePrice > 0 ? rawSalePrice : null
 
-    const images = (row.images || row.image || '')
-      .split('|')
-      .map((s: string) => s.trim())
-      .filter(Boolean)
+    const images = sanitizeImageUrls(
+      (row.images || row.image || '')
+        .split('|')
+        .map((s: string) => s.trim())
+        .filter(Boolean)
+    )
 
     try {
       await prisma.product.create({

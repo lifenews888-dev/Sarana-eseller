@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
 import { formatPrice, discountPercent, cn } from '@/lib/utils';
+import { PLACEHOLDER_IMAGE } from '@/lib/image-url';
 import { useToast } from '@/components/shared/Toast';
 import {
   X, ShoppingCart, Minus, Plus, Share2, Heart, Star,
@@ -229,6 +230,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                 <img
                   src={media[activeImg]?.url || images[0]}
                   alt={product.name}
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }}
                   className="w-full h-full object-cover transition-opacity duration-300 cursor-zoom-in"
                   onClick={() => media[activeImg]?.type === 'image' && setZoomedImg(media[activeImg].url)}
                 />
@@ -299,7 +301,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                       <Play className="w-5 h-5 text-white" fill="white" />
                     </div>
                   ) : (
-                    <img loading="lazy" src={m.url} alt="" className="w-full h-full object-cover" />
+                    <img loading="lazy" src={m.url} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }} className="w-full h-full object-cover" />
                   )}
                 </button>
               ))}
@@ -538,7 +540,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   className="shrink-0 w-[130px] cursor-pointer group">
                   <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5">
                     {p.images?.[0] ? (
-                      <img loading="lazy" src={p.images[0]} alt="" className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                      <img loading="lazy" src={p.images[0]} alt="" onError={(e) => { (e.currentTarget as HTMLImageElement).src = PLACEHOLDER_IMAGE; }} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-2xl">{p.emoji || <Package className="w-6 h-6 text-[#CBD5E1]" />}</div>
                     )}

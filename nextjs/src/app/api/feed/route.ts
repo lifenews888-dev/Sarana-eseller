@@ -4,6 +4,7 @@ import { json } from '@/lib/api-auth';
 import { DEMO_FEED } from '@/lib/types/entity';
 
 import { requireAuth, errorJson } from '@/lib/api-auth';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 // GET /api/feed?category=agent&tier=vip&page=1&limit=20&sort=newest&search=...&district=...&priceMin=...&priceMax=...
 export async function GET(req: NextRequest) {
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
         description: description || null,
         price: price ? Number(price) : null,
         originalPrice: originalPrice ? Number(originalPrice) : null,
-        images: images || [],
+        images: sanitizeImageUrls(images),
         category: category || null,
         subcategory: subcategory || null,
         entityType,

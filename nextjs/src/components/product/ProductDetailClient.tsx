@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import type { Product } from '@/lib/api';
 import { formatPrice, discountPercent, cn } from '@/lib/utils';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 import { ENTITY_CARD_CONFIG, type EntityType } from '@/lib/cards/entityCardConfig';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
 import AddToCartButton from './AddToCartButton';
@@ -34,10 +35,14 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
   const et = (product.entityType || 'STORE') as EntityType;
   const config = ENTITY_CARD_CONFIG[et] || ENTITY_CARD_CONFIG.STORE;
 
-  // Build media from either media array or images array
+  // Build media from either media array or images array. Filter out
+  // local-device paths (e.g. file:///data/user/...) the mobile client
+  // historically posted into Product.images — those cannot be rendered.
   const media: MediaItem[] = product.media && product.media.length > 0
-    ? product.media
-    : (product.images || []).map((url, i) => ({ type: 'IMAGE' as const, url, sortOrder: i }));
+    ? product.media.filter((m) => isValidPublicImageUrl(m.url))
+    : (product.images || [])
+        .filter(isValidPublicImageUrl)
+        .map((url, i) => ({ type: 'IMAGE' as const, url, sortOrder: i }));
 
   const price = product.salePrice || product.price;
   const hasDiscount = product.salePrice && product.salePrice < product.price;
@@ -142,7 +147,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
               {relatedProducts.slice(0, 4).map(rp => (
                 <Link key={rp._id} href={`/product/${rp._id}`} className="group">
                   <div className="aspect-square rounded-xl overflow-hidden bg-[var(--esl-bg-card)] relative">
-                    {rp.images?.[0] && <Image src={rp.images[0]} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform" sizes="25vw" />}
+                    {isValidPublicImageUrl(rp.images?.[0]) && <Image src={rp.images![0]} alt={rp.name} fill className="object-cover group-hover:scale-105 transition-transform" sizes="25vw" />}
                   </div>
                   <p className="mt-2 text-sm font-medium truncate">{rp.name}</p>
                   <p className="text-sm font-bold text-[#E8242C]">{formatPrice(rp.salePrice || rp.price)}</p>
