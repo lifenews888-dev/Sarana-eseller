@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
+import { sanitizeImageUrls } from '@/lib/image-url'
 
 // USD → MNT ханш
 async function getUsdRate(): Promise<number> {
@@ -63,7 +64,7 @@ export async function POST(req: NextRequest) {
       name,
       description: description || '',
       price: sellPrice,
-      images: images || [],
+      images: sanitizeImageUrls(images),
       stock: supplierStock || 0,
       userId: auth.id,
       isActive: true,

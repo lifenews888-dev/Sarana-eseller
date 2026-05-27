@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 // POST /api/orders/[id]/return — buyer requests return
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // Create return request
   const ret = await prisma.returnRequest.create({
-    data: { orderId: id, buyerId: user.id, reason, description, images },
+    data: { orderId: id, buyerId: user.id, reason, description, images: sanitizeImageUrls(images) },
   });
 
   return json({ message: 'Буцаалтын хүсэлт илгээгдлээ', id: ret.id });
