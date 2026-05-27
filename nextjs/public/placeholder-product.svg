@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Зураг байхгүй">
+  <rect width="400" height="400" fill="#f3f4f6"/>
+  <g fill="none" stroke="#9ca3af" stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="90" y="110" width="220" height="180" rx="12"/>
+    <circle cx="150" cy="170" r="18" fill="#9ca3af" stroke="none"/>
+    <path d="M110 270 L180 210 L230 250 L290 200 L290 280 L110 280 Z" fill="#d1d5db" stroke="none"/>
+  </g>
+  <text x="200" y="340" text-anchor="middle" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#6b7280">Зураг байхгүй</text>
+</svg>

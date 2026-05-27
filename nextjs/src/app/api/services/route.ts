@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireSeller, getShopForUser } from '@/lib/api-auth';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 // GET /api/services?shopId=... | shopId=all returns all active services across shops
 export async function GET(req: NextRequest) {
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
       price: Number(price),
       duration: duration ? Number(duration) : null,
       category: category || null,
-      images: images || [],
+      images: sanitizeImageUrls(images),
       isActive: isActive !== false,
     },
   });

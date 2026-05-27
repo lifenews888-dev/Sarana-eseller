@@ -13,7 +13,9 @@
     "clean:demo:dry": "npx tsx scripts/clean-demo-data.ts --dry-run",
     "test:smoke": "npx tsx scripts/smoke-test.ts",
     "seed:seller": "npx tsx scripts/seed-first-seller.ts",
-    "test:upload": "npx tsx scripts/test-upload.ts"
+    "test:upload": "npx tsx scripts/test-upload.ts",
+    "clean:images": "npx tsx scripts/clean-bad-image-urls.ts",
+    "clean:images:dry": "npx tsx scripts/clean-bad-image-urls.ts --dry-run"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.88.0",

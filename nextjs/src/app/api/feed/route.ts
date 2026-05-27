@@ -9,6 +9,7 @@ import {
   categoryPathInfo,
   normalizeMarketplaceCategory,
 } from '@/lib/marketplaceCategories';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 const mediaInclude = { media: { orderBy: { sortOrder: 'asc' as const } } };
 
@@ -381,7 +382,7 @@ export async function POST(req: NextRequest) {
     const normalizedOriginalPrice = toOptionalNumber(originalPrice);
     const normalizedLat = toOptionalNumber(lat);
     const normalizedLng = toOptionalNumber(lng);
-    const imageUrls = normalizeMediaUrls(images);
+    const imageUrls = sanitizeImageUrls(normalizeMediaUrls(images));
     const normalizedVideoUrl = cleanString(videoUrl);
     const normalizedVideoUrls = [
       ...(normalizedVideoUrl ? [normalizedVideoUrl] : []),

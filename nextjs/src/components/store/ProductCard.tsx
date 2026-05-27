@@ -4,6 +4,7 @@ import { useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { formatPrice, discountPercent } from '@/lib/utils';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 import type { Product } from '@/lib/api';
 import { Heart } from 'lucide-react';
 import SafeImage from '@/components/ui/SafeImage';
@@ -31,7 +32,7 @@ export default function ProductCard({
   const disc = discountPercent(p.price, p.salePrice);
   const isNew = p.createdAt && renderedAt - new Date(p.createdAt).getTime() < 7 * 864e5;
   const stars = p.rating ? Math.min(5, Math.round(p.rating)) : 0;
-  const images = p.images?.length ? p.images : [];
+  const images = (p.images || []).filter(isValidPublicImageUrl);
   const hasMultipleImages = images.length > 1;
 
   // ─── Multi-image hover slideshow ───

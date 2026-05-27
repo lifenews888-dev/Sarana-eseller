@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
+import { sanitizeImageUrls } from '@/lib/image-url'
 
 // PUT — Feed URL тохируулах
 export async function PUT(req: NextRequest) {
@@ -88,7 +89,7 @@ export async function POST(req: NextRequest) {
             name,
             description: p.description || '',
             price: Math.round(parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 0),
-            images: p.image ? [p.image] : p.images || [],
+            images: sanitizeImageUrls(p.image ? [p.image] : p.images),
             userId: auth.id,
             isActive: true,
           },
