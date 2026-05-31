@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // POST /api/quick-order — create quick order + invoice
 export async function POST(req: NextRequest) {
@@ -61,7 +62,7 @@ export async function POST(req: NextRequest) {
       id: product.id,
       name: product.name,
       price: product.price,
-      images: product.images,
+      images: getSafeImageList(product.images),
     },
   });
 }
