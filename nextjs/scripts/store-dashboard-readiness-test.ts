@@ -16,6 +16,11 @@ type Check = {
 };
 
 const dashboardLayout = path.join(process.cwd(), 'src', 'app', 'dashboard', 'layout.tsx');
+const scanRoots = [
+  path.join(process.cwd(), 'src', 'app', 'dashboard'),
+  path.join(process.cwd(), 'src', 'components', 'dashboard'),
+  path.join(process.cwd(), 'src', 'components', 'store'),
+];
 const storeRouteRoot = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store');
 
 const requiredStoreRoutes = [
@@ -49,6 +54,62 @@ function hasRedirectTarget(route: string, target: string): boolean {
   const pagePath = path.join(storeRouteRoot, route, 'page.tsx');
   if (!fs.existsSync(pagePath)) return false;
   return fs.readFileSync(pagePath, 'utf8').includes(`redirect('${target}')`);
+}
+
+function walkTsFiles(dir: string): string[] {
+  if (!fs.existsSync(dir)) return [];
+
+  const files: string[] = [];
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name === '.next') continue;
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...walkTsFiles(fullPath));
+      continue;
+    }
+    if (/\.(ts|tsx)$/.test(entry.name)) files.push(fullPath);
+  }
+  return files;
+}
+
+function findStoreDashboardLinks(): Map<string, Set<string>> {
+  const links = new Map<string, Set<string>>();
+  const pattern = /\/dashboard\/store(?:\/[A-Za-z0-9_-]+)*(?:\?[A-Za-z0-9_=&%-]+)?/g;
+
+  for (const root of scanRoots) {
+    for (const file of walkTsFiles(root)) {
+      const source = fs.readFileSync(file, 'utf8');
+      for (const match of source.matchAll(pattern)) {
+        const url = match[0].split('?')[0].replace(/\/$/, '');
+        if (!links.has(url)) links.set(url, new Set());
+        links.get(url)?.add(path.relative(process.cwd(), file));
+      }
+    }
+  }
+
+  return links;
+}
+
+function routeExistsForUrl(url: string): boolean {
+  const relative = url.replace(/^\/dashboard\/store\/?/, '');
+  if (!relative) return routePageExists('');
+
+  const segments = relative.split('/').filter(Boolean);
+  return routeSegmentsExist(storeRouteRoot, segments);
+}
+
+function routeSegmentsExist(currentDir: string, segments: string[]): boolean {
+  if (segments.length === 0) return fs.existsSync(path.join(currentDir, 'page.tsx'));
+
+  const [segment, ...rest] = segments;
+  const literalPath = path.join(currentDir, segment);
+  if (fs.existsSync(literalPath) && routeSegmentsExist(literalPath, rest)) return true;
+
+  const dynamicDirs = fs
+    .readdirSync(currentDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && /^\[.+\]$/.test(entry.name));
+
+  return dynamicDirs.some((entry) => routeSegmentsExist(path.join(currentDir, entry.name), rest));
 }
 
 function main() {
@@ -96,6 +157,21 @@ function main() {
       label: `sidebar includes ${url}`,
       ok: layoutSource.includes(url),
       detail: 'src/app/dashboard/layout.tsx',
+    });
+  }
+
+  const discoveredLinks = findStoreDashboardLinks();
+  checks.push({
+    label: 'dynamic link sweep found links',
+    ok: discoveredLinks.size > 0,
+    detail: `${discoveredLinks.size} store dashboard link(s) discovered`,
+  });
+
+  for (const [url, files] of [...discoveredLinks.entries()].sort(([a], [b]) => a.localeCompare(b))) {
+    checks.push({
+      label: `link route ${url}`.slice(0, 38),
+      ok: routeExistsForUrl(url),
+      detail: [...files].slice(0, 2).join(', '),
     });
   }
 
