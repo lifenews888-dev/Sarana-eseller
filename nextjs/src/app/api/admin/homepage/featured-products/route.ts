@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdminDB as requireAdmin } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET — онцлох бараа жагсаалт (product info-тай)
 export async function GET(req: NextRequest) {
@@ -20,10 +21,13 @@ export async function GET(req: NextRequest) {
   });
   const productMap = new Map(products.map((p) => [p.id, p]));
 
-  const result = featured.map((f) => ({
-    ...f,
-    product: productMap.get(f.productId) || null,
-  }));
+  const result = featured.map((f) => {
+    const product = productMap.get(f.productId);
+    return {
+      ...f,
+      product: product ? { ...product, images: getSafeImageList(product.images) } : null,
+    };
+  });
 
   return NextResponse.json(result);
 }

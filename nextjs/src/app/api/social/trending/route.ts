@@ -31,6 +31,7 @@ export async function GET() {
   return ok({
     posts: sorted.map((post) => ({
       ...post,
+      images: getSafeImageList(post.images),
       products: post.products.map((linked) => ({
         ...linked,
         product: linked.product ? { ...linked.product, images: getSafeImageList(linked.product.images) } : null,
