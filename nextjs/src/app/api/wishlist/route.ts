@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET /api/wishlist
 export async function GET(req: NextRequest) {
@@ -18,7 +19,7 @@ export async function GET(req: NextRequest) {
     select: { id: true, name: true, price: true, salePrice: true, images: true, emoji: true, category: true },
   });
 
-  const productMap = new Map(products.map(p => [p.id, p]));
+  const productMap = new Map(products.map(p => [p.id, { ...p, images: getSafeImageList(p.images) }]));
 
   return json(items.map(i => ({
     id: i.id,

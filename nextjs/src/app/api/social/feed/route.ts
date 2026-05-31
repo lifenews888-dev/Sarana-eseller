@@ -1,6 +1,23 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { getSafeImageList, sanitizeImageUrls } from '@/lib/image-url';
+
+function serializePost<
+  T extends {
+    images: unknown;
+    products: Array<{ product: ({ images: unknown } & Record<string, unknown>) | null }>;
+  },
+>(post: T) {
+  return {
+    ...post,
+    images: getSafeImageList(post.images),
+    products: post.products.map((linked) => ({
+      ...linked,
+      product: linked.product ? { ...linked.product, images: getSafeImageList(linked.product.images) } : null,
+    })),
+  };
+}
 
 // GET /api/social/feed?page=1&limit=20
 export async function GET(req: NextRequest) {
@@ -37,16 +54,16 @@ export async function GET(req: NextRequest) {
     ]);
 
     return json({
-      posts,
+      posts: posts.map(serializePost),
       meta: { total, page, limit, hasMore: page * limit < total },
     });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    return errorJson('Фийд ачаалахад алдаа: ' + message, 500);
+    return errorJson('Feed load failed: ' + message, 500);
   }
 }
 
-// POST /api/social/feed — create new social post
+// POST /api/social/feed - create new social post
 export async function POST(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof Response) return auth;
@@ -58,16 +75,17 @@ export async function POST(req: NextRequest) {
       images?: string[];
       productIds?: string[];
     };
+    const safeImages = sanitizeImageUrls(images);
 
-    if (!content && (!images || images.length === 0)) {
-      return errorJson('Агуулга эсвэл зураг шаардлагатай');
+    if (!content && safeImages.length === 0) {
+      return errorJson('Content or image is required');
     }
 
     const post = await prisma.socialPost.create({
       data: {
         userId: auth.id,
         content: content || null,
-        images: images || [],
+        images: safeImages,
         products:
           productIds && productIds.length > 0
             ? {
@@ -96,9 +114,9 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return json(post, 201);
+    return json(serializePost(post), 201);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Unknown error';
-    return errorJson('Пост үүсгэхэд алдаа: ' + message, 500);
+    return errorJson('Post create failed: ' + message, 500);
   }
 }
