@@ -53,6 +53,7 @@ const scopedLintFiles = [
   'src/app/api/live/[id]/purchase/route.ts',
   'src/app/api/social/trending/route.ts',
   'src/app/api/digital/upload/route.ts',
+  'src/app/api/upload/route.ts',
   'scripts/clean-bad-image-urls.ts',
   'scripts/clean-audit-products.ts',
   'src/app/product/[id]/page.tsx',
