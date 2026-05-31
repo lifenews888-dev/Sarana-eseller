@@ -101,6 +101,11 @@ function main() {
       ok: onboardingSource.includes('form.slug.length >= 3'),
       detail: 'next button waits for a valid visible slug',
     },
+    {
+      label: 'onboarding auth redirect',
+      ok: onboardingSource.includes("router.push('/login?redirect=/become-seller')"),
+      detail: 'logged-out users return to onboarding after login',
+    },
   ];
 
   console.log('\n══════════════════════════════');
