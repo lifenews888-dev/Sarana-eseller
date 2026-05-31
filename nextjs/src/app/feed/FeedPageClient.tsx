@@ -231,6 +231,75 @@ function normalizeFeedItem(item: ApiFeedItem): FeedItem {
   };
 }
 
+type FeaturedBusinessCard = {
+  href: string;
+  title: string;
+  subtitle: string;
+  entityType: EntityType;
+  image: string;
+  verified: boolean;
+  sourceLabel: string;
+  sourceTone: 'paid' | 'demo';
+};
+
+const FEATURED_BUSINESS_LIMIT = 3;
+const FEATURED_BUSINESS_DEMOS: FeaturedBusinessCard[] = [
+  {
+    href: '/entity/auto_dealer/autocity',
+    title: 'AutoCity Mongolia',
+    subtitle: 'Toyota, BMW, Hyundai · 48 машин · ★ 4.8',
+    entityType: 'auto_dealer',
+    image: 'https://picsum.photos/seed/eseller-600/600',
+    verified: true,
+    sourceLabel: 'Жишээ',
+    sourceTone: 'demo',
+  },
+  {
+    href: '/entity/company/mongolian-properties',
+    title: 'Монголиан Пропертиз',
+    subtitle: '15+ төсөл · 3,200+ айл · ★ 4.7',
+    entityType: 'company',
+    image: 'https://picsum.photos/seed/eseller-601/600',
+    verified: true,
+    sourceLabel: 'Жишээ',
+    sourceTone: 'demo',
+  },
+  {
+    href: '/entity/agent/erdenbat',
+    title: 'Б. Эрдэнэбат',
+    subtitle: '12 жил туршлага · 800+ хэлцэл · ★ 4.9',
+    entityType: 'agent',
+    image: 'https://picsum.photos/seed/eseller-602/600',
+    verified: true,
+    sourceLabel: 'Жишээ',
+    sourceTone: 'demo',
+  },
+];
+
+function featuredBusinessHref(item: FeedItem) {
+  if (item.entitySlug && item.entityType !== 'user') return `/entity/${item.entityType}/${item.entitySlug}`;
+  return feedDetailHref(item.id) || '/feed?tier=featured';
+}
+
+function featuredBusinessFromItem(item: FeedItem): FeaturedBusinessCard {
+  const firstImage = item.media.find((media) => media.type === 'image')?.url;
+  const entity = ENTITY_LABELS[item.entityType] || ENTITY_LABELS.user;
+  const category = marketplaceCategoryLabel(item.category);
+  const district = item.district ? ` · ${item.district}` : '';
+  const views = item.viewCount ? ` · ${item.viewCount.toLocaleString('mn-MN')} үзэлт` : '';
+
+  return {
+    href: featuredBusinessHref(item),
+    title: item.entityName || item.title,
+    subtitle: `${category}${district}${views}`,
+    entityType: item.entityType,
+    image: firstImage || `https://picsum.photos/seed/eseller-featured-${encodeURIComponent(item.id)}/600`,
+    verified: item.verified,
+    sourceLabel: item.tier === 'featured' ? 'Онцлох эрх' : entity.label,
+    sourceTone: 'paid',
+  };
+}
+
 function formatPrice(n: number) {
   if (n >= 1000000000) return (n / 1000000000).toFixed(1) + ' тэрбум₮';
   if (n >= 1000000) return (n / 1000000).toFixed(n % 1000000 === 0 ? 0 : 1) + ' сая₮';
@@ -919,6 +988,25 @@ export default function FeedPageClient({
     return sortFeedItemsByTierAndOption(list, activeSort);
   }, [feedItems, search, activeCat, activeEntityType, activeTier, activeSort]);
 
+  const featuredBusinesses = useMemo(() => {
+    const isBusinessFeatured = (item: FeedItem) => item.tier === 'featured' && item.entityType !== 'user';
+    const strictMatches = filtered.filter(isBusinessFeatured);
+    const relaxedMatches = filteredWithoutLocation.filter(isBusinessFeatured);
+    const source = strictMatches.length > 0 ? strictMatches : relaxedMatches;
+
+    if (source.length > 0) {
+      return source.slice(0, FEATURED_BUSINESS_LIMIT).map(featuredBusinessFromItem);
+    }
+
+    return FEATURED_BUSINESS_DEMOS;
+  }, [filtered, filteredWithoutLocation]);
+
+  const featuredBusinessMode = featuredBusinesses.some((business) => business.sourceTone === 'paid') ? 'paid' : 'demo';
+  const featuredBusinessUsedLocationFallback =
+    featuredBusinessMode === 'paid'
+    && filtered.filter((item) => item.tier === 'featured' && item.entityType !== 'user').length === 0
+    && filteredWithoutLocation.filter((item) => item.tier === 'featured' && item.entityType !== 'user').length > 0;
+
   const vipCount = filtered.filter(i => i.tier === 'vip').length;
   const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
   const canRelaxLocationFilter = filtered.length === 0 && hasLocationFilter && filteredWithoutLocation.length > 0;
@@ -1031,65 +1119,54 @@ export default function FeedPageClient({
             <div>
               <h2 className="text-lg font-black text-[var(--esl-text)]">Онцлох бизнесүүд</h2>
               <p className="text-xs text-[var(--esl-text-muted)]">
-                Одоогоор жишээ байршуулалт. Production-д төлбөртэй онцлох эрх, админ баталгаажуулалттай бизнесүүд энд эрэмбэлэгдэнэ.
+                {featuredBusinessMode === 'paid'
+                  ? 'Төлбөртэй онцлох эрхтэй заруудаас үүссэн бизнесүүд. Байршилд таарахгүй үед бүх байршлын онцлох эрхээс харуулна.'
+                  : 'Одоогоор жишээ байршуулалт. Production-д төлбөртэй онцлох эрх, админ баталгаажуулалттай бизнесүүд энд эрэмбэлэгдэнэ.'}
               </p>
+              {featuredBusinessUsedLocationFallback && (
+                <p className="mt-1 text-[11px] font-semibold text-[#F59E0B]">
+                  Сонгосон байршилд онцлох бизнес олдоогүй тул бүх байршлын онцлох эрхээс харуулж байна.
+                </p>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <Link href="/partner" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-[var(--esl-text)]">Онцлох эрх авах</Link>
               <Link href="/feed?tier=featured" className="text-xs font-semibold text-[#E8242C] no-underline hover:underline">Бүгдийг харах →</Link>
             </div>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Auto Dealer */}
-            <Link href="/entity/auto_dealer/autocity" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
-              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="AutoCity Mongolia" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <span className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white/80">
-                Жишээ
-              </span>
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold bg-[#E8242C] text-white px-2 py-0.5 rounded">Авто</span>
-                  <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> Баталгаатай</span>
-                </div>
-                <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">AutoCity Mongolia</h3>
-                <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">Toyota, BMW, Hyundai · 48 машин · ★ 4.8</p>
-              </div>
-            </Link>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4" data-feed-featured-businesses={featuredBusinessMode}>
+            {featuredBusinesses.map((business) => {
+              const entity = ENTITY_LABELS[business.entityType] || ENTITY_LABELS.user;
+              const badgeClass = business.entityType === 'auto_dealer'
+                ? 'bg-[#E8242C] text-white'
+                : business.entityType === 'company'
+                  ? 'bg-blue-500 text-white'
+                  : business.entityType === 'agent'
+                    ? 'bg-[#D4AF37] text-black'
+                    : 'bg-[var(--esl-bg-card)] text-[var(--esl-text)]';
 
-            {/* Construction Company */}
-            <Link href="/entity/company/mongolian-properties" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
-              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="Mongolian Properties" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <span className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white/80">
-                Жишээ
-              </span>
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold bg-blue-500 text-white px-2 py-0.5 rounded">Барилга</span>
-                  <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> Баталгаатай</span>
-                </div>
-                <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">Монголиан Пропертиз</h3>
-                <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">15+ төсөл · 3,200+ айл · ★ 4.7</p>
-              </div>
-            </Link>
-
-            {/* Agent */}
-            <Link href="/entity/agent/erdenbat" className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
-              <SafeImage src="https://picsum.photos/seed/eseller-600/600" alt="Real estate agent" className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <span className="absolute right-3 top-3 rounded-full border border-white/10 bg-black/60 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-white/80">
-                Жишээ
-              </span>
-              <div className="absolute bottom-0 left-0 right-0 p-5">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-xs font-bold bg-[#D4AF37] text-black px-2 py-0.5 rounded">Агент</span>
-                  <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> Баталгаатай</span>
-                </div>
-                <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">Б. Эрдэнэбат</h3>
-                <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">12 жил туршлага · 800+ хэлцэл · ★ 4.9</p>
-              </div>
-            </Link>
+              return (
+                <Link key={`${business.sourceTone}-${business.href}-${business.title}`} href={business.href} className="group relative h-52 rounded-2xl overflow-hidden no-underline block">
+                  <SafeImage src={business.image} alt={business.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+                  <span className={`absolute right-3 top-3 rounded-full border border-white/10 px-2 py-1 text-[10px] font-black uppercase tracking-wide ${
+                    business.sourceTone === 'paid' ? 'bg-[#E8242C] text-white' : 'bg-black/60 text-white/80'
+                  }`}>
+                    {business.sourceLabel}
+                  </span>
+                  <div className="absolute bottom-0 left-0 right-0 p-5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded ${badgeClass}`}>{entity.label}</span>
+                      {business.verified && (
+                        <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> ???????????</span>
+                      )}
+                    </div>
+                    <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">{business.title}</h3>
+                    <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">{business.subtitle}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
 
