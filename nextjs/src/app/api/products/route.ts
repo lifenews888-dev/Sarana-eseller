@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ok } from '@/lib/api-envelope';
 import { DEMO_PRODUCTS } from '@/lib/utils';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET /api/products?limit=20&search=&category=
 export async function GET(req: NextRequest) {
@@ -52,6 +53,7 @@ export async function GET(req: NextRequest) {
       products: products.map((product) => ({
         ...product,
         _id: product.id,
+        images: getSafeImageList(product.images),
       })),
       total,
       page,
@@ -63,6 +65,7 @@ export async function GET(req: NextRequest) {
       ...product,
       id: product._id,
       _id: product._id,
+      images: getSafeImageList('images' in product ? product.images : []),
       isActive: true,
     }));
 

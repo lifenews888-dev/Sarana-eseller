@@ -5,6 +5,7 @@ import ProductDetailClient, { type DetailProduct } from '@/components/product/Pr
 import type { Product } from '@/lib/api';
 import type { Metadata } from 'next';
 import { DEMO_PRODUCTS } from '@/lib/utils';
+import { getSafeImageList, getSafeImageUrl } from '@/lib/image-url';
 
 type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[] };
 
@@ -21,7 +22,7 @@ function demoProduct(id: string) {
 }
 
 function demoDetailProduct(product: NonNullable<ReturnType<typeof demoProduct>>) {
-  const images = product.images || [];
+  const images = getSafeImageList(product.images || []);
 
   return {
     ...product,
@@ -112,7 +113,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: product.name,
       description: product.description?.slice(0, 160) || product.name,
-      images: product.images?.[0] ? [product.images[0]] : [],
+      images: getSafeImageList(product.images)?.slice(0, 1),
     },
   };
 }
@@ -178,14 +179,16 @@ export default async function ProductPage({ params }: Props) {
     related = [...related, ...fallback];
   }
 
+  const safeImages = getSafeImageList(product.images);
   const clientProduct = {
     ...product,
     _id: product.id,
+    images: safeImages,
     media: media.map(m => ({
       id: m.id,
       type: m.type as 'IMAGE' | 'VIDEO' | 'VIRTUAL_TOUR' | 'FLOOR_PLAN',
-      url: m.url,
-      thumbnail: m.thumbnail,
+      url: getSafeImageUrl(m.url),
+      thumbnail: m.thumbnail ? getSafeImageUrl(m.thumbnail) : m.thumbnail,
       caption: m.caption,
       sortOrder: m.sortOrder,
     })),
@@ -195,11 +198,12 @@ export default async function ProductPage({ params }: Props) {
   const relatedProducts = related.map(r => ({
     ...r,
     _id: r.id,
+    images: getSafeImageList(r.images),
   }));
 
   return (
     <>
-      <JsonLdScript id={`product-jsonld-${product.id}`} data={buildProductJsonLd(product)} />
+      <JsonLdScript id={`product-jsonld-${product.id}`} data={buildProductJsonLd({ ...product, images: safeImages })} />
       <ProductDetailClient product={clientProduct as unknown as DetailProduct} relatedProducts={relatedProducts as unknown as Product[]} />
     </>
   );

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import FeedDetailClient from '@/components/product/FeedDetailClient';
 import type { Metadata } from 'next';
 import { DEMO_FEED, type FeedItemData } from '@/lib/types/entity';
+import { getSafeImageList, getSafeImageUrl } from '@/lib/image-url';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -669,11 +670,12 @@ function relatedDemoScore(current: FeedItemData, candidate: FeedItemData) {
 }
 
 function toRelatedDemoPost(item: FeedItemData) {
+  const images = getSafeImageList(item.images);
   return {
     id: canonicalDemoId(item.id),
     title: item.title,
     price: item.price,
-    image: item.images[0] || DETAIL_IMAGE,
+    image: images[0] || DETAIL_IMAGE,
     category: item.category,
     subcategory: item.subcategory,
     entityType: item.entityType,
@@ -700,7 +702,8 @@ function getDemoRelatedPosts(current: FeedItemData) {
 }
 
 function toClientPost(item: FeedItemData) {
-  const images = item.images.length > 0 ? item.images : [DETAIL_IMAGE];
+  const safeImages = getSafeImageList(item.images);
+  const images = safeImages.length > 0 ? safeImages : [DETAIL_IMAGE];
   return {
     ...item,
     _id: item.id,
@@ -741,7 +744,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: post.title,
       description: post.description?.slice(0, 160) || post.title,
-      images: post.images?.[0] ? [post.images[0]] : [],
+      images: getSafeImageList(post.images).slice(0, 1),
     },
   };
 }
@@ -804,13 +807,14 @@ export default async function FeedDetailPage({ params }: Props) {
 
   const owner = post.agent || post.company || post.autoDealer || post.serviceProvider;
 
+  const safePostImages = getSafeImageList(post.images);
   const clientPost = {
     _id: post.id,
     title: post.title,
     description: post.description || undefined,
     price: post.price || undefined,
     originalPrice: post.originalPrice || undefined,
-    images: post.images,
+    images: safePostImages.length > 0 ? safePostImages : [DETAIL_IMAGE],
     refId: post.refId,
     category: post.category || undefined,
     subcategory: post.subcategory || undefined,
@@ -825,8 +829,8 @@ export default async function FeedDetailPage({ params }: Props) {
     media: post.media.map((m) => ({
       id: m.id,
       type: m.type as 'IMAGE' | 'VIDEO' | 'VIRTUAL_TOUR' | 'FLOOR_PLAN',
-      url: m.url,
-      thumbnail: m.thumbnail || undefined,
+      url: getSafeImageUrl(m.url),
+      thumbnail: m.thumbnail ? getSafeImageUrl(m.thumbnail) : undefined,
       caption: m.caption || undefined,
       sortOrder: m.sortOrder,
     })),
@@ -842,7 +846,7 @@ export default async function FeedDetailPage({ params }: Props) {
       id: item.id,
       title: item.title,
       price: item.price || undefined,
-      image: item.media[0]?.url || item.images[0] || DETAIL_IMAGE,
+      image: getSafeImageUrl(item.media[0]?.url || item.images[0] || DETAIL_IMAGE),
       category: item.category || undefined,
       subcategory: item.subcategory || undefined,
       entityType: item.entityType,
