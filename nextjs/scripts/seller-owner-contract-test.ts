@@ -111,6 +111,11 @@ function main() {
       ok: includesAll(onboardingSource, ['acceptedTerms', 'setAcceptedTerms', 'canSubmit', '!acceptedTerms']),
       detail: 'owner registration cannot submit until terms are accepted',
     },
+    {
+      label: 'onboarding legal links',
+      ok: includesAll(onboardingSource, ['href="/terms"', 'href="/privacy"']) && !onboardingSource.includes('href="#"'),
+      detail: 'terms and privacy links point to real public pages',
+    },
   ];
 
   console.log('\n══════════════════════════════');
