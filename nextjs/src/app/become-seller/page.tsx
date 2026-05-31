@@ -492,7 +492,7 @@ export default function BecomeSellerPage() {
                     className="mt-1 rounded accent-[#E8242C]"
                   />
                   <span className="text-xs text-[var(--esl-text-muted)]">
-                    <a href="#" className="text-[#E8242C] no-underline">Үйлчилгээний нөхцөл</a> болон <a href="#" className="text-[#E8242C] no-underline">нууцлалын бодлого</a>-г зөвшөөрч байна.
+                    <Link href="/terms" className="text-[#E8242C] no-underline">Үйлчилгээний нөхцөл</Link> болон <Link href="/privacy" className="text-[#E8242C] no-underline">нууцлалын бодлого</Link>-г зөвшөөрч байна.
                   </span>
                 </label>
               </div>
