@@ -57,6 +57,28 @@ function main() {
       detail: 'client redirect is sanitized before router.push',
     },
     {
+      label: 'already logged-in redirect',
+      ok: loginSource.includes('if (isLoggedIn && user) router.replace(getRedirectTarget(user.role))'),
+      detail: 'authenticated users return to the requested flow',
+    },
+    {
+      label: 'email login redirect',
+      ok: loginSource.includes('router.push(getRedirectTarget(data.user.role))'),
+      detail: 'password login preserves /become-seller target',
+    },
+    {
+      label: 'register redirect',
+      ok: loginSource.includes('const data = await AuthAPI.register') &&
+        loginSource.includes('router.push(getRedirectTarget(data.user.role))'),
+      detail: 'new account registration preserves /become-seller target',
+    },
+    {
+      label: 'google links preserve redirect',
+      ok: loginSource.includes("buildAuthHref('/api/auth/google', {}, redirectTarget)") &&
+        loginSource.includes("buildAuthHref('/api/auth/google', { role }, redirectTarget)"),
+      detail: 'OAuth login/register buttons carry redirect',
+    },
+    {
       label: 'google start uses safe helper',
       ok: googleSource.includes('safeRelativeRedirect('),
       detail: 'OAuth redirect cookie is sanitized',

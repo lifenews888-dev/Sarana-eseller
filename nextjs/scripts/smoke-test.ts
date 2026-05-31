@@ -40,6 +40,7 @@ const ROUTES = [
   { url: '/partner', label: 'Хамтрах' },
   { url: '/cart', label: 'Сагс' },
   { url: '/register', label: 'Бүртгэл' },
+  { url: '/login?redirect=/become-seller', label: 'Login redirect to seller onboarding' },
   { url: '/gold', label: 'Gold' },
   { url: '/search', label: 'Хайлт' },
   { url: '/compare', label: 'Харьцуулалт' },
