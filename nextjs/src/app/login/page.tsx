@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, roleHome } from '@/lib/auth';
 import { AuthAPI, type AuthResponse } from '@/lib/api';
+import { safeRelativeRedirect } from '@/lib/safe-redirect';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import { Store, Megaphone, ShoppingBag, Truck, AlertTriangle, CheckCircle, Hand, Rocket, Eye, EyeOff } from 'lucide-react';
@@ -27,15 +28,11 @@ function isAuthResponse(value: unknown): value is AuthResponse {
   return typeof candidate.token === 'string' && Boolean(candidate.user);
 }
 
-function isSafeRelativePath(target: string | null): target is string {
-  return Boolean(target && target.startsWith('/') && !target.startsWith('//'));
-}
-
 function readRedirectTargetFromLocation(): string {
   if (typeof window === 'undefined') return '';
   const params = new URLSearchParams(window.location.search);
   const target = params.get('redirect') || params.get('next');
-  return isSafeRelativePath(target) ? target : '';
+  return safeRelativeRedirect(target);
 }
 
 function buildAuthHref(path: string, params: Record<string, string | undefined>, redirectTarget: string): string {

@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { fail } from '@/lib/api-envelope';
+import { safeRelativeRedirect } from '@/lib/safe-redirect';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const VALID_ROLES = ['seller', 'affiliate', 'buyer', 'delivery'];
-
-function safeRelativePath(target: string | null): string {
-  return target && target.startsWith('/') && !target.startsWith('//') ? target : '';
-}
 
 export async function GET(req: NextRequest) {
   if (!GOOGLE_CLIENT_ID) {
@@ -20,7 +17,7 @@ export async function GET(req: NextRequest) {
   // Role from query param (e.g. /api/auth/google?role=seller)
   const role = req.nextUrl.searchParams.get('role');
   const safeRole = role && VALID_ROLES.includes(role) ? role : 'buyer';
-  const redirectTarget = safeRelativePath(
+  const redirectTarget = safeRelativeRedirect(
     req.nextUrl.searchParams.get('redirect') || req.nextUrl.searchParams.get('next'),
   );
 

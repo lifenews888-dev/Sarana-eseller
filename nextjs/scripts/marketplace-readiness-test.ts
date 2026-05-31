@@ -29,6 +29,7 @@ const scopedLintFiles = [
   'scripts/feed-readiness-test.ts',
   'scripts/detail-readiness-test.ts',
   'scripts/marketplace-readiness-test.ts',
+  'scripts/login-redirect-contract-test.ts',
   'scripts/seller-owner-contract-test.ts',
   'scripts/store-dashboard-readiness-test.ts',
   'scripts/test-image-url.ts',
@@ -105,6 +106,11 @@ const steps: ReadinessStep[] = [
     label: 'Seller owner contract',
     command: 'npm',
     args: ['run', 'test:seller-owner'],
+  },
+  {
+    label: 'Login redirect contract',
+    command: 'npm',
+    args: ['run', 'test:login-redirect'],
   },
 ];
 
