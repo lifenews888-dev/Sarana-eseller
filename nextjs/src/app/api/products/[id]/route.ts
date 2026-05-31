@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { ok, fail } from '@/lib/api-envelope';
 import { DEMO_PRODUCTS } from '@/lib/utils';
 import { getSafeImageList } from '@/lib/image-url';
+import { isPublicLaunchProduct } from '@/lib/product-visibility';
 
 type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[]; stock?: number };
 
@@ -100,7 +101,7 @@ export async function GET(
       },
     });
 
-    if (!product) {
+    if (!product || !isPublicLaunchProduct(product)) {
       return fail('Бараа олдсонгүй', 404);
     }
 

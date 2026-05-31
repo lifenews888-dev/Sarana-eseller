@@ -22,7 +22,7 @@ interface BannerData {
 const FALLBACK_SLIDES: BannerData[] = [
   {
     id: 'f1', badge: 'Шинэ сезон', title: 'Зуны мега хямдрал эхэллээ',
-    subtitle: '70% хүртэл хөнгөлөлт · 10,000+ бараа',
+    subtitle: '70% хүртэл хөнгөлөлт · Шинэ бараа нэмэгдсээр',
     buttonText: 'Бараа үзэх', buttonLink: '/store',
     color: '#E8242C', gradient: 'from-[#0d1b2e] to-[#1a3a5c]',
   },

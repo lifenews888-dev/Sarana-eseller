@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Phone, Mail, MessageCircle, MapPin, CheckCircle } from 'lucide-react';
+import { Mail, MessageCircle, MapPin, CheckCircle } from 'lucide-react';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
 
 const CONTACTS = [
-  { icon: Phone, title: 'Утас', value: '7700-XXXX', sub: 'Даваа–Баасан 9:00–18:00', href: 'tel:7700XXXX' },
   { icon: Mail, title: 'Имэйл', value: 'info@eseller.mn', sub: '24 цагийн дотор хариулна', href: 'mailto:info@eseller.mn' },
   { icon: MessageCircle, title: 'Facebook', value: '@eseller.mn', sub: 'Мессеж илгээх', href: 'https://facebook.com/eseller.mn' },
   { icon: MapPin, title: 'Хаяг', value: 'Улаанбаатар хот', sub: 'Чингэлтэй дүүрэг', href: 'https://maps.google.com' },

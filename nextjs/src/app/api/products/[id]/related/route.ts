@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ok } from '@/lib/api-envelope';
+import { getSafeImageList } from '@/lib/image-url';
+import { publicProductWhere } from '@/lib/product-visibility';
 
 // GET /api/products/[id]/related?limit=4
 // Same-category active products, excluding the current one.
@@ -25,12 +27,10 @@ export async function GET(
     }
 
     const products = await prisma.product.findMany({
-      where: {
+      where: publicProductWhere({
         category: current.category,
         id: { not: id },
-        isActive: true,
-        isDemo: false,
-      },
+      }),
       orderBy: { createdAt: 'desc' },
       take: limit,
       select: {
@@ -45,7 +45,13 @@ export async function GET(
       },
     });
 
-    return ok({ products });
+    return ok({
+      products: products.map((product) => ({
+        ...product,
+        _id: product.id,
+        images: getSafeImageList(product.images),
+      })),
+    });
   } catch (err) {
     console.error('Related products error:', err);
     // Soft-fail with an empty list so the caller renders the "no

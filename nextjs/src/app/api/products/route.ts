@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { ok } from '@/lib/api-envelope';
 import { DEMO_PRODUCTS } from '@/lib/utils';
 import { getSafeImageList } from '@/lib/image-url';
+import { publicProductWhere } from '@/lib/product-visibility';
 
 // GET /api/products?limit=20&search=&category=
 export async function GET(req: NextRequest) {
@@ -12,17 +13,16 @@ export async function GET(req: NextRequest) {
   const search = sp.get('search') || sp.get('q') || '';
   const category = sp.get('category') || '';
 
-  const where: Record<string, unknown> = {
-    isActive: true,
-    isDemo: false,
-  };
+  const filters: Parameters<typeof publicProductWhere> = [];
 
   if (search) {
-    where.name = { contains: search, mode: 'insensitive' };
+    filters.push({ name: { contains: search, mode: 'insensitive' } });
   }
   if (category) {
-    where.category = category;
+    filters.push({ category });
   }
+
+  const where = publicProductWhere(...filters);
 
   try {
     const [products, total] = await Promise.all([

@@ -163,7 +163,7 @@ async function getHomeData() {
     const configMap = new Map(configs.map((c) => [c.key, c.value]));
     const stats = {
       useRealData: configMap.get('stats_use_real') === 'true',
-      products: configMap.get('stats_products') || '10,000+',
+      products: configMap.get('stats_products') || 'Шинэ бараа',
       shops: configMap.get('stats_shops') || '500+',
       users: configMap.get('stats_users') || '50,000+',
     };

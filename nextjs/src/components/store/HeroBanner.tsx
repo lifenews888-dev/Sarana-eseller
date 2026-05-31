@@ -6,7 +6,7 @@ import { Search, ChevronRight, ChevronLeft, Truck, Shield, Clock, Sparkles } fro
 
 const FEATURES = [
   { icon: Truck, title: 'Үнэгүй хүргэлт', sub: '50,000₮-с дээш', color: '#059669' },
-  { icon: Shield, title: 'Аюулгүй төлбөр', sub: 'QPay & Карт', color: '#0891B2' },
+  { icon: Shield, title: 'Аюулгүй төлбөр', sub: 'QPay төлбөр', color: '#0891B2' },
   { icon: Clock, title: 'Хурдан хүргэлт', sub: '2-4 цагийн дотор', color: '#D97706' },
   { icon: Sparkles, title: 'Шинэ ирэлтүүд', sub: 'Долоо хоног бүр', color: '#7C3AED' },
 ];

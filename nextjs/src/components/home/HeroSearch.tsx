@@ -40,7 +40,7 @@ export default function HeroSearch() {
           <span style={{ color: '#E8242C' }}> цахим зах</span>
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, marginBottom: 32 }}>
-          10,000+ бараа · 500+ дэлгүүр · Хурдан хүргэлт
+          Бараа · Үйлчилгээ · Зарын булан · Хурдан хүргэлт
         </p>
 
         <form onSubmit={handleSearch} style={{

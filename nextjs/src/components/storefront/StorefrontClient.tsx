@@ -21,6 +21,19 @@ interface ProductData {
   rating?: number | null; reviewCount?: number | null; stock?: number | null;
 }
 
+type StorefrontBannerData = {
+  imageUrl?: string;
+  title?: string;
+  subtitle?: string;
+  ctaText?: string;
+  ctaHref?: string;
+};
+
+type StorefrontMenuItem = {
+  href?: string;
+  label?: string;
+};
+
 const ENTITY_BADGES: Record<string, { label: string; emoji: string; color: string }> = {
   store: { label: 'Онлайн дэлгүүр', emoji: '🏪', color: '#3B82F6' },
   service: { label: 'Үйлчилгээ', emoji: '🛎️', color: '#888780' },
@@ -50,8 +63,8 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
   const heroTitle = (cfg.heroTitle as string) || '';
   const heroSubtitle = (cfg.heroSubtitle as string) || '';
   const ctaText = (cfg.ctaText as string) || 'Захиалах';
-  const banners = (cfg.banners as any[]) || [];
-  const menuItems = (cfg.menuItems as any[]) || [];
+  const banners = Array.isArray(cfg.banners) ? (cfg.banners as StorefrontBannerData[]) : [];
+  const menuItems = Array.isArray(cfg.menuItems) ? (cfg.menuItems as StorefrontMenuItem[]) : [];
   const socialLinks = (cfg.socialLinks as Record<string, string>) || {};
   const contactInfo = (cfg.contactInfo as Record<string, string>) || {};
   const logoUrl = (cfg.logoUrl as string) || shop.logo;
@@ -128,7 +141,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
       {/* ═══ MENU NAV ═══ */}
       {menuItems.length > 0 && (
         <nav className="max-w-6xl mx-auto px-6 py-3 flex items-center gap-6 overflow-x-auto" style={{ borderBottom: '1px solid var(--esl-border)' }}>
-          {menuItems.map((item: any, i: number) => (
+          {menuItems.map((item, i) => (
             <a key={i} href={item.href || '#'} className="text-sm font-semibold no-underline whitespace-nowrap hover:opacity-80 transition" style={{ color: 'var(--esl-text-primary)' }}>
               {item.label}
             </a>
@@ -151,7 +164,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
             <span className="text-5xl block mb-4">📦</span>
             <p className="font-bold text-lg" style={{ color: 'var(--esl-text-primary)' }}>Энэ дэлгүүрт бараа хараахан байхгүй</p>
             <p className="text-sm mt-2 mb-6 max-w-sm mx-auto" style={{ color: 'var(--esl-text-muted)' }}>
-              Өөр олон дэлгүүр, 10,000+ бараа таныг хүлээж байна
+              Өөр олон дэлгүүр, шинэ бараа таныг хүлээж байна
             </p>
             <div className="flex gap-2 justify-center flex-wrap">
               <Link href="/store" className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold no-underline hover:bg-[#c91f26] transition">
@@ -291,7 +304,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
             <div>
               <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--esl-text-primary)' }}>Мэдээлэл</p>
               <div className="space-y-2">
-                <a href="/terms" className="block text-xs no-underline hover:underline" style={{ color: 'var(--esl-text-muted)' }}>Үйлчилгээний нөхцөл</a>
+                <Link href="/terms" className="block text-xs no-underline hover:underline" style={{ color: 'var(--esl-text-muted)' }}>Үйлчилгээний нөхцөл</Link>
                 <p className="text-xs" style={{ color: 'var(--esl-text-muted)' }}>🚚 Хүргэлт: Улаанбаатар хотод 24 цагийн дотор</p>
                 <p className="text-xs" style={{ color: 'var(--esl-text-muted)' }}>↩️ Буцаалт: 7 хоногийн дотор</p>
                 <p className="text-xs" style={{ color: 'var(--esl-text-muted)' }}>💳 Төлбөр: QPay, банк шилжүүлэг</p>
@@ -335,7 +348,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
 }
 
 /* ═══ Banner Slider ═══ */
-function BannerSlider({ banners, primaryColor }: { banners: any[]; primaryColor: string }) {
+function BannerSlider({ banners, primaryColor }: { banners: StorefrontBannerData[]; primaryColor: string }) {
   const [active, setActive] = useState(0);
 
   useEffect(() => {
