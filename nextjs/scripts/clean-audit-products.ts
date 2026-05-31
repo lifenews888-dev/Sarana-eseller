@@ -2,15 +2,22 @@
 //
 // Usage:
 //   npx tsx scripts/clean-audit-products.ts --dry-run
-//   npx tsx scripts/clean-audit-products.ts
+//   CONFIRM_PRODUCTION_CLEANUP=yes npx tsx scripts/clean-audit-products.ts
 
 import 'dotenv/config';
 import { prisma } from '../src/lib/prisma';
 import { isPublicLaunchProduct } from '../src/lib/product-visibility';
 
 const DRY_RUN = process.argv.includes('--dry-run');
+const CONFIRMED = process.env.CONFIRM_PRODUCTION_CLEANUP === 'yes';
 
 async function main() {
+  if (!DRY_RUN && !CONFIRMED) {
+    console.error('Refusing to deactivate products without CONFIRM_PRODUCTION_CLEANUP=yes.');
+    console.error('Run dry-run first: npm run clean:audit-products:dry');
+    process.exit(1);
+  }
+
   const products = await prisma.product.findMany({
     select: {
       id: true,
@@ -40,7 +47,7 @@ async function main() {
   }
 
   if (DRY_RUN) {
-    console.log('No writes performed. Re-run without --dry-run to apply.');
+    console.log('No writes performed. Re-run with CONFIRM_PRODUCTION_CLEANUP=yes to apply.');
   }
 
   await prisma.$disconnect();
