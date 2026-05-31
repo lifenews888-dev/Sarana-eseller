@@ -6,6 +6,7 @@ import type { Product } from '@/lib/api';
 import type { Metadata } from 'next';
 import { DEMO_PRODUCTS } from '@/lib/utils';
 import { getSafeImageList, getSafeImageUrl } from '@/lib/image-url';
+import { isPublicLaunchProduct, publicProductWhere } from '@/lib/product-visibility';
 
 type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[] };
 
@@ -104,9 +105,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   let product;
   try {
-    product = await prisma.product.findUnique({ where: { id }, select: { name: true, description: true, images: true } });
+    product = await prisma.product.findUnique({
+      where: { id },
+      select: { name: true, description: true, images: true, price: true, isActive: true, isDemo: true },
+    });
   } catch { return { title: 'Олдсонгүй' }; }
-  if (!product) return { title: 'Олдсонгүй' };
+  if (!product || !isPublicLaunchProduct(product)) return { title: 'Олдсонгүй' };
   return {
     title: `${product.name} - eseller.mn`,
     description: product.description?.slice(0, 160) || product.name,
@@ -148,7 +152,7 @@ export default async function ProductPage({ params }: Props) {
     });
   } catch { notFound(); }
 
-  if (!product) notFound();
+  if (!product || !isPublicLaunchProduct(product)) notFound();
 
   const media = await prisma.entityMedia.findMany({
     where: { productId: id },
@@ -157,11 +161,10 @@ export default async function ProductPage({ params }: Props) {
 
   let related = product.categoryId
     ? await prisma.product.findMany({
-        where: {
+        where: publicProductWhere({
           categoryId: product.categoryId,
           id: { not: id },
-          isActive: true,
-        },
+        }),
         take: 4,
         orderBy: { createdAt: 'desc' },
       })
@@ -169,10 +172,9 @@ export default async function ProductPage({ params }: Props) {
 
   if (related.length < 4) {
     const fallback = await prisma.product.findMany({
-      where: {
+      where: publicProductWhere({
         id: { notIn: [id, ...related.map(r => r.id)] },
-        isActive: true,
-      },
+      }),
       take: 4 - related.length,
       orderBy: { createdAt: 'desc' },
     });

@@ -21,11 +21,6 @@ type CheckResult = {
 
 const DETAIL_PAGES = [
   {
-    url: '/product/69e1b41bba8282843ef58e30',
-    label: 'real product detail',
-    snippets: ['RP01-B Heavy Duty Metal Alloy Light Stand'],
-  },
-  {
     url: '/product/d1',
     label: 'demo product detail',
     snippets: ['eseller.mn'],
@@ -68,9 +63,13 @@ const DETAIL_PAGES = [
 ];
 
 const PRODUCT_API_ROUTES = [
-  '/api/products/69e1b41bba8282843ef58e30',
   '/api/products?limit=20',
   '/api/marketplace',
+];
+
+const HIDDEN_AUDIT_PRODUCT_ROUTES = [
+  '/product/69e1b41bba8282843ef58e30',
+  '/api/products/69e1b41bba8282843ef58e30',
 ];
 
 const FORBIDDEN_IMAGE_PREFIXES = [
@@ -272,6 +271,26 @@ async function checkProductApi(route: string): Promise<CheckResult> {
   }
 }
 
+async function checkHiddenAuditProduct(route: string): Promise<CheckResult> {
+  try {
+    const res = await fetch(`${BASE}${route}`, {
+      redirect: 'manual',
+      headers: { 'User-Agent': 'eseller-detail-readiness' },
+    });
+    return {
+      label: `hidden audit product ${route}`,
+      ok: res.status === 404,
+      detail: `${res.status} expected 404`,
+    };
+  } catch (error) {
+    return {
+      label: `hidden audit product ${route}`,
+      ok: false,
+      detail: error instanceof Error ? error.message : 'request failed',
+    };
+  }
+}
+
 function checkSourceContract(file: string, label: string, snippets: string[]): CheckResult {
   const fullPath = repoPath(file);
   if (!fs.existsSync(fullPath)) return { label, ok: false, detail: `${file} not found` };
@@ -299,6 +318,10 @@ async function main() {
 
   for (const route of PRODUCT_API_ROUTES) {
     results.push(await checkProductApi(route));
+  }
+
+  for (const route of HIDDEN_AUDIT_PRODUCT_ROUTES) {
+    results.push(await checkHiddenAuditProduct(route));
   }
 
   results.push(checkSourceContract('src/lib/image-url.ts', 'image URL validation library', [
