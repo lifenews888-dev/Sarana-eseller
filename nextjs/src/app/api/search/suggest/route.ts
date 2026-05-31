@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET /api/search/suggest?q=
 export async function GET(req: NextRequest) {
@@ -21,7 +22,11 @@ export async function GET(req: NextRequest) {
         take: 3, select: { id: true, name: true, slug: true, icon: true },
       }),
     ]);
-    return NextResponse.json({ products, shops, categories });
+    return NextResponse.json({
+      products: products.map((product) => ({ ...product, images: getSafeImageList(product.images) })),
+      shops,
+      categories,
+    });
   } catch {
     return NextResponse.json({ products: [], shops: [], categories: [] });
   }

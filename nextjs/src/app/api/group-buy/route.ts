@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET /api/group-buy — open group buys
 export async function GET() {
@@ -16,7 +17,14 @@ export async function GET() {
     },
   });
 
-  return NextResponse.json({ data: { groupBuys } });
+  return NextResponse.json({
+    data: {
+      groupBuys: groupBuys.map((groupBuy) => ({
+        ...groupBuy,
+        product: groupBuy.product ? { ...groupBuy.product, images: getSafeImageList(groupBuy.product.images) } : null,
+      })),
+    },
+  });
 }
 
 // POST /api/group-buy — create new group buy

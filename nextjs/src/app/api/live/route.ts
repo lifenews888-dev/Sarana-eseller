@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, getShopForUser, json, errorJson } from '@/lib/api-auth';
 import { canCreateLive, LiveScope } from '@/lib/live-plans';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET /api/live — list streams (?my=1 for seller's own streams including ended)
 export async function GET(req: NextRequest) {
@@ -42,7 +43,7 @@ export async function GET(req: NextRequest) {
         host: { select: { id: true, name: true } },
         products: {
           include: {
-            product: { select: { id: true, name: true, price: true } },
+            product: { select: { id: true, name: true, price: true, images: true } },
           },
         },
         _count: { select: { products: true } },
@@ -74,7 +75,7 @@ export async function GET(req: NextRequest) {
             id: p.id,
             soldCount: p.soldCount,
             flashPrice: p.flashPrice,
-            product: p.product,
+            product: p.product ? { ...p.product, images: getSafeImageList(p.product.images) } : null,
           }))
         : undefined,
       productCount: s._count.products,
@@ -178,7 +179,13 @@ export async function POST(req: NextRequest) {
       return stream;
     });
 
-    return json(result, 201);
+    return json({
+      ...result,
+      products: result.products.map((linked) => ({
+        ...linked,
+        product: linked.product ? { ...linked.product, images: getSafeImageList(linked.product.images) } : null,
+      })),
+    }, 201);
   } catch (e: unknown) {
     return errorJson((e as Error).message, 500);
   }

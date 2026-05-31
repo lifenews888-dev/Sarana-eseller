@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getSafeImageList } from '@/lib/image-url';
 
 export const revalidate = 300; // 5 минут cache
 
@@ -43,7 +44,7 @@ export async function GET() {
             id: p.id,
             name: p.name,
             price: p.salePrice || p.price,
-            image: p.images?.[0] || null,
+            image: getSafeImageList(p.images)[0] || null,
           },
         };
       })
