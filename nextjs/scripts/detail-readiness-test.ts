@@ -67,6 +67,17 @@ const PRODUCT_API_ROUTES = [
   '/api/marketplace',
 ];
 
+const PUBLIC_IMAGE_API_ROUTES = [
+  '/api/feed',
+  '/api/homepage/config',
+  '/api/search?q=Samsung',
+  '/api/search/suggest?q=Samsung',
+  '/api/group-buy',
+  '/api/stories',
+  '/api/social/trending',
+  '/api/live',
+];
+
 const HIDDEN_AUDIT_PRODUCT_ROUTES = [
   '/product/69e1b41bba8282843ef58e30',
   '/api/products/69e1b41bba8282843ef58e30',
@@ -271,6 +282,28 @@ async function checkProductApi(route: string): Promise<CheckResult> {
   }
 }
 
+async function checkPublicImageApi(route: string): Promise<CheckResult> {
+  try {
+    const res = await fetch(`${BASE}${route}`, {
+      headers: { 'User-Agent': 'eseller-detail-readiness' },
+    });
+    const body = await readJson(res);
+    const urls = collectImageUrls(body);
+    const problem = urls.map(imageUrlProblem).find(Boolean);
+    return {
+      label: `public API image leak ${route}`,
+      ok: res.status < 400 && !problem,
+      detail: `${res.status} urls=${urls.length}${problem ? ` ${problem}` : ''}`,
+    };
+  } catch (error) {
+    return {
+      label: `public API image leak ${route}`,
+      ok: false,
+      detail: error instanceof Error ? error.message : 'request failed',
+    };
+  }
+}
+
 async function checkHiddenAuditProduct(route: string): Promise<CheckResult> {
   try {
     const res = await fetch(`${BASE}${route}`, {
@@ -318,6 +351,10 @@ async function main() {
 
   for (const route of PRODUCT_API_ROUTES) {
     results.push(await checkProductApi(route));
+  }
+
+  for (const route of PUBLIC_IMAGE_API_ROUTES) {
+    results.push(await checkPublicImageApi(route));
   }
 
   for (const route of HIDDEN_AUDIT_PRODUCT_ROUTES) {
