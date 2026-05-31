@@ -64,6 +64,18 @@ const ROUTES = [
   { url: '/api/health', label: 'API health' },
 ];
 
+const PUBLIC_COPY_ROUTES = ['/', '/store', '/feed', '/contact', '/privacy', '/terms'];
+
+const FORBIDDEN_PUBLIC_COPY = [
+  { pattern: 'QPay & Карт', reason: 'card payment is not launched' },
+  { pattern: 'QPay & Card', reason: 'card payment is not launched' },
+  { pattern: '7XXX-XXXX', reason: 'placeholder phone number' },
+  { pattern: '7700-XXXX', reason: 'placeholder phone number' },
+  { pattern: '10,000+ бараа', reason: 'inflated product count claim' },
+  { pattern: '10,000+ products', reason: 'inflated product count claim' },
+  { pattern: 'E2E Test Product', reason: 'test product leaked' },
+];
+
 async function testRoute(route: typeof ROUTES[0]): Promise<Result> {
   try {
     const res = await fetch(`${BASE}${route.url}`, {
@@ -74,6 +86,27 @@ async function testRoute(route: typeof ROUTES[0]): Promise<Result> {
   } catch {
     return { url: route.url, status: 0, ok: false, label: route.label };
   }
+}
+
+async function testPublicCopyRoutes(): Promise<number> {
+  let failures = 0;
+
+  console.log(`\nPUBLIC COPY audit smoke:`);
+  for (const route of PUBLIC_COPY_ROUTES) {
+    const res = await fetch(`${BASE}${route}`, {
+      redirect: 'follow',
+      headers: { 'User-Agent': 'eseller-smoke-test' },
+    });
+    const body = await res.text();
+    const hit = FORBIDDEN_PUBLIC_COPY.find((item) => body.includes(item.pattern));
+    const ok = res.status < 400 && !hit;
+    if (!ok) failures += 1;
+    console.log(
+      `  ${ok ? 'ok' : 'FAIL'} ${String(res.status).padStart(3)} ${route}${hit ? ` - ${hit.pattern} (${hit.reason})` : ''}`
+    );
+  }
+
+  return failures;
 }
 
 async function readJson(res: Response): Promise<unknown> {
@@ -262,6 +295,7 @@ async function main() {
 
   const mobileConfigFailures = await testMobileConfigRoute();
   const sellerBffFailures = await testSellerBffRoutes();
+  const publicCopyFailures = await testPublicCopyRoutes();
 
   // Failed routes
   const failed = results.filter(r => !r.ok);
@@ -273,7 +307,9 @@ async function main() {
   }
 
   console.log(`\n══════════════════════════════\n`);
-  process.exit(failed.length > 0 || mobileConfigFailures > 0 || sellerBffFailures > 0 ? 1 : 0);
+  process.exit(
+    failed.length > 0 || mobileConfigFailures > 0 || sellerBffFailures > 0 || publicCopyFailures > 0 ? 1 : 0
+  );
 }
 
 main();
