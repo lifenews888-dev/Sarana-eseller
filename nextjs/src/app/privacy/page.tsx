@@ -58,7 +58,7 @@ const sections = [
     title: '7. Холбоо барих',
     content: `Нууцлалтай холбоотой асуудлаар:
 📧 privacy@eseller.mn
-📞 7700-XXXX
+📧 info@eseller.mn
 🏠 Улаанбаатар хот, Чингэлтэй дүүрэг`,
   },
 ];

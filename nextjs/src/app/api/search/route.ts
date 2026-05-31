@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { getSafeImageList } from '@/lib/image-url';
+import { publicProductWhere } from '@/lib/product-visibility';
 
 // GET /api/search?q=&category=&minPrice=&maxPrice=&district=&entityType=&sort=&page=&limit=
 export async function GET(req: NextRequest) {
@@ -14,18 +17,21 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, Number(sp.get('page') || 1));
   const limit = Math.min(50, Number(sp.get('limit') || 20));
 
-  const where: any = { isActive: true, price: { gte: minPrice, lte: maxPrice } };
+  const productFilters: Parameters<typeof publicProductWhere> = [
+    { price: { gte: Math.max(minPrice, 2), lte: maxPrice } },
+  ];
 
   if (q) {
-    where.OR = [
+    productFilters.push({ OR: [
       { name: { contains: q, mode: 'insensitive' } },
       { description: { contains: q, mode: 'insensitive' } },
       { brand: { contains: q, mode: 'insensitive' } },
-    ];
+    ] });
   }
-  if (category) where.categoryId = category;
-  if (district) where.district = district;
-  if (entityType) where.entityType = entityType;
+  if (category) productFilters.push({ categoryId: category });
+  if (district) productFilters.push({ district });
+  if (entityType) productFilters.push({ entityType });
+  const where = publicProductWhere(...productFilters);
 
   const orderBy = sort === 'price_asc' ? { price: 'asc' as const }
     : sort === 'price_desc' ? { price: 'desc' as const }
@@ -48,7 +54,7 @@ export async function GET(req: NextRequest) {
     // Бараа байвал шууд буцаах
     if (products.length > 0) {
       return NextResponse.json({
-        products: products.map((p) => ({ ...p, _id: p.id })),
+        products: products.map((p) => ({ ...p, _id: p.id, images: getSafeImageList(p.images) })),
         total,
         pages: Math.ceil(total / limit),
         page,
@@ -56,7 +62,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Бараа байхгүй бол Feed posts-оос хайх
-    const feedWhere: any = { status: 'active' };
+    const feedWhere: Prisma.FeedItemWhereInput = { status: 'active' };
     if (q) {
       feedWhere.OR = [
         { title: { contains: q, mode: 'insensitive' } },
@@ -76,7 +82,7 @@ export async function GET(req: NextRequest) {
       _id: p.id,
       name: p.title,
       price: p.price,
-      images: p.images || [],
+      images: getSafeImageList(p.images),
       media: p.media,
       category: p.category ? { name: p.category } : null,
       isFeedPost: true,

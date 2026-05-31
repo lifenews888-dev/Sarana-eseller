@@ -1,12 +1,14 @@
 export const runtime = 'nodejs';
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { getSafeImageList } from '@/lib/image-url';
+import { publicProductWhere } from '@/lib/product-visibility';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
     const products = await prisma.product.findMany({
-      where: { isActive: true, isDemo: false },
+      where: publicProductWhere(),
       take: 60,
       orderBy: { createdAt: 'desc' },
     });
@@ -23,7 +25,7 @@ export async function GET(req: NextRequest) {
       description: p.description,
       category: p.category,
       emoji: p.emoji,
-      images: p.images || [],
+      images: getSafeImageList(p.images),
       stock: p.stock,
       rating: p.rating,
       reviewCount: p.reviewCount,

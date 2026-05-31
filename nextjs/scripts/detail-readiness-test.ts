@@ -70,6 +70,7 @@ const DETAIL_PAGES = [
 const PRODUCT_API_ROUTES = [
   '/api/products/69e1b41bba8282843ef58e30',
   '/api/products?limit=20',
+  '/api/marketplace',
 ];
 
 const FORBIDDEN_IMAGE_PREFIXES = [
@@ -172,6 +173,34 @@ function collectImageUrls(value: unknown, urls: string[] = []): string[] {
   return urls;
 }
 
+function publicProductProblem(value: unknown): string | null {
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      const problem = publicProductProblem(item);
+      if (problem) return problem;
+    }
+    return null;
+  }
+
+  if (!isRecord(value)) return null;
+
+  const name = typeof value.name === 'string' ? value.name : typeof value.title === 'string' ? value.title : '';
+  const price = typeof value.price === 'number' ? value.price : null;
+  if (name && price !== null) {
+    const lowerName = name.toLowerCase();
+    if (['e2e', 'test', 'тест', 'dummy', 'placeholder'].some((pattern) => lowerName.includes(pattern))) {
+      return `test product leaked: ${name}`;
+    }
+    if (price <= 1) return `zero/one price product leaked: ${name}`;
+  }
+
+  for (const nested of Object.values(value)) {
+    const problem = publicProductProblem(nested);
+    if (problem) return problem;
+  }
+  return null;
+}
+
 async function checkPage(route: typeof DETAIL_PAGES[number]): Promise<CheckResult> {
   try {
     const res = await fetch(`${BASE}${route.url}`, {
@@ -227,11 +256,12 @@ async function checkProductApi(route: string): Promise<CheckResult> {
     const data = unwrapData(body);
     const urls = collectImageUrls(data);
     const problem = urls.map(imageUrlProblem).find(Boolean);
+    const productProblem = publicProductProblem(data);
     const envelopeOk = isRecord(body) && body.success === true && !!data;
     return {
       label: `product API images ${route}`,
-      ok: res.status < 400 && envelopeOk && !problem,
-      detail: `${res.status} urls=${urls.length}${problem ? ` ${problem}` : ''}${!envelopeOk ? ' bad envelope' : ''}`,
+      ok: res.status < 400 && envelopeOk && !problem && !productProblem,
+      detail: `${res.status} urls=${urls.length}${problem ? ` ${problem}` : ''}${productProblem ? ` ${productProblem}` : ''}${!envelopeOk ? ' bad envelope' : ''}`,
     };
   } catch (error) {
     return {

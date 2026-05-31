@@ -43,6 +43,10 @@ const ROUTES = [
   { url: '/gold', label: 'Gold' },
   { url: '/search', label: 'Хайлт' },
   { url: '/compare', label: 'Харьцуулалт' },
+  { url: '/products', label: 'Products alias' },
+  { url: '/listings', label: 'Listings alias' },
+  { url: '/zar', label: 'Zar alias' },
+  { url: '/admin', label: 'Admin alias' },
 
   // Onboarding
   { url: '/open-shop', label: 'Дэлгүүр нээх' },
@@ -57,6 +61,7 @@ const ROUTES = [
   // API endpoints
   { url: '/api/stats', label: 'API stats' },
   { url: '/api/stores', label: 'API stores' },
+  { url: '/api/health', label: 'API health' },
 ];
 
 async function testRoute(route: typeof ROUTES[0]): Promise<Result> {
