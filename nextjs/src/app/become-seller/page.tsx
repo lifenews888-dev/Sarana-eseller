@@ -99,6 +99,7 @@ export default function BecomeSellerPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [entityType, setEntityType] = useState<EntityType | null>(null);
   const [selectedPlan, setSelectedPlan] = useState('free');
 
@@ -133,8 +134,16 @@ export default function BecomeSellerPage() {
     return true;
   };
 
+  const canSubmit = () => {
+    return !!entityType && form.name.length >= 2 && form.phone.length >= 4 && form.slug.length >= 3 && acceptedTerms && !submitting;
+  };
+
   const handleSubmit = async () => {
     if (!entityType) return;
+    if (!acceptedTerms) {
+      setSubmitError('Үйлчилгээний нөхцөл болон нууцлалын бодлогыг зөвшөөрнө үү.');
+      return;
+    }
     setSubmitting(true);
     setSubmitError('');
     try {
@@ -476,7 +485,12 @@ export default function BecomeSellerPage() {
                 </div>
 
                 <label className="flex items-start gap-2 cursor-pointer">
-                  <input type="checkbox" className="mt-1 rounded accent-[#E8242C]" />
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(event) => setAcceptedTerms(event.target.checked)}
+                    className="mt-1 rounded accent-[#E8242C]"
+                  />
                   <span className="text-xs text-[var(--esl-text-muted)]">
                     <a href="#" className="text-[#E8242C] no-underline">Үйлчилгээний нөхцөл</a> болон <a href="#" className="text-[#E8242C] no-underline">нууцлалын бодлого</a>-г зөвшөөрч байна.
                   </span>
@@ -509,15 +523,16 @@ export default function BecomeSellerPage() {
               Дараах <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
-            <button onClick={handleSubmit} disabled={submitting}
-              className="flex items-center gap-1.5 px-8 py-3 bg-[#E8242C] text-white rounded-xl text-sm font-bold hover:bg-[#CC0000] transition border-none cursor-pointer">
+            <button onClick={handleSubmit} disabled={!canSubmit()}
+              className={cn('flex items-center gap-1.5 px-8 py-3 rounded-xl text-sm font-bold transition border-none',
+                canSubmit() ? 'bg-[#E8242C] text-white hover:bg-[#CC0000] cursor-pointer' : 'bg-[var(--esl-bg-elevated)] text-[#555] cursor-not-allowed')}>
               {submitting ? 'Илгээж байна...' : <><Sparkles className="w-4 h-4" /> Бүртгэл дуусгах</>}
             </button>
           )}
         </div>
 
         {step === 4 && (
-          <p className="text-center text-xs text-[#555] mt-4 cursor-pointer hover:text-[var(--esl-text-muted)]" onClick={handleSubmit}>
+          <p className="text-center text-xs text-[#555] mt-4">
             Одоохондоо үнэгүй эхлэх → Dashboard-аас дараа upgrade хийнэ
           </p>
         )}

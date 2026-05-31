@@ -106,6 +106,11 @@ function main() {
       ok: onboardingSource.includes("router.push('/login?redirect=/become-seller')"),
       detail: 'logged-out users return to onboarding after login',
     },
+    {
+      label: 'onboarding terms gate',
+      ok: includesAll(onboardingSource, ['acceptedTerms', 'setAcceptedTerms', 'canSubmit', '!acceptedTerms']),
+      detail: 'owner registration cannot submit until terms are accepted',
+    },
   ];
 
   console.log('\n══════════════════════════════');
