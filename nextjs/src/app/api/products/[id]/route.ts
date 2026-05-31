@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ok, fail } from '@/lib/api-envelope';
 import { DEMO_PRODUCTS } from '@/lib/utils';
+import { getSafeImageList } from '@/lib/image-url';
 
 type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[]; stock?: number };
 
@@ -13,6 +14,8 @@ function demoProduct(id: string) {
   const product = (DEMO_PRODUCTS as DemoProduct[]).find((item) => item._id === id);
   if (!product) return null;
 
+  const images = getSafeImageList(product.images || []);
+
   return {
     id: product._id,
     _id: product._id,
@@ -20,7 +23,7 @@ function demoProduct(id: string) {
     price: product.price,
     salePrice: product.salePrice,
     description: product.description,
-    images: product.images || [],
+    images,
     stock: product.stock,
     category: product.category,
     emoji: product.emoji,
@@ -108,7 +111,7 @@ export async function GET(
       price: product.price,
       salePrice: product.salePrice,
       description: product.description,
-      images: product.images,
+      images: getSafeImageList(product.images),
       stock: product.stock,
       category: product.category,
       emoji: product.emoji,
