@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireSeller, getShopForUser, errorJson, json } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // POST /api/digital/upload — create a digital product record
 export async function POST(req: NextRequest) {
@@ -93,10 +94,17 @@ export async function GET(req: NextRequest) {
 
     const digitalsWithCount = digitalProducts.map((dp) => {
       const { downloads, ...rest } = dp;
-      return { ...rest, totalDownloads: downloads.length };
+      return {
+        ...rest,
+        product: rest.product ? { ...rest.product, images: getSafeImageList(rest.product.images) } : null,
+        totalDownloads: downloads.length,
+      };
     });
 
-    return json({ products, digitalProducts: digitalsWithCount });
+    return json({
+      products: products.map((product) => ({ ...product, images: getSafeImageList(product.images) })),
+      digitalProducts: digitalsWithCount,
+    });
   } catch (e: unknown) {
     return errorJson((e as Error).message, 500);
   }

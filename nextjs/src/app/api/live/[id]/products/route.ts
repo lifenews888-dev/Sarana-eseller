@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // POST /api/live/[id]/products — add product to stream
 export async function POST(
@@ -46,7 +47,10 @@ export async function POST(
       },
     });
 
-    return json(liveProduct, 201);
+    return json({
+      ...liveProduct,
+      product: liveProduct.product ? { ...liveProduct.product, images: getSafeImageList(liveProduct.product.images) } : null,
+    }, 201);
   } catch (e: unknown) {
     return errorJson((e as Error).message, 500);
   }
