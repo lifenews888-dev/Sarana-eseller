@@ -205,6 +205,8 @@ async function main() {
     '/feed/post?category=',
     'tier=featured',
     'onClearLocation',
+    'data-feed-featured-businesses',
+    'featuredBusinessUsedLocationFallback',
   ]));
   results.push(checkSourceContract('src/app/feed/post/page.tsx', 'post prefill/readiness source', [
     'data-feed-post-prefill-notice',

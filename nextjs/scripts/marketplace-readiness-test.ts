@@ -31,6 +31,7 @@ const scopedLintFiles = [
   'scripts/marketplace-readiness-test.ts',
   'scripts/test-image-url.ts',
   'src/lib/image-url.ts',
+  'src/app/feed/FeedPageClient.tsx',
   'src/app/api/products/route.ts',
   'src/app/api/products/[id]/route.ts',
   'src/app/product/[id]/page.tsx',
