@@ -14,6 +14,7 @@
     "test:smoke": "npx tsx scripts/smoke-test.ts",
     "test:feed": "npx tsx scripts/feed-readiness-test.ts",
     "test:details": "npx tsx scripts/detail-readiness-test.ts",
+    "test:store-dashboard": "npx tsx scripts/store-dashboard-readiness-test.ts",
     "test:image-url": "npx tsx scripts/test-image-url.ts",
     "test:readiness": "npx tsx scripts/marketplace-readiness-test.ts",
     "seed:seller": "npx tsx scripts/seed-first-seller.ts",
