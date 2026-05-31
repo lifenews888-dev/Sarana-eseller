@@ -12,6 +12,7 @@
     "clean:demo": "npx tsx scripts/clean-demo-data.ts",
     "clean:demo:dry": "npx tsx scripts/clean-demo-data.ts --dry-run",
     "test:smoke": "npx tsx scripts/smoke-test.ts",
+    "test:feed": "npx tsx scripts/feed-readiness-test.ts",
     "seed:seller": "npx tsx scripts/seed-first-seller.ts",
     "test:upload": "npx tsx scripts/test-upload.ts",
     "clean:images": "npx tsx scripts/clean-bad-image-urls.ts",
