@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // POST /api/live/[id]/purchase — buy a live product
 export async function POST(
@@ -42,6 +43,7 @@ export async function POST(
 
     const unitPrice = liveProduct.flashPrice ?? liveProduct.product.price;
     const total = unitPrice * qty;
+    const productImages = getSafeImageList(liveProduct.product.images);
 
     // Create order + update soldCount in transaction
     const [order] = await prisma.$transaction([
@@ -57,7 +59,7 @@ export async function POST(
               name: liveProduct.product.name,
               price: unitPrice,
               quantity: qty,
-              image: (liveProduct.product.images as string[])?.[0] || null,
+              image: productImages[0] || null,
               liveStreamId: streamId,
             },
           ],

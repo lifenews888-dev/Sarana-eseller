@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { ok } from '@/lib/api-envelope';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET /api/social/trending — top liked posts in last 24h
 export async function GET() {
@@ -27,5 +28,13 @@ export async function GET() {
   // Sort by likes count
   const sorted = posts.sort((a, b) => b._count.likes - a._count.likes);
 
-  return ok({ posts: sorted });
+  return ok({
+    posts: sorted.map((post) => ({
+      ...post,
+      products: post.products.map((linked) => ({
+        ...linked,
+        product: linked.product ? { ...linked.product, images: getSafeImageList(linked.product.images) } : null,
+      })),
+    })),
+  });
 }
