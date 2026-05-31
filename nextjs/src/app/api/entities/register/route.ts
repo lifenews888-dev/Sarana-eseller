@@ -1,6 +1,21 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth, signToken } from '@/lib/api-auth';
+import { isValidPublicImageUrl } from '@/lib/image-url';
+
+function normalizeSlug(value: unknown): string {
+  if (typeof value !== 'string') return '';
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
+}
+
+function publicImageOrNull(value: unknown): string | null {
+  return isValidPublicImageUrl(value) ? value : null;
+}
 
 // POST /api/entities/register
 // Auto-upsert the selected seller entity for the current user and refresh auth
@@ -27,14 +42,30 @@ export async function POST(req: NextRequest) {
     coverImage,
   } = body;
 
-  if (!entityType || !name || !slug) return errorJson('entityType, name, slug шаардлагатай');
+  if (!entityType || !name) return errorJson('entityType, name шаардлагатай');
+
+  const safeSlug = normalizeSlug(slug) || normalizeSlug(name) || `seller-${auth.id.slice(-8).toLowerCase()}`;
+  const safeLogo = publicImageOrNull(logo);
+  const safeCoverImage = publicImageOrNull(coverImage);
 
   try {
-    const slugExistsInShops = await prisma.shop.findFirst({
-      where: { slug, NOT: { userId: auth.id } },
-      select: { id: true },
-    });
-    if (slugExistsInShops) return errorJson('Энэ slug аль хэдийн бүртгэлтэй байна');
+    const [slugExistsInShops, slugExistsInAgents, slugExistsInCompanies, slugExistsInAutoDealers, slugExistsInServices] =
+      await Promise.all([
+        prisma.shop.findFirst({
+          where: {
+            NOT: { userId: auth.id },
+            OR: [{ slug: safeSlug }, { storefrontSlug: safeSlug }],
+          },
+          select: { id: true },
+        }),
+        prisma.agent.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
+        prisma.company.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
+        prisma.autoDealer.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
+        prisma.serviceProvider.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
+      ]);
+    if (slugExistsInShops || slugExistsInAgents || slugExistsInCompanies || slugExistsInAutoDealers || slugExistsInServices) {
+      return errorJson('Энэ slug аль хэдийн бүртгэлтэй байна');
+    }
 
     let entity;
 
@@ -54,8 +85,9 @@ export async function POST(req: NextRequest) {
           create: {
             userId: auth.id,
             name,
-            slug,
-            logo: logo || null,
+            slug: safeSlug,
+            storefrontSlug: safeSlug,
+            logo: safeLogo,
             phone,
             address,
             district,
@@ -64,8 +96,9 @@ export async function POST(req: NextRequest) {
           },
           update: {
             name,
-            slug,
-            logo: logo || undefined,
+            slug: safeSlug,
+            storefrontSlug: safeSlug,
+            logo: logo === undefined ? undefined : safeLogo,
             phone: phone || undefined,
             address: address || undefined,
             district: district || undefined,
@@ -82,28 +115,28 @@ export async function POST(req: NextRequest) {
               where: { id: existing.id },
               data: {
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 bio: description,
                 licenseNumber,
-                profilePhoto: logo || undefined,
-                coverImage: coverImage || undefined,
+                profilePhoto: logo === undefined ? undefined : safeLogo,
+                coverImage: coverImage === undefined ? undefined : safeCoverImage,
               },
             })
           : await prisma.agent.create({
               data: {
                 userId: auth.id,
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 bio: description,
                 licenseNumber,
-                profilePhoto: logo || null,
-                coverImage: coverImage || null,
+                profilePhoto: safeLogo,
+                coverImage: safeCoverImage,
                 isVerified: false,
               },
             });
@@ -118,14 +151,14 @@ export async function POST(req: NextRequest) {
               where: { id: existing.id },
               data: {
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 description,
                 licenseNumber: regNumber,
-                logo: logo || undefined,
-                coverImage: coverImage || undefined,
+                logo: logo === undefined ? undefined : safeLogo,
+                coverImage: coverImage === undefined ? undefined : safeCoverImage,
                 socialLinks,
               },
             })
@@ -133,14 +166,14 @@ export async function POST(req: NextRequest) {
               data: {
                 userId: auth.id,
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 description,
                 licenseNumber: regNumber,
-                logo: logo || null,
-                coverImage: coverImage || null,
+                logo: safeLogo,
+                coverImage: safeCoverImage,
                 socialLinks,
                 isVerified: false,
               },
@@ -154,26 +187,26 @@ export async function POST(req: NextRequest) {
               where: { id: existing.id },
               data: {
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 description,
-                logo: logo || undefined,
-                coverImage: coverImage || undefined,
+                logo: logo === undefined ? undefined : safeLogo,
+                coverImage: coverImage === undefined ? undefined : safeCoverImage,
               },
             })
           : await prisma.autoDealer.create({
               data: {
                 userId: auth.id,
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 description,
-                logo: logo || null,
-                coverImage: coverImage || null,
+                logo: safeLogo,
+                coverImage: safeCoverImage,
                 isVerified: false,
               },
             });
@@ -186,26 +219,26 @@ export async function POST(req: NextRequest) {
               where: { id: existing.id },
               data: {
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 description,
-                logo: logo || undefined,
-                coverImage: coverImage || undefined,
+                logo: logo === undefined ? undefined : safeLogo,
+                coverImage: coverImage === undefined ? undefined : safeCoverImage,
               },
             })
           : await prisma.serviceProvider.create({
               data: {
                 userId: auth.id,
                 name,
-                slug,
+                slug: safeSlug,
                 phone,
                 address,
                 district,
                 description,
-                logo: logo || null,
-                coverImage: coverImage || null,
+                logo: safeLogo,
+                coverImage: safeCoverImage,
                 isVerified: false,
               },
             });
@@ -215,7 +248,7 @@ export async function POST(req: NextRequest) {
         return errorJson('Буруу entityType: ' + entityType);
     }
 
-    const username = slug || `seller-${auth.id.slice(-8)}`;
+    const username = safeSlug;
     const updatedUser = await prisma.user.update({
       where: { id: auth.id },
       data: { role: 'seller', entityType, username },

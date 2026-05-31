@@ -76,6 +76,15 @@ const ENTITY_DEFS: Record<EntityType, {
 const STEPS = ['Төрөл сонгох', 'Үндсэн мэдээлэл', 'Баталгаажуулалт', 'Профайл тохируулах', 'Үнийн төлөвлөгөө'];
 const DISTRICTS = ['СБД', 'ЧД', 'БЗД', 'ХУД', 'СХД', 'БГД', 'НД', 'Хан-Уул', 'Налайх', 'Багануур'];
 
+function toSellerSlug(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 48);
+}
+
 const PLANS: Record<string, { name: string; price: string; priceNum: number; features: string[]; Icon: React.ElementType; color: string; popular?: boolean }> = {
   free:     { name: 'Үнэгүй', price: '0₮/сар', priceNum: 0, Icon: Zap, color: '#10B981', features: ['10 бараа хүртэл', 'Үндсэн аналитик', 'Стандарт дэмжлэг'] },
   pro:      { name: 'Pro', price: '29,900₮/сар', priceNum: 29900, Icon: Star, color: '#3B82F6', popular: true, features: ['Хязгааргүй бараа', 'Дэлгэрэнгүй аналитик', 'Хямдрал & купон', 'Тэргүүлэх дэмжлэг', 'Custom domain'] },
@@ -114,13 +123,13 @@ export default function BecomeSellerPage() {
   const updateForm = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
 
   const handleNameChange = (name: string) => {
-    const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').slice(0, 40);
-    setForm(prev => ({ ...prev, name, slug }));
+    const generatedSlug = toSellerSlug(name);
+    setForm(prev => ({ ...prev, name, slug: generatedSlug || prev.slug || `seller-${Date.now().toString(36).slice(-6)}` }));
   };
 
   const canNext = () => {
     if (step === 0) return !!entityType;
-    if (step === 1) return form.name.length >= 2 && form.phone.length >= 4;
+    if (step === 1) return form.name.length >= 2 && form.phone.length >= 4 && form.slug.length >= 3;
     return true;
   };
 
@@ -247,7 +256,7 @@ export default function BecomeSellerPage() {
                   <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Slug (URL)</label>
                   <div className="flex">
                     <span className="px-4 py-3 bg-[var(--esl-bg-elevated)] border border-r-0 border-[var(--esl-border)] rounded-l-xl text-xs text-[var(--esl-text-muted)]">eseller.mn/</span>
-                    <input type="text" value={form.slug} onChange={(e) => updateForm('slug', e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    <input type="text" value={form.slug} onChange={(e) => updateForm('slug', toSellerSlug(e.target.value))}
                       className="flex-1 px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-r-xl text-sm font-mono text-white outline-none focus:border-[#E8242C]" />
                   </div>
                 </div>
