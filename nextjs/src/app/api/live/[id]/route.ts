@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { getSafeImageList } from '@/lib/image-url';
 
 // GET /api/live/[id] — stream detail
 export async function GET(
@@ -35,7 +36,13 @@ export async function GET(
 
     if (!stream) return errorJson('Live олдсонгүй', 404);
 
-    return json(stream);
+    return json({
+      ...stream,
+      products: stream.products.map((linked) => ({
+        ...linked,
+        product: linked.product ? { ...linked.product, images: getSafeImageList(linked.product.images) } : null,
+      })),
+    });
   } catch (e: unknown) {
     return errorJson((e as Error).message, 500);
   }
