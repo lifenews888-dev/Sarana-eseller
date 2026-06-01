@@ -327,9 +327,8 @@ export default function LoginPage() {
                 Google-ээр нэвтрэх
               </a>
 
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
-                href="/api/auth/dan"
+                href={buildAuthHref('/api/auth/dan', {}, redirectTarget)}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-base text-white border-none cursor-pointer transition-all hover:opacity-90 no-underline mt-3"
                 style={{ background: '#2563EB' }}
               >
@@ -474,9 +473,8 @@ export default function LoginPage() {
                 Google-ээр бүртгүүлэх
               </a>
 
-              {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
               <a
-                href="/api/auth/dan"
+                href={buildAuthHref('/api/auth/dan', {}, redirectTarget)}
                 className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-bold text-base text-white border-none cursor-pointer transition-all hover:opacity-90 no-underline mt-3"
                 style={{ background: '#2563EB' }}
               >

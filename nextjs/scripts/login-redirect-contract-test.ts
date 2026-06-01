@@ -19,6 +19,8 @@ const loginPage = path.join(process.cwd(), 'src', 'app', 'login', 'page.tsx');
 const registerPage = path.join(process.cwd(), 'src', 'app', 'register', 'page.tsx');
 const googleRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'google', 'route.ts');
 const googleCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'google', 'callback', 'route.ts');
+const danRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'route.ts');
+const danCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'callback', 'route.ts');
 
 function read(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -41,6 +43,8 @@ function main() {
   const registerSource = read(registerPage);
   const googleSource = read(googleRoute);
   const callbackSource = read(googleCallback);
+  const danSource = read(danRoute);
+  const danCallbackSource = read(danCallback);
 
   const checks: Check[] = [
     {
@@ -88,6 +92,12 @@ function main() {
       detail: 'OAuth login/register buttons carry redirect',
     },
     {
+      label: 'dan links preserve redirect',
+      ok: loginSource.includes("buildAuthHref('/api/auth/dan', {}, redirectTarget)") &&
+        !loginSource.includes('href="/api/auth/dan"'),
+      detail: 'DAN login/register buttons carry redirect',
+    },
+    {
       label: 'google start uses safe helper',
       ok: googleSource.includes('safeRelativeRedirect('),
       detail: 'OAuth redirect cookie is sanitized',
@@ -101,6 +111,28 @@ function main() {
       label: 'google callback preserves redirect',
       ok: callbackSource.includes("redirectUrl.searchParams.set('redirect', redirectTarget)"),
       detail: 'login hash handler receives the original internal target',
+    },
+    {
+      label: 'dan start uses safe helper',
+      ok: danSource.includes('safeRelativeRedirect(') &&
+        danSource.includes('dan_oauth_redirect') &&
+        danSource.includes('dan_oauth_state'),
+      detail: 'DAN OAuth redirect cookie is sanitized',
+    },
+    {
+      label: 'dan callback preserves redirect',
+      ok: danCallbackSource.includes('safeRelativeRedirect(') &&
+        danCallbackSource.includes("new URL(redirectTarget || '/dashboard', request.url)") &&
+        danCallbackSource.includes('dan_invalid_state'),
+      detail: 'DAN callback returns to the original internal target',
+    },
+    {
+      label: 'dan user create contract',
+      ok: danCallbackSource.includes('getDanFallbackEmail') &&
+        danCallbackSource.includes('password: hashedPassword') &&
+        danCallbackSource.includes("role: 'buyer'") &&
+        !danCallbackSource.includes('as any'),
+      detail: 'DAN-created users satisfy the Prisma user contract',
     },
   ];
 
