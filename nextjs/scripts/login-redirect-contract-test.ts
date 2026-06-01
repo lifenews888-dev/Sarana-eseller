@@ -22,6 +22,7 @@ const googleCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'go
 const danRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'route.ts');
 const danCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'callback', 'route.ts');
 const logoutRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'logout', 'route.ts');
+const middlewareRoute = path.join(process.cwd(), 'src', 'middleware.ts');
 
 function read(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -47,6 +48,16 @@ function main() {
   const danSource = read(danRoute);
   const danCallbackSource = read(danCallback);
   const logoutSource = read(logoutRoute);
+  const middlewareSource = read(middlewareRoute);
+  const authSessionCookieNames = [
+    'auth-token',
+    'token',
+    'dan_user_id',
+    'dan_oauth_state',
+    'dan_oauth_redirect',
+    'google_oauth_state',
+    'google_oauth_redirect',
+  ];
 
   const checks: Check[] = [
     {
@@ -145,16 +156,15 @@ function main() {
     },
     {
       label: 'logout clears auth cookies',
-      ok: [
-        'auth-token',
-        'token',
-        'dan_user_id',
-        'dan_oauth_state',
-        'dan_oauth_redirect',
-        'google_oauth_state',
-        'google_oauth_redirect',
-      ].every((cookieName) => logoutSource.includes(`res.cookies.delete('${cookieName}')`)),
+      ok: authSessionCookieNames.every((cookieName) => logoutSource.includes(`res.cookies.delete('${cookieName}')`)),
       detail: 'logout clears JWT, legacy, DAN, and OAuth transient cookies',
+    },
+    {
+      label: 'middleware clears invalid session',
+      ok: authSessionCookieNames.every((cookieName) => middlewareSource.includes(`'${cookieName}'`)) &&
+        middlewareSource.includes('AUTH_SESSION_COOKIES.forEach') &&
+        middlewareSource.includes('res.cookies.delete(cookieName)'),
+      detail: 'expired dashboard sessions clear JWT, legacy, DAN, and OAuth transient cookies',
     },
   ];
 

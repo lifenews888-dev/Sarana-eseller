@@ -10,6 +10,16 @@ const JWT_SECRET_BYTES = new TextEncoder().encode(
   process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026',
 );
 
+const AUTH_SESSION_COOKIES = [
+  'auth-token',
+  'token',
+  'dan_user_id',
+  'dan_oauth_state',
+  'dan_oauth_redirect',
+  'google_oauth_state',
+  'google_oauth_redirect',
+] as const;
+
 // Role → allowed dashboard path prefix. Checked in order; first match wins.
 // `/dashboard` and `/dashboard/orders|wishlist|addresses|settings|chat` are
 // shared space for any authenticated user and don't appear here.
@@ -125,7 +135,7 @@ export async function middleware(req: NextRequest) {
       role = String(payload.role || '').toLowerCase();
     } catch {
       const res = NextResponse.redirect(loginUrl);
-      res.cookies.delete('auth-token');
+      AUTH_SESSION_COOKIES.forEach((cookieName) => res.cookies.delete(cookieName));
       return res;
     }
 

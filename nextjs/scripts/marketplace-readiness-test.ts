@@ -33,6 +33,7 @@ const scopedLintFiles = [
   'scripts/seller-owner-contract-test.ts',
   'scripts/store-dashboard-readiness-test.ts',
   'scripts/test-image-url.ts',
+  'src/middleware.ts',
   'src/lib/image-url.ts',
   'src/lib/product-visibility.ts',
   'src/app/api/auth/dan/route.ts',
