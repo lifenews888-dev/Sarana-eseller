@@ -112,7 +112,7 @@ export default function CheckoutPage() {
   // Auth guard
   useEffect(() => {
     if (mounted && !isLoggedIn) {
-      router.replace('/login');
+      router.replace('/login?redirect=/checkout');
     }
   }, [mounted, isLoggedIn, router]);
 

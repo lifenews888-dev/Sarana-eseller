@@ -27,7 +27,7 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
     if (!isLoggedIn) {
       sessionStorage.setItem('sarana_redirect', '/checkout');
       toast.show('Захиалахын тулд нэвтэрнэ үү', 'warn');
-      setTimeout(() => router.push('/login'), 900);
+      setTimeout(() => router.push('/login?redirect=/checkout'), 900);
       return;
     }
     onClose();

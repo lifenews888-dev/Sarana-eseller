@@ -24,6 +24,8 @@ const danCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan',
 const logoutRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'logout', 'route.ts');
 const middlewareRoute = path.join(process.cwd(), 'src', 'middleware.ts');
 const startSellingButton = path.join(process.cwd(), 'src', 'components', 'product', 'StartSellingButton.tsx');
+const cartDrawer = path.join(process.cwd(), 'src', 'components', 'store', 'CartDrawer.tsx');
+const checkoutPage = path.join(process.cwd(), 'src', 'app', 'checkout', 'page.tsx');
 
 function read(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -51,6 +53,8 @@ function main() {
   const logoutSource = read(logoutRoute);
   const middlewareSource = read(middlewareRoute);
   const startSellingSource = read(startSellingButton);
+  const cartDrawerSource = read(cartDrawer);
+  const checkoutSource = read(checkoutPage);
   const authSessionCookieNames = [
     'auth-token',
     'token',
@@ -178,6 +182,12 @@ function main() {
       ok: startSellingSource.includes('const returnTo = `/product/${productId}`') &&
         startSellingSource.includes('router.push(`/login?redirect=${encodeURIComponent(returnTo)}`)'),
       detail: 'affiliate start login returns to the product detail page',
+    },
+    {
+      label: 'checkout login preserves checkout',
+      ok: cartDrawerSource.includes("router.push('/login?redirect=/checkout')") &&
+        checkoutSource.includes("router.replace('/login?redirect=/checkout')"),
+      detail: 'cart and checkout auth guards return users to checkout',
     },
   ];
 
