@@ -23,6 +23,7 @@ const danRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'r
 const danCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'callback', 'route.ts');
 const logoutRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'logout', 'route.ts');
 const middlewareRoute = path.join(process.cwd(), 'src', 'middleware.ts');
+const startSellingButton = path.join(process.cwd(), 'src', 'components', 'product', 'StartSellingButton.tsx');
 
 function read(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -49,6 +50,7 @@ function main() {
   const danCallbackSource = read(danCallback);
   const logoutSource = read(logoutRoute);
   const middlewareSource = read(middlewareRoute);
+  const startSellingSource = read(startSellingButton);
   const authSessionCookieNames = [
     'auth-token',
     'token',
@@ -170,6 +172,12 @@ function main() {
       label: 'middleware preserves dashboard query',
       ok: middlewareSource.includes("loginUrl.searchParams.set('redirect', `${pathname}${req.nextUrl.search}`)"),
       detail: 'dashboard auth redirects keep tabs and filters after login',
+    },
+    {
+      label: 'start selling preserves product',
+      ok: startSellingSource.includes('const returnTo = `/product/${productId}`') &&
+        startSellingSource.includes('router.push(`/login?redirect=${encodeURIComponent(returnTo)}`)'),
+      detail: 'affiliate start login returns to the product detail page',
     },
   ];
 
