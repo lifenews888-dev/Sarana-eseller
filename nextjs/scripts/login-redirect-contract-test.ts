@@ -21,6 +21,7 @@ const googleRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'googl
 const googleCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'google', 'callback', 'route.ts');
 const danRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'route.ts');
 const danCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'callback', 'route.ts');
+const logoutRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'logout', 'route.ts');
 
 function read(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -45,6 +46,7 @@ function main() {
   const callbackSource = read(googleCallback);
   const danSource = read(danRoute);
   const danCallbackSource = read(danCallback);
+  const logoutSource = read(logoutRoute);
 
   const checks: Check[] = [
     {
@@ -140,6 +142,19 @@ function main() {
         danCallbackSource.includes("redirectUrl.hash = `google_auth=") &&
         danCallbackSource.includes("response.cookies.set('auth-token', token"),
       detail: 'DAN callback hands a JWT to the client and middleware',
+    },
+    {
+      label: 'logout clears auth cookies',
+      ok: [
+        'auth-token',
+        'token',
+        'dan_user_id',
+        'dan_oauth_state',
+        'dan_oauth_redirect',
+        'google_oauth_state',
+        'google_oauth_redirect',
+      ].every((cookieName) => logoutSource.includes(`res.cookies.delete('${cookieName}')`)),
+      detail: 'logout clears JWT, legacy, DAN, and OAuth transient cookies',
     },
   ];
 

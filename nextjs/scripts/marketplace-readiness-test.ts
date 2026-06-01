@@ -37,6 +37,7 @@ const scopedLintFiles = [
   'src/lib/product-visibility.ts',
   'src/app/api/auth/dan/route.ts',
   'src/app/api/auth/dan/callback/route.ts',
+  'src/app/api/auth/logout/route.ts',
   'src/app/feed/FeedPageClient.tsx',
   'src/app/api/marketplace/route.ts',
   'src/app/api/health/route.ts',

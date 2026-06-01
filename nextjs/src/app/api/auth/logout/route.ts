@@ -7,5 +7,11 @@ import { ok } from '@/lib/api-envelope';
 export async function POST() {
   const res = ok({ ok: true });
   res.cookies.delete('auth-token');
+  res.cookies.delete('token');
+  res.cookies.delete('dan_user_id');
+  res.cookies.delete('dan_oauth_state');
+  res.cookies.delete('dan_oauth_redirect');
+  res.cookies.delete('google_oauth_state');
+  res.cookies.delete('google_oauth_redirect');
   return res;
 }
