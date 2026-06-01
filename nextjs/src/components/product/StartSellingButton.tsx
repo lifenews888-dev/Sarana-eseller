@@ -22,9 +22,10 @@ export default function StartSellingButton({ productId, productName, commission,
 
   const handleClick = async () => {
     if (!isLoggedIn) {
-      sessionStorage.setItem('sarana_redirect', `/product/${productId}`);
+      const returnTo = `/product/${productId}`;
+      sessionStorage.setItem('sarana_redirect', returnTo);
       toast.show('Борлуулагч болохын тулд нэвтэрнэ үү', 'warn');
-      router.push('/login');
+      router.push(`/login?redirect=${encodeURIComponent(returnTo)}`);
       return;
     }
 
