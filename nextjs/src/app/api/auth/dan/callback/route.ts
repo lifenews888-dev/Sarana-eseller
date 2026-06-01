@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { exchangeCode, getUserInfo } from '@/lib/dan';
 import { safeRelativeRedirect } from '@/lib/safe-redirect';
 import crypto from 'crypto';
+import jwt from 'jsonwebtoken';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
 
 function getDanFallbackEmail(registerNumber: string, phone: string): string {
   const stableId = (registerNumber || phone).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -69,16 +72,38 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // In production, create a session/JWT here
-    // For now, redirect with userId
-    const dashboardUrl = new URL(redirectTarget || '/dashboard', request.url);
-    dashboardUrl.searchParams.set('userId', user.id);
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role, name: user.name, entityType: user.entityType },
+      JWT_SECRET,
+      { expiresIn: '30d' },
+    );
 
-    const response = NextResponse.redirect(dashboardUrl);
+    const userData = {
+      _id: user.id,
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      username: user.username,
+      avatar: user.avatar,
+      entityType: user.entityType,
+    };
+
+    const redirectUrl = new URL('/login', request.url);
+    if (redirectTarget) redirectUrl.searchParams.set('redirect', redirectTarget);
+    redirectUrl.hash = `google_auth=${encodeURIComponent(JSON.stringify({ token, user: userData }))}`;
+
+    const response = NextResponse.redirect(redirectUrl);
     response.cookies.delete('dan_oauth_state');
     response.cookies.delete('dan_oauth_redirect');
 
-    // Set a basic auth cookie (replace with proper JWT in production)
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 30 * 24 * 60 * 60,
+      path: '/',
+    });
     response.cookies.set('dan_user_id', user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
