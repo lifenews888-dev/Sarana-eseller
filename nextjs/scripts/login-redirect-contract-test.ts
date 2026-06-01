@@ -122,9 +122,9 @@ function main() {
     {
       label: 'dan callback preserves redirect',
       ok: danCallbackSource.includes('safeRelativeRedirect(') &&
-        danCallbackSource.includes("new URL(redirectTarget || '/dashboard', request.url)") &&
+        danCallbackSource.includes("redirectUrl.searchParams.set('redirect', redirectTarget)") &&
         danCallbackSource.includes('dan_invalid_state'),
-      detail: 'DAN callback returns to the original internal target',
+      detail: 'DAN callback returns login hash handler to the original internal target',
     },
     {
       label: 'dan user create contract',
@@ -133,6 +133,13 @@ function main() {
         danCallbackSource.includes("role: 'buyer'") &&
         !danCallbackSource.includes('as any'),
       detail: 'DAN-created users satisfy the Prisma user contract',
+    },
+    {
+      label: 'dan callback issues session',
+      ok: danCallbackSource.includes('jwt.sign(') &&
+        danCallbackSource.includes("redirectUrl.hash = `google_auth=") &&
+        danCallbackSource.includes("response.cookies.set('auth-token', token"),
+      detail: 'DAN callback hands a JWT to the client and middleware',
     },
   ];
 
