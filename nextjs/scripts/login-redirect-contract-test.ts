@@ -16,6 +16,7 @@ type Check = {
 };
 
 const loginPage = path.join(process.cwd(), 'src', 'app', 'login', 'page.tsx');
+const registerPage = path.join(process.cwd(), 'src', 'app', 'register', 'page.tsx');
 const googleRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'google', 'route.ts');
 const googleCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'google', 'callback', 'route.ts');
 
@@ -37,6 +38,7 @@ const redirectCases = [
 
 function main() {
   const loginSource = read(loginPage);
+  const registerSource = read(registerPage);
   const googleSource = read(googleRoute);
   const callbackSource = read(googleCallback);
 
@@ -71,6 +73,13 @@ function main() {
       ok: loginSource.includes('const data = await AuthAPI.register') &&
         loginSource.includes('router.push(getRedirectTarget(data.user.role))'),
       detail: 'new account registration preserves /become-seller target',
+    },
+    {
+      label: 'register alias redirect',
+      ok: registerSource.includes('safeRelativeRedirect') &&
+        registerSource.includes("readParam(params.redirect) || readParam(params.next)") &&
+        registerSource.includes('redirect(`/login${query}#register`)'),
+      detail: '/register preserves redirect targets and opens register tab',
     },
     {
       label: 'google links preserve redirect',
