@@ -123,7 +123,7 @@ export async function middleware(req: NextRequest) {
     const token = req.cookies.get('auth-token')?.value;
     const loginUrl = req.nextUrl.clone();
     loginUrl.pathname = '/login';
-    loginUrl.searchParams.set('redirect', pathname);
+    loginUrl.searchParams.set('redirect', `${pathname}${req.nextUrl.search}`);
 
     if (!token) {
       return NextResponse.redirect(loginUrl);
