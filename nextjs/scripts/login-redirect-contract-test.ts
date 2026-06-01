@@ -166,6 +166,11 @@ function main() {
         middlewareSource.includes('res.cookies.delete(cookieName)'),
       detail: 'expired dashboard sessions clear JWT, legacy, DAN, and OAuth transient cookies',
     },
+    {
+      label: 'middleware preserves dashboard query',
+      ok: middlewareSource.includes("loginUrl.searchParams.set('redirect', `${pathname}${req.nextUrl.search}`)"),
+      detail: 'dashboard auth redirects keep tabs and filters after login',
+    },
   ];
 
   console.log('\n══════════════════════════════');
