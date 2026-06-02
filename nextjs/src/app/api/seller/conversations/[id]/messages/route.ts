@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -60,6 +61,9 @@ export async function POST(req: NextRequest, ctx: Ctx) {
     const body = await req.json();
     if (!body.text?.trim() && !body.imageUrl) {
       return errorJson('Мессеж хоосон байна', 400);
+    }
+    if (body.imageUrl && !isValidPublicImageUrl(body.imageUrl)) {
+      return errorJson('imageUrl must be a public URL', 400);
     }
 
     const message = await prisma.message.create({

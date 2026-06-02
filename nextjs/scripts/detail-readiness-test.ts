@@ -394,6 +394,27 @@ async function main() {
   results.push(checkSourceContract('src/app/api/admin/banners/route.ts', 'banner write safe image path', [
     'isValidPublicImageUrl(imageUrl)',
   ]));
+  results.push(checkSourceContract('src/app/api/feed/[id]/route.ts', 'feed update safe media path', [
+    'sanitizeImageUrls(hasField(body, \'images\')',
+    'sanitizeImageUrls([hasField(body, \'videoUrl\')',
+    'sanitizeImageUrls([hasField(body, \'virtualTourUrl\')',
+    'sanitizeImageUrls([hasField(body, \'floorPlanUrl\')',
+  ]));
+  results.push(checkSourceContract('src/app/api/admin/banners/[id]/route.ts', 'banner update safe image path', [
+    'isValidPublicImageUrl(body.imageUrl)',
+  ]));
+  results.push(checkSourceContract('src/app/api/products/[id]/addons/route.ts', 'addon write safe image path', [
+    'isValidPublicImageUrl(image)',
+  ]));
+  results.push(checkSourceContract('src/app/api/products/[id]/addons/[addonId]/route.ts', 'addon update safe image path', [
+    'isValidPublicImageUrl(body.image)',
+  ]));
+  results.push(checkSourceContract('src/app/api/chat/conversations/[id]/messages/route.ts', 'chat write safe image path', [
+    'isValidPublicImageUrl(imageUrl)',
+  ]));
+  results.push(checkSourceContract('src/app/api/seller/conversations/[id]/messages/route.ts', 'seller chat write safe image path', [
+    'isValidPublicImageUrl(body.imageUrl)',
+  ]));
 
   for (const result of results) {
     console.log(`${result.ok ? '✅' : '❌'} ${result.label.padEnd(42)} ${result.detail || ''}`);
