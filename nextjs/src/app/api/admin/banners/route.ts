@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth } from '@/lib/api-auth';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 
 // GET /api/admin/banners?status=&slot=&search=&page=1&limit=10
 export async function GET(req: NextRequest) {
@@ -49,6 +50,9 @@ export async function POST(req: NextRequest) {
     const { title, slot, imageUrl, linkUrl, startsAt, endsAt, ...rest } = body;
     if (!title || !slot || !imageUrl || !linkUrl || !startsAt || !endsAt) {
       return errorJson('title, slot, imageUrl, linkUrl, startsAt, endsAt шаардлагатай');
+    }
+    if (!isValidPublicImageUrl(imageUrl)) {
+      return errorJson('imageUrl must be a public URL', 400);
     }
 
     // Auto refId: BNR-YYMM-XXXX

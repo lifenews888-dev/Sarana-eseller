@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser } from '@/lib/api-auth';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 // GET /api/reviews?productId=xxx
 export async function GET(req: NextRequest) {
@@ -32,7 +33,7 @@ export async function POST(req: NextRequest) {
   if (orderId) { const order = await prisma.order.findFirst({ where: { id: orderId, userId: user.id, status: 'delivered' } }); isVerified = !!order; }
 
   const review = await prisma.review.create({
-    data: { productId, buyerId: user.id, buyerName: user.name, orderId, rating, title, comment, images, isVerified, status: 'APPROVED' },
+    data: { productId, buyerId: user.id, buyerName: user.name, orderId, rating, title, comment, images: sanitizeImageUrls(images), isVerified, status: 'APPROVED' },
   });
 
   // Update product rating
