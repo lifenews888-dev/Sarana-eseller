@@ -163,9 +163,9 @@ async function getHomeData() {
     const configMap = new Map(configs.map((c) => [c.key, c.value]));
     const stats = {
       useRealData: configMap.get('stats_use_real') === 'true',
-      products: configMap.get('stats_products') || 'Шинэ бараа',
-      shops: configMap.get('stats_shops') || '500+',
-      users: configMap.get('stats_users') || '50,000+',
+      products: configMap.get('stats_products') || '8+',
+      shops: configMap.get('stats_shops') || '11+',
+      users: configMap.get('stats_users') || '99+',
     };
 
     // If real data requested, count from DB

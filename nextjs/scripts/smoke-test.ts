@@ -120,7 +120,9 @@ async function testPublicCopyRoutes(): Promise<number> {
 
 function testHomepageStatsSourceGuardrails(): number {
   const guardedFiles = [
+    'src/app/page.tsx',
     'src/app/api/homepage/config/route.ts',
+    'src/app/api/admin/site-settings/route.ts',
     'src/app/dashboard/admin/homepage/page.tsx',
   ];
   const forbidden = ['10,000+', '500+', '50,000+'];

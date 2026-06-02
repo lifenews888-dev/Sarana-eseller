@@ -28,8 +28,8 @@ const DEFAULT_SETTINGS: SiteSettings = {
     isVisible: true,
   },
   statsBar: [
-    { icon: '🚚', number: '50,000+', label: 'Хүргэлт хийгдсэн' },
-    { icon: '🏪', number: '500+', label: 'Дэлгүүр' },
+    { icon: '🚚', number: '0+', label: 'Хүргэлт хийгдсэн' },
+    { icon: '🏪', number: '11+', label: 'Дэлгүүр' },
     { icon: '⭐', number: '4.8', label: 'Үнэлгээ' },
   ],
   footerColumns: [
@@ -38,7 +38,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
     { title: 'Тусламж', links: [{ label: 'Буцаалт', href: '/returns' }, { label: 'Хүргэлт', href: '/delivery' }] },
     { title: 'Хууль', links: [{ label: 'Үйлчилгээний нөхцөл', href: '/terms' }, { label: 'Нууцлал', href: '/privacy' }] },
   ],
-  paymentIcons: { qpay: true, visa: true, mastercard: true, socialpay: true },
+  paymentIcons: { qpay: true, visa: false, mastercard: false, socialpay: false },
   copyrightText: `© ${new Date().getFullYear()} eseller.mn — Борлуулагчтай л борлуулалт байна`,
   loginPage: {
     heroTitle: 'Борлуулагчтай л\nборлуулалт байна.',
