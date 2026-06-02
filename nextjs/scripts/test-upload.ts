@@ -1,47 +1,78 @@
 /**
- * eseller.mn — Vercel Blob Upload Test
- * Usage: npx tsx scripts/test-upload.ts
+ * eseller.mn - Vercel Blob upload smoke.
+ *
+ * Default behavior is safe for CI/local readiness: skip when
+ * BLOB_READ_WRITE_TOKEN is not available. Set UPLOAD_SMOKE_REQUIRED=1
+ * in an ops smoke environment to make missing storage config fail.
  */
 
 import 'dotenv/config';
-import { put, del } from '@vercel/blob';
+import { del, put } from '@vercel/blob';
+import { isValidPublicImageUrl } from '../src/lib/image-url';
+
+const REQUIRED = process.env.UPLOAD_SMOKE_REQUIRED === '1';
+const TOKEN_PRESENT = Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+const PNG_BYTES = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAH+QL/hc2rNAAAAABJRU5ErkJggg==',
+  'base64'
+);
+
+function fail(message: string): never {
+  console.error(`FAIL ${message}`);
+  process.exit(1);
+}
+
+function skip(message: string): never {
+  console.log(`SKIP ${message}`);
+  process.exit(0);
+}
 
 async function main() {
-  console.log('\n🧪 Vercel Blob upload тест...\n');
+  console.log('\neseller.mn upload smoke');
+  console.log('------------------------');
 
-  // Create a tiny 1x1 red PNG (68 bytes)
-  const pngBytes = Buffer.from(
-    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAH+QL/hc2rNAAAAABJRU5ErkJggg==',
-    'base64'
-  );
+  if (!TOKEN_PRESENT) {
+    if (REQUIRED) fail('BLOB_READ_WRITE_TOKEN is required for upload smoke');
+    skip('BLOB_READ_WRITE_TOKEN is not set; set UPLOAD_SMOKE_REQUIRED=1 for ops gating');
+  }
 
-  const filename = `test/upload-test-${Date.now()}.png`;
+  const pathname = `test/eseller-upload-smoke-${Date.now()}.png`;
+  let uploadedUrl = '';
 
   try {
-    // 1. Upload
-    console.log('📤 Upload хийж байна...');
-    const blob = await put(filename, pngBytes, { access: 'public' });
-    console.log(`✅ Upload: ${blob.url}`);
-    console.log(`   Size: ${pngBytes.length} bytes`);
+    const blob = await put(pathname, PNG_BYTES, {
+      access: 'public',
+      contentType: 'image/png',
+    });
+    uploadedUrl = blob.url;
 
-    // 2. Verify fetch
-    console.log('\n🔍 URL шалгаж байна...');
-    const res = await fetch(blob.url);
-    console.log(`✅ Fetch: ${res.status} ${res.statusText} (${res.headers.get('content-length') || '?'} bytes)`);
+    if (!isValidPublicImageUrl(uploadedUrl)) {
+      fail(`Blob returned a non-public URL: ${uploadedUrl}`);
+    }
+    console.log(`OK upload returned public URL`);
 
-    // 3. Cleanup
-    console.log('\n🗑️ Устгаж байна...');
-    await del(blob.url);
-    console.log('✅ Delete: cleaned up');
+    const res = await fetch(uploadedUrl, { cache: 'no-store' });
+    if (!res.ok) fail(`uploaded URL fetch failed: ${res.status} ${res.statusText}`);
 
-    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Vercel Blob ажиллаж байна — production бэлэн!');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.toLowerCase().startsWith('image/png')) {
+      fail(`uploaded URL content-type is not image/png: ${contentType || '(missing)'}`);
+    }
+    console.log(`OK uploaded URL fetch ${res.status} ${contentType}`);
   } catch (error) {
-    console.error('❌ Алдаа:', (error as Error).message);
-    console.log('\n💡 BLOB_READ_WRITE_TOKEN .env.local-д байгаа эсэхийг шалгана уу');
-    process.exit(1);
+    fail((error as Error).message || 'upload smoke failed');
+  } finally {
+    if (uploadedUrl) {
+      try {
+        await del(uploadedUrl);
+        console.log('OK uploaded test blob deleted');
+      } catch (cleanupError) {
+        console.error(`WARN cleanup failed: ${(cleanupError as Error).message}`);
+      }
+    }
   }
+
+  console.log('OK upload smoke passed\n');
 }
 
 main();
