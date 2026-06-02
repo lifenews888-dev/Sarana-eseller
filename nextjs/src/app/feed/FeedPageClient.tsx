@@ -1029,9 +1029,10 @@ export default function FeedPageClient({
     && filtered.filter((item) => item.tier === 'featured' && item.entityType !== 'user').length === 0
     && filteredWithoutLocation.filter((item) => item.tier === 'featured' && item.entityType !== 'user').length > 0;
 
-  const vipCount = filtered.filter(i => i.tier === 'vip').length;
   const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
   const canRelaxLocationFilter = filtered.length === 0 && hasLocationFilter && filteredWithoutLocation.length > 0;
+  const visibleFeedItems = canRelaxLocationFilter ? filteredWithoutLocation : filtered;
+  const vipCount = visibleFeedItems.filter(i => i.tier === 'vip').length;
   const activeCategoryPath = activeCat === 'all' ? undefined : categoryPathInfo(activeCat);
   const activeCategoryChildren = activeCat === 'all' ? [] : categoryChildOptions(activeCat);
   const activeCategoryLabel = activeCategoryPath?.label || (activeCat === 'all' ? '' : marketplaceCategoryLabel(activeCat));
@@ -1337,19 +1338,32 @@ export default function FeedPageClient({
         {/* Result bar */}
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm text-[var(--esl-text-muted)]">
-            <span className="font-extrabold text-[var(--esl-text)]">{filtered.length}</span> зар олдлоо
+            <span className="font-extrabold text-[var(--esl-text)]">{visibleFeedItems.length}</span> зар олдлоо
             {vipCount > 0 && <span className="text-[#D4AF37] inline-flex items-center gap-1"> · <Crown className="w-3.5 h-3.5" /> {vipCount} ВИП</span>}
           </p>
         </div>
 
+        {canRelaxLocationFilter && (
+          <div className="mb-4 rounded-2xl border border-[#E8242C]/30 bg-[#E8242C]/10 px-4 py-3 text-sm text-[var(--esl-text-secondary)]">
+            Сонгосон байршилд зар олдсонгүй. Бүх байршлын <span className="font-bold text-[var(--esl-text)]">{filteredWithoutLocation.length}</span> зарыг харуулж байна.
+            <button
+              type="button"
+              onClick={() => applyFeedRouteFilters({ district: 'Бүгд', province: '' })}
+              className="ml-3 font-bold text-[#E8242C] underline underline-offset-4"
+            >
+              Байршлын шүүлтүүрийг авах
+            </button>
+          </div>
+        )}
+
         {/* Feed grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {filtered.map((item) => (
+          {visibleFeedItems.map((item) => (
             <FeedCard key={item.id} item={item} onClick={() => setSelectedId(item.id)} />
           ))}
         </div>
 
-        {filtered.length === 0 && (
+        {visibleFeedItems.length === 0 && (
           <div className="text-center py-16 px-6 rounded-2xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] max-w-xl mx-auto">
             <span className="text-5xl block mb-4">📋</span>
             <p className="text-lg font-bold text-[var(--esl-text)]">Энэ шүүлтүүрээр зар олдсонгүй</p>
