@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, CreditCard, Smartphone, Loader2, Check } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { X, Smartphone, Loader2, Check } from 'lucide-react';
 
 interface Props {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface Props {
   onSuccess?: (paymentId: string) => void;
 }
 
-type PayMethod = 'qpay' | 'card';
+type PayMethod = 'qpay';
 type PayStatus = 'idle' | 'creating' | 'pending' | 'success' | 'error';
 
 export function PaymentModal({ isOpen, onClose, amount, orderId, context, onSuccess }: Props) {
@@ -31,6 +31,33 @@ export function PaymentModal({ isOpen, onClose, amount, orderId, context, onSucc
       setInvoiceId('');
     }
   }, [isOpen]);
+
+  const checkPayment = useCallback(async () => {
+    if (!invoiceId) return;
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/payment/qpay/check/${encodeURIComponent(invoiceId)}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const body = await res.json();
+      // Envelope: { success: true, data: {paid, ...} } | { success: false, error }
+      // Legacy:    {paid, ...}
+      if (body?.success === false) return;
+      const data = body?.success === true ? body.data : body;
+      if (data?.paid) {
+        setStatus('success');
+        onSuccess?.(data.paymentId || orderId || '');
+        setTimeout(onClose, 2000);
+      }
+    } catch {}
+  }, [invoiceId, onClose, onSuccess, orderId]);
+
+  // Auto-check every 5s when pending
+  useEffect(() => {
+    if (status !== 'pending') return;
+    const interval = setInterval(checkPayment, 5000);
+    return () => clearInterval(interval);
+  }, [checkPayment, status]);
 
   if (!isOpen) return null;
 
@@ -61,33 +88,6 @@ export function PaymentModal({ isOpen, onClose, amount, orderId, context, onSucc
       setStatus('error');
     }
   };
-
-  const checkPayment = async () => {
-    if (!invoiceId) return;
-    try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`/api/payment/qpay/check/${encodeURIComponent(invoiceId)}`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      const body = await res.json();
-      // Envelope: { success: true, data: {paid, ...} } | { success: false, error }
-      // Legacy:    {paid, ...}
-      if (body?.success === false) return;
-      const data = body?.success === true ? body.data : body;
-      if (data?.paid) {
-        setStatus('success');
-        onSuccess?.(data.paymentId || orderId || '');
-        setTimeout(onClose, 2000);
-      }
-    } catch {}
-  };
-
-  // Auto-check every 5s when pending
-  useEffect(() => {
-    if (status !== 'pending') return;
-    const interval = setInterval(checkPayment, 5000);
-    return () => clearInterval(interval);
-  }, [status]);
 
   return (
     <div style={{
@@ -127,7 +127,6 @@ export function PaymentModal({ isOpen, onClose, amount, orderId, context, onSucc
             <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               {[
                 { key: 'qpay' as const, label: 'QPay', icon: <Smartphone size={16} />, desc: 'QR код уншуулах' },
-                { key: 'card' as const, label: 'Карт', icon: <CreditCard size={16} />, desc: 'Visa / Mastercard' },
               ].map(m => (
                 <button key={m.key} onClick={() => setMethod(m.key)}
                   style={{

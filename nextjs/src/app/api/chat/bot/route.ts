@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
 
+type ChatHistoryItem = {
+  role: 'user' | 'assistant';
+  content: string;
+};
+
 const SYSTEM_PROMPT = `Та eseller.mn Монголын нэгдсэн цахим худалдааны платформын дэмжлэгийн туслах юм.
 
 Хэрэглэгчийн түгээмэл асуултуудад хариулж тусалдаг:
 1. ЗАХИАЛГА: Захиалга хийх, хянах, цуцлах, буцаалт
-2. ТӨЛБӨР: QPay, SocialPay, MonPay, Дундын данс
+2. ТӨЛБӨР: QPay QR, Дундын данс
 3. ХҮРГЭЛТ: Хугацаа, байршил, жолоочтой холбоо
 4. ДЭЛГҮҮР: Дэлгүүр нээх, бараа нэмэх, комисс тохиргоо
 5. GOLD: Гишүүнчлэл, давуу тал, үнэ (19,900₮/сар)
@@ -15,7 +20,7 @@ const SYSTEM_PROMPT = `Та eseller.mn Монголын нэгдсэн цахи�
 
 export async function POST(req: Request) {
   try {
-    const { message, history = [] } = await req.json();
+    const { message = '', history = [] } = await req.json() as { message?: string; history?: ChatHistoryItem[] };
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
 
@@ -33,7 +38,7 @@ export async function POST(req: Request) {
           max_tokens: 500,
           system: SYSTEM_PROMPT,
           messages: [
-            ...history.map((h: any) => ({ role: h.role, content: h.content })),
+            ...history.map((h) => ({ role: h.role, content: h.content })),
             { role: 'user', content: message },
           ],
         }),
@@ -70,7 +75,7 @@ function getFallbackReply(msg: string): string {
     return '🔄 Бараа хүлээж авснаас хойш 48 цагийн дотор буцаалт хийх боломжтой. Захиалгын хуудаснаас "Буцаалт хийх" товч дарна уу. Мөнгө дундын дансанд байгаа бол шууд буцаагдана.';
 
   if (lower.includes('төлбөр') || lower.includes('qpay'))
-    return '💳 QPay, SocialPay, MonPay-ээр төлбөр хийх боломжтой. Төлбөр дундын дансанд хадгалагдаж, бараа хүлээж авсны дараа дэлгүүрт шилжинэ (Escrow систем).';
+    return '💳 Одоогоор QPay QR төлбөр идэвхтэй. Төлбөр дундын дансанд хадгалагдаж, бараа хүлээж авсны дараа дэлгүүрт шилжинэ (Escrow систем).';
 
   if (lower.includes('gold') || lower.includes('гишүүн'))
     return '👑 Gold гишүүнчлэл — 19,900₮/сар. Давуу тал: Үнэгүй хүргэлт, 5% нэмэлт хямдрал, давхар оноо, VIP дэмжлэг, сарын бэлэг. eseller.mn/gold хуудаснаас бүртгүүлнэ үү.';

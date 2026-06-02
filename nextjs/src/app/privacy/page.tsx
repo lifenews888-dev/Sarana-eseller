@@ -32,7 +32,7 @@ const sections = [
   {
     title: '4. Гуравдагч этгээдийн үйлчилгээ',
     content: `Бид дараах гуравдагч үйлчилгээ ашигладаг:
-- QPay / SocialPay / MonPay — төлбөрийн систем
+- QPay — төлбөрийн систем
 - Cloudinary — зураг хадгалах
 - Vercel — вэб хостинг
 - Google Analytics — статистик`,
