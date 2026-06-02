@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth } from '@/lib/api-auth';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -13,6 +14,9 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
     const { id } = await ctx.params;
     const body = await req.json();
+    if (body.imageUrl !== undefined && !isValidPublicImageUrl(body.imageUrl)) {
+      return errorJson('imageUrl must be a public URL', 400);
+    }
     if (body.startsAt) body.startsAt = new Date(body.startsAt);
     if (body.endsAt) body.endsAt = new Date(body.endsAt);
 

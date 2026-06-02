@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth } from '@/lib/api-auth';
 import { buildOwnedFeedWhere } from '@/lib/feedOwnership';
+import { sanitizeImageUrls } from '@/lib/image-url';
 
 type Ctx = { params: Promise<{ id: string }> };
 type MetadataValue = string | number | boolean | string[];
@@ -222,7 +223,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       : item.originalPrice;
     const nextLat = hasField(body, 'lat') ? toOptionalNumber(body.lat) : item.lat;
     const nextLng = hasField(body, 'lng') ? toOptionalNumber(body.lng) : item.lng;
-    const nextImageUrls = hasField(body, 'images') ? normalizeMediaUrls(body.images) : item.images;
+    const nextImageUrls = sanitizeImageUrls(hasField(body, 'images') ? normalizeMediaUrls(body.images) : item.images);
     const mergedMetadata = hasField(body, 'metadata')
       ? { ...objectRecord(item.metadata), ...objectRecord(body.metadata) }
       : objectRecord(item.metadata);
@@ -264,15 +265,15 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
       hasField(body, key)
     );
     if (shouldSyncMedia) {
-      const videoUrl = hasField(body, 'videoUrl')
+      const videoUrl = sanitizeImageUrls([hasField(body, 'videoUrl')
         ? cleanString(body.videoUrl)
-        : item.media.find((media) => media.type === 'VIDEO')?.url || '';
-      const virtualTourUrl = hasField(body, 'virtualTourUrl')
+        : item.media.find((media) => media.type === 'VIDEO')?.url || ''])[0] || '';
+      const virtualTourUrl = sanitizeImageUrls([hasField(body, 'virtualTourUrl')
         ? cleanString(body.virtualTourUrl)
-        : item.media.find((media) => media.type === 'VIRTUAL_TOUR')?.url || '';
-      const floorPlanUrl = hasField(body, 'floorPlanUrl')
+        : item.media.find((media) => media.type === 'VIRTUAL_TOUR')?.url || ''])[0] || '';
+      const floorPlanUrl = sanitizeImageUrls([hasField(body, 'floorPlanUrl')
         ? cleanString(body.floorPlanUrl)
-        : item.media.find((media) => media.type === 'FLOOR_PLAN')?.url || '';
+        : item.media.find((media) => media.type === 'FLOOR_PLAN')?.url || ''])[0] || '';
       const mediaRows = [
         ...nextImageUrls.map((url, sortOrder) => ({ feedItemId: id, type: 'IMAGE', url, sortOrder })),
         ...(videoUrl ? [{ feedItemId: id, type: 'VIDEO', url: videoUrl, sortOrder: nextImageUrls.length }] : []),

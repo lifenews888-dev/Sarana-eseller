@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 
 // GET /api/chat/conversations/[id]/messages
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -31,6 +32,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   const { content, imageUrl } = await req.json();
   if (!content && !imageUrl) return errorJson('content шаардлагатай');
+  if (imageUrl && !isValidPublicImageUrl(imageUrl)) return errorJson('imageUrl must be a public URL', 400);
 
   const conv = await prisma.conversation.findUnique({ where: { id } });
   if (!conv) return errorJson('Conversation олдсонгүй', 404);
