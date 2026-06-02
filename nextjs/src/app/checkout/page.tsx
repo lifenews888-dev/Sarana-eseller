@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ShoppingCart, Star, Smartphone, CreditCard, Landmark, Building2, Package } from 'lucide-react';
+import { ShoppingCart, Star, Smartphone, Landmark, Building2, Package } from 'lucide-react';
 import { OrdersAPI, PaymentAPI } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
 import { formatPrice } from '@/lib/utils';
@@ -82,7 +82,7 @@ export default function CheckoutPage() {
 
   const [form, setForm] = useState<DeliveryForm>(initialForm);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [paymentMethod, setPaymentMethod] = useState<'qpay' | 'card'>('qpay');
+  const [paymentMethod, setPaymentMethod] = useState<'qpay'>('qpay');
   const [submitting, setSubmitting] = useState(false);
   const [orderNumber, setOrderNumber] = useState<string | null>(null);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -554,14 +554,6 @@ export default function CheckoutPage() {
                   <Smartphone size={24} className="text-[var(--esl-text-primary)]" />
                 </label>
 
-                <label className="flex items-center gap-3 p-4 rounded-xl border-2 border-[var(--esl-border)] opacity-50 cursor-not-allowed">
-                  <input type="radio" name="payment" disabled className="accent-[var(--esl-brand)]" />
-                  <div className="flex-1">
-                    <span className="font-semibold text-[var(--esl-text-disabled)]">Банкны карт</span>
-                    <p className="text-sm text-[var(--esl-text-disabled)]">Тун удахгүй нэмэгдэнэ</p>
-                  </div>
-                  <CreditCard size={24} className="text-[var(--esl-text-disabled)] opacity-50" />
-                </label>
               </div>
 
               {/* QPay QR Preview (shows bank links when QPay selected) */}

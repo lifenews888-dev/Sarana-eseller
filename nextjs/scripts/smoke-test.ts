@@ -66,13 +66,17 @@ const ROUTES = [
   { url: '/api/health', label: 'API health' },
 ];
 
-const PUBLIC_COPY_ROUTES = ['/', '/store', '/feed', '/help', '/contact', '/privacy', '/terms'];
+const PUBLIC_COPY_ROUTES = ['/', '/store', '/feed', '/checkout', '/help', '/contact', '/privacy', '/terms'];
 
 const FORBIDDEN_PUBLIC_COPY = [
   { pattern: 'QPay & Карт', reason: 'card payment is not launched' },
   { pattern: 'QPay & Card', reason: 'card payment is not launched' },
   { pattern: 'QPay, Visa, Mastercard', reason: 'card payment is not launched' },
   { pattern: 'дебит/кредит карт', reason: 'card payment is not launched' },
+  { pattern: 'Visa / Mastercard', reason: 'card payment is not launched' },
+  { pattern: 'SocialPay', reason: 'payment method is not launched' },
+  { pattern: 'MonPay', reason: 'payment method is not launched' },
+  { pattern: 'StorePay', reason: 'payment method is not launched' },
   { pattern: '7XXX-XXXX', reason: 'placeholder phone number' },
   { pattern: '7700-XXXX', reason: 'placeholder phone number' },
   { pattern: '7700XXXX', reason: 'placeholder phone number' },

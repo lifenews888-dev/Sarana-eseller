@@ -1,12 +1,8 @@
 'use client';
-import { useState } from 'react';
-import { Landmark, CreditCard, Smartphone, Wallet, type LucideIcon } from 'lucide-react';
+import { Landmark, type LucideIcon } from 'lucide-react';
 
 const METHODS: { id: string; name: string; icon: LucideIcon; desc: string; color: string }[] = [
-  { id: 'qpay', name: 'QPay', icon: Landmark, desc: 'Бүх банкны апп', color: '#E8242C' },
-  { id: 'socialpay', name: 'SocialPay', icon: CreditCard, desc: 'Голомт банк', color: '#D32F2F' },
-  { id: 'monpay', name: 'MonPay', icon: Smartphone, desc: 'Хаан банк', color: '#0047AB' },
-  { id: 'storepay', name: 'StorePay', icon: Wallet, desc: '3-12 хувааж төлөх', color: '#2E7D32' },
+  { id: 'qpay', name: 'QPay', icon: Landmark, desc: 'QR төлбөр', color: '#E8242C' },
 ];
 
 export function PaymentMethods({ selected, onChange }: { selected: string; onChange: (m: string) => void }) {
@@ -38,19 +34,6 @@ export function PaymentMethods({ selected, onChange }: { selected: string; onCha
           </button>
         ))}
       </div>
-
-      {selected === 'storepay' && (
-        <div className="mt-3 bg-[rgba(46,125,50,0.08)] rounded-[10px] p-3.5 border border-[rgba(46,125,50,0.2)]">
-          <p className="text-[var(--esl-text)] font-semibold text-[13px] mb-2">Хувааж төлөх:</p>
-          <div className="flex gap-2">
-            {[{ m: 3, l: '3 сар' }, { m: 6, l: '6 сар' }, { m: 12, l: '12 сар' }].map((o) => (
-              <button key={o.m} className="flex-1 bg-[#2E7D32] text-white border-none rounded-lg py-2 cursor-pointer text-[13px] font-semibold">
-                {o.l}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
