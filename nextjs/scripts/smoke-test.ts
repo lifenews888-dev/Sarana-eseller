@@ -118,6 +118,26 @@ async function testPublicCopyRoutes(): Promise<number> {
   return failures;
 }
 
+function testHomepageStatsSourceGuardrails(): number {
+  const guardedFiles = [
+    'src/app/api/homepage/config/route.ts',
+    'src/app/dashboard/admin/homepage/page.tsx',
+  ];
+  const forbidden = ['10,000+', '500+', '50,000+'];
+  let failures = 0;
+
+  console.log(`\nHOMEPAGE STATS source guardrails:`);
+  for (const file of guardedFiles) {
+    const source = fs.readFileSync(path.join(process.cwd(), file), 'utf8');
+    const hit = forbidden.find((pattern) => source.includes(pattern));
+    const ok = !hit;
+    if (!ok) failures += 1;
+    console.log(`  ${ok ? 'ok' : 'FAIL'} ${file}${hit ? ` - inflated default ${hit}` : ''}`);
+  }
+
+  return failures;
+}
+
 async function readJson(res: Response): Promise<unknown> {
   try {
     return await res.json();
@@ -305,6 +325,7 @@ async function main() {
   const mobileConfigFailures = await testMobileConfigRoute();
   const sellerBffFailures = await testSellerBffRoutes();
   const publicCopyFailures = await testPublicCopyRoutes();
+  const homepageStatsFailures = testHomepageStatsSourceGuardrails();
 
   // Failed routes
   const failed = results.filter(r => !r.ok);
@@ -317,7 +338,11 @@ async function main() {
 
   console.log(`\n══════════════════════════════\n`);
   process.exit(
-    failed.length > 0 || mobileConfigFailures > 0 || sellerBffFailures > 0 || publicCopyFailures > 0 ? 1 : 0
+    failed.length > 0 ||
+    mobileConfigFailures > 0 ||
+    sellerBffFailures > 0 ||
+    publicCopyFailures > 0 ||
+    homepageStatsFailures > 0 ? 1 : 0
   );
 }
 
