@@ -383,6 +383,17 @@ async function main() {
   results.push(checkSourceContract('src/components/product/ProductDetailClient.tsx', 'product detail client image filter', [
     'isValidPublicImageUrl',
   ]));
+  results.push(checkSourceContract('src/app/api/feed/route.ts', 'feed write safe media path', [
+    'sanitizeImageUrls(normalizeMediaUrls(images))',
+    'sanitizeImageUrls([cleanString(virtualTourUrl)])',
+    'sanitizeImageUrls([cleanString(floorPlanUrl)])',
+  ]));
+  results.push(checkSourceContract('src/app/api/reviews/route.ts', 'review write safe image path', [
+    'sanitizeImageUrls(images)',
+  ]));
+  results.push(checkSourceContract('src/app/api/admin/banners/route.ts', 'banner write safe image path', [
+    'isValidPublicImageUrl(imageUrl)',
+  ]));
 
   for (const result of results) {
     console.log(`${result.ok ? '✅' : '❌'} ${result.label.padEnd(42)} ${result.detail || ''}`);

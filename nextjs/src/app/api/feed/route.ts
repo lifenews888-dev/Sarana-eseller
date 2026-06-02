@@ -384,12 +384,12 @@ export async function POST(req: NextRequest) {
     const normalizedLng = toOptionalNumber(lng);
     const imageUrls = sanitizeImageUrls(normalizeMediaUrls(images));
     const normalizedVideoUrl = cleanString(videoUrl);
-    const normalizedVideoUrls = [
+    const normalizedVideoUrls = sanitizeImageUrls([
       ...(normalizedVideoUrl ? [normalizedVideoUrl] : []),
       ...normalizeMediaUrls(videoUrls),
-    ].filter((url, index, urls) => urls.indexOf(url) === index);
-    const normalizedVirtualTourUrl = cleanString(virtualTourUrl);
-    const normalizedFloorPlanUrl = cleanString(floorPlanUrl);
+    ]);
+    const normalizedVirtualTourUrl = sanitizeImageUrls([cleanString(virtualTourUrl)])[0] || '';
+    const normalizedFloorPlanUrl = sanitizeImageUrls([cleanString(floorPlanUrl)])[0] || '';
     const normalizedMetadata = normalizeMetadata(
       metadata,
       normalizedEntityType,
