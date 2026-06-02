@@ -3,9 +3,17 @@ import { put } from '@vercel/blob';
 import { requireAdminDB as requireAdmin } from '@/lib/api-auth';
 import { isValidPublicImageUrl } from '@/lib/image-url';
 
+function uploadStorageUnavailable(): NextResponse {
+  return NextResponse.json(
+    { code: 'UPLOAD_STORAGE_UNAVAILABLE', error: 'Upload storage is not configured' },
+    { status: 503 }
+  );
+}
+
 export async function POST(req: NextRequest) {
   const admin = await requireAdmin(req);
   if (admin instanceof NextResponse) return admin;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return uploadStorageUnavailable();
 
   const formData = await req.formData();
   const file = formData.get('video') as File | null;
