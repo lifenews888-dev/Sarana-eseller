@@ -9,6 +9,7 @@ import jwt from 'jsonwebtoken';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
 const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
+const HEALTH_UPLOAD_CHECK_REQUIRED = process.env.HEALTH_UPLOAD_CHECK_REQUIRED === '1';
 
 interface Result {
   url: string;
@@ -215,6 +216,32 @@ async function testMobileConfigRoute(): Promise<number> {
   return ok ? 0 : 1;
 }
 
+async function testHealthRouteContract(): Promise<number> {
+  console.log(`\nHEALTH smoke:`);
+  const route = '/api/health';
+  const res = await fetch(`${BASE}${route}`, {
+    headers: { 'User-Agent': 'eseller-smoke-test' },
+  });
+  const body = await readJson(res);
+  const envelope = isRecord(body) ? body : {};
+  const checks = isRecord(envelope.checks) ? envelope.checks : {};
+  const uploadStorage = isRecord(checks.uploadStorage) ? checks.uploadStorage : {};
+  const serialized = JSON.stringify(body);
+  const hasUploadStorageCheck = typeof uploadStorage.configured === 'boolean';
+  const ok =
+    res.status === 200 &&
+    envelope.ok === true &&
+    envelope.service === 'sarana-eseller' &&
+    (hasUploadStorageCheck || !HEALTH_UPLOAD_CHECK_REQUIRED) &&
+    !serialized.includes('BLOB_READ_WRITE_TOKEN') &&
+    !serialized.includes('blob_read_write_token');
+
+  console.log(
+    `  ${ok ? 'ok' : 'FAIL'} ${String(res.status).padStart(3)} ${route} uploadStorage.configured=${hasUploadStorageCheck ? String(uploadStorage.configured) : 'pending'}`
+  );
+  return ok ? 0 : 1;
+}
+
 function findForbiddenSellerMutationRoutes(): string[] {
   const sellerApiDir = path.join(process.cwd(), 'src', 'app', 'api', 'seller');
   if (!fs.existsSync(sellerApiDir)) return [];
@@ -325,6 +352,7 @@ async function main() {
   }
 
   const mobileConfigFailures = await testMobileConfigRoute();
+  const healthFailures = await testHealthRouteContract();
   const sellerBffFailures = await testSellerBffRoutes();
   const publicCopyFailures = await testPublicCopyRoutes();
   const homepageStatsFailures = testHomepageStatsSourceGuardrails();
@@ -342,6 +370,7 @@ async function main() {
   process.exit(
     failed.length > 0 ||
     mobileConfigFailures > 0 ||
+    healthFailures > 0 ||
     sellerBffFailures > 0 ||
     publicCopyFailures > 0 ||
     homepageStatsFailures > 0 ? 1 : 0

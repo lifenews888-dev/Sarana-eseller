@@ -383,6 +383,11 @@ async function main() {
   results.push(checkSourceContract('src/components/product/ProductDetailClient.tsx', 'product detail client image filter', [
     'isValidPublicImageUrl',
   ]));
+  results.push(checkSourceContract('src/app/api/health/route.ts', 'health upload readiness contract', [
+    'uploadStorage',
+    'BLOB_READ_WRITE_TOKEN',
+    'configured',
+  ]));
   results.push(checkSourceContract('src/app/api/upload/route.ts', 'upload API public URL contract', [
     'put(',
     'BLOB_READ_WRITE_TOKEN',
