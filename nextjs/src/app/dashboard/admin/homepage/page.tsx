@@ -91,9 +91,9 @@ export default function AdminHomepagePage() {
   const [featuredShops, setFeaturedShops] = useState<FeaturedShopRow[]>([]);
 
   // Stats config
-  const [statsProducts, setStatsProducts] = useState('10,000+');
-  const [statsShops, setStatsShops] = useState('500+');
-  const [statsUsers, setStatsUsers] = useState('50,000+');
+  const [statsProducts, setStatsProducts] = useState('8+');
+  const [statsShops, setStatsShops] = useState('11+');
+  const [statsUsers, setStatsUsers] = useState('99+');
   const [useRealStats, setUseRealStats] = useState(false);
 
   // Modal
@@ -794,9 +794,9 @@ function StatsTab({
       </div>
 
       <div className={`space-y-3 ${useRealStats ? 'opacity-40 pointer-events-none' : ''}`}>
-        <Field label="Бараа тоо" value={statsProducts} onChange={setStatsProducts} placeholder="10,000+" />
-        <Field label="Дэлгүүр тоо" value={statsShops} onChange={setStatsShops} placeholder="500+" />
-        <Field label="Хэрэглэгч тоо" value={statsUsers} onChange={setStatsUsers} placeholder="50,000+" />
+        <Field label="Бараа тоо" value={statsProducts} onChange={setStatsProducts} placeholder="8+" />
+        <Field label="Дэлгүүр тоо" value={statsShops} onChange={setStatsShops} placeholder="11+" />
+        <Field label="Хэрэглэгч тоо" value={statsUsers} onChange={setStatsUsers} placeholder="99+" />
       </div>
 
       {/* Preview */}
