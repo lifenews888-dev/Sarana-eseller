@@ -207,6 +207,9 @@ async function main() {
     'onClearLocation',
     'data-feed-featured-businesses',
     'featuredBusinessUsedLocationFallback',
+    'hasLocationFilter',
+    "relaxedParams.delete('district')",
+    "relaxedParams.delete('province')",
   ]));
   results.push(checkSourceContract('src/app/feed/post/page.tsx', 'post prefill/readiness source', [
     'data-feed-post-prefill-notice',
