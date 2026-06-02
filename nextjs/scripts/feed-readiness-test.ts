@@ -207,6 +207,8 @@ async function main() {
     'onClearLocation',
     'data-feed-featured-businesses',
     'featuredBusinessUsedLocationFallback',
+    'Баталгаатай',
+    'Бүх байршил',
     'hasLocationFilter',
     'visibleFeedItems',
     'canRelaxLocationFilter ? filteredWithoutLocation : filtered',
