@@ -208,6 +208,8 @@ async function main() {
     'data-feed-featured-businesses',
     'featuredBusinessUsedLocationFallback',
     'hasLocationFilter',
+    'visibleFeedItems',
+    'canRelaxLocationFilter ? filteredWithoutLocation : filtered',
     "relaxedParams.delete('district')",
     "relaxedParams.delete('province')",
   ]));
