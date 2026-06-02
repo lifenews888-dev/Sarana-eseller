@@ -42,9 +42,17 @@ function validateBlobUrl(url: string): NextResponse | null {
   return NextResponse.json({ error: 'Upload provider returned an invalid public URL' }, { status: 502 });
 }
 
+function uploadStorageUnavailable(): NextResponse {
+  return NextResponse.json(
+    { code: 'UPLOAD_STORAGE_UNAVAILABLE', error: 'Upload storage is not configured' },
+    { status: 503 }
+  );
+}
+
 export async function POST(req: NextRequest) {
   const user = requireAuth(req);
   if (user instanceof NextResponse) return user;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) return uploadStorageUnavailable();
 
   try {
     const contentType = req.headers.get('content-type') || '';

@@ -385,10 +385,14 @@ async function main() {
   ]));
   results.push(checkSourceContract('src/app/api/upload/route.ts', 'upload API public URL contract', [
     'put(',
+    'BLOB_READ_WRITE_TOKEN',
+    'UPLOAD_STORAGE_UNAVAILABLE',
     'validateBlobUrl(blob.url)',
     'return NextResponse.json({ url: blob.url })',
   ]));
   results.push(checkSourceContract('src/app/api/admin/homepage/video/route.ts', 'hero video public URL contract', [
+    'BLOB_READ_WRITE_TOKEN',
+    'UPLOAD_STORAGE_UNAVAILABLE',
     'isValidPublicImageUrl(blob.url)',
     'return NextResponse.json({ videoUrl: blob.url })',
   ]));
