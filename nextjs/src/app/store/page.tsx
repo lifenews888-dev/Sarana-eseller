@@ -92,7 +92,7 @@ const TRUST_ITEMS = [
   { icon: ShieldCheck, label: 'Баталгаат', sub: 'Бүх бараа баталгаатай', color: '#059669' },
   { icon: Truck, label: 'Хурдан хүргэлт', sub: '2-4 цагийн дотор', color: '#0891B2' },
   { icon: RefreshCw, label: '48 цагийн буцаалт', sub: 'Эрсдэлгүй худалдан авалт', color: '#D97706' },
-  { icon: Lock, label: 'Аюулгүй төлбөр', sub: 'QPay, Visa, Mastercard', color: '#7C3AED' },
+  { icon: Lock, label: 'Аюулгүй төлбөр', sub: 'QPay QR', color: '#7C3AED' },
 ];
 
 const MARQUEE_ITEMS = [
@@ -787,7 +787,7 @@ export default function StorePage() {
             <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-4" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
               <span className="text-xs text-white/25">&copy; 2026 eseller.mn — Бүх эрх хуулиар хамгаалагдсан</span>
               <div className="flex items-center gap-5">
-                {['QPay', 'Visa', 'Mastercard', 'SocialPay'].map(name => (
+                {['QPay'].map(name => (
                   <span key={name} className="text-xs font-bold text-white/30 tracking-wide">{name}</span>
                 ))}
               </div>

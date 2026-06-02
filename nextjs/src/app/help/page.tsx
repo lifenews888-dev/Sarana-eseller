@@ -18,7 +18,7 @@ const FAQS = [
   {
     cat: 'Төлбөр', icon: CreditCard,
     items: [
-      { q: 'Ямар төлбөрийн сувгууд байдаг вэ?', a: 'QPay (бүх банк), SocialPay (Голомт), MonPay (Хаан), StorePay (хувааж төлөх) болон дебит/кредит карт.' },
+      { q: 'Ямар төлбөрийн сувгууд байдаг вэ?', a: 'Одоогоор QPay QR төлбөр идэвхтэй. Банкны карт болон бусад суваг албан ёсоор нээгдсэний дараа тусдаа мэдэгдэнэ.' },
       { q: 'Дундын данс гэж юу вэ?', a: 'Таны мөнгийг бид хамгаалж байдаг. Бараа хүлээн авснаас 3 хоногийн дараа дэлгүүрт шилжинэ. Хэрэв бараа ирээгүй бол мөнгийг буцааж авна.' },
       { q: 'Мөнгө буцааж авах хугацаа?', a: 'Буцаалт баталгаажсаны дараа 5-7 ажлын өдрийн дотор дансанд буцаана.' },
     ],
@@ -147,9 +147,9 @@ export default function HelpPage() {
             <Link href="/contact" style={{ background: '#E8242C', color: '#fff', padding: '12px 24px', borderRadius: 12, textDecoration: 'none', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               <Send size={16} /> Мессеж илгээх
             </Link>
-            <a href="tel:7700XXXX" style={{ background: 'var(--esl-bg-section)', color: 'var(--esl-text)', padding: '12px 24px', borderRadius: 12, textDecoration: 'none', fontWeight: 600, border: '1px solid var(--esl-border)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              <Phone size={16} /> Утас залгах
-            </a>
+            <Link href="/contact" style={{ background: 'var(--esl-bg-section)', color: 'var(--esl-text)', padding: '12px 24px', borderRadius: 12, textDecoration: 'none', fontWeight: 600, border: '1px solid var(--esl-border)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              <Phone size={16} /> Холбоо барих
+            </Link>
           </div>
         </div>
       </main>
