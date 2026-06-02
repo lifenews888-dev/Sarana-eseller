@@ -1181,7 +1181,7 @@ export default function FeedPageClient({
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`text-xs font-bold px-2 py-0.5 rounded ${badgeClass}`}>{entity.label}</span>
                       {business.verified && (
-                        <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> ???????????</span>
+                        <span className="text-[10px] text-blue-400 font-bold flex items-center gap-0.5"><BadgeCheck className="w-3 h-3" /> Баталгаатай</span>
                       )}
                     </div>
                     <h3 className="text-base font-black text-[var(--esl-text)] group-hover:text-[#E8242C] transition-colors">{business.title}</h3>
@@ -1220,7 +1220,7 @@ export default function FeedPageClient({
             onChange={(e) => applyFeedRouteFilters({ district: e.target.value, province: '' })}
             className="h-11 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text-secondary)] text-sm outline-none cursor-pointer"
           >
-            {DISTRICTS.map(d => <option key={d} value={d}>{d === 'Бүгд' ? '📍 Бүх дүүрэг' : d}</option>)}
+            {DISTRICTS.map(d => <option key={d} value={d}>{d === 'Бүгд' ? '📍 Бүх байршил' : d}</option>)}
           </select>
           {/* Sort */}
           <select
