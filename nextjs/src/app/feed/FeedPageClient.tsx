@@ -922,6 +922,7 @@ export default function FeedPageClient({
 
   // Fetch real feed data from API, fallback to DEMO_FEED
   useEffect(() => {
+    let cancelled = false;
     const params = new URLSearchParams();
     if (activeCat !== 'all') params.set('category', activeCat);
     if (activeEntityType) params.set('entityType', activeEntityType);
@@ -930,7 +931,6 @@ export default function FeedPageClient({
     if (activeDistrict !== 'Бүгд') params.set('district', activeDistrict);
     if (activeProvince) params.set('province', activeProvince);
     if (activeSort !== 'newest') params.set('sort', activeSort);
-    const query = params.toString();
     const canUseDemoFeed =
       activeCat === 'all'
       && !activeEntityType
@@ -939,13 +939,35 @@ export default function FeedPageClient({
       && activeDistrict === 'Бүгд'
       && !activeProvince
       && activeSort === 'newest';
-    fetch(`/api/feed${query ? `?${query}` : ''}`).then(r => r.json()).then(res => {
-      const d = res.data || res;
-      const all = [...(d.vip || []), ...(d.featured || []), ...(d.discounted || []), ...(d.normal || [])];
-      setFeedItems(all.length > 0 ? all.map((item: ApiFeedItem) => normalizeFeedItem(item)) : (canUseDemoFeed ? DEMO_FEED : []));
+    const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
+    const toFeedItems = (res: unknown) => {
+      const d = (res as { data?: { vip?: ApiFeedItem[]; featured?: ApiFeedItem[]; discounted?: ApiFeedItem[]; normal?: ApiFeedItem[] } }).data
+        || (res as { vip?: ApiFeedItem[]; featured?: ApiFeedItem[]; discounted?: ApiFeedItem[]; normal?: ApiFeedItem[] });
+      return [...(d.vip || []), ...(d.featured || []), ...(d.discounted || []), ...(d.normal || [])]
+        .map((item: ApiFeedItem) => normalizeFeedItem(item));
+    };
+    const fetchFeed = (nextParams: URLSearchParams) => {
+      const nextQuery = nextParams.toString();
+      return fetch(`/api/feed${nextQuery ? `?${nextQuery}` : ''}`).then(r => r.json()).then(toFeedItems);
+    };
+
+    fetchFeed(params).then(async (all) => {
+      if (all.length === 0 && hasLocationFilter) {
+        const relaxedParams = new URLSearchParams(params);
+        relaxedParams.delete('district');
+        relaxedParams.delete('province');
+        const relaxed = await fetchFeed(relaxedParams);
+        if (!cancelled) setFeedItems(relaxed.length > 0 ? relaxed : []);
+        return;
+      }
+
+      if (!cancelled) setFeedItems(all.length > 0 ? all : (canUseDemoFeed ? DEMO_FEED : []));
     }).catch(() => {
-      setFeedItems(canUseDemoFeed ? DEMO_FEED : []);
+      if (!cancelled) setFeedItems(canUseDemoFeed ? DEMO_FEED : []);
     });
+    return () => {
+      cancelled = true;
+    };
   }, [activeCat, activeEntityType, activeTier, search, activeDistrict, activeProvince, activeSort]);
   const { district: userDistrict, loading: locLoading, permissionDenied, refresh: refreshLoc, setManualDistrict } = useUserLocation();
 
