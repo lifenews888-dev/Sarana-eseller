@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, Loader2, Video, Globe, FileImage } from 'lucide-react';
+import { Upload, X, Loader2, Video, Globe, FileImage, AlertCircle } from 'lucide-react';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 import { ENTITY_CARD_CONFIG, type EntityType } from '@/lib/cards/entityCardConfig';
 
 interface Props {
@@ -26,6 +27,7 @@ export function MediaUploader({ context, value, onChange, maxFiles = 5, label, e
   const hasVirtualTour = config ? config.mediaTypes.includes('VIRTUAL_TOUR') : false;
   const hasFloorPlan = config ? config.mediaTypes.includes('FLOOR_PLAN') : false;
   const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -40,7 +42,13 @@ export function MediaUploader({ context, value, onChange, maxFiles = 5, label, e
       headers: token ? { Authorization: `Bearer ${token}` } : {},
       body: formData,
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || 'Upload failed');
+    }
+    if (!isValidPublicImageUrl(data.url)) {
+      throw new Error('Upload did not return a public URL');
+    }
     return data.url as string;
   }, [context]);
 
@@ -49,12 +57,15 @@ export function MediaUploader({ context, value, onChange, maxFiles = 5, label, e
     if (remaining <= 0) return;
 
     const toUpload = Array.from(files).slice(0, remaining);
+    setError('');
     setUploading(true);
 
     try {
       const urls = await Promise.all(toUpload.map(uploadFile));
       onChange([...value, ...urls.filter(Boolean)]);
-    } catch {}
+    } catch (e) {
+      setError((e as Error).message || 'Upload failed');
+    }
     finally { setUploading(false); }
   }, [value, effectiveMax, onChange, uploadFile]);
 
@@ -121,6 +132,12 @@ export function MediaUploader({ context, value, onChange, maxFiles = 5, label, e
           <p style={{ fontSize: 10, color: '#555', marginTop: 2 }}>
             PNG, JPG, WebP · {value.length}/{maxFiles}
           </p>
+        </div>
+      )}
+
+      {error && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontSize: 12, color: '#EF4444' }}>
+          <AlertCircle size={14} /> {error}
         </div>
       )}
 

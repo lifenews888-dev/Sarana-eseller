@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Loader2, AlertCircle } from 'lucide-react';
+import { Upload, X, Loader2, AlertCircle } from 'lucide-react';
+import { isValidPublicImageUrl } from '@/lib/image-url';
 
 interface Props {
   value?: string;
@@ -46,8 +47,9 @@ export default function ImageUpload({ value, onUpload, onRemove, label, hint, ma
         body: formData,
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Upload амжилтгүй');
+      if (!isValidPublicImageUrl(data.url)) throw new Error('Upload did not return a public URL');
       onUpload(data.url);
     } catch (e) {
       setError((e as Error).message);
