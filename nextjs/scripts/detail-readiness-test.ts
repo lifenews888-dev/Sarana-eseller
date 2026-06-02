@@ -383,6 +383,23 @@ async function main() {
   results.push(checkSourceContract('src/components/product/ProductDetailClient.tsx', 'product detail client image filter', [
     'isValidPublicImageUrl',
   ]));
+  results.push(checkSourceContract('src/app/api/upload/route.ts', 'upload API public URL contract', [
+    'put(',
+    'validateBlobUrl(blob.url)',
+    'return NextResponse.json({ url: blob.url })',
+  ]));
+  results.push(checkSourceContract('src/app/api/admin/homepage/video/route.ts', 'hero video public URL contract', [
+    'isValidPublicImageUrl(blob.url)',
+    'return NextResponse.json({ videoUrl: blob.url })',
+  ]));
+  results.push(checkSourceContract('src/components/shared/MediaUploader.tsx', 'media uploader public URL contract', [
+    'isValidPublicImageUrl(data.url)',
+    'Upload did not return a public URL',
+  ]));
+  results.push(checkSourceContract('src/components/shared/ImageUpload.tsx', 'image uploader public URL contract', [
+    'isValidPublicImageUrl(data.url)',
+    'Upload did not return a public URL',
+  ]));
   results.push(checkSourceContract('src/app/api/feed/route.ts', 'feed write safe media path', [
     'sanitizeImageUrls(normalizeMediaUrls(images))',
     'sanitizeImageUrls([cleanString(virtualTourUrl)])',
