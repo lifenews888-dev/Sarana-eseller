@@ -6,7 +6,7 @@ import type { Product } from '@/lib/api';
 import type { Metadata } from 'next';
 import { DEMO_PRODUCTS } from '@/lib/utils';
 import { getSafeImageList, getSafeImageUrl } from '@/lib/image-url';
-import { isPublicLaunchProduct, publicProductWhere } from '@/lib/product-visibility';
+import { filterPublicLaunchProducts, isPublicLaunchProduct, publicProductWhere } from '@/lib/product-visibility';
 
 type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[] };
 
@@ -107,7 +107,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
     product = await prisma.product.findUnique({
       where: { id },
-      select: { name: true, description: true, images: true, price: true, isActive: true, isDemo: true },
+      select: { name: true, description: true, images: true, price: true, salePrice: true, isActive: true, isDemo: true },
     });
   } catch { return { title: 'Олдсонгүй' }; }
   if (!product || !isPublicLaunchProduct(product)) return { title: 'Олдсонгүй' };
@@ -197,7 +197,7 @@ export default async function ProductPage({ params }: Props) {
     user: product.user ? { ...product.user, _id: product.user.id } : null,
   };
 
-  const relatedProducts = related.map(r => ({
+  const relatedProducts = filterPublicLaunchProducts(related).map(r => ({
     ...r,
     _id: r.id,
     images: getSafeImageList(r.images),

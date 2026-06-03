@@ -22,7 +22,7 @@ const googleCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'go
 const danRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'route.ts');
 const danCallback = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'dan', 'callback', 'route.ts');
 const logoutRoute = path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'logout', 'route.ts');
-const middlewareRoute = path.join(process.cwd(), 'src', 'middleware.ts');
+const proxyRoute = path.join(process.cwd(), 'src', 'proxy.ts');
 const startSellingButton = path.join(process.cwd(), 'src', 'components', 'product', 'StartSellingButton.tsx');
 const cartDrawer = path.join(process.cwd(), 'src', 'components', 'store', 'CartDrawer.tsx');
 const checkoutPage = path.join(process.cwd(), 'src', 'app', 'checkout', 'page.tsx');
@@ -51,7 +51,7 @@ function main() {
   const danSource = read(danRoute);
   const danCallbackSource = read(danCallback);
   const logoutSource = read(logoutRoute);
-  const middlewareSource = read(middlewareRoute);
+  const proxySource = read(proxyRoute);
   const startSellingSource = read(startSellingButton);
   const cartDrawerSource = read(cartDrawer);
   const checkoutSource = read(checkoutPage);
@@ -166,15 +166,15 @@ function main() {
       detail: 'logout clears JWT, legacy, DAN, and OAuth transient cookies',
     },
     {
-      label: 'middleware clears invalid session',
-      ok: authSessionCookieNames.every((cookieName) => middlewareSource.includes(`'${cookieName}'`)) &&
-        middlewareSource.includes('AUTH_SESSION_COOKIES.forEach') &&
-        middlewareSource.includes('res.cookies.delete(cookieName)'),
+      label: 'proxy clears invalid session',
+      ok: authSessionCookieNames.every((cookieName) => proxySource.includes(`'${cookieName}'`)) &&
+        proxySource.includes('AUTH_SESSION_COOKIES.forEach') &&
+        proxySource.includes('res.cookies.delete(cookieName)'),
       detail: 'expired dashboard sessions clear JWT, legacy, DAN, and OAuth transient cookies',
     },
     {
-      label: 'middleware preserves dashboard query',
-      ok: middlewareSource.includes("loginUrl.searchParams.set('redirect', `${pathname}${req.nextUrl.search}`)"),
+      label: 'proxy preserves dashboard query',
+      ok: proxySource.includes("loginUrl.searchParams.set('redirect', `${pathname}${req.nextUrl.search}`)"),
       detail: 'dashboard auth redirects keep tabs and filters after login',
     },
     {

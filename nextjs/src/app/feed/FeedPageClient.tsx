@@ -10,6 +10,7 @@ import LocationBar from '@/components/location/LocationBar';
 import CategoryBar from '@/components/shared/CategoryBar';
 import SafeImage from '@/components/ui/SafeImage';
 import { MONGOLIA_LOCATIONS } from '@/lib/location/mongolia';
+import { DISTRICT_SHORT_MAP, UB_DISTRICTS } from '@/lib/location/userLocation';
 import {
   Search, MapPin, Eye, Clock, Plus,
   X, Heart, Phone, MessageCircle, Share2, ChevronLeft, ChevronRight,
@@ -40,6 +41,10 @@ type FeedPageClientProps = {
   initialProvince?: string;
   initialSort?: FeedSortKey;
 };
+
+function districtShortForLocationKey(key: string): string | undefined {
+  return Object.entries(DISTRICT_SHORT_MAP).find(([, locationKey]) => locationKey === key)?.[0];
+}
 
 const TIER_CONFIG: Record<ItemTier, { label: string; badge: LucideIcon | null; color: string; border: string; bg: string }> = {
   vip: { label: 'ВИП', badge: Crown, color: '#D4AF37', border: 'border-amber-500/30', bg: 'bg-amber-500/5' },
@@ -823,6 +828,7 @@ export default function FeedPageClient({
   const [activeProvince, setActiveProvince] = useState(initialProvince);
   const [activeSort, setActiveSort] = useState<FeedSortKey>(initialSort);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [autoLocationFilterEnabled, setAutoLocationFilterEnabled] = useState(true);
 
   const applyFeedRouteFilters = useCallback((next: {
     category?: string;
@@ -973,16 +979,11 @@ export default function FeedPageClient({
 
   // Auto-set district from GPS
   useEffect(() => {
-    if (userDistrict && activeDistrict === 'Бүгд' && !activeProvince) {
-      const shortMap: Record<string, string> = {
-        'khan-uul': 'ХУД', 'sukhbaatar': 'СБД', 'bayangol': 'БГД',
-        'bayanzurkh': 'БЗД', 'chingeltei': 'ЧД', 'songinokhairkhan': 'СХД',
-        'nalaikh': 'НД', 'baganuur': 'БНД',
-      };
-      const short = shortMap[userDistrict.key];
+    if (autoLocationFilterEnabled && userDistrict && activeDistrict === 'Бүгд' && !activeProvince) {
+      const short = districtShortForLocationKey(userDistrict.key);
       if (short) window.setTimeout(() => setActiveDistrict(short), 0);
     }
-  }, [activeDistrict, activeProvince, userDistrict]);
+  }, [activeDistrict, activeProvince, autoLocationFilterEnabled, userDistrict]);
 
   const filtered = useMemo(() => {
     let list = [...feedItems];
@@ -1040,10 +1041,37 @@ export default function FeedPageClient({
   const activeProvinceLabel = activeProvince ? MONGOLIA_LOCATIONS.provinces[activeProvince]?.name || activeProvince : '';
   const activeSortLabel = SORT_OPTIONS.find((option) => option.key === activeSort)?.label || activeSort;
   const activeTierLabel = activeTier ? TIER_CONFIG[activeTier].label : '';
+  const locationBarDistrict = useMemo(() => {
+    if (activeDistrict !== 'Бүгд') {
+      const districtKey = DISTRICT_SHORT_MAP[activeDistrict] || activeDistrict;
+      const districtLabel = UB_DISTRICTS[districtKey]?.label || activeDistrict;
+      return { key: districtKey, label: `${districtLabel} дүүрэг` };
+    }
+
+    if (activeProvince) {
+      const provinceLabel = MONGOLIA_LOCATIONS.provinces[activeProvince]?.name || activeProvince;
+      return { key: activeProvince, label: `${provinceLabel} аймаг` };
+    }
+
+    if (autoLocationFilterEnabled && userDistrict) {
+      return { key: userDistrict.key, label: `${userDistrict.label} дүүрэг` };
+    }
+
+    return null;
+  }, [activeDistrict, activeProvince, autoLocationFilterEnabled, userDistrict]);
   const postHref = activeCat !== 'all'
     ? `/feed/post?category=${encodeURIComponent(activeCat)}`
     : '/feed/post';
+  const clearLocationFilter = useCallback((mode: 'push' | 'replace' = 'push') => {
+    setAutoLocationFilterEnabled(false);
+    applyFeedRouteFilters({ district: 'Бүгд', province: '' }, mode);
+  }, [applyFeedRouteFilters]);
+  const refreshLocationFilter = useCallback(() => {
+    setAutoLocationFilterEnabled(true);
+    refreshLoc();
+  }, [refreshLoc]);
   const clearAllFeedFilters = () => {
+    setAutoLocationFilterEnabled(false);
     applyFeedRouteFilters({
       category: 'all',
       entityType: '',
@@ -1065,10 +1093,10 @@ export default function FeedPageClient({
       ? { key: 'tier', label: `Төрөл: ${activeTierLabel}`, onClear: () => applyFeedRouteFilters({ tier: '' }) }
       : null,
     activeDistrict !== 'Бүгд'
-      ? { key: 'district', label: `Дүүрэг: ${activeDistrict}`, onClear: () => applyFeedRouteFilters({ district: 'Бүгд' }) }
+      ? { key: 'district', label: `Дүүрэг: ${activeDistrict}`, onClear: clearLocationFilter }
       : null,
     activeProvince
-      ? { key: 'province', label: `Аймаг: ${activeProvinceLabel}`, onClear: () => applyFeedRouteFilters({ province: '' }) }
+      ? { key: 'province', label: `Аймаг: ${activeProvinceLabel}`, onClear: clearLocationFilter }
       : null,
     activeSort !== 'newest'
       ? { key: 'sort', label: `Эрэмбэ: ${activeSortLabel}`, onClear: () => applyFeedRouteFilters({ sort: 'newest' }) }
@@ -1111,28 +1139,23 @@ export default function FeedPageClient({
         {/* ═══ Location Bar ═══ */}
         <div className="mb-6">
           <LocationBar
-            district={userDistrict}
+            district={locationBarDistrict}
             loading={locLoading}
             permissionDenied={permissionDenied}
             onDistrictChange={(key) => {
+              setAutoLocationFilterEnabled(true);
               setManualDistrict(key);
-              const ubShortMap: Record<string, string> = {
-                'khan-uul': 'ХУД', 'sukhbaatar': 'СБД', 'bayangol': 'БГД',
-                'bayanzurkh': 'БЗД', 'chingeltei': 'ЧД', 'songinokhairkhan': 'СХД',
-                'nalaikh': 'НД', 'baganuur': 'БНД',
-              };
-              if (ubShortMap[key]) {
+              const selectedDistrict = districtShortForLocationKey(key);
+              if (selectedDistrict) {
                 // УБ дүүрэг сонгосон
-                applyFeedRouteFilters({ district: ubShortMap[key], province: '' });
+                applyFeedRouteFilters({ district: selectedDistrict, province: '' });
               } else {
                 // Аймаг сонгосон
                 applyFeedRouteFilters({ district: 'Бүгд', province: key });
               }
             }}
-            onRefresh={refreshLoc}
-            onClearLocation={() => {
-              applyFeedRouteFilters({ district: 'Бүгд', province: '' });
-            }}
+            onRefresh={refreshLocationFilter}
+            onClearLocation={clearLocationFilter}
           />
         </div>
 
@@ -1348,7 +1371,7 @@ export default function FeedPageClient({
             Сонгосон байршилд зар олдсонгүй. Бүх байршлын <span className="font-bold text-[var(--esl-text)]">{filteredWithoutLocation.length}</span> зарыг харуулж байна.
             <button
               type="button"
-              onClick={() => applyFeedRouteFilters({ district: 'Бүгд', province: '' })}
+              onClick={() => clearLocationFilter()}
               className="ml-3 font-bold text-[#E8242C] underline underline-offset-4"
             >
               Байршлын шүүлтүүрийг авах
@@ -1378,7 +1401,7 @@ export default function FeedPageClient({
               {canRelaxLocationFilter && (
                 <button
                   type="button"
-                  onClick={() => applyFeedRouteFilters({ district: 'Бүгд', province: '' })}
+                  onClick={() => clearLocationFilter()}
                   className="px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold hover:bg-[#c91f26] transition border-none cursor-pointer"
                 >
                   Байршлын шүүлтүүргүй харах

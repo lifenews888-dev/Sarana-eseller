@@ -110,6 +110,14 @@ interface Props {
   isEdit?: boolean;
 }
 
+type SocialField = Extract<keyof LocationData, 'facebook' | 'instagram' | 'whatsapp'>;
+
+const SOCIAL_LINKS: { key: SocialField; placeholder: string; icon: string }[] = [
+  { key: 'facebook', placeholder: 'facebook.com/sarana', icon: 'f' },
+  { key: 'instagram', placeholder: 'instagram.com/sarana', icon: 'ig' },
+  { key: 'whatsapp', placeholder: '+976 9900 0000', icon: 'wa' },
+];
+
 export default function LocationForm({ initialData, isEdit }: Props) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -141,7 +149,7 @@ export default function LocationForm({ initialData, isEdit }: Props) {
     lng: initialData?.lng || 106.9177,
   });
 
-  const upd = (field: keyof LocationData, value: any) => {
+  const upd = <K extends keyof LocationData>(field: K, value: LocationData[K]) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -196,13 +204,13 @@ export default function LocationForm({ initialData, isEdit }: Props) {
       });
 
       if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
+        const data: { error?: string } = await res.json().catch(() => ({}));
         throw new Error(data.error || 'Хадгалахад алдаа гарлаа');
       }
 
       router.push('/dashboard/store/locations');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setSaving(false);
     }
@@ -382,18 +390,14 @@ export default function LocationForm({ initialData, isEdit }: Props) {
           <div style={{ borderTop: '1px solid #3D3D3D', paddingTop: '12px', marginTop: '4px' }}>
             <span style={{ ...label, textTransform: 'uppercase', fontSize: '10px', letterSpacing: '0.05em' }}>Социал сүлжээ</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {[
-                { key: 'facebook', placeholder: 'facebook.com/sarana', icon: 'f' },
-                { key: 'instagram', placeholder: 'instagram.com/sarana', icon: 'ig' },
-                { key: 'whatsapp', placeholder: '+976 9900 0000', icon: 'wa' },
-              ].map((s) => (
+              {SOCIAL_LINKS.map((s) => (
                 <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{ width: '36px', height: '36px', borderRadius: '8px', backgroundColor: 'var(--esl-bg-elevated)', border: '1px solid #3D3D3D', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: '#777' }}>
                     {s.icon}
                   </div>
                   <input style={{ ...input, flex: 1, height: '36px' }}
-                    value={(form as any)[s.key] || ''}
-                    onChange={(e) => upd(s.key as keyof LocationData, e.target.value)}
+                    value={form[s.key] || ''}
+                    onChange={(e) => upd(s.key, e.target.value)}
                     placeholder={s.placeholder} />
                 </div>
               ))}

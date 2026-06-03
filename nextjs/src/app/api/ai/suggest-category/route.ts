@@ -57,7 +57,7 @@ ${description ? `Тайлбар: ${description}` : ''}
       .filter(Boolean);
 
     return NextResponse.json({ suggestions: matched, raw: suggested });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[AI] Category suggestion error:', err);
     return NextResponse.json({ error: 'AI ангилал санал болгож чадсангүй' }, { status: 500 });
   }

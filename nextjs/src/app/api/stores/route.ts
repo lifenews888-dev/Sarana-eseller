@@ -1,5 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+
+type StoreEntityType = 'store' | 'agent' | 'company' | 'auto_dealer' | 'service';
+
+interface StoreListing {
+  id: string;
+  ownerId: string;
+  name: string;
+  slug: string;
+  logo?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  industry?: string | null;
+  district?: string | null;
+  entityType: StoreEntityType;
+  storeType?: string;
+  isVerified: boolean;
+  serviceCount?: number;
+  specialties?: string[];
+  rating?: number | null;
+  reviewCount?: number | null;
+  employeeCount?: number | null;
+  brands?: string[];
+  serviceTypes?: string[];
+  createdAt: Date;
+}
 
 /**
  * GET /api/stores — Unified store/entity listing
@@ -23,10 +49,10 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get('limit') || '20')));
     const skip = (page - 1) * limit;
 
-    const stores: any[] = [];
+    const stores: StoreListing[] = [];
 
     // Hide test shops/users from public listings
-    const HIDE_TEST = {
+    const HIDE_TEST: Prisma.ShopWhereInput = {
       AND: [
         { NOT: { slug: { startsWith: 'test-' } } },
         { NOT: { name: { contains: 'test', mode: 'insensitive' as const } } },
@@ -35,7 +61,7 @@ export async function GET(req: NextRequest) {
 
     // ─── Shops (product/service/hybrid stores) ───────────
     if (type === 'all' || type === 'store') {
-      const where: any = { ...HIDE_TEST };
+      const where: Prisma.ShopWhereInput = { ...HIDE_TEST };
       if (search) where.name = { contains: search, mode: 'insensitive' };
       if (district) where.district = district;
 
@@ -73,7 +99,7 @@ export async function GET(req: NextRequest) {
 
     // ─── Agents (real estate) ────────────────────────────
     if (type === 'all' || type === 'agent') {
-      const where: any = {};
+      const where: Prisma.AgentWhereInput = {};
       if (search) where.name = { contains: search, mode: 'insensitive' };
       if (district) where.district = district;
 
@@ -106,7 +132,7 @@ export async function GET(req: NextRequest) {
 
     // ─── Companies (construction) ────────────────────────
     if (type === 'all' || type === 'company') {
-      const where: any = {};
+      const where: Prisma.CompanyWhereInput = {};
       if (search) where.name = { contains: search, mode: 'insensitive' };
       if (district) where.district = district;
 
@@ -139,7 +165,7 @@ export async function GET(req: NextRequest) {
 
     // ─── Auto Dealers ────────────────────────────────────
     if (type === 'all' || type === 'auto_dealer') {
-      const where: any = {};
+      const where: Prisma.AutoDealerWhereInput = {};
       if (search) where.name = { contains: search, mode: 'insensitive' };
       if (district) where.district = district;
 
@@ -172,7 +198,7 @@ export async function GET(req: NextRequest) {
 
     // ─── Service Providers ───────────────────────────────
     if (type === 'all' || type === 'service') {
-      const where: any = {};
+      const where: Prisma.ServiceProviderWhereInput = {};
       if (search) where.name = { contains: search, mode: 'insensitive' };
       if (district) where.district = district;
 

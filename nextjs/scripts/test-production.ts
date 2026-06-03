@@ -113,7 +113,11 @@ async function main() {
       console.log(
         `${ok ? '✅' : '❌'} ${ms.toString().padStart(4)}ms  ${t.name}  → ${res.status}`,
       );
-      ok ? passed++ : failed++;
+      if (ok) {
+        passed++;
+      } else {
+        failed++;
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       console.log(`❌ ERROR  ${t.name}  → ${msg}`);

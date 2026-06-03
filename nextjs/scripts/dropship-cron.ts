@@ -12,6 +12,11 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+type OrderItem = {
+  id?: string;
+  productId?: string;
+};
+
 async function main() {
   console.log('[DROPSHIP CRON] Starting at', new Date().toISOString());
 
@@ -26,7 +31,7 @@ async function main() {
   });
 
   for (const order of pendingOrders) {
-    const items = order.items as any[];
+    const items = Array.isArray(order.items) ? (order.items as OrderItem[]) : [];
     let hasDropship = false;
 
     for (const item of items) {

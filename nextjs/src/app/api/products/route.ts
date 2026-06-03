@@ -1,15 +1,60 @@
 import { NextRequest } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { ok } from '@/lib/api-envelope';
 import { DEMO_PRODUCTS } from '@/lib/utils';
 import { getSafeImageList } from '@/lib/image-url';
-import { publicProductWhere } from '@/lib/product-visibility';
+import { fetchPublicLaunchProductPage, publicProductWhere } from '@/lib/product-visibility';
+
+const productListSelect = {
+  id: true,
+  name: true,
+  description: true,
+  price: true,
+  salePrice: true,
+  images: true,
+  category: true,
+  emoji: true,
+  stock: true,
+  rating: true,
+  reviewCount: true,
+  isActive: true,
+  isDemo: true,
+  isLive: true,
+  currentLiveId: true,
+} satisfies Prisma.ProductSelect;
+
+type ProductListRow = Prisma.ProductGetPayload<{ select: typeof productListSelect }>;
+
+function positiveIntParam(value: string | null, fallback: number, max: number) {
+  const parsed = Number(value || fallback);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(max, Math.floor(parsed));
+}
+
+function toProductListItem(product: ProductListRow) {
+  return {
+    id: product.id,
+    _id: product.id,
+    name: product.name,
+    price: product.price,
+    salePrice: product.salePrice,
+    images: getSafeImageList(product.images),
+    category: product.category,
+    emoji: product.emoji,
+    stock: product.stock,
+    rating: product.rating,
+    reviewCount: product.reviewCount,
+    isLive: product.isLive,
+    currentLiveId: product.currentLiveId,
+  };
+}
 
 // GET /api/products?limit=20&search=&category=
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
-  const limit = Math.min(100, Number(sp.get('limit') || '20'));
-  const page = Math.max(1, Number(sp.get('page') || '1'));
+  const limit = positiveIntParam(sp.get('limit'), 20, 100);
+  const page = positiveIntParam(sp.get('page'), 1, Number.MAX_SAFE_INTEGER);
   const search = sp.get('search') || sp.get('q') || '';
   const category = sp.get('category') || '';
 
@@ -23,41 +68,26 @@ export async function GET(req: NextRequest) {
   }
 
   const where = publicProductWhere(...filters);
+  const orderBy = { createdAt: 'desc' as const };
 
   try {
-    const [products, total] = await Promise.all([
-      prisma.product.findMany({
+    const productPage = await fetchPublicLaunchProductPage({
+      page,
+      limit,
+      fetchBatch: ({ skip, take }) => prisma.product.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
-        skip: (page - 1) * limit,
-        take: limit,
-        select: {
-          id: true,
-          name: true,
-          price: true,
-          salePrice: true,
-          images: true,
-          category: true,
-          emoji: true,
-          stock: true,
-          rating: true,
-          reviewCount: true,
-          isLive: true,
-          currentLiveId: true,
-        },
+        orderBy,
+        skip,
+        take,
+        select: productListSelect,
       }),
-      prisma.product.count({ where }),
-    ]);
+    });
 
     return ok({
-      products: products.map((product) => ({
-        ...product,
-        _id: product.id,
-        images: getSafeImageList(product.images),
-      })),
-      total,
+      products: productPage.products.map(toProductListItem),
+      total: productPage.total,
       page,
-      hasMore: page * limit < total,
+      hasMore: productPage.hasMore,
     });
   } catch (err) {
     console.error('Products list error:', err);

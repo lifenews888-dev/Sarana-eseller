@@ -1,4 +1,3 @@
-/* eslint-disable no-console */
 import { prisma } from '../src/lib/prisma';
 
 const BASE = process.env.E2E_BASE_URL || 'https://eseller.mn';

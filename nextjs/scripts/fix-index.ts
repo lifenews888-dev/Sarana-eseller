@@ -5,8 +5,9 @@ async function main() {
   try {
     await prisma.$runCommandRaw({ dropIndexes: 'stores', index: 'referralCode_1' });
     console.log('✓ Dropped referralCode_1 index');
-  } catch (e: any) {
-    console.log('Drop result:', e.message?.substring(0, 100));
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : String(e);
+    console.log('Drop result:', message.substring(0, 100));
   }
   await prisma.$disconnect();
 }

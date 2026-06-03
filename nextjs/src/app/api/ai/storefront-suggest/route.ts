@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function getAnthropicText(data: unknown): string | null {
+  if (!isRecord(data) || !Array.isArray(data.content)) return null;
+  const first = data.content[0];
+  return isRecord(first) && typeof first.text === 'string' ? first.text : null;
+}
+
+function getProductNames(products: unknown): string {
+  if (!Array.isArray(products)) return '';
+  return products
+    .slice(0, 5)
+    .map((product) => (isRecord(product) && typeof product.name === 'string' ? product.name : null))
+    .filter((name): name is string => Boolean(name))
+    .join(', ');
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { prompt, currentConfig, shopName, entityType, products } = await req.json();
@@ -12,7 +31,7 @@ export async function POST(req: NextRequest) {
 Дэлгүүрийн нэр: ${shopName || 'Дэлгүүр'}
 Төрөл: ${entityType || 'store'}
 Одоогийн тохиргоо: ${JSON.stringify(currentConfig || {})}
-Бараа: ${(products || []).slice(0, 5).map((p: any) => p.name).join(', ')}
+Бараа: ${getProductNames(products)}
 
 Хэрэглэгчийн хүсэлтэд тулгуурлан JSON формат хариу өг:
 { "heroTitle": "...", "heroSubtitle": "...", "ctaText": "...", "primaryColor": "#hex", "sections": ["hero","products","about","reviews","contact"] }
@@ -47,8 +66,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ suggestion: { heroTitle: `${shopName} — Шилдэг сонголт`, heroSubtitle: 'Бидэнтэй хамт' }, isDemo: true });
     }
 
-    const data = await res.json();
-    const text = data.content?.[0]?.text || '{}';
+    const data: unknown = await res.json();
+    const text = getAnthropicText(data) || '{}';
 
     try {
       const suggestion = JSON.parse(text);

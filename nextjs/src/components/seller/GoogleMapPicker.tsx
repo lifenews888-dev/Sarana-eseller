@@ -91,13 +91,19 @@ export function GoogleMapPicker({ lat, lng, onChange, height = 280 }: Props) {
   useEffect(() => {
     const key = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if ((window as any).google?.maps) { initMap(); return; }
+    if ((window as any).google?.maps) {
+      const timer = window.setTimeout(initMap, 0);
+      return () => window.clearTimeout(timer);
+    }
 
     const script = document.createElement('script');
     script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&libraries=places&language=mn`;
     script.async = true;
     script.onload = initMap;
     document.head.appendChild(script);
+    return () => {
+      script.onload = null;
+    };
   }, [initMap]);
 
   // Address search

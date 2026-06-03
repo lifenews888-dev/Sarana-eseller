@@ -65,7 +65,7 @@ const PLATFORM_HOSTS = new Set([
   '127.0.0.1:3000',
 ]);
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const hostname = req.headers.get('host') || '';
   const { pathname } = req.nextUrl;
 
@@ -160,7 +160,7 @@ export async function middleware(req: NextRequest) {
   }
 
   // Dev: nomin.localhost:3000 handled by next.config.ts rewrites
-  // (middleware runs AFTER rewrites for *.localhost)
+  // (proxy runs AFTER rewrites for *.localhost)
 
   // Skip platform's own domains
   if (PLATFORM_HOSTS.has(hostname) || PLATFORM_HOSTS.has(hostname.split(':')[0])) {

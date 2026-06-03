@@ -24,6 +24,8 @@ async function main() {
       name: true,
       description: true,
       price: true,
+      salePrice: true,
+      images: true,
       isActive: true,
       isDemo: true,
     },

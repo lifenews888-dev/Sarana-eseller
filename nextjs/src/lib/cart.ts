@@ -78,15 +78,19 @@ export const useCartStore = create<CartStore>((set, get) => ({
     if (typeof window === 'undefined') return;
     try {
       const raw = localStorage.getItem(CART_KEY);
-      const parsed = raw ? JSON.parse(raw) : [];
+      const parsed = (raw ? JSON.parse(raw) : []) as Partial<CartItem>[];
       // Migrate old cart items that don't have modifier fields
-      const items = parsed.map((item: any) => ({
-        ...item,
-        selectedModifiers: item.selectedModifiers || [],
-        selectedAddOns: item.selectedAddOns || [],
-        unitPrice: item.unitPrice || (item.salePrice || item.price),
-        lineTotal: item.lineTotal || ((item.salePrice || item.price) * (item.qty || 1)),
-      }));
+      const items = parsed.map((item): CartItem => {
+        const itemPrice = item.salePrice || item.price || 0;
+
+        return {
+          ...item,
+          selectedModifiers: item.selectedModifiers || [],
+          selectedAddOns: item.selectedAddOns || [],
+          unitPrice: item.unitPrice || itemPrice,
+          lineTotal: item.lineTotal || (itemPrice * (item.qty || 1)),
+        } as CartItem;
+      });
       set({ items });
     } catch {
       set({ items: [] });

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { formatPrice, cn, discountPercent, CATEGORIES } from '@/lib/utils';
+import { useState, useEffect, useRef } from 'react';
+import { formatPrice, cn, discountPercent } from '@/lib/utils';
 import type { Product } from '@/lib/api';
 import type { SelectedModifier, SelectedAddOn } from '@/lib/cart';
 import type { ModifierGroupData, AddOnData } from '@/lib/marketplace';
@@ -36,26 +36,40 @@ interface ModalBodyProps {
   onShare?: () => void;
 }
 
+type ProductWithOptions = Product & {
+  modifierGroups?: ModifierGroupData[];
+  addOns?: AddOnData[];
+};
+
 export default function ModalBody({ product, qty, setQty, onAddToCart, isAffiliate, onShare }: ModalBodyProps) {
   const [selectedModifiers, setSelectedModifiers] = useState<SelectedModifier[]>([]);
   const [selectedAddOns, setSelectedAddOns] = useState<SelectedAddOn[]>([]);
+  const productIdRef = useRef(product._id);
+  const productWithOptions = product as ProductWithOptions;
 
   // Use demo data if product has no modifiers (for demonstration)
-  const modifierGroups: ModifierGroupData[] = (product as any).modifierGroups?.length
-    ? (product as any).modifierGroups
+  const modifierGroups: ModifierGroupData[] = productWithOptions.modifierGroups?.length
+    ? productWithOptions.modifierGroups
     : (product.category === 'fashion' ? DEMO_MODIFIERS : []);
 
-  const addOns: AddOnData[] = (product as any).addOns?.length
-    ? (product as any).addOns
+  const addOns: AddOnData[] = productWithOptions.addOns?.length
+    ? productWithOptions.addOns
     : (product.category === 'electronics' ? DEMO_ADDONS : []);
 
-  const deliveryFee = (product as any).deliveryFee ?? 0;
-  const estimatedMins = (product as any).estimatedMins;
+  const deliveryFee = product.deliveryFee ?? 0;
+  const estimatedMins = product.estimatedMins;
 
   // Reset on product change
   useEffect(() => {
-    setSelectedModifiers([]);
-    setSelectedAddOns([]);
+    if (productIdRef.current === product._id) return;
+    productIdRef.current = product._id;
+
+    const timer = window.setTimeout(() => {
+      setSelectedModifiers([]);
+      setSelectedAddOns([]);
+    }, 0);
+
+    return () => window.clearTimeout(timer);
   }, [product._id]);
 
   // Price calcs

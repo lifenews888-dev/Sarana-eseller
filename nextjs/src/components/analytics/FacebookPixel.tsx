@@ -8,8 +8,8 @@ const PIXEL_ID = process.env.NEXT_PUBLIC_FB_PIXEL_ID
 
 declare global {
   interface Window {
-    fbq: (...args: any[]) => void
-    _fbq: any
+    fbq: (...args: unknown[]) => void
+    _fbq: unknown
   }
 }
 
@@ -49,6 +49,7 @@ export function FacebookPixel() {
         <PixelPageView />
       </Suspense>
       <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           height="1"
           width="1"

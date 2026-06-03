@@ -27,7 +27,7 @@ export async function GET(req: NextRequest) {
     const entityType = searchParams.get('entityType');
 
     // Try DB first
-    let themes = await prisma.themeTemplate.findMany({
+    const themes = await prisma.themeTemplate.findMany({
       where: { isActive: true },
       orderBy: { createdAt: 'desc' },
     }).catch(() => []);
