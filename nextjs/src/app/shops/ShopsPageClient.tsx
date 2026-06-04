@@ -237,6 +237,10 @@ export default function ShopsPageClient() {
   const selectedFilters = [activeType !== 'all', activeDistrict, activeCategory, activeSearch].filter(Boolean).length;
   const verifiedCount = items.filter((item) => item.isVerified).length;
   const inventoryCount = items.reduce((sum, item) => sum + item.productCount + item.serviceCount + item.listingCount, 0);
+  const activeCategoryLabel = useMemo(
+    () => facets.categories.find((category) => category.value === activeCategory)?.label || activeCategory,
+    [activeCategory, facets.categories],
+  );
 
   return (
     <div className="min-h-screen bg-[#0b0c10] text-white">
@@ -505,7 +509,7 @@ export default function ShopsPageClient() {
                     )}
                     {activeSearch && <FilterPill label={activeSearch} onClear={() => updateParams({ q: null, search: null })} />}
                     {activeDistrict && <FilterPill label={activeDistrict} onClear={() => updateParams({ district: null })} />}
-                    {activeCategory && <FilterPill label={activeCategory} onClear={() => updateParams({ category: null })} />}
+                    {activeCategory && <FilterPill label={activeCategoryLabel} onClear={() => updateParams({ category: null })} />}
                   </div>
                 )}
               </div>
