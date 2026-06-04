@@ -127,7 +127,7 @@ export default function ShopsPageClient() {
   const activeSort = sort as StoreDirectorySort;
   const activeDistrict = searchParams.get('district') || '';
   const activeCategory = searchParams.get('category') || '';
-  const activeSearch = searchParams.get('q') || '';
+  const activeSearch = searchParams.get('q') || searchParams.get('search') || '';
 
   const [searchInput, setSearchInput] = useState(activeSearch);
   const [items, setItems] = useState<StoreDirectoryItem[]>([]);
@@ -171,7 +171,7 @@ export default function ShopsPageClient() {
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       const query = searchInput.trim();
-      if (query !== activeSearch) updateParams({ q: query || null });
+      if (query !== activeSearch) updateParams({ q: query || null, search: null });
     }, 350);
 
     return () => window.clearTimeout(timeout);
@@ -253,7 +253,7 @@ export default function ShopsPageClient() {
             className="relative hidden min-w-0 flex-1 md:block"
             onSubmit={(event) => {
               event.preventDefault();
-              updateParams({ q: searchInput.trim() || null });
+              updateParams({ q: searchInput.trim() || null, search: null });
             }}
           >
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/[.35]" />
@@ -269,7 +269,7 @@ export default function ShopsPageClient() {
                 type="button"
                 onClick={() => {
                   setSearchInput('');
-                  updateParams({ q: null });
+                  updateParams({ q: null, search: null });
                 }}
                 className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white/60 transition hover:text-white"
                 aria-label="Хайлт цэвэрлэх"
@@ -329,7 +329,7 @@ export default function ShopsPageClient() {
                 className="relative mb-4 block md:hidden"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  updateParams({ q: searchInput.trim() || null });
+                  updateParams({ q: searchInput.trim() || null, search: null });
                 }}
               >
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/[.35]" />
@@ -345,7 +345,7 @@ export default function ShopsPageClient() {
                     type="button"
                     onClick={() => {
                       setSearchInput('');
-                      updateParams({ q: null });
+                      updateParams({ q: null, search: null });
                     }}
                     className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white/60"
                     aria-label="Хайлт цэвэрлэх"
@@ -417,7 +417,7 @@ export default function ShopsPageClient() {
                   type="button"
                   onClick={() => {
                     setSearchInput('');
-                    updateParams({ type: null, district: null, category: null, q: null, sort: null });
+                    updateParams({ type: null, district: null, category: null, q: null, search: null, sort: null });
                   }}
                   disabled={selectedFilters === 0 && activeSort === 'featured'}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-bold text-white/70 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
@@ -486,7 +486,7 @@ export default function ShopsPageClient() {
               hasFilters={selectedFilters > 0 || activeSort !== 'featured'}
               onReset={() => {
                 setSearchInput('');
-                updateParams({ type: null, district: null, category: null, q: null, sort: null });
+                updateParams({ type: null, district: null, category: null, q: null, search: null, sort: null });
               }}
             />
           ) : (
@@ -503,7 +503,7 @@ export default function ShopsPageClient() {
                         onClear={() => updateParams({ type: null })}
                       />
                     )}
-                    {activeSearch && <FilterPill label={activeSearch} onClear={() => updateParams({ q: null })} />}
+                    {activeSearch && <FilterPill label={activeSearch} onClear={() => updateParams({ q: null, search: null })} />}
                     {activeDistrict && <FilterPill label={activeDistrict} onClear={() => updateParams({ district: null })} />}
                     {activeCategory && <FilterPill label={activeCategory} onClear={() => updateParams({ category: null })} />}
                   </div>
