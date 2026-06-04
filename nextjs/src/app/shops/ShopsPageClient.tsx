@@ -234,7 +234,7 @@ export default function ShopsPageClient() {
     return () => controller.abort();
   }, [activeCategory, activeDistrict, activeSearch, activeSort, activeType, page, requestKey]);
 
-  const selectedFilters = [activeType !== 'all', activeDistrict, activeCategory, activeSearch].filter(Boolean).length;
+  const selectedFilters = [activeType !== 'all', activeDistrict, activeCategory, activeSearch, activeSort !== 'featured'].filter(Boolean).length;
   const verifiedCount = items.filter((item) => item.isVerified).length;
   const inventoryCount = items.reduce((sum, item) => sum + item.productCount + item.serviceCount + item.listingCount, 0);
   const activeCategoryLabel = useMemo(
@@ -510,6 +510,12 @@ export default function ShopsPageClient() {
                     {activeSearch && <FilterPill label={activeSearch} onClear={() => updateParams({ q: null, search: null })} />}
                     {activeDistrict && <FilterPill label={activeDistrict} onClear={() => updateParams({ district: null })} />}
                     {activeCategory && <FilterPill label={activeCategoryLabel} onClear={() => updateParams({ category: null })} />}
+                    {activeSort !== 'featured' && (
+                      <FilterPill
+                        label={STORE_DIRECTORY_SORT_LABELS[activeSort]}
+                        onClear={() => updateParams({ sort: null })}
+                      />
+                    )}
                   </div>
                 )}
               </div>
