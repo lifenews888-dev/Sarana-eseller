@@ -556,6 +556,7 @@ function ShopCard({ item }: { item: StoreDirectoryItem }) {
   const Icon = DIRECTORY_ICON_MAP[item.directoryType];
   const accentClass = itemAccentClass(item);
   const rating = item.rating || 0;
+  const mediaSrc = item.coverImage || item.logo;
 
   return (
     <Link
@@ -564,12 +565,16 @@ function ShopCard({ item }: { item: StoreDirectoryItem }) {
       className="group block overflow-hidden rounded-lg border border-white/10 bg-[#15161b] text-white no-underline transition hover:-translate-y-0.5 hover:border-white/20 hover:bg-[#181a20]"
     >
       <div className="relative aspect-[16/9] overflow-hidden bg-[#101116]">
-        <SafeImage
-          src={item.coverImage || item.logo}
-          alt={item.name}
-          className="h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.03]"
-          fallbackClassName="opacity-100"
-        />
+        {mediaSrc ? (
+          <SafeImage
+            src={mediaSrc}
+            alt={item.name}
+            className="h-full w-full object-cover opacity-90 transition duration-300 group-hover:scale-[1.03]"
+            fallbackClassName="opacity-100"
+          />
+        ) : (
+          <ShopCardMediaFallback item={item} Icon={Icon} />
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
         <div className={cn('absolute left-3 top-3 inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-black', accentClass)}>
           <Icon className="h-3.5 w-3.5" />
@@ -644,6 +649,40 @@ function ShopCard({ item }: { item: StoreDirectoryItem }) {
         </div>
       </div>
     </Link>
+  );
+}
+
+function ShopCardMediaFallback({ item, Icon }: { item: StoreDirectoryItem; Icon: LucideIcon }) {
+  const initials = item.name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center bg-[linear-gradient(135deg,#151821_0%,#262b38_48%,#7f1218_100%)]">
+      <div className="absolute inset-x-10 bottom-10 h-px bg-white/15" />
+      <div className="absolute left-10 bottom-10 h-16 w-14 rounded-t-md border border-white/12 bg-white/[.06]" />
+      <div className="absolute left-28 bottom-10 h-24 w-20 rounded-t-md border border-white/12 bg-white/[.07]" />
+      <div className="absolute right-12 bottom-10 h-20 w-16 rounded-t-md border border-white/12 bg-white/[.06]" />
+      <div className="absolute inset-0 bg-[linear-gradient(120deg,rgba(255,255,255,.08)_0%,transparent_32%,rgba(255,255,255,.05)_68%,transparent_100%)]" />
+      <div className="relative flex flex-col items-center gap-3 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-lg border border-white/15 bg-black/25 text-white shadow-lg backdrop-blur">
+          {initials ? (
+            <span className="text-lg font-black">{initials}</span>
+          ) : (
+            <Icon className="h-8 w-8" />
+          )}
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black/25 px-3 py-2 text-xs font-black text-white/75 backdrop-blur">
+          <Icon className="h-4 w-4 text-[#ff5159]" />
+          <span className="line-clamp-1 max-w-44">{item.category || STORE_DIRECTORY_TYPE_LABELS[item.directoryType]}</span>
+        </div>
+      </div>
+    </div>
   );
 }
 
