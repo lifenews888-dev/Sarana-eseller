@@ -16,6 +16,7 @@ import {
 } from '@/lib/shop-directory';
 
 const DIRECTORY_FETCH_LIMIT = 300;
+const SHOP_DIRECTORY_PRODUCT_SCAN_LIMIT = 500;
 
 const BLOCKED_PUBLIC_ENTITY_TEXT = [
   'test',
@@ -71,6 +72,19 @@ type ShopDirectoryAssets = {
   productCount: number;
   coverImage: string | null;
 };
+
+type ShopDirectoryProduct = Prisma.ProductGetPayload<{
+  select: {
+    userId: true;
+    name: true;
+    description: true;
+    price: true;
+    salePrice: true;
+    images: true;
+    isActive: true;
+    isDemo: true;
+  };
+}>;
 
 function blockedShopWhere(): Prisma.ShopWhereInput[] {
   return [
@@ -415,31 +429,45 @@ function mapServiceProvider(provider: ServiceProviderWithCount): StoreDirectoryI
 }
 
 async function fetchShopDirectoryAssets(shops: ShopWithRelations[]) {
-  const entries = await Promise.all(
-    shops.map(async (shop) => {
-      const products = await prisma.product.findMany({
-        where: publicProductWhere({ userId: shop.userId }),
-        select: {
-          name: true,
-          description: true,
-          price: true,
-          salePrice: true,
-          images: true,
-          isActive: true,
-          isDemo: true,
-        },
-        take: 500,
-      });
-      const publicProducts = filterPublicLaunchProducts(products);
-      const coverImage = publicProducts
-        .flatMap((product) => sanitizeImageUrls(product.images))
-        .at(0) || null;
+  const userIds = [...new Set(shops.map((shop) => shop.userId).filter(Boolean))];
 
-      return [shop.id, { productCount: publicProducts.length, coverImage }] as const;
-    }),
-  );
+  if (userIds.length === 0) {
+    return new Map<string, ShopDirectoryAssets>();
+  }
 
-  return new Map(entries);
+  const products = await prisma.product.findMany({
+    where: publicProductWhere({ userId: { in: userIds } }),
+    select: {
+      userId: true,
+      name: true,
+      description: true,
+      price: true,
+      salePrice: true,
+      images: true,
+      isActive: true,
+      isDemo: true,
+    },
+    orderBy: { createdAt: 'desc' },
+    take: userIds.length * SHOP_DIRECTORY_PRODUCT_SCAN_LIMIT,
+  });
+  const productsByUserId = new Map<string, ShopDirectoryProduct[]>();
+
+  for (const product of products) {
+    if (!product.userId) continue;
+    const current = productsByUserId.get(product.userId) || [];
+    if (current.length >= SHOP_DIRECTORY_PRODUCT_SCAN_LIMIT) continue;
+    current.push(product);
+    productsByUserId.set(product.userId, current);
+  }
+
+  return new Map(shops.map((shop) => {
+    const publicProducts = filterPublicLaunchProducts(productsByUserId.get(shop.userId) || []);
+    const coverImage = publicProducts
+      .flatMap((product) => sanitizeImageUrls(product.images))
+      .at(0) || null;
+
+    return [shop.id, { productCount: publicProducts.length, coverImage }] as const;
+  }));
 }
 
 async function fetchDirectoryItems(district: string) {
