@@ -497,6 +497,12 @@ export default function ShopsPageClient() {
                 </p>
                 {selectedFilters > 0 && (
                   <div className="flex min-w-0 flex-wrap justify-end gap-2">
+                    {activeType !== 'all' && (
+                      <FilterPill
+                        label={STORE_DIRECTORY_TYPE_LABELS[activeType]}
+                        onClear={() => updateParams({ type: null })}
+                      />
+                    )}
                     {activeSearch && <FilterPill label={activeSearch} onClear={() => updateParams({ q: null })} />}
                     {activeDistrict && <FilterPill label={activeDistrict} onClear={() => updateParams({ district: null })} />}
                     {activeCategory && <FilterPill label={activeCategory} onClear={() => updateParams({ category: null })} />}
