@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { filterPublicLaunchProducts, publicProductWhere } from '@/lib/product-visibility';
+import { sanitizeImageUrls } from '@/lib/image-url';
 import {
   STORE_DIRECTORY_TYPES,
   type StoreDirectoryFacet,
@@ -65,6 +66,11 @@ type AutoDealerWithCount = Prisma.AutoDealerGetPayload<{
 type ServiceProviderWithCount = Prisma.ServiceProviderGetPayload<{
   include: { _count: { select: { listings: true } } };
 }>;
+
+type ShopDirectoryAssets = {
+  productCount: number;
+  coverImage: string | null;
+};
 
 function blockedShopWhere(): Prisma.ShopWhereInput[] {
   return [
@@ -266,7 +272,7 @@ function createFacets(items: StoreDirectoryItem[]): StoreDirectoryFacets {
   };
 }
 
-function mapShop(shop: ShopWithRelations, productCount: number): StoreDirectoryItem {
+function mapShop(shop: ShopWithRelations, assets: ShopDirectoryAssets): StoreDirectoryItem {
   const directoryType = normalizeShopType(shop.shopType?.type);
   const keywords = displayText(shop.industry, shop.shopType?.type, directoryType === 'service' ? 'Үйлчилгээ' : 'Дэлгүүр');
   return {
@@ -276,7 +282,7 @@ function mapShop(shop: ShopWithRelations, productCount: number): StoreDirectoryI
     slug: shop.slug,
     href: `/s/${shop.storefrontSlug || shop.slug}`,
     logo: shop.logo,
-    coverImage: shop.logo,
+    coverImage: assets.coverImage || shop.logo,
     description: shop.industry || shop.address || null,
     category: shop.industry || (directoryType === 'service' ? 'Үйлчилгээ' : 'Дэлгүүр'),
     address: shop.address,
@@ -288,7 +294,7 @@ function mapShop(shop: ShopWithRelations, productCount: number): StoreDirectoryI
     isVerified: shop.locationStatus === 'verified',
     rating: null,
     reviewCount: null,
-    productCount,
+    productCount: assets.productCount,
     serviceCount: shop._count.services || shop.services.length,
     listingCount: 0,
     createdAt: shop.createdAt.toISOString(),
@@ -408,7 +414,7 @@ function mapServiceProvider(provider: ServiceProviderWithCount): StoreDirectoryI
   };
 }
 
-async function fetchShopProductCounts(shops: ShopWithRelations[]) {
+async function fetchShopDirectoryAssets(shops: ShopWithRelations[]) {
   const entries = await Promise.all(
     shops.map(async (shop) => {
       const products = await prisma.product.findMany({
@@ -424,7 +430,12 @@ async function fetchShopProductCounts(shops: ShopWithRelations[]) {
         },
         take: 500,
       });
-      return [shop.id, filterPublicLaunchProducts(products).length] as const;
+      const publicProducts = filterPublicLaunchProducts(products);
+      const coverImage = publicProducts
+        .flatMap((product) => sanitizeImageUrls(product.images))
+        .at(0) || null;
+
+      return [shop.id, { productCount: publicProducts.length, coverImage }] as const;
     }),
   );
 
@@ -477,10 +488,10 @@ async function fetchDirectoryItems(district: string) {
     }),
   ]);
 
-  const productCounts = await fetchShopProductCounts(shops);
+  const shopAssets = await fetchShopDirectoryAssets(shops);
 
   return [
-    ...shops.map((shop) => mapShop(shop, productCounts.get(shop.id) || 0)),
+    ...shops.map((shop) => mapShop(shop, shopAssets.get(shop.id) || { productCount: 0, coverImage: null })),
     ...agents.map(mapAgent),
     ...companies.map(mapCompany),
     ...dealers.map(mapAutoDealer),
