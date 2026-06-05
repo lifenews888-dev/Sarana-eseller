@@ -7,6 +7,7 @@ import {
   ArrowRight,
   Building2,
   Car,
+  ChevronDown,
   ChevronRight,
   Grid2X2,
   Loader2,
@@ -138,6 +139,7 @@ export default function ShopsPageClient() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAllCategories, setShowAllCategories] = useState(false);
   const requestKeyRef = useRef('');
 
   const requestKey = useMemo(
@@ -241,6 +243,17 @@ export default function ShopsPageClient() {
     () => facets.categories.find((category) => category.value === activeCategory)?.label || activeCategory,
     [activeCategory, facets.categories],
   );
+  const visibleCategories = useMemo(() => {
+    const categoryLimit = 12;
+    if (showAllCategories || facets.categories.length <= categoryLimit) return facets.categories;
+
+    const visible = facets.categories.slice(0, categoryLimit);
+    if (!activeCategory || visible.some((category) => category.value === activeCategory)) return visible;
+
+    const selectedCategory = facets.categories.find((category) => category.value === activeCategory);
+    return selectedCategory ? [...visible.slice(0, categoryLimit - 1), selectedCategory] : visible;
+  }, [activeCategory, facets.categories, showAllCategories]);
+  const hiddenCategoryCount = Math.max(facets.categories.length - visibleCategories.length, 0);
 
   return (
     <div className="min-h-screen bg-[#0b0c10] text-white">
@@ -445,13 +458,13 @@ export default function ShopsPageClient() {
                   </button>
                 )}
               </div>
-              <div className="flex max-h-[136px] flex-wrap gap-2 overflow-hidden">
+              <div className="flex flex-wrap gap-2">
                 {facets.categories.length === 0 ? (
                   <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/[.45]">
                     Ангилал алга
                   </span>
                 ) : (
-                  facets.categories.map((category) => {
+                  visibleCategories.map((category) => {
                     const selected = activeCategory === category.value;
                     return (
                       <button
@@ -472,6 +485,16 @@ export default function ShopsPageClient() {
                   })
                 )}
               </div>
+              {facets.categories.length > 12 && (
+                <button
+                  type="button"
+                  onClick={() => setShowAllCategories((current) => !current)}
+                  className="mt-3 inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-black text-white/60 transition hover:bg-white/10 hover:text-white"
+                >
+                  <ChevronDown className={cn('h-4 w-4 transition', showAllCategories && 'rotate-180')} />
+                  {showAllCategories ? 'Хураах' : `Бүгдийг харах${hiddenCategoryCount > 0 ? ` +${hiddenCategoryCount}` : ''}`}
+                </button>
+              )}
             </aside>
           </div>
         </section>
