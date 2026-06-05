@@ -620,6 +620,8 @@ function ShopCard({ item }: { item: StoreDirectoryItem }) {
   const accentClass = itemAccentClass(item);
   const rating = item.rating || 0;
   const mediaSrc = item.coverImage || item.logo;
+  const previewImages = (item.previewImages || []).filter(Boolean).slice(0, 5);
+  const hasPreviewRail = previewImages.length > 1;
 
   return (
     <Link
@@ -651,6 +653,19 @@ function ShopCard({ item }: { item: StoreDirectoryItem }) {
         <div className="absolute bottom-3 left-3 flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border border-white/15 bg-black/30 backdrop-blur">
           <SafeImage src={item.logo} alt={item.name} className="h-full w-full object-cover" />
         </div>
+        {hasPreviewRail && (
+          <div className="absolute bottom-3 right-3 flex max-w-[58%] items-center gap-1.5 rounded-lg border border-white/12 bg-black/45 p-1.5 shadow-lg backdrop-blur-md">
+            {previewImages.map((src, index) => (
+              <div key={`${src}-${index}`} className="h-9 w-9 overflow-hidden rounded-md border border-white/10 bg-white/10">
+                <SafeImage
+                  src={src}
+                  alt={`${item.name} preview ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="p-4">
@@ -669,6 +684,17 @@ function ShopCard({ item }: { item: StoreDirectoryItem }) {
         <p className="mb-3 line-clamp-2 min-h-[36px] text-sm leading-5 text-white/[.62]">
           {item.description || item.address || item.slug}
         </p>
+
+        {hasPreviewRail && (
+          <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[.035] px-3 py-2">
+            <span className="min-w-0 truncate text-xs font-black text-white/70">
+              {previewImages.length.toLocaleString('mn-MN')} зурагтай preview
+            </span>
+            <span className="shrink-0 text-xs font-black text-[#ff5159]">
+              {countLabel(item)}
+            </span>
+          </div>
+        )}
 
         <div className="mb-3 flex flex-wrap gap-2 text-xs font-bold text-white/[.58]">
           {item.district && (

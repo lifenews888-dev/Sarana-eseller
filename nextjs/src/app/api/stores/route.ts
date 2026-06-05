@@ -71,6 +71,7 @@ type ServiceProviderWithCount = Prisma.ServiceProviderGetPayload<{
 type ShopDirectoryAssets = {
   productCount: number;
   coverImage: string | null;
+  previewImages: string[];
 };
 
 type ShopDirectoryProduct = Prisma.ProductGetPayload<{
@@ -304,6 +305,7 @@ function mapShop(shop: ShopWithRelations, assets: ShopDirectoryAssets): StoreDir
     href: `/s/${shop.storefrontSlug || shop.slug}`,
     logo: shop.logo,
     coverImage: assets.coverImage || shop.logo,
+    previewImages: assets.previewImages,
     description: shop.industry || shop.address || null,
     category: shop.industry || (directoryType === 'service' ? 'Үйлчилгээ' : 'Дэлгүүр'),
     address: shop.address,
@@ -469,11 +471,13 @@ async function fetchShopDirectoryAssets(shops: ShopWithRelations[]) {
 
   return new Map(shops.map((shop) => {
     const publicProducts = filterPublicLaunchProducts(productsByUserId.get(shop.userId) || []);
-    const coverImage = publicProducts
+    const previewImages = Array.from(new Set(publicProducts
       .flatMap((product) => sanitizeImageUrls(product.images))
-      .at(0) || null;
+      .filter(Boolean)))
+      .slice(0, 5);
+    const coverImage = previewImages.at(0) || null;
 
-    return [shop.id, { productCount: publicProducts.length, coverImage }] as const;
+    return [shop.id, { productCount: publicProducts.length, coverImage, previewImages }] as const;
   }));
 }
 
@@ -526,7 +530,7 @@ async function fetchDirectoryItems(district: string) {
   const shopAssets = await fetchShopDirectoryAssets(shops);
 
   return [
-    ...shops.map((shop) => mapShop(shop, shopAssets.get(shop.id) || { productCount: 0, coverImage: null })),
+    ...shops.map((shop) => mapShop(shop, shopAssets.get(shop.id) || { productCount: 0, coverImage: null, previewImages: [] })),
     ...agents.map(mapAgent),
     ...companies.map(mapCompany),
     ...dealers.map(mapAutoDealer),

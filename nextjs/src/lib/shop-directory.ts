@@ -24,6 +24,7 @@ export type StoreDirectoryItem = {
   href: string;
   logo?: string | null;
   coverImage?: string | null;
+  previewImages?: string[];
   description?: string | null;
   category?: string | null;
   address?: string | null;
