@@ -173,6 +173,10 @@ export default function ShopsPageClient() {
   }, [activeSearch]);
 
   useEffect(() => {
+    setShowAllCategories(false);
+  }, [requestKey]);
+
+  useEffect(() => {
     const timeout = window.setTimeout(() => {
       const query = searchInput.trim();
       if (query !== activeSearch) updateParams({ q: query || null, search: null });
