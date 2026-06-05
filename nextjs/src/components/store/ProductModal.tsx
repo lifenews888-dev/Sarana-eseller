@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
@@ -13,7 +12,7 @@ import {
   X, ShoppingCart, Minus, Plus, Share2, Heart, Star,
   Truck, Shield, RotateCcw, Clock, ChevronLeft, ChevronRight,
   Package, Check, Play, ZoomIn, Info,
-  Tag, Layers, Ruler, Weight, Palette, Box,
+  Tag, Layers, Ruler, Palette, Box,
 } from 'lucide-react';
 
 interface ProductModalProps {
@@ -29,13 +28,6 @@ interface ProductModalProps {
   onProductClick?: (id: string) => void;
 }
 
-/* ═══ Recommended items (mixed products + featured ads) ═══ */
-const FEATURED_ADS = [
-  { id: 'ad-1', type: 'auto' as const, title: 'Toyota Land Cruiser 300', price: '185 сая₮', image: 'https://picsum.photos/seed/eseller-400/400', badge: 'Авто зар', link: '/entity/auto_dealer/autocity' },
-  { id: 'ad-2', type: 'realty' as const, title: '3 өрөө байр, Ривер Гарден', price: '450 сая₮', image: 'https://picsum.photos/seed/eseller-400/400', badge: 'Орон сууц', link: '/entity/agent/erdenbat' },
-  { id: 'ad-3', type: 'service' as const, title: 'Вэбсайт хөгжүүлэлт', price: '2.5 сая₮', image: 'https://picsum.photos/seed/eseller-400/400', badge: 'Үйлчилгээ', link: '/feed' },
-  { id: 'ad-4', type: 'building' as const, title: 'Zaisan Heights — шинэ төсөл', price: '95 сая₮~', image: 'https://picsum.photos/seed/eseller-400/400', badge: 'Шинэ барилга', link: '/entity/company/mongolian-properties' },
-];
 
 /* ═══ Specs generation based on category ═══ */
 function getProductSpecs(product: Product): { icon: typeof Box; label: string; value: string }[] {
@@ -110,8 +102,7 @@ interface ReviewData {
   createdAt?: string;
 }
 
-export default function ProductModal({ product, onClose, isAffiliate, onShare, onPrev, onNext, hasPrev, hasNext, allProducts, onProductClick }: ProductModalProps) {
-  const router = useRouter();
+export default function ProductModal({ product, onClose, isAffiliate, onShare, onPrev, onNext, hasPrev, hasNext }: ProductModalProps) {
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
@@ -125,17 +116,12 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   const cart = useCartStore();
   const toast = useToast();
 
-  const openRecommendedProduct = (id: string) => {
-    if (onProductClick) {
-      onProductClick(id);
-      return;
-    }
-    router.push(`/product/${id}`);
-  };
-
   useEffect(() => {
-    setQty(1); setActiveImg(0); setSelectedSize(''); setSelectedColor('');
-    setAdded(false); setActiveTab('info'); setReviews([]);
+    const frame = window.requestAnimationFrame(() => {
+      setQty(1); setActiveImg(0); setSelectedSize(''); setSelectedColor('');
+      setAdded(false); setActiveTab('info'); setReviews([]);
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [product?._id]);
 
   // Fetch reviews from API
@@ -169,7 +155,8 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   if (!product) return null;
 
   const images = product.images?.length ? product.images : [];
-  const videoUrl = (product as any).videoUrl || product.videoUrl;
+  const productWithVideo = product as Product & { videoUrl?: string | null };
+  const videoUrl = productWithVideo.videoUrl;
   // Build media array: images + video at the end
   type MediaSlide = { type: 'image'; url: string } | { type: 'video'; url: string };
   const media: MediaSlide[] = [
@@ -179,6 +166,12 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   const px = product.salePrice || product.price;
   const disc = discountPercent(product.price, product.salePrice);
   const specs = getProductSpecs(product);
+  const productFacts = [
+    { icon: Package, label: 'Дэлгүүр', value: product.store?.name || 'eseller.mn' },
+    { icon: Tag, label: 'Ангилал', value: product.category || product.entityType || 'Бараа' },
+    { icon: Layers, label: 'Медиа', value: `${Math.max(media.length, 1).toLocaleString('mn-MN')} зураг/видео` },
+    ...specs.slice(0, 3),
+  ].slice(0, 6);
 
   const sizes = product.category === 'Хувцас' ? ['XS', 'S', 'M', 'L', 'XL'] : product.category === 'Спорт' ? ['S', 'M', 'L'] : [];
   const colors = product.category === 'Хувцас' ? [
@@ -538,40 +531,23 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
               </div>
             )}
           </div>
-
-          {/* ═══ Recommendations Carousel ═══ */}
           <div className="px-6 py-4 border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]/50">
-            <h4 className="text-xs font-bold text-[var(--esl-text-secondary)] uppercase tracking-wider mb-3">Танд санал болгох</h4>
-            <div className="flex gap-2.5 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-              {/* Other products */}
-              {allProducts?.filter(p => p._id !== product._id).slice(0, 4).map(p => (
-                <div key={p._id} onClick={() => openRecommendedProduct(p._id)}
-                  className="shrink-0 w-[130px] cursor-pointer group">
-                  <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5">
-                    {p.images?.[0] ? (
-                      <SafeImage src={p.images[0]} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-2xl">{p.emoji || <Package className="w-6 h-6 text-[#CBD5E1]" />}</div>
-                    )}
+            <h4 className="text-xs font-bold text-[var(--esl-text-secondary)] uppercase tracking-wider mb-3">Барааны товч</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {productFacts.map((fact) => {
+                const Icon = fact.icon;
+                return (
+                  <div key={`${fact.label}-${fact.value}`} className="min-w-0 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-[var(--esl-text-muted)]">
+                      <Icon className="h-3.5 w-3.5 shrink-0 text-[#E24B4A]" />
+                      <span className="truncate">{fact.label}</span>
+                    </div>
+                    <p className="truncate text-xs font-black text-[var(--esl-text-primary)]">{fact.value}</p>
                   </div>
-                  <p className="text-[11px] font-semibold text-[var(--esl-text-primary)] line-clamp-1 group-hover:text-[#E24B4A] transition-colors">{p.name}</p>
-                  <p className="text-[11px] font-bold text-[#E24B4A]">{formatPrice(p.salePrice || p.price)}</p>
-                </div>
-              ))}
-              {/* Featured ads */}
-              {FEATURED_ADS.slice(0, 3).map(ad => (
-                <a key={ad.id} href={ad.link} className="shrink-0 w-[130px] no-underline group">
-                  <div className="h-[90px] rounded-lg overflow-hidden bg-[var(--esl-bg-section)] mb-1.5 relative">
-                    <SafeImage src={ad.image} alt={ad.title} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                    <span className="absolute top-1 left-1 text-[8px] font-bold bg-black/60 text-white px-1.5 py-0.5 rounded">{ad.badge}</span>
-                  </div>
-                  <p className="text-[11px] font-semibold text-[var(--esl-text-primary)] line-clamp-1 group-hover:text-[#E24B4A] transition-colors">{ad.title}</p>
-                  <p className="text-[11px] font-bold text-[var(--esl-text-secondary)]">{ad.price}</p>
-                </a>
-              ))}
+                );
+              })}
             </div>
           </div>
-
           {/* ═══ Footer: Qty + Add to Cart ═══ */}
           <div className="px-6 py-4 border-t border-[var(--esl-border)] shrink-0 space-y-3 bg-[var(--esl-bg-card)]">
             <div className="flex items-center justify-between">
