@@ -163,7 +163,10 @@ export default function ShopsPageClient() {
       else params.set(key, value);
     }
 
+    const current = searchParams.toString();
     const next = params.toString();
+    if (next === current) return;
+
     setPage(1);
     const href = next ? `${pathname}?${next}` : pathname;
     if (options?.replace) router.replace(href, { scroll: false });
