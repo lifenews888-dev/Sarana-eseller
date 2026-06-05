@@ -15,6 +15,7 @@ import {
   Package,
   Phone,
   PlusCircle,
+  RefreshCw,
   Scissors,
   Search,
   ShieldCheck,
@@ -140,6 +141,7 @@ export default function ShopsPageClient() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAllCategories, setShowAllCategories] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const requestKeyRef = useRef('');
 
   const requestKey = useMemo(
@@ -234,7 +236,7 @@ export default function ShopsPageClient() {
 
     load();
     return () => controller.abort();
-  }, [activeCategory, activeDistrict, activeSearch, activeSort, activeType, page, requestKey]);
+  }, [activeCategory, activeDistrict, activeSearch, activeSort, activeType, page, requestKey, retryToken]);
 
   const selectedFilters = [activeType !== 'all', activeDistrict, activeCategory, activeSearch, activeSort !== 'featured'].filter(Boolean).length;
   const verifiedCount = items.filter((item) => item.isVerified).length;
@@ -509,8 +511,16 @@ export default function ShopsPageClient() {
 
         <section className="pt-6">
           {error && (
-            <div className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100">
-              Дэлгүүрүүдийг ачаалж чадсангүй
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100">
+              <span>Дэлгүүрүүдийг ачаалж чадсангүй</span>
+              <button
+                type="button"
+                onClick={() => setRetryToken((current) => current + 1)}
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-red-200/20 bg-red-50/10 px-3 text-xs font-black text-red-50 transition hover:bg-red-50/15"
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+                Дахин оролдох
+              </button>
             </div>
           )}
 
