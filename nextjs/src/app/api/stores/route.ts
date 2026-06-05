@@ -215,6 +215,13 @@ function matchesCategory(item: StoreDirectoryItem, category: string) {
     || normalizeFacetValue(item.category) === normalized;
 }
 
+function parsePositiveInt(value: string | null, fallback: number, max?: number) {
+  const parsed = Number.parseInt(value || '', 10);
+  if (!Number.isFinite(parsed)) return fallback;
+  const positive = Math.max(1, parsed);
+  return typeof max === 'number' ? Math.min(max, positive) : positive;
+}
+
 function activityScore(item: StoreDirectoryItem) {
   const ratingScore = (item.rating || 0) * 20;
   const reviewScore = (item.reviewCount || 0) * 2;
@@ -549,8 +556,8 @@ export async function GET(req: NextRequest) {
     const district = (url.searchParams.get('district') || '').trim();
     const search = (url.searchParams.get('search') || url.searchParams.get('q') || '').trim();
     const category = (url.searchParams.get('category') || '').trim();
-    const page = Math.max(1, parseInt(url.searchParams.get('page') || '1', 10));
-    const limit = Math.min(60, Math.max(1, parseInt(url.searchParams.get('limit') || '24', 10)));
+    const page = parsePositiveInt(url.searchParams.get('page'), 1);
+    const limit = parsePositiveInt(url.searchParams.get('limit'), 24, 60);
 
     const allItems = await fetchDirectoryItems(district);
     const searchFiltered = allItems.filter((item) => matchesSearch(item, search));
