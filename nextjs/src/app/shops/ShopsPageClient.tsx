@@ -278,6 +278,7 @@ export default function ShopsPageClient() {
               data-testid="shops-search-desktop"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
+              aria-label="Дэлгүүр, үйлчилгээ хайх"
               placeholder="Дэлгүүр, үйлчилгээ хайх"
               className="h-11 w-full rounded-lg border border-white/10 bg-black/[.35] pl-10 pr-10 text-sm font-medium text-white outline-none transition focus:border-[#E8242C]/70 focus:bg-black/[.55]"
             />
@@ -354,6 +355,7 @@ export default function ShopsPageClient() {
                   data-testid="shops-search-mobile"
                   value={searchInput}
                   onChange={(event) => setSearchInput(event.target.value)}
+                  aria-label="Дэлгүүр, үйлчилгээ хайх"
                   placeholder="Дэлгүүр, үйлчилгээ хайх"
                   className="h-11 w-full rounded-lg border border-white/10 bg-white/5 pl-10 pr-10 text-sm font-medium text-white outline-none transition focus:border-[#E8242C]/70"
                 />
@@ -383,6 +385,7 @@ export default function ShopsPageClient() {
                       data-testid={`shops-type-${option.key}`}
                       key={option.key}
                       type="button"
+                      aria-pressed={selected}
                       onClick={() => updateParams({ type: option.key === 'all' ? null : option.key })}
                       className={cn(
                         'inline-flex h-10 shrink-0 items-center gap-2 rounded-lg border px-3 text-sm font-bold transition',
@@ -407,6 +410,7 @@ export default function ShopsPageClient() {
                   <select
                     value={activeDistrict}
                     onChange={(event) => updateParams({ district: event.target.value || null })}
+                    aria-label="Байршлаар шүүх"
                     className="h-11 w-full appearance-none rounded-lg border border-white/10 bg-white/5 pl-10 pr-8 text-sm font-bold text-white outline-none transition focus:border-[#E8242C]/70"
                   >
                     <option value="">Бүх байршил</option>
@@ -421,6 +425,7 @@ export default function ShopsPageClient() {
                 <select
                   value={activeSort}
                   onChange={(event) => updateParams({ sort: event.target.value === 'featured' ? null : event.target.value })}
+                  aria-label="Эрэмбэлэх"
                   className="h-11 rounded-lg border border-white/10 bg-white/5 px-3 text-sm font-bold text-white outline-none transition focus:border-[#E8242C]/70"
                 >
                   {SORT_OPTIONS.map((option) => (
@@ -458,7 +463,7 @@ export default function ShopsPageClient() {
                   </button>
                 )}
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div id="shops-category-facets" className="flex flex-wrap gap-2">
                 {facets.categories.length === 0 ? (
                   <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/[.45]">
                     Ангилал алга
@@ -470,6 +475,7 @@ export default function ShopsPageClient() {
                       <button
                         key={category.value}
                         type="button"
+                        aria-pressed={selected}
                         onClick={() => updateParams({ category: selected ? null : category.value })}
                         className={cn(
                           'rounded-lg border px-3 py-2 text-xs font-bold transition',
@@ -488,6 +494,8 @@ export default function ShopsPageClient() {
               {facets.categories.length > 12 && (
                 <button
                   type="button"
+                  aria-controls="shops-category-facets"
+                  aria-expanded={showAllCategories}
                   onClick={() => setShowAllCategories((current) => !current)}
                   className="mt-3 inline-flex h-9 items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 text-xs font-black text-white/60 transition hover:bg-white/10 hover:text-white"
                 >
@@ -577,6 +585,7 @@ function FilterPill({ label, onClear }: { label: string; onClear: () => void }) 
     <button
       type="button"
       onClick={onClear}
+      aria-label={`Арилгах: ${label}`}
       className="inline-flex max-w-[220px] items-center gap-1 rounded-lg border border-[#E8242C]/30 bg-[#E8242C]/12 px-2.5 py-1.5 text-xs font-bold text-[#ff6b72]"
     >
       <span className="truncate">{label}</span>
