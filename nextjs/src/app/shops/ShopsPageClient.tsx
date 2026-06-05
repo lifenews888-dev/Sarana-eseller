@@ -221,10 +221,12 @@ export default function ShopsPageClient() {
       } catch (err) {
         if (!controller.signal.aborted) {
           setError(err instanceof Error ? err.message : 'Stores request failed');
-          setItems([]);
-          setFacets(EMPTY_FACETS);
-          setTotal(0);
-          setHasMore(false);
+          if (page === 1) {
+            setItems([]);
+            setFacets(EMPTY_FACETS);
+            setTotal(0);
+            setHasMore(false);
+          }
         }
       } finally {
         if (!controller.signal.aborted) {
