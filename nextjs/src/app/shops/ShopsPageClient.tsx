@@ -155,7 +155,7 @@ export default function ShopsPageClient() {
     [activeType, activeSort, activeDistrict, activeCategory, activeSearch],
   );
 
-  const updateParams = useCallback((patch: Record<string, string | null>) => {
+  const updateParams = useCallback((patch: Record<string, string | null>, options?: { replace?: boolean }) => {
     const params = new URLSearchParams(searchParams.toString());
 
     for (const [key, value] of Object.entries(patch)) {
@@ -165,7 +165,9 @@ export default function ShopsPageClient() {
 
     const next = params.toString();
     setPage(1);
-    router.push(next ? `${pathname}?${next}` : pathname, { scroll: false });
+    const href = next ? `${pathname}?${next}` : pathname;
+    if (options?.replace) router.replace(href, { scroll: false });
+    else router.push(href, { scroll: false });
   }, [pathname, router, searchParams]);
 
   useEffect(() => {
@@ -179,7 +181,7 @@ export default function ShopsPageClient() {
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       const query = searchInput.trim();
-      if (query !== activeSearch) updateParams({ q: query || null, search: null });
+      if (query !== activeSearch) updateParams({ q: query || null, search: null }, { replace: true });
     }, 350);
 
     return () => window.clearTimeout(timeout);
