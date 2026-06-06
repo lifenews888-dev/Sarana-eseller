@@ -24,8 +24,6 @@ interface ProductModalProps {
   onNext?: () => void;
   hasPrev?: boolean;
   hasNext?: boolean;
-  allProducts?: Product[];
-  onProductClick?: (id: string) => void;
 }
 
 
