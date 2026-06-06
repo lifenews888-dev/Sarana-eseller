@@ -196,6 +196,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
       {hasPrev && onPrev && (
         <button
           onClick={onPrev}
+          aria-label="Өмнөх бараа"
           className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
         >
           <ChevronLeft className="w-5 h-5 text-[var(--esl-text-primary)]" />
@@ -204,6 +205,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
       {hasNext && onNext && (
         <button
           onClick={onNext}
+          aria-label="Дараагийн бараа"
           className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
         >
           <ChevronRight className="w-5 h-5 text-[var(--esl-text-primary)]" />
@@ -243,10 +245,12 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             {media.length > 1 && (
               <>
                 <button onClick={() => setActiveImg(prev => (prev - 1 + media.length) % media.length)}
+                  aria-label="Өмнөх зураг"
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-lg">
                   <ChevronLeft className="w-4 h-4 text-[var(--esl-text-secondary)]" />
                 </button>
                 <button onClick={() => setActiveImg(prev => (prev + 1) % media.length)}
+                  aria-label="Дараагийн зураг"
                   className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-lg">
                   <ChevronRight className="w-4 h-4 text-[var(--esl-text-secondary)]" />
                 </button>
@@ -270,11 +274,14 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             {/* Actions */}
             <div className="absolute top-4 right-4 flex flex-col gap-2">
               <button onClick={() => setIsWished(!isWished)}
+                aria-label={isWished ? 'Хүслийн жагсаалтаас хасах' : 'Хүслийн жагсаалтад нэмэх'}
+                aria-pressed={isWished}
                 className="w-10 h-10 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-lg">
                 <Heart className="w-4 h-4" fill={isWished ? '#E24B4A' : 'none'} color={isWished ? '#E24B4A' : '#666'} />
               </button>
               {media.length > 0 && media[activeImg]?.type === 'image' && (
                 <button onClick={() => setZoomedImg(media[activeImg].url)}
+                  aria-label="Зургийг томруулах"
                   className="w-10 h-10 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-lg">
                   <ZoomIn className="w-4 h-4 text-[var(--esl-text-secondary)]" />
                 </button>
@@ -294,6 +301,8 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             <div className="flex gap-2 p-3 bg-[var(--esl-bg-card)]/80 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               {media.map((m, i) => (
                 <button key={i} onClick={() => setActiveImg(i)}
+                  aria-label={`${i + 1}-р медиа сонгох`}
+                  aria-pressed={i === activeImg}
                   className={cn('w-16 h-16 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shrink-0 relative',
                     i === activeImg ? 'border-[#E24B4A] shadow-md scale-105' : 'border-[var(--esl-border)] opacity-60 hover:opacity-100')}>
                   {m.type === 'video' ? (
@@ -313,6 +322,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         <div className="md:w-[45%] flex flex-col">
           {/* Close */}
           <button onClick={onClose}
+            aria-label="Барааны цонх хаах"
             className="absolute top-3 right-3 md:relative md:top-0 md:right-0 md:self-end md:m-3 w-8 h-8 rounded-full bg-[var(--esl-bg-section)] border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card-hover)] transition z-10">
             <X className="w-4 h-4 text-[var(--esl-text-secondary)]" />
           </button>
@@ -361,6 +371,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
+                  aria-pressed={activeTab === tab.key}
                   className={cn('flex-1 py-2 rounded-lg text-xs font-semibold border-none cursor-pointer transition-all',
                     activeTab === tab.key ? 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] shadow-sm' : 'bg-transparent text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]')}
                 >
@@ -553,11 +564,13 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                 <span className="text-sm font-semibold text-[var(--esl-text-secondary)]">Тоо:</span>
                 <div className="flex items-center border border-[var(--esl-border)] rounded-xl overflow-hidden">
                   <button onClick={() => setQty(Math.max(1, qty - 1))}
+                    aria-label="Тоо ширхэг багасгах"
                     className="w-9 h-9 bg-[var(--esl-bg-section)] border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center">
                     <Minus className="w-3.5 h-3.5 text-[var(--esl-text-secondary)]" />
                   </button>
                   <span className="w-10 h-9 flex items-center justify-center text-sm font-bold border-x border-[var(--esl-border)]">{qty}</span>
                   <button onClick={() => setQty(qty + 1)}
+                    aria-label="Тоо ширхэг нэмэх"
                     className="w-9 h-9 bg-[var(--esl-bg-section)] border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center">
                     <Plus className="w-3.5 h-3.5 text-[var(--esl-text-secondary)]" />
                   </button>
@@ -567,6 +580,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             </div>
 
             <button onClick={handleAdd} disabled={added}
+              aria-label={`${product.name} сагсанд нэмэх`}
               className={cn('w-full py-3.5 rounded-xl font-bold text-sm border-none cursor-pointer transition-all flex items-center justify-center gap-2',
                 added ? 'bg-green-500 text-white' : 'bg-[#E24B4A] text-white shadow-[0_4px_16px_rgba(226,75,74,.3)] hover:bg-[#c73a39] hover:shadow-[0_6px_20px_rgba(226,75,74,.4)]')}>
               {added ? <><Check className="w-4 h-4" /> Нэмэгдлээ!</> : <><ShoppingCart className="w-4 h-4" /> Сагсанд нэмэх — {formatPrice(px * qty)}</>}
@@ -574,6 +588,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
 
             {isAffiliate && onShare && (
               <button onClick={onShare}
+                aria-label={`${product.name} хуваалцах линк хуулах`}
                 className="w-full bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)] py-3 rounded-xl font-semibold text-sm border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center gap-2">
                 <Share2 className="w-4 h-4" /> Хуваалцах линк хуулах
               </button>
@@ -606,6 +621,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         >
           <SafeImage src={zoomedImg} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
           <button onClick={() => setZoomedImg(null)}
+            aria-label="Томруулсан зураг хаах"
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border-none cursor-pointer flex items-center justify-center text-white hover:bg-white/20 transition">
             <X className="w-5 h-5" />
           </button>
