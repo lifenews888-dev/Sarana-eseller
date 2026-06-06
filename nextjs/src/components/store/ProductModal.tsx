@@ -139,16 +139,22 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
     return () => { document.body.style.overflow = ''; };
   }, [product]);
 
-  // Keyboard nav between products
+  // Keyboard shortcuts for modal and media zoom
   useEffect(() => {
     if (!product) return;
     const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (zoomedImg) setZoomedImg(null);
+        else onClose();
+        return;
+      }
+      if (zoomedImg) return;
       if (e.key === 'ArrowLeft' && hasPrev && onPrev) onPrev();
       if (e.key === 'ArrowRight' && hasNext && onNext) onNext();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [product, hasPrev, hasNext, onPrev, onNext]);
+  }, [product, zoomedImg, hasPrev, hasNext, onPrev, onNext, onClose]);
 
   if (!product) return null;
 
