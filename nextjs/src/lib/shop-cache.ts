@@ -6,13 +6,55 @@
 import { Redis } from '@upstash/redis';
 import { prisma } from './prisma';
 
-const redis = new Redis({
-  url: process.env.UPSTASH_KV_REST_API_URL!,
-  token: process.env.UPSTASH_KV_REST_API_TOKEN!,
-});
-
 const CACHE_TTL = 3600; // 1 цаг
 const NULL_TTL = 300;   // 5 минут (олдохгүй бол)
+
+let redisClient: Redis | null | undefined;
+
+function getRedis(): Redis | null {
+  if (redisClient !== undefined) return redisClient;
+
+  const url =
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.UPSTASH_KV_REST_API_URL ||
+    process.env.KV_REST_API_URL;
+  const token =
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.UPSTASH_KV_REST_API_TOKEN ||
+    process.env.KV_REST_API_TOKEN;
+
+  redisClient = url && token ? new Redis({ url, token }) : null;
+  return redisClient;
+}
+
+async function getCached<T>(key: string): Promise<T | null | undefined> {
+  const redis = getRedis();
+  if (!redis) return undefined;
+
+  try {
+    return await redis.get<T>(key);
+  } catch {
+    return undefined;
+  }
+}
+
+async function setCached(key: string, value: unknown, ttl: number): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+
+  try {
+    await redis.set(key, value, { ex: ttl });
+  } catch {}
+}
+
+async function deleteCached(key: string): Promise<void> {
+  const redis = getRedis();
+  if (!redis) return;
+
+  try {
+    await redis.del(key);
+  } catch {}
+}
 
 export interface ShopConfig {
   id: string;
@@ -35,12 +77,8 @@ export async function getShopConfig(slug: string): Promise<ShopConfig | null> {
   const key = `shop:${slug}`;
 
   // 1. Redis cache
-  try {
-    const cached = await redis.get<ShopConfig>(key);
-    if (cached !== null && cached !== undefined) return cached;
-  } catch {
-    // Redis unavailable — fall through to DB
-  }
+  const cached = await getCached<ShopConfig>(key);
+  if (cached !== null && cached !== undefined) return cached;
 
   // 2. DB lookup — enterprise shop
   const enterprise = await prisma.enterpriseShop.findFirst({
@@ -74,7 +112,7 @@ export async function getShopConfig(slug: string): Promise<ShopConfig | null> {
       address: enterprise.shop.address,
       ownerId: enterprise.shop.userId,
     };
-    try { await redis.set(key, config, { ex: CACHE_TTL }); } catch {}
+    await setCached(key, config, CACHE_TTL);
     return config;
   }
 
@@ -91,7 +129,7 @@ export async function getShopConfig(slug: string): Promise<ShopConfig | null> {
   });
 
   if (!shop) {
-    try { await redis.set(key, null, { ex: NULL_TTL }); } catch {}
+    await setCached(key, null, NULL_TTL);
     return null;
   }
 
@@ -111,7 +149,7 @@ export async function getShopConfig(slug: string): Promise<ShopConfig | null> {
     ownerId: shop.userId,
   };
 
-  try { await redis.set(key, config, { ex: CACHE_TTL }); } catch {}
+  await setCached(key, config, CACHE_TTL);
   return config;
 }
 
@@ -119,10 +157,8 @@ export async function getShopConfig(slug: string): Promise<ShopConfig | null> {
 export async function getShopByDomain(domain: string): Promise<ShopConfig | null> {
   const key = `domain:${domain}`;
 
-  try {
-    const cached = await redis.get<ShopConfig>(key);
-    if (cached !== null && cached !== undefined) return cached;
-  } catch {}
+  const cached = await getCached<ShopConfig>(key);
+  if (cached !== null && cached !== undefined) return cached;
 
   const enterprise = await prisma.enterpriseShop.findFirst({
     where: { customDomain: domain, isActive: true },
@@ -137,7 +173,7 @@ export async function getShopByDomain(domain: string): Promise<ShopConfig | null
   });
 
   if (!enterprise) {
-    try { await redis.set(key, null, { ex: NULL_TTL }); } catch {}
+    await setCached(key, null, NULL_TTL);
     return null;
   }
 
@@ -157,15 +193,15 @@ export async function getShopByDomain(domain: string): Promise<ShopConfig | null
     ownerId: enterprise.shop.userId,
   };
 
-  try { await redis.set(key, config, { ex: CACHE_TTL }); } catch {}
+  await setCached(key, config, CACHE_TTL);
   return config;
 }
 
 /** Invalidate cache when shop config changes */
 export async function invalidateShopCache(slug: string): Promise<void> {
-  try { await redis.del(`shop:${slug}`); } catch {}
+  await deleteCached(`shop:${slug}`);
 }
 
 export async function invalidateDomainCache(domain: string): Promise<void> {
-  try { await redis.del(`domain:${domain}`); } catch {}
+  await deleteCached(`domain:${domain}`);
 }

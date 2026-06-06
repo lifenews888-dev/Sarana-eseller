@@ -692,8 +692,6 @@ export default function StorePage() {
             hasNext={(() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); return idx >= 0 && idx < filtered.length - 1; })()}
             onPrev={() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); if (idx > 0) setSelProduct(filtered[idx - 1]); }}
             onNext={() => { const idx = filtered.findIndex(p => productId(p) === productId(selProduct)); if (idx >= 0 && idx < filtered.length - 1) setSelProduct(filtered[idx + 1]); }}
-            allProducts={catalogItems}
-            onProductClick={(id) => setSelProduct(findProduct(id))}
           />
         )}
 

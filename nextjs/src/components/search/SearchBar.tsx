@@ -17,15 +17,17 @@ export default function SearchBar({ placeholder = 'Бараа, дэлгүүр х
   const [suggestions, setSuggestions] = useState<Suggestion | null>(null);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
-    if (q.length < 2) { setSuggestions(null); return; }
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    const query = q.trim();
+    if (query.length < 2) return undefined;
+
+    const timeout = setTimeout(() => {
       fetch(`/api/search/suggest?q=${encodeURIComponent(q)}`)
         .then(r => r.json()).then(d => { setSuggestions(d); setOpen(true); }).catch(() => {});
     }, 300);
+
+    return () => clearTimeout(timeout);
   }, [q]);
 
   useEffect(() => {
@@ -35,6 +37,12 @@ export default function SearchBar({ placeholder = 'Бараа, дэлгүүр х
   }, []);
 
   const submit = () => { if (q.trim()) { router.push(`/search?q=${encodeURIComponent(q)}`); setOpen(false); } };
+  const updateQuery = (value: string) => {
+    setQ(value);
+    if (value.trim().length >= 2) return;
+    setSuggestions(null);
+    setOpen(false);
+  };
   const h = size === 'lg' ? 'h-14 text-base' : size === 'sm' ? 'h-9 text-xs' : 'h-11 text-sm';
   const hasSuggestions = suggestions && (suggestions.products.length > 0 || suggestions.shops.length > 0 || suggestions.categories.length > 0);
 
@@ -42,7 +50,7 @@ export default function SearchBar({ placeholder = 'Бараа, дэлгүүр х
     <div ref={ref} className="relative w-full">
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'var(--esl-text-muted)' }} />
-        <input value={q} onChange={e => setQ(e.target.value)} onFocus={() => hasSuggestions && setOpen(true)}
+        <input value={q} onChange={e => updateQuery(e.target.value)} onFocus={() => hasSuggestions && setOpen(true)}
           onKeyDown={e => e.key === 'Enter' && submit()} placeholder={placeholder}
           className={`w-full pl-12 pr-10 ${h} rounded-2xl outline-none transition-all focus:ring-2 focus:ring-[#E8242C]/30`}
           style={{ background: 'var(--esl-bg-card)', border: '1.5px solid var(--esl-border)', color: 'var(--esl-text-primary)' }} />
@@ -95,7 +103,7 @@ export default function SearchBar({ placeholder = 'Бараа, дэлгүүр х
           )}
           <div className="p-2 border-t" style={{ borderColor: 'var(--esl-border)' }}>
             <button onClick={submit} className="w-full py-2 rounded-lg text-xs font-semibold border-none cursor-pointer" style={{ background: 'var(--esl-bg-section)', color: '#E8242C' }}>
-              "{q}" хайх →
+              &quot;{q}&quot; хайх →
             </button>
           </div>
         </div>

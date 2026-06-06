@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ok } from '@/lib/api-envelope';
 import { getSafeImageList } from '@/lib/image-url';
-import { publicProductWhere } from '@/lib/product-visibility';
+import { filterPublicLaunchProducts, publicProductWhere } from '@/lib/product-visibility';
 
 // GET /api/products/[id]/related?limit=4
 // Same-category active products, excluding the current one.
@@ -45,8 +45,10 @@ export async function GET(
       },
     });
 
+    const visibleProducts = filterPublicLaunchProducts(products);
+
     return ok({
-      products: products.map((product) => ({
+      products: visibleProducts.map((product) => ({
         ...product,
         _id: product.id,
         images: getSafeImageList(product.images),

@@ -1,7 +1,16 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { ChevronLeft, ChevronRight, Play, X, Maximize2, Package, Globe, Ruler } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Images,
+  Maximize2,
+  Package,
+  Play,
+  Ruler,
+  X,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import SafeImage from '@/components/ui/SafeImage';
 
@@ -22,52 +31,83 @@ interface MediaCarouselProps {
   mediaLabel?: string;
 }
 
-export default function MediaCarousel({ media, layout = 'carousel', aspectRatio = 'aspect-[4/3]', className, mediaLabel }: MediaCarouselProps) {
+export default function MediaCarousel({
+  media,
+  layout = 'carousel',
+  aspectRatio = 'aspect-[4/3]',
+  className,
+  mediaLabel,
+}: MediaCarouselProps) {
   const [active, setActive] = useState(0);
-  const [zoomed, setZoomed] = useState<{ src: string; alt: string } | null>(null);
-  const [playingVideo, setPlayingVideo] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const touchRef = useRef<{ x: number; y: number } | null>(null);
 
-  const fallbackLabel = mediaLabel?.trim() || 'Listing media';
+  const fallbackLabel = mediaLabel?.trim() || 'Зарын медиа';
+  const orderedMedia = useMemo(() => (
+    [...media].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+  ), [media]);
+  const visualMedia = useMemo(() => (
+    orderedMedia.filter((item) => item.type === 'IMAGE' || item.type === 'VIDEO' || item.type === 'FLOOR_PLAN')
+  ), [orderedMedia]);
+  const virtualTours = useMemo(() => (
+    orderedMedia.filter((item) => item.type === 'VIRTUAL_TOUR')
+  ), [orderedMedia]);
+  const visualCount = visualMedia.length;
+
   const mediaAlt = useCallback((item: MediaItem | undefined, index: number) => (
     item?.caption?.trim() || `${fallbackLabel} ${index + 1}`
   ), [fallbackLabel]);
 
-  const images = useMemo(() => media.filter(m => m.type === 'IMAGE'), [media]);
-  const videos = useMemo(() => media.filter(m => m.type === 'VIDEO'), [media]);
-  const tours = useMemo(() => media.filter(m => m.type === 'VIRTUAL_TOUR'), [media]);
-  const floorPlans = useMemo(() => media.filter(m => m.type === 'FLOOR_PLAN'), [media]);
-  const allVisual = useMemo(() => [...images, ...videos], [images, videos]);
-  const visualCount = allVisual.length;
-
   const go = useCallback((dir: 1 | -1) => {
     if (visualCount <= 0) return;
-    setActive(i => (i + dir + visualCount) % visualCount);
-    setPlayingVideo(null);
+    setActive((index) => (index + dir + visualCount) % visualCount);
   }, [visualCount]);
 
+  const goLightbox = useCallback((dir: 1 | -1) => {
+    if (visualCount <= 0) return;
+    setLightboxIndex((index) => {
+      if (index === null) return index;
+      return (index + dir + visualCount) % visualCount;
+    });
+  }, [visualCount]);
+
+  const openLightbox = useCallback((index: number) => {
+    setActive(index);
+    setLightboxIndex(index);
+  }, []);
+
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') go(-1);
-      if (e.key === 'ArrowRight') go(1);
-      if (e.key === 'Escape') { setZoomed(null); setShowAll(false); }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setLightboxIndex(null);
+      if (lightboxIndex !== null) {
+        if (event.key === 'ArrowLeft') goLightbox(-1);
+        if (event.key === 'ArrowRight') goLightbox(1);
+        return;
+      }
+      if (event.key === 'ArrowLeft') go(-1);
+      if (event.key === 'ArrowRight') go(1);
     };
+
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [go]);
+  }, [go, goLightbox, lightboxIndex]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  const handleTouchStart = (event: React.TouchEvent) => {
+    touchRef.current = {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY,
+    };
   };
-  const handleTouchEnd = (e: React.TouchEvent) => {
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
     if (!touchRef.current) return;
-    const dx = e.changedTouches[0].clientX - touchRef.current.x;
-    if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+    const dx = event.changedTouches[0].clientX - touchRef.current.x;
+    const dy = event.changedTouches[0].clientY - touchRef.current.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy)) go(dx < 0 ? 1 : -1);
     touchRef.current = null;
   };
 
-  if (allVisual.length === 0) {
+  if (visualCount === 0) {
     return (
       <div className={cn(aspectRatio, 'bg-[var(--esl-bg-card)] rounded-2xl flex items-center justify-center', className)}>
         <Package className="w-10 h-10 opacity-30" />
@@ -75,199 +115,374 @@ export default function MediaCarousel({ media, layout = 'carousel', aspectRatio 
     );
   }
 
-  const current = allVisual[active];
+  const safeActive = Math.min(active, visualCount - 1);
+  const current = visualMedia[safeActive] || visualMedia[0];
 
-  // Grid layout for real estate
-  if (layout === 'grid' && images.length >= 3) {
-    const gridImages = images.slice(0, 4);
-    const remaining = images.length - 4;
+  if (layout === 'grid' && visualCount >= 3) {
+    const gridItems = visualMedia.slice(0, 5);
+    const remaining = Math.max(visualCount - 5, 0);
+
     return (
       <>
-        <div className={cn('grid grid-cols-4 grid-rows-2 gap-1.5 rounded-2xl overflow-hidden', aspectRatio, className)}>
-          {/* Main image */}
-          <div
-            className="col-span-2 row-span-2 relative cursor-pointer group"
-            onClick={() => setZoomed({ src: gridImages[0].url, alt: mediaAlt(gridImages[0], 0) })}
-          >
-            <SafeImage
-              src={gridImages[0].url}
-              alt={mediaAlt(gridImages[0], 0)}
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          </div>
-          {gridImages.slice(1).map((img, i) => (
-            <div key={i} className="relative cursor-pointer group" onClick={() => setZoomed({ src: img.url, alt: mediaAlt(img, i + 1) })}>
-              <SafeImage
-                src={img.url}
-                alt={mediaAlt(img, i + 1)}
-                className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-              />
-              {i === 2 && remaining > 0 && (
+        <div className={cn('relative overflow-hidden rounded-2xl bg-black', aspectRatio, className)}>
+          <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 gap-1.5">
+            <button
+              type="button"
+              className="group relative col-span-2 row-span-2 overflow-hidden bg-[var(--esl-bg-muted)] text-left"
+              onClick={() => openLightbox(0)}
+              aria-label={`${mediaAlt(gridItems[0], 0)} харах`}
+            >
+              <MediaTile item={gridItems[0]} alt={mediaAlt(gridItems[0], 0)} priority />
+            </button>
+
+            {gridItems.slice(1).map((item, index) => {
+              const mediaIndex = index + 1;
+              const isLastTile = mediaIndex === gridItems.length - 1;
+              return (
                 <button
-                  onClick={(e) => { e.stopPropagation(); setShowAll(true); }}
-                  className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-bold text-lg"
+                  key={`${item.type}-${item.url}-${mediaIndex}`}
+                  type="button"
+                  className={cn(
+                    'group relative overflow-hidden bg-[var(--esl-bg-muted)] text-left',
+                    gridTileSpanClass(mediaIndex, gridItems.length)
+                  )}
+                  onClick={() => openLightbox(mediaIndex)}
+                  aria-label={`${mediaAlt(item, mediaIndex)} харах`}
                 >
-                  +{remaining} зураг
+                  <MediaTile item={item} alt={mediaAlt(item, mediaIndex)} />
+                  {isLastTile && remaining > 0 ? (
+                    <span className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 text-white">
+                      <span className="text-xl font-black leading-none">+{remaining}</span>
+                      <span className="mt-1 text-[11px] font-bold">медиа</span>
+                    </span>
+                  ) : null}
                 </button>
-              )}
-            </div>
-          ))}
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => openLightbox(0)}
+            className="absolute bottom-3 left-3 inline-flex h-9 items-center gap-2 rounded-full bg-black/60 px-3 text-xs font-bold text-white backdrop-blur hover:bg-black/75"
+          >
+            <Images size={15} />
+            {visualCount} медиа
+          </button>
         </div>
 
-        {/* Video/Tour/FloorPlan badges */}
-        <div className="flex gap-2 mt-3">
-          {videos.length > 0 && (
-            <button onClick={() => setPlayingVideo(videos[0].url)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
-              <Play size={14} /> Видео ({videos.length})
-            </button>
-          )}
-          {tours.length > 0 && (
-            <button onClick={() => setPlayingVideo(tours[0].url)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
-              <Globe size={14} /> 360° тойрог
-            </button>
-          )}
-          {floorPlans.length > 0 && (
-            <button onClick={() => setZoomed({ src: floorPlans[0].url, alt: mediaAlt(floorPlans[0], 0) })} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
-              <Ruler size={14} /> Зураглал
-            </button>
-          )}
-        </div>
+        <MediaExtras tours={virtualTours} />
 
-        {/* Gallery modal */}
-        {showAll && <GalleryModal images={images} mediaLabel={fallbackLabel} onClose={() => setShowAll(false)} />}
-        {zoomed && <ZoomModal src={zoomed.src} alt={zoomed.alt} onClose={() => setZoomed(null)} />}
-        {playingVideo && <VideoModal src={playingVideo} onClose={() => setPlayingVideo(null)} />}
+        {lightboxIndex !== null ? (
+          <GalleryLightbox
+            items={visualMedia}
+            activeIndex={lightboxIndex}
+            mediaLabel={fallbackLabel}
+            mediaAlt={mediaAlt}
+            onChange={setLightboxIndex}
+            onPrev={() => goLightbox(-1)}
+            onNext={() => goLightbox(1)}
+            onClose={() => setLightboxIndex(null)}
+          />
+        ) : null}
       </>
     );
   }
 
-  // Carousel layout (default)
   return (
     <>
-      <div className={cn('relative rounded-2xl overflow-hidden group', aspectRatio, className)}
-        onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}
+      <div
+        className={cn('relative overflow-hidden rounded-2xl bg-black group', aspectRatio, className)}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
       >
-        {current.type === 'VIDEO' || playingVideo ? (
-          <div className="absolute inset-0 bg-black flex items-center justify-center">
-            <iframe src={playingVideo || current.url} className="w-full h-full" allowFullScreen allow="autoplay" />
-          </div>
-        ) : (
-          <SafeImage
-            src={current.url}
-            alt={mediaAlt(current, active)}
-            loading={active === 0 ? 'eager' : 'lazy'}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        )}
+        <button
+          type="button"
+          className="absolute inset-0 text-left"
+          onClick={() => openLightbox(safeActive)}
+          aria-label={`${mediaAlt(current, safeActive)} томоор харах`}
+        >
+          <MediaTile item={current} alt={mediaAlt(current, safeActive)} priority={safeActive === 0} />
+        </button>
 
-        {/* Arrows */}
-        {allVisual.length > 1 && (
+        {visualCount > 1 ? (
           <>
-            <button onClick={() => go(-1)} className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><ChevronLeft size={20} /></button>
-            <button onClick={() => go(1)} className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><ChevronRight size={20} /></button>
+            <button
+              type="button"
+              onClick={() => go(-1)}
+              className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+              aria-label="Өмнөх медиа"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              type="button"
+              onClick={() => go(1)}
+              className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+              aria-label="Дараах медиа"
+            >
+              <ChevronRight size={20} />
+            </button>
           </>
-        )}
+        ) : null}
 
-        {/* Zoom */}
-        {current.type === 'IMAGE' && (
-          <button onClick={() => setZoomed({ src: current.url, alt: mediaAlt(current, active) })} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"><Maximize2 size={16} /></button>
-        )}
+        <button
+          type="button"
+          onClick={() => openLightbox(safeActive)}
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity hover:bg-black/70 group-hover:opacity-100"
+          aria-label="Томоор харах"
+        >
+          <Maximize2 size={16} />
+        </button>
 
-        {/* Video play overlay */}
-        {current.type === 'VIDEO' && !playingVideo && (
-          <button onClick={() => setPlayingVideo(current.url)} className="absolute inset-0 flex items-center justify-center">
-            <div className="w-16 h-16 rounded-full bg-black/60 flex items-center justify-center"><Play size={28} className="text-white ml-1" /></div>
-          </button>
-        )}
-
-        {/* Counter */}
-        <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-black/50 text-white text-xs font-medium">
-          {active + 1}/{allVisual.length}
+        <div className="absolute bottom-3 right-3 rounded-full bg-black/55 px-2.5 py-1 text-xs font-bold text-white">
+          {safeActive + 1}/{visualCount}
         </div>
       </div>
 
-      {/* Dots */}
-      {allVisual.length > 1 && allVisual.length <= 12 && (
-        <div className="flex justify-center gap-1.5 mt-3">
-          {allVisual.map((m, i) => (
-            <button key={i} onClick={() => { setActive(i); setPlayingVideo(null); }}
-              className={cn('w-2 h-2 rounded-full transition-all', i === active ? 'bg-[#E8242C] w-5' : 'bg-[var(--esl-border)]')}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Thumbnails for many images */}
-      {allVisual.length > 12 && (
-        <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1 scrollbar-none">
-          {allVisual.map((m, i) => (
-            <button key={i} onClick={() => { setActive(i); setPlayingVideo(null); }}
-              className={cn('w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 border-2 transition-colors', i === active ? 'border-[#E8242C]' : 'border-transparent')}
+      {visualCount > 1 ? (
+        <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {visualMedia.map((item, index) => (
+            <button
+              key={`${item.type}-${item.url}-${index}`}
+              type="button"
+              onClick={() => setActive(index)}
+              className={cn(
+                'relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 bg-black transition-colors',
+                index === safeActive ? 'border-[#E8242C]' : 'border-transparent'
+              )}
+              aria-label={`${mediaAlt(item, index)} сонгох`}
             >
-              <SafeImage src={m.thumbnail || m.url} alt={mediaAlt(m, i)} className="h-full w-full object-cover" />
+              <MediaTile item={item} alt={mediaAlt(item, index)} compact />
             </button>
           ))}
         </div>
-      )}
+      ) : null}
 
-      {/* Media type buttons */}
-      {(tours.length > 0 || floorPlans.length > 0) && (
-        <div className="flex gap-2 mt-3">
-          {tours.map((t, i) => (
-            <button key={i} onClick={() => setPlayingVideo(t.url)} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
-              <Globe size={14} /> 360° харах
-            </button>
-          ))}
-          {floorPlans.map((f, i) => (
-            <button key={i} onClick={() => setZoomed({ src: f.url, alt: mediaAlt(f, i) })} className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-full text-xs font-medium hover:bg-[var(--esl-bg-muted)] transition-colors">
-              <Ruler size={14} /> Зураглал
-            </button>
-          ))}
-        </div>
-      )}
+      <MediaExtras tours={virtualTours} />
 
-      {zoomed && <ZoomModal src={zoomed.src} alt={zoomed.alt} onClose={() => setZoomed(null)} />}
-      {playingVideo && current.type !== 'VIDEO' && <VideoModal src={playingVideo} onClose={() => setPlayingVideo(null)} />}
+      {lightboxIndex !== null ? (
+        <GalleryLightbox
+          items={visualMedia}
+          activeIndex={lightboxIndex}
+          mediaLabel={fallbackLabel}
+          mediaAlt={mediaAlt}
+          onChange={setLightboxIndex}
+          onPrev={() => goLightbox(-1)}
+          onNext={() => goLightbox(1)}
+          onClose={() => setLightboxIndex(null)}
+        />
+      ) : null}
     </>
   );
 }
 
-/* ═══ Zoom Modal ═══ */
-function ZoomModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+function gridTileSpanClass(mediaIndex: number, gridCount: number): string {
+  if (gridCount === 3) return 'col-span-2';
+  if (gridCount === 4 && mediaIndex === 3) return 'col-span-2';
+  return '';
+}
+
+function MediaTile({
+  item,
+  alt,
+  compact = false,
+  priority = false,
+}: {
+  item: MediaItem;
+  alt: string;
+  compact?: boolean;
+  priority?: boolean;
+}) {
+  const preview = item.thumbnail || (item.type === 'IMAGE' || item.type === 'FLOOR_PLAN' ? item.url : null);
+
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" onClick={onClose}>
-      <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"><X size={24} /></button>
-      <div className="h-[80vh] w-[90vw] max-w-[1200px]" onClick={e => e.stopPropagation()}>
-        <SafeImage src={src} alt={alt} className="h-full w-full object-contain" />
-      </div>
+    <>
+      {preview ? (
+        <SafeImage
+          src={preview}
+          alt={alt}
+          loading={priority ? 'eager' : 'lazy'}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-neutral-900 text-white">
+          <Play className={compact ? 'h-5 w-5' : 'h-9 w-9'} />
+        </div>
+      )}
+
+      {item.type === 'VIDEO' ? (
+        <span className="absolute inset-0 flex items-center justify-center bg-black/20">
+          <span className={cn('flex items-center justify-center rounded-full bg-black/65 text-white', compact ? 'h-7 w-7' : 'h-14 w-14')}>
+            <Play className={compact ? 'h-4 w-4' : 'h-7 w-7'} fill="currentColor" />
+          </span>
+        </span>
+      ) : null}
+
+      {item.type === 'FLOOR_PLAN' ? (
+        <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-black/60 px-2 py-1 text-[10px] font-bold text-white">
+          <Ruler size={12} />
+          Зургалал
+        </span>
+      ) : null}
+    </>
+  );
+}
+
+function MediaExtras({ tours }: { tours: MediaItem[] }) {
+  if (tours.length === 0) return null;
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {tours.map((tour, index) => (
+        <a
+          key={`${tour.url}-${index}`}
+          href={tour.url}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-xs font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg-muted)]"
+        >
+          <Images size={14} />
+          360° харах
+        </a>
+      ))}
     </div>
   );
 }
 
-/* ═══ Video Modal ═══ */
-function VideoModal({ src, onClose }: { src: string; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center" onClick={onClose}>
-      <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20"><X size={24} /></button>
-      <div className="w-[90vw] max-w-4xl aspect-video" onClick={e => e.stopPropagation()}>
-        <iframe src={src} className="w-full h-full rounded-xl" allowFullScreen allow="autoplay" />
-      </div>
-    </div>
-  );
-}
+function GalleryLightbox({
+  items,
+  activeIndex,
+  mediaLabel,
+  mediaAlt,
+  onChange,
+  onPrev,
+  onNext,
+  onClose,
+}: {
+  items: MediaItem[];
+  activeIndex: number;
+  mediaLabel: string;
+  mediaAlt: (item: MediaItem | undefined, index: number) => string;
+  onChange: (index: number) => void;
+  onPrev: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}) {
+  const current = items[activeIndex] || items[0];
+  const canSlide = items.length > 1;
 
-/* ═══ Gallery Modal ═══ */
-function GalleryModal({ images, mediaLabel, onClose }: { images: MediaItem[]; mediaLabel: string; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/95 overflow-y-auto p-4" onClick={onClose}>
-      <button onClick={onClose} className="fixed top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20 z-10"><X size={24} /></button>
-      <div className="max-w-5xl mx-auto pt-16 grid grid-cols-2 md:grid-cols-3 gap-2" onClick={e => e.stopPropagation()}>
-        {images.map((img, i) => (
-          <div key={i} className="relative aspect-square rounded-lg overflow-hidden">
-            <SafeImage src={img.url} alt={img.caption?.trim() || `${mediaLabel} ${i + 1}`} className="absolute inset-0 h-full w-full object-cover" />
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-black/95 text-white" onClick={onClose}>
+      <div className="flex h-14 shrink-0 items-center justify-between gap-3 px-4">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold">{mediaLabel}</p>
+          <p className="text-xs text-white/60">{activeIndex + 1}/{items.length}</p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"
+          aria-label="Хаах"
+        >
+          <X size={22} />
+        </button>
+      </div>
+
+      <div className="relative min-h-0 flex-1" onClick={(event) => event.stopPropagation()}>
+        <div className="absolute inset-0 flex items-center justify-center px-4 pb-24 pt-2 sm:px-16">
+          <LightboxFrame item={current} alt={mediaAlt(current, activeIndex)} />
+        </div>
+
+        {canSlide ? (
+          <>
+            <button
+              type="button"
+              onClick={onPrev}
+              className="absolute left-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              aria-label="Өмнөх медиа"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              type="button"
+              onClick={onNext}
+              className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
+              aria-label="Дараах медиа"
+            >
+              <ChevronRight size={24} />
+            </button>
+          </>
+        ) : null}
+
+        {canSlide ? (
+          <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-black via-black/85 to-transparent px-4 pb-4 pt-8">
+            <div className="flex max-w-full gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {items.map((item, index) => (
+                <button
+                  key={`${item.type}-${item.url}-${index}`}
+                  type="button"
+                  onClick={() => onChange(index)}
+                  className={cn(
+                    'relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 bg-black',
+                    activeIndex === index ? 'border-[#E8242C]' : 'border-white/20'
+                  )}
+                  aria-label={`${mediaAlt(item, index)} сонгох`}
+                >
+                  <MediaTile item={item} alt={mediaAlt(item, index)} compact />
+                </button>
+              ))}
+            </div>
           </div>
-        ))}
+        ) : null}
       </div>
     </div>
   );
+}
+
+function LightboxFrame({ item, alt }: { item: MediaItem; alt: string }) {
+  if (item.type === 'VIDEO') {
+    if (isDirectVideoUrl(item.url)) {
+      return (
+        <video
+          key={item.url}
+          src={item.url}
+          poster={item.thumbnail}
+          controls
+          playsInline
+          className="max-h-full max-w-full rounded-xl bg-black"
+        />
+      );
+    }
+
+    return (
+      <iframe
+        key={item.url}
+        src={item.url}
+        title={alt}
+        className="aspect-video w-full max-w-5xl rounded-xl bg-black"
+        allow="autoplay; encrypted-media; picture-in-picture"
+        allowFullScreen
+      />
+    );
+  }
+
+  return (
+    <div className="relative h-full w-full">
+      <SafeImage
+        src={item.url}
+        alt={alt}
+        className="absolute inset-0 h-full w-full object-contain"
+      />
+    </div>
+  );
+}
+
+function isDirectVideoUrl(url: string): boolean {
+  try {
+    const pathname = new URL(url, 'https://eseller.mn').pathname.toLowerCase();
+    return /\.(mp4|webm|ogg|mov)$/.test(pathname);
+  } catch {
+    return /\.(mp4|webm|ogg|mov)(\?|#|$)/i.test(url);
+  }
 }

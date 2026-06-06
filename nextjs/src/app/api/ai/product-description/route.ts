@@ -40,7 +40,7 @@ ${price ? `Үнэ: ${price}₮` : ''}
     const description = message.content[0].type === 'text' ? message.content[0].text : '';
 
     return NextResponse.json({ description });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('[AI] Product description error:', err);
     return NextResponse.json({ error: 'AI тайлбар үүсгэж чадсангүй' }, { status: 500 });
   }

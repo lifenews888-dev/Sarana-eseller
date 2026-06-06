@@ -138,7 +138,8 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
           <div>
             <MediaCarousel
               media={media}
-              layout={et === 'REAL_ESTATE' || et === 'CONSTRUCTION' ? 'grid' : 'carousel'}
+              layout="grid"
+              mediaLabel={product.name}
             />
           </div>
 

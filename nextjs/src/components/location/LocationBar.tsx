@@ -35,7 +35,7 @@ export default function LocationBar({
             </div>
           ) : district ? (
             <>
-              <p className="text-sm font-semibold" style={{ color: 'var(--esl-text-primary)' }}>{district.label} дүүрэг</p>
+              <p className="text-sm font-semibold" style={{ color: 'var(--esl-text-primary)' }}>{district.label}</p>
               {nearbyCount !== undefined && (
                 <p className="text-xs" style={{ color: 'var(--esl-text-muted)' }}>Таны ойролцоо {nearbyCount} дэлгүүр, үйлчилгээ</p>
               )}

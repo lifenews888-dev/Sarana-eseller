@@ -38,7 +38,6 @@ const ROUTE_LIMITS: Record<string, RateLimitConfig> = {
 };
 
 function getConfig(method: string, path: string): RateLimitConfig {
-  const key = `${method}:${path}`;
   // Find matching route
   for (const [pattern, config] of Object.entries(ROUTE_LIMITS)) {
     if (pattern === 'DEFAULT') continue;
@@ -73,8 +72,10 @@ export function checkRateLimit(req: NextRequest): { limited: boolean; remaining:
 }
 
 /** Apply rate limit to API route handler */
-export function withRateLimit(handler: (req: NextRequest, ...args: any[]) => Promise<Response>) {
-  return async (req: NextRequest, ...args: any[]) => {
+export function withRateLimit<Args extends unknown[]>(
+  handler: (req: NextRequest, ...args: Args) => Promise<Response>
+) {
+  return async (req: NextRequest, ...args: Args) => {
     const { limited, remaining, resetIn } = checkRateLimit(req);
 
     if (limited) {

@@ -10,6 +10,7 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+import { getPublicProductQualityIssue } from '../src/lib/product-visibility';
 
 const BASE = process.env.BASE_URL || 'http://localhost:3000';
 
@@ -81,6 +82,10 @@ const PUBLIC_IMAGE_API_ROUTES = [
 const HIDDEN_AUDIT_PRODUCT_ROUTES = [
   '/product/69e1b41bba8282843ef58e30',
   '/api/products/69e1b41bba8282843ef58e30',
+  '/product/69e1b411ba8282843ef58e2e',
+  '/api/products/69e1b411ba8282843ef58e2e',
+  '/product/69de669c59e20ea070499b7d',
+  '/api/products/69de669c59e20ea070499b7d',
 ];
 
 const FORBIDDEN_IMAGE_PREFIXES = [
@@ -197,15 +202,40 @@ function publicProductProblem(value: unknown): string | null {
   const name = typeof value.name === 'string' ? value.name : typeof value.title === 'string' ? value.title : '';
   const price = typeof value.price === 'number' ? value.price : null;
   if (name && price !== null) {
-    const lowerName = name.toLowerCase();
-    if (['e2e', 'test', 'тест', 'dummy', 'placeholder'].some((pattern) => lowerName.includes(pattern))) {
-      return `test product leaked: ${name}`;
-    }
-    if (price <= 1) return `zero/one price product leaked: ${name}`;
+    const issue = getPublicProductQualityIssue({
+      name,
+      description: typeof value.description === 'string' ? value.description : null,
+      price,
+      salePrice: typeof value.salePrice === 'number' ? value.salePrice : null,
+      images: value.images,
+      isActive: typeof value.isActive === 'boolean' ? value.isActive : true,
+      isDemo: typeof value.isDemo === 'boolean' ? value.isDemo : false,
+    });
+    if (issue) return `non-public product leaked: ${name} (${issue})`;
   }
 
   for (const nested of Object.values(value)) {
     const problem = publicProductProblem(nested);
+    if (problem) return problem;
+  }
+  return null;
+}
+
+function publicProductPaginationProblem(value: unknown): string | null {
+  if (!isRecord(value)) return null;
+
+  const list = Array.isArray(value.products)
+    ? value.products
+    : Array.isArray(value.items)
+      ? value.items
+      : null;
+
+  if (list && typeof value.total === 'number' && value.total > 0 && list.length === 0) {
+    return `first page is empty but total=${value.total}`;
+  }
+
+  for (const nested of Object.values(value)) {
+    const problem = publicProductPaginationProblem(nested);
     if (problem) return problem;
   }
   return null;
@@ -267,11 +297,12 @@ async function checkProductApi(route: string): Promise<CheckResult> {
     const urls = collectImageUrls(data);
     const problem = urls.map(imageUrlProblem).find(Boolean);
     const productProblem = publicProductProblem(data);
+    const paginationProblem = publicProductPaginationProblem(data);
     const envelopeOk = isRecord(body) && body.success === true && !!data;
     return {
       label: `product API images ${route}`,
-      ok: res.status < 400 && envelopeOk && !problem && !productProblem,
-      detail: `${res.status} urls=${urls.length}${problem ? ` ${problem}` : ''}${productProblem ? ` ${productProblem}` : ''}${!envelopeOk ? ' bad envelope' : ''}`,
+      ok: res.status < 400 && envelopeOk && !problem && !productProblem && !paginationProblem,
+      detail: `${res.status} urls=${urls.length}${problem ? ` ${problem}` : ''}${productProblem ? ` ${productProblem}` : ''}${paginationProblem ? ` ${paginationProblem}` : ''}${!envelopeOk ? ' bad envelope' : ''}`,
     };
   } catch (error) {
     return {
@@ -366,8 +397,19 @@ async function main() {
     'sanitizeImageUrls',
     'getSafeImageList',
   ]));
+  results.push(checkSourceContract('src/lib/product-visibility.ts', 'public product quality contract', [
+    'PUBLIC_PRODUCT_MIN_PRICE = 1000',
+    'hasPublicProductImage',
+    'getPublicProductQualityIssue',
+    'fetchPublicLaunchProductPage',
+  ]));
   results.push(checkSourceContract('src/app/api/products/route.ts', 'product list safe image read path', [
     'getSafeImageList',
+    'fetchPublicLaunchProductPage',
+  ]));
+  results.push(checkSourceContract('src/app/api/search/route.ts', 'search product pagination read path', [
+    'getSafeImageList',
+    'fetchPublicLaunchProductPage',
   ]));
   results.push(checkSourceContract('src/app/api/products/[id]/route.ts', 'product detail safe image read path', [
     'getSafeImageList',

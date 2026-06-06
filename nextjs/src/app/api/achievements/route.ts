@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     orderBy: { points: 'asc' },
   });
 
-  let earnedMap: Record<string, Date> = {};
+  const earnedMap: Record<string, Date> = {};
   let totalPoints = 0;
 
   if (user) {

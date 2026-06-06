@@ -8,15 +8,57 @@ interface MapPickerProps {
   onChange: (lat: number, lng: number) => void;
 }
 
+type LeafletPosition = [number, number] | { lat: number; lng: number };
+type LeafletLatLng = { lat: number; lng: number };
+type LeafletClickEvent = { latlng: LeafletLatLng };
+type LeafletIcon = object;
+
+type LeafletMap = {
+  setView(center: [number, number], zoom: number): LeafletMap;
+  on(event: 'click', handler: (event: LeafletClickEvent) => void): void;
+  remove(): void;
+};
+
+type LeafletMarker = {
+  addTo(map: LeafletMap): LeafletMarker;
+  on(event: 'dragend', handler: () => void): void;
+  getLatLng(): LeafletLatLng;
+  setLatLng(position: LeafletPosition): void;
+};
+
+type LeafletApi = {
+  map(element: HTMLElement): LeafletMap;
+  tileLayer(url: string, options: { attribution: string }): { addTo(map: LeafletMap): void };
+  divIcon(options: {
+    html: string;
+    iconSize: [number, number];
+    iconAnchor: [number, number];
+    className: string;
+  }): LeafletIcon;
+  marker(position: LeafletPosition, options: { draggable: boolean; icon: LeafletIcon }): LeafletMarker;
+};
+
+declare global {
+  interface Window {
+    L?: LeafletApi;
+  }
+}
+
 /**
  * Map picker using Leaflet (loaded via CDN to avoid SSR issues).
  * User can click map or drag marker to select location.
  */
 export function MapPicker({ lat, lng, onChange }: MapPickerProps) {
   const mapRef = useRef<HTMLDivElement>(null);
-  const mapObjRef = useRef<any>(null);
-  const markerRef = useRef<any>(null);
+  const mapObjRef = useRef<LeafletMap | null>(null);
+  const markerRef = useRef<LeafletMarker | null>(null);
+  const initialCoordsRef = useRef({ lat, lng });
+  const onChangeRef = useRef(onChange);
   const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   useEffect(() => {
     if (!mapRef.current || mapObjRef.current) return;
@@ -31,26 +73,31 @@ export function MapPicker({ lat, lng, onChange }: MapPickerProps) {
     }
 
     // Load Leaflet JS
-    const loadLeaflet = (): Promise<any> => {
-      if ((window as any).L) return Promise.resolve((window as any).L);
+    const loadLeaflet = (): Promise<LeafletApi> => {
+      if (window.L) return Promise.resolve(window.L);
 
       return new Promise((resolve) => {
         if (document.getElementById('leaflet-js')) {
           const check = setInterval(() => {
-            if ((window as any).L) { clearInterval(check); resolve((window as any).L); }
+            if (window.L) { clearInterval(check); resolve(window.L); }
           }, 50);
           return;
         }
         const script = document.createElement('script');
         script.id = 'leaflet-js';
         script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-        script.onload = () => resolve((window as any).L);
+        script.onload = () => {
+          if (window.L) resolve(window.L);
+        };
         document.head.appendChild(script);
       });
     };
 
+    let cancelled = false;
     loadLeaflet().then((L) => {
-      const map = L.map(mapRef.current!).setView([lat, lng], 14);
+      if (cancelled || !mapRef.current) return;
+      const { lat: initialLat, lng: initialLng } = initialCoordsRef.current;
+      const map = L.map(mapRef.current).setView([initialLat, initialLng], 14);
 
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap',
@@ -63,18 +110,18 @@ export function MapPicker({ lat, lng, onChange }: MapPickerProps) {
         className: '',
       });
 
-      const marker = L.marker([lat, lng], { draggable: true, icon }).addTo(map);
+      const marker = L.marker([initialLat, initialLng], { draggable: true, icon }).addTo(map);
       markerRef.current = marker;
 
       marker.on('dragend', () => {
         const pos = marker.getLatLng();
-        onChange(parseFloat(pos.lat.toFixed(6)), parseFloat(pos.lng.toFixed(6)));
+        onChangeRef.current(parseFloat(pos.lat.toFixed(6)), parseFloat(pos.lng.toFixed(6)));
       });
 
-      map.on('click', (e: any) => {
+      map.on('click', (e) => {
         const pos = e.latlng;
         marker.setLatLng(pos);
-        onChange(parseFloat(pos.lat.toFixed(6)), parseFloat(pos.lng.toFixed(6)));
+        onChangeRef.current(parseFloat(pos.lat.toFixed(6)), parseFloat(pos.lng.toFixed(6)));
       });
 
       mapObjRef.current = map;
@@ -82,6 +129,7 @@ export function MapPicker({ lat, lng, onChange }: MapPickerProps) {
     });
 
     return () => {
+      cancelled = true;
       mapObjRef.current?.remove();
       mapObjRef.current = null;
     };

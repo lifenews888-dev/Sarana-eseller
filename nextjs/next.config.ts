@@ -1,6 +1,12 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== 'production';
+const buildRoot = process.cwd();
+const turbopackRoot = process.env.VERCEL && path.basename(buildRoot) === 'nextjs'
+  ? path.dirname(buildRoot)
+  : buildRoot;
+
 const connectSrc = [
   "'self'",
   'https://sarana-backend.onrender.com',
@@ -48,6 +54,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
+  turbopack: {
+    root: turbopackRoot,
+  },
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'res.cloudinary.com', pathname: '/duo61k04v/**' },
@@ -66,7 +75,7 @@ const nextConfig: NextConfig = {
     return [{ source: '/(.*)', headers: securityHeaders }];
   },
   async rewrites() {
-    // Production: middleware.ts handles *.eseller.mn → /shop-sub/:slug
+    // Production: proxy.ts handles *.eseller.mn → /shop-sub/:slug
     // Dev only: next.config handles *.localhost → /shop-sub/:slug
     return {
       beforeFiles: [

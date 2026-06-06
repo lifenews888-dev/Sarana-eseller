@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSafeImageList } from '@/lib/image-url';
 
-export const revalidate = 300; // 5 минут cache
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {

@@ -1,22 +1,33 @@
 // eseller.mn — Analytics Event Tracking (GA4 + Facebook Pixel)
 
 declare global {
-  interface Window { dataLayer: any[]; fbq: (...args: any[]) => void }
+  interface Window { dataLayer: Record<string, unknown>[]; fbq: (...args: unknown[]) => void }
 }
 
-export function trackPurchase(order: { id: string; total: number; items: any[]; couponCode?: string }) {
+interface PurchaseItem {
+  product?: {
+    id?: string;
+    name?: string;
+  };
+  productId?: string;
+  name?: string;
+  price?: number;
+  quantity?: number;
+}
+
+export function trackPurchase(order: { id: string; total: number; items: PurchaseItem[]; couponCode?: string }) {
   if (typeof window === 'undefined') return;
   if (window.dataLayer) {
     window.dataLayer.push({
       event: 'purchase',
       ecommerce: {
         transaction_id: order.id, value: order.total, currency: 'MNT', coupon: order.couponCode,
-        items: order.items.map((i: any) => ({ item_id: i.product?.id || i.productId, item_name: i.product?.name || i.name, price: i.price, quantity: i.quantity })),
+        items: order.items.map((i) => ({ item_id: i.product?.id || i.productId, item_name: i.product?.name || i.name, price: i.price, quantity: i.quantity })),
       },
     });
   }
   if (window.fbq) {
-    window.fbq('track', 'Purchase', { value: order.total, currency: 'MNT', content_type: 'product', content_ids: order.items.map((i: any) => i.product?.id || i.productId) });
+    window.fbq('track', 'Purchase', { value: order.total, currency: 'MNT', content_type: 'product', content_ids: order.items.map((i) => i.product?.id || i.productId) });
   }
 }
 

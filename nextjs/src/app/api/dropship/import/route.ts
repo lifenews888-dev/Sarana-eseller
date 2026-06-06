@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { sanitizeImageUrls } from '@/lib/image-url'
+import { getPublicProductQualityIssue } from '@/lib/product-visibility'
 
 // USD → MNT ханш
 async function getUsdRate(): Promise<number> {
@@ -33,9 +34,19 @@ export async function POST(req: NextRequest) {
     category,
     description,
   } = await req.json()
+  const productName = typeof name === 'string' ? name.trim() : ''
+  const productDescription = typeof description === 'string' ? description : ''
 
-  if (!supplierId || !supplierName || !name) {
+  if (!supplierId || !supplierName || !productName) {
     return NextResponse.json({ error: 'Мэдээлэл дутуу' }, { status: 400 })
+  }
+
+  const numericSupplierPrice = Number(supplierPrice)
+  const numericProfitMargin = Number(profitMargin)
+  const cleanImages = sanitizeImageUrls(images)
+
+  if (!Number.isFinite(numericSupplierPrice) || numericSupplierPrice <= 0) {
+    return NextResponse.json({ error: 'Invalid supplier price' }, { status: 400 })
   }
 
   const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
@@ -55,16 +66,32 @@ export async function POST(req: NextRequest) {
 
   // Үнэ тооцоолох
   const usdRate = supplierCurrency === 'USD' ? await getUsdRate() : 1
-  const costMnt = Math.round(supplierPrice * usdRate)
-  const sellPrice = Math.round(costMnt * (1 + profitMargin / 100))
+  const margin = Number.isFinite(numericProfitMargin) ? numericProfitMargin : 40
+  const costMnt = Math.round(numericSupplierPrice * usdRate)
+  const sellPrice = Math.round(costMnt * (1 + margin / 100))
+  const qualityIssue = getPublicProductQualityIssue({
+    name: productName,
+    description: productDescription,
+    price: sellPrice,
+    images: cleanImages,
+    isActive: true,
+    isDemo: false,
+  })
+
+  if (qualityIssue) {
+    return NextResponse.json({
+      error: 'Product does not meet public marketplace quality requirements',
+      qualityIssue,
+    }, { status: 400 })
+  }
 
   // Бараа үүсгэх
   const product = await prisma.product.create({
     data: {
-      name,
-      description: description || '',
+      name: productName,
+      description: productDescription,
       price: sellPrice,
-      images: sanitizeImageUrls(images),
+      images: cleanImages,
       stock: supplierStock || 0,
       userId: auth.id,
       isActive: true,
@@ -79,10 +106,10 @@ export async function POST(req: NextRequest) {
       supplierName,
       supplierId,
       supplierUrl: supplierUrl || '',
-      supplierPrice,
+      supplierPrice: numericSupplierPrice,
       supplierCurrency: supplierCurrency || 'USD',
       supplierStock: supplierStock || 0,
-      profitMargin,
+      profitMargin: margin,
       syncStatus: 'success',
       lastSyncAt: new Date(),
       supplierData: { costMnt, usdRate, importedAt: new Date().toISOString() },

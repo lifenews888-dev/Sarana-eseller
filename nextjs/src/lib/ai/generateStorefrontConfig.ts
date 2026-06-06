@@ -8,6 +8,34 @@ import {
   MOOD_FONTS, MOOD_COLORS, createDefaultConfig,
 } from '@/lib/types/storefront';
 
+const SECTION_TYPES = new Set<Section['type']>([
+  'hero_fullscreen',
+  'hero_split',
+  'hero_centered',
+  'featured_products',
+  'about_story',
+  'instagram_grid',
+  'testimonials',
+  'video_banner',
+  'category_showcase',
+  'cta_banner',
+  'contact_map',
+]);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isSectionType(value: unknown): value is Section['type'] {
+  return typeof value === 'string' && SECTION_TYPES.has(value as Section['type']);
+}
+
+function getAnthropicText(data: unknown): string | null {
+  if (!isRecord(data) || !Array.isArray(data.content)) return null;
+  const first = data.content[0];
+  return isRecord(first) && typeof first.text === 'string' ? first.text : null;
+}
+
 /** Determine mood from category + price range */
 function inferMood(category: string, priceRange: string): Mood {
   const cat = category.toLowerCase();
@@ -160,24 +188,36 @@ Output ONLY valid JSON, no markdown.`;
 
   if (!res.ok) return null;
 
-  const data = await res.json();
-  const text = data.content?.[0]?.text;
+  const data: unknown = await res.json();
+  const text = getAnthropicText(data);
   if (!text) return null;
 
   try {
-    const parsed = JSON.parse(text);
+    const parsed: unknown = JSON.parse(text);
+    if (!isRecord(parsed)) return null;
+
     const config = createDefaultConfig('');
     config.aiGenerated = true;
-    if (parsed.theme) config.theme = { ...config.theme, ...parsed.theme };
-    if (parsed.hero) config.hero = { ...config.hero, ...parsed.hero };
-    if (parsed.sections) {
-      config.sections = parsed.sections.map((s: any, i: number) => ({
-        id: `s${i}`,
-        type: s.type,
-        order: s.order ?? i,
-        visible: s.visible !== false,
-        content: s.content || {},
-      }));
+    if (isRecord(parsed.theme)) {
+      config.theme = { ...config.theme, ...parsed.theme } as StorefrontConfig['theme'];
+    }
+    if (isRecord(parsed.hero)) {
+      config.hero = { ...config.hero, ...parsed.hero } as StorefrontConfig['hero'];
+    }
+    if (Array.isArray(parsed.sections)) {
+      config.sections = parsed.sections
+        .map((section, i): Section | null => {
+          if (!isRecord(section) || !isSectionType(section.type)) return null;
+
+          return {
+            id: `s${i}`,
+            type: section.type,
+            order: typeof section.order === 'number' ? section.order : i,
+            visible: section.visible !== false,
+            content: isRecord(section.content) ? section.content : {},
+          };
+        })
+        .filter((section): section is Section => section !== null);
     }
     return config;
   } catch {

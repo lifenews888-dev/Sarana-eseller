@@ -3,7 +3,7 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getSafeImageList } from '@/lib/image-url';
-import { publicProductWhere } from '@/lib/product-visibility';
+import { filterPublicLaunchProducts, publicProductWhere } from '@/lib/product-visibility';
 
 export async function GET() {
   try {
@@ -14,7 +14,8 @@ export async function GET() {
     });
 
     // Map to store page format (_id, name, price, etc)
-    const items = products.map((p) => ({
+    const visibleProducts = filterPublicLaunchProducts(products);
+    const items = visibleProducts.map((p) => ({
       _id: p.id,
       id: p.id,
       type: 'product',
