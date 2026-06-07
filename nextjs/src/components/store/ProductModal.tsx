@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '@/lib/api';
@@ -111,6 +111,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   const [zoomedImg, setZoomedImg] = useState<string | null>(null);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [reviewBreakdown, setReviewBreakdown] = useState<{ rating: number; count: number }[]>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
   const cart = useCartStore();
   const toast = useToast();
 
@@ -145,6 +146,12 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = previousOverflow; };
   }, [product]);
+
+  useEffect(() => {
+    if (!product) return;
+    const frame = window.requestAnimationFrame(() => modalRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [product?._id, product]);
 
   // Keyboard shortcuts for modal and media zoom
   useEffect(() => {
@@ -227,6 +234,11 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
 
       {/* Modal */}
       <motion.div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-modal-title"
+        tabIndex={-1}
         className="fixed inset-2 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-5xl bg-[var(--esl-bg-card)] rounded-2xl z-[999] overflow-hidden flex flex-col md:flex-row max-h-[94vh] shadow-2xl"
         initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 30, stiffness: 350 }}>
@@ -348,7 +360,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             )}
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-2 leading-tight">{product.name}</h2>
+            <h2 id="product-modal-title" className="text-xl font-bold text-[var(--esl-text-primary)] mb-2 leading-tight">{product.name}</h2>
 
             {/* Rating */}
             {product.rating != null && (
@@ -359,7 +371,13 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   ))}
                 </div>
                 <span className="text-xs text-[var(--esl-text-muted)]">{product.rating} ({product.reviewCount || 0} үнэлгээ)</span>
-                <span className="text-xs text-blue-500 font-medium cursor-pointer" onClick={() => setActiveTab('reviews')}>Үнэлгээ харах</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('reviews')}
+                  className="text-xs text-blue-500 font-medium cursor-pointer bg-transparent border-none p-0"
+                >
+                  Үнэлгээ харах
+                </button>
               </div>
             )}
 
