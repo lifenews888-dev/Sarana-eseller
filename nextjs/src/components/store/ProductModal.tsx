@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '@/lib/api';
@@ -112,6 +112,8 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [reviewBreakdown, setReviewBreakdown] = useState<{ rating: number; count: number }[]>([]);
   const modalRef = useRef<HTMLDivElement>(null);
+  const zoomDialogRef = useRef<HTMLDivElement>(null);
+  const lastZoomTriggerRef = useRef<HTMLElement | null>(null);
   const cart = useCartStore();
   const toast = useToast();
 
@@ -153,16 +155,64 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
     return () => window.cancelAnimationFrame(frame);
   }, [product?._id, product]);
 
+  useEffect(() => {
+    if (!zoomedImg) return;
+    const frame = window.requestAnimationFrame(() => zoomDialogRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [zoomedImg]);
+
+  const openZoom = useCallback((url: string, trigger?: HTMLElement | null) => {
+    lastZoomTriggerRef.current = trigger || (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    setZoomedImg(url);
+  }, []);
+
+  const closeZoom = useCallback(() => {
+    setZoomedImg(null);
+    const trigger = lastZoomTriggerRef.current;
+    lastZoomTriggerRef.current = null;
+    window.requestAnimationFrame(() => trigger?.focus());
+  }, []);
+
   // Keyboard shortcuts for modal and media zoom
   useEffect(() => {
     if (!product) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (zoomedImg) setZoomedImg(null);
+        if (zoomedImg) closeZoom();
         else onClose();
         return;
       }
-      if (zoomedImg) return;
+      if (zoomedImg) {
+        if (e.key === 'Tab') {
+          const zoomDialog = zoomDialogRef.current;
+          if (!zoomDialog) return;
+          const focusable = Array.from(
+            zoomDialog.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+          ).filter(el => el.getClientRects().length > 0);
+
+          if (focusable.length === 0) {
+            e.preventDefault();
+            zoomDialog.focus();
+            return;
+          }
+
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          const active = document.activeElement;
+          if (e.shiftKey && (active === first || !zoomDialog.contains(active))) {
+            e.preventDefault();
+            last.focus();
+            return;
+          }
+          if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+        return;
+      }
       if (e.key === 'Tab') {
         const modal = modalRef.current;
         if (!modal) return;
@@ -197,7 +247,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [product, zoomedImg, hasPrev, hasNext, onPrev, onNext, onClose]);
+  }, [product, zoomedImg, hasPrev, hasNext, onPrev, onNext, onClose, closeZoom]);
 
   if (!product) return null;
 
@@ -288,7 +338,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   src={media[activeImg]?.url || images[0]}
                   alt={product.name}
                   className="w-full h-full object-cover transition-opacity duration-300 cursor-zoom-in"
-                  onClick={() => media[activeImg]?.type === 'image' && setZoomedImg(media[activeImg].url)}
+                  onClick={(e) => media[activeImg]?.type === 'image' && openZoom(media[activeImg].url, e.currentTarget)}
                 />
               )
             ) : (
@@ -334,7 +384,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                 <Heart className="w-4 h-4" fill={isWished ? '#E24B4A' : 'none'} color={isWished ? '#E24B4A' : '#666'} />
               </button>
               {media.length > 0 && media[activeImg]?.type === 'image' && (
-                <button onClick={() => setZoomedImg(media[activeImg].url)}
+                <button onClick={(e) => openZoom(media[activeImg].url, e.currentTarget)}
                   aria-label="Зургийг томруулах"
                   className="w-10 h-10 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-lg">
                   <ZoomIn className="w-4 h-4 text-[var(--esl-text-secondary)]" />
@@ -675,12 +725,17 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
       {/* ═══ Fullscreen Zoom ═══ */}
       {zoomedImg && (
         <motion.div
+          ref={zoomDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Zoomed product image"
+          tabIndex={-1}
           className="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center cursor-zoom-out"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          onClick={() => setZoomedImg(null)}
+          onClick={closeZoom}
         >
           <SafeImage src={zoomedImg} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
-          <button onClick={() => setZoomedImg(null)}
+          <button onClick={closeZoom}
             aria-label="Томруулсан зураг хаах"
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border-none cursor-pointer flex items-center justify-center text-white hover:bg-white/20 transition">
             <X className="w-5 h-5" />
