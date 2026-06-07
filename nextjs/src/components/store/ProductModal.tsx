@@ -117,7 +117,8 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setQty(1); setActiveImg(0); setSelectedSize(''); setSelectedColor('');
-      setAdded(false); setActiveTab('info'); setReviews([]);
+      setIsWished(false); setAdded(false); setActiveTab('info'); setZoomedImg(null);
+      setReviews([]); setReviewBreakdown([]);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [product?._id]);
@@ -125,18 +126,24 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   // Fetch reviews from API
   useEffect(() => {
     if (!product?._id) return;
-    fetch(`/api/products/${product._id}/reviews`)
+
+    const controller = new AbortController();
+    fetch(`/api/products/${product._id}/reviews`, { signal: controller.signal })
       .then(r => r.json())
       .then(data => {
         if (data.reviews) setReviews(data.reviews);
         if (data.breakdown) setReviewBreakdown(data.breakdown);
       })
       .catch(() => {});
+
+    return () => controller.abort();
   }, [product?._id]);
 
   useEffect(() => {
-    if (product) document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    if (!product) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
   }, [product]);
 
   // Keyboard shortcuts for modal and media zoom
