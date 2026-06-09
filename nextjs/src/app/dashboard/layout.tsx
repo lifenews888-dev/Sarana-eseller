@@ -6,6 +6,16 @@ import { useAuth } from '@/lib/auth';
 import { useShopTypeStore, type ShopType } from '@/lib/shop-type-store';
 import Sidebar, { type SidebarSection } from '@/components/dashboard/Sidebar';
 
+type SellerStoreOption = {
+  id: string;
+  name: string;
+  slug: string;
+  entityType: string;
+  storeType: ShopType;
+  href: string;
+  logo?: string | null;
+};
+
 // ═══════════════════════════════════════════════════════
 // Shared sections (used by both product and service)
 // ═══════════════════════════════════════════════════════
@@ -340,6 +350,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user } = useAuth();
   const router = useRouter();
   const [ready] = useState(() => (typeof window !== 'undefined' ? !!localStorage.getItem('token') : false));
+  const [stores, setStores] = useState<SellerStoreOption[]>([]);
+  const [activeStoreId, setActiveStoreId] = useState<string | null>(() => (
+    typeof window !== 'undefined' ? localStorage.getItem('eseller_active_store_id') : null
+  ));
 
   const shopType = useShopTypeStore((s) => s.shopType);
   const loadShopType = useShopTypeStore((s) => s.load);
@@ -356,6 +370,68 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router, loadShopType]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const role = user?.role || 'buyer';
+  const isSellerRole = ['seller', 'agent', 'company', 'auto_dealer', 'service'].includes(role);
+
+  useEffect(() => {
+    if (!isSellerRole) return;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) return;
+
+    let cancelled = false;
+
+    fetch('/api/seller/my-stores', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((response) => response.ok ? response.json() : { stores: [] })
+      .then((data) => {
+        if (cancelled) return;
+        const nextStores = Array.isArray(data.stores) ? data.stores : [];
+        setStores(nextStores);
+
+        const savedId = localStorage.getItem('eseller_active_store_id');
+        const savedStillExists = savedId && nextStores.some((store: SellerStoreOption) => store.id === savedId);
+        const nextActiveId = savedStillExists ? savedId : nextStores[0]?.id || null;
+
+        setActiveStoreId(nextActiveId);
+        if (nextActiveId) {
+          const active = nextStores.find((store: SellerStoreOption) => store.id === nextActiveId);
+          localStorage.setItem('eseller_active_store_id', nextActiveId);
+          localStorage.setItem('eseller_shop_id', nextActiveId);
+          if (active) {
+            localStorage.setItem('eseller_active_store_type', active.entityType);
+            localStorage.setItem('eseller_active_store_business_type', active.storeType);
+          }
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setStores([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSellerRole]);
+
+  const handleStoreChange = (storeId: string) => {
+    const active = stores.find((store) => store.id === storeId);
+    setActiveStoreId(storeId);
+    localStorage.setItem('eseller_active_store_id', storeId);
+    localStorage.setItem('eseller_shop_id', storeId);
+    if (active) {
+      localStorage.setItem('eseller_active_store_type', active.entityType);
+      localStorage.setItem('eseller_active_store_business_type', active.storeType);
+      let config: Record<string, unknown> = {};
+      try {
+        const raw = localStorage.getItem('eseller_store_config');
+        config = raw ? JSON.parse(raw) : {};
+      } catch {}
+      config.businessType = active.storeType;
+      config.shopId = storeId;
+      localStorage.setItem('eseller_store_config', JSON.stringify(config));
+    }
+  };
 
   if (!ready) {
     return (
@@ -365,17 +441,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  const role = user?.role || 'buyer';
-  const userEntityType = user?.entityType || undefined;
-  const isSellerRole = ['seller', 'agent', 'company', 'auto_dealer', 'service'].includes(role);
+  const activeStore = stores.find((store) => store.id === activeStoreId) || stores[0] || null;
+  const userEntityType = activeStore?.entityType || user?.entityType || undefined;
+  const effectiveShopType = activeStore?.storeType || shopType;
   const sections = isSellerRole
-    ? getSellerSections(shopType, userEntityType)
+    ? getSellerSections(effectiveShopType, userEntityType)
     : OTHER_ROLE_SECTIONS[role] || BUYER_SECTIONS;
 
   const storeInfo = isSellerRole
     ? {
-        name: user?.store?.name || user?.name + 'ийн дэлгүүр',
-        url: (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
+        id: activeStore?.id,
+        name: activeStore?.name || user?.store?.name || user?.name + 'ийн дэлгүүр',
+        url: activeStore?.slug ? `eseller.mn/${activeStore.slug}` : (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
+        href: activeStore?.href,
+        entityType: userEntityType,
         plan: 'Үнэгүй',
         planBadge: 'Үнэгүй туршилт',
       }
@@ -398,7 +477,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar — hidden on mobile, slide-in when open */}
       <div className={`md:block ${mobileOpen ? 'block' : 'hidden'}`}>
-        <Sidebar sections={sections} storeInfo={storeInfo} />
+        <Sidebar
+          sections={sections}
+          storeInfo={storeInfo}
+          stores={stores}
+          activeStoreId={activeStoreId}
+          onStoreChange={handleStoreChange}
+        />
       </div>
 
       <main className="ml-0 md:ml-[260px] min-h-screen transition-all duration-300 p-4 pt-20 md:pt-6 md:p-6 lg:p-8">

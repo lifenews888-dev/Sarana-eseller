@@ -97,6 +97,9 @@ const PLANS: Record<string, { name: string; price: string; priceNum: number; fea
 export default function BecomeSellerPage() {
   const { user, isLoggedIn, login } = useAuth();
   const router = useRouter();
+  const [isCreateStoreIntent] = useState(() => (
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('intent') === 'create-store'
+  ));
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -121,10 +124,10 @@ export default function BecomeSellerPage() {
       router.push('/login?redirect=/become-seller');
       return;
     }
-    if (isLoggedIn && user?.role && DASHBOARD_ROLES.has(user.role)) {
+    if (isLoggedIn && user?.role && DASHBOARD_ROLES.has(user.role) && !isCreateStoreIntent) {
       router.replace(roleHome(user.role));
     }
-  }, [isLoggedIn, router, user?.role]);
+  }, [isCreateStoreIntent, isLoggedIn, router, user?.role]);
 
   const def = entityType ? ENTITY_DEFS[entityType] : null;
   const updateForm = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));

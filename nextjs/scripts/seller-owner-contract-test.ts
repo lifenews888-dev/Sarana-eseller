@@ -17,6 +17,8 @@ type Check = {
 
 const registerRoute = path.join(process.cwd(), 'src', 'app', 'api', 'entities', 'register', 'route.ts');
 const becomeSellerPage = path.join(process.cwd(), 'src', 'app', 'become-seller', 'page.tsx');
+const openShopPage = path.join(process.cwd(), 'src', 'app', 'open-shop', 'page.tsx');
+const myStoresRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'my-stores', 'route.ts');
 
 function readSource(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -29,6 +31,8 @@ function includesAll(source: string, snippets: string[]): boolean {
 function main() {
   const registerSource = readSource(registerRoute);
   const onboardingSource = readSource(becomeSellerPage);
+  const openShopSource = readSource(openShopPage);
+  const myStoresSource = readSource(myStoresRoute);
 
   const checks: Check[] = [
     {
@@ -105,6 +109,31 @@ function main() {
       label: 'onboarding auth redirect',
       ok: onboardingSource.includes("router.push('/login?redirect=/become-seller')"),
       detail: 'logged-out users return to onboarding after login',
+    },
+    {
+      label: 'create more stores intent',
+      ok: includesAll(onboardingSource, ["new URLSearchParams(window.location.search).get('intent') === 'create-store'", '!isCreateStoreIntent']),
+      detail: 'logged-in sellers can re-enter onboarding to add another store type',
+    },
+    {
+      label: 'open-shop canonical redirect',
+      ok: includesAll(openShopSource, ["redirect('/become-seller?source=open-shop')"]),
+      detail: '/open-shop cannot become a second store creation flow',
+    },
+    {
+      label: 'my-stores route requires auth',
+      ok: includesAll(myStoresSource, ['requireAuth(req)', 'auth instanceof Response']),
+      detail: 'store switcher is scoped to the logged-in owner',
+    },
+    {
+      label: 'my-stores owner filter',
+      ok: includesAll(myStoresSource, ['where: { userId: auth.id', 'prisma.agent.findUnique({ where: { userId: auth.id } })']),
+      detail: 'store switcher does not list unrelated stores',
+    },
+    {
+      label: 'my-stores typed entries',
+      ok: includesAll(myStoresSource, ['entityType:', 'storeType:', 'href:']),
+      detail: 'dashboard can select tools by active store type',
     },
     {
       label: 'onboarding terms gate',

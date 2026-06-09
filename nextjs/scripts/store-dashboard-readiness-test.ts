@@ -16,6 +16,7 @@ type Check = {
 };
 
 const dashboardLayout = path.join(process.cwd(), 'src', 'app', 'dashboard', 'layout.tsx');
+const sidebarComponent = path.join(process.cwd(), 'src', 'components', 'dashboard', 'Sidebar.tsx');
 const scanRoots = [
   path.join(process.cwd(), 'src', 'app', 'dashboard'),
   path.join(process.cwd(), 'src', 'components', 'dashboard'),
@@ -115,11 +116,36 @@ function routeSegmentsExist(currentDir: string, segments: string[]): boolean {
 function main() {
   const checks: Check[] = [];
   const layoutSource = fs.existsSync(dashboardLayout) ? fs.readFileSync(dashboardLayout, 'utf8') : '';
+  const sidebarSource = fs.existsSync(sidebarComponent) ? fs.readFileSync(sidebarComponent, 'utf8') : '';
 
   checks.push({
     label: 'dashboard layout exists',
     ok: !!layoutSource,
     detail: 'src/app/dashboard/layout.tsx',
+  });
+
+  checks.push({
+    label: 'store switcher component exists',
+    ok: sidebarSource.includes('onStoreChange') && sidebarSource.includes('Дэлгүүр сонгох'),
+    detail: 'src/components/dashboard/Sidebar.tsx',
+  });
+
+  checks.push({
+    label: 'dashboard loads owned stores',
+    ok: layoutSource.includes("fetch('/api/seller/my-stores'") && layoutSource.includes('setStores(nextStores)'),
+    detail: 'src/app/dashboard/layout.tsx',
+  });
+
+  checks.push({
+    label: 'active store persists',
+    ok: layoutSource.includes("localStorage.setItem('eseller_active_store_id'") && layoutSource.includes("localStorage.setItem('eseller_active_store_type'"),
+    detail: 'active store survives dashboard refresh',
+  });
+
+  checks.push({
+    label: 'active store controls tools',
+    ok: layoutSource.includes('activeStore?.entityType') && layoutSource.includes('activeStore?.storeType') && layoutSource.includes('getSellerSections(effectiveShopType, userEntityType)'),
+    detail: 'sidebar sections follow selected store type',
   });
 
   for (const item of requiredStoreRoutes) {
