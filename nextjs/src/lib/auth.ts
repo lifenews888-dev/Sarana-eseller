@@ -58,9 +58,14 @@ export function roleHome(role?: string): string {
   const map: Record<string, string> = {
     buyer: '/',
     seller: '/dashboard/store',
+    agent: '/dashboard/store',
+    company: '/dashboard/store',
+    auto_dealer: '/dashboard/store',
+    service: '/dashboard/store',
     affiliate: '/dashboard/affiliate',
     delivery: '/dashboard/delivery',
     admin: '/dashboard/admin',
+    superadmin: '/dashboard/admin',
   };
   return map[role || ''] || '/';
 }
