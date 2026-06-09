@@ -47,11 +47,14 @@ export function getStoredToken(): string | null {
 export function saveAuth(token: string, user: User) {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `auth-token=${encodeURIComponent(token)}; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax${secure}`;
 }
 
 export function clearAuth() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  document.cookie = 'auth-token=; Path=/; Max-Age=0; SameSite=Lax';
 }
 
 export function roleHome(role?: string): string {
