@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { getAuthUser } from '@/lib/api-auth';
+import { getAuthUser, getShopForRequest } from '@/lib/api-auth';
+
+type StorefrontConfig = {
+  isPublished?: boolean;
+  [key: string]: unknown;
+};
 
 // GET — fetch current storefront config
 export async function GET(req: NextRequest) {
@@ -8,14 +13,16 @@ export async function GET(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    let shop = await prisma.shop.findUnique({ where: { userId: user.id } }).catch(() => null);
-    if (!shop) shop = await prisma.shop.findFirst({ where: { userId: user.id } });
+    const shopId = await getShopForRequest(req, user.id);
+    const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
     if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 });
 
+    const config = (shop.storefrontConfig || null) as StorefrontConfig | null;
+
     return NextResponse.json({
-      config: shop.storefrontConfig || null,
+      config,
       slug: shop.storefrontSlug || shop.slug,
-      isPublished: !!(shop.storefrontConfig as any)?.isPublished,
+      isPublished: !!config?.isPublished,
     });
   } catch (e) {
     console.error('[storefront GET]', (e as Error).message);
@@ -36,9 +43,8 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: 'Config object required' }, { status: 400 });
     }
 
-    // Try findUnique first, then findFirst as fallback
-    let shop = await prisma.shop.findUnique({ where: { userId: user.id } }).catch(() => null);
-    if (!shop) shop = await prisma.shop.findFirst({ where: { userId: user.id } });
+    const shopId = await getShopForRequest(req, user.id);
+    const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
     if (!shop) return NextResponse.json({ error: `Shop not found for user ${user.id} (${user.email})`, userId: user.id }, { status: 404 });
 
     // Merge with existing config to preserve fields

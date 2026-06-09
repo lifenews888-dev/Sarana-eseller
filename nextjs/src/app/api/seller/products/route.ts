@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, errorJson } from '@/lib/api-auth';
 import { checkShopLimit } from '@/lib/subscription-server';
 import { sanitizeImageUrls } from '@/lib/image-url';
 
@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   try {
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForRequest(req, user.id);
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     // Plan enforcement
@@ -58,6 +58,9 @@ export async function GET(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   try {
+    const shopId = await getShopForRequest(req, user.id);
+    if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
+
     const products = await prisma.product.findMany({
       where: { userId: user.id, isActive: true },
       orderBy: { createdAt: 'desc' },

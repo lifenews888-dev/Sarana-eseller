@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect } from 'react';
 import { Search, Check, ChevronRight, ChevronDown, Loader2, Plus, Send, FolderOpen } from 'lucide-react';
 import { useToast } from '@/components/shared/Toast';
 import EmptyState from '@/components/shared/EmptyState';
+import { getActiveStoreHeaders } from '@/lib/api';
 
 interface Category {
   id: string;
@@ -28,8 +29,7 @@ export default function StoreCategoriesPage() {
   const [reqSending, setReqSending] = useState(false);
 
   const loadData = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    const headers: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers = getActiveStoreHeaders();
 
     try {
       // Load tree + selected in parallel
@@ -73,10 +73,9 @@ export default function StoreCategoriesPage() {
   async function handleSave() {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch('/api/store/categories', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        headers: getActiveStoreHeaders(true),
         body: JSON.stringify({ categoryIds: Array.from(selected) }),
       });
       if (res.ok) toast.show(`${selected.size} ангилал хадгалагдлаа`);

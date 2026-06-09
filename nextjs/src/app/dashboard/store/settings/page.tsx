@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
 import { Store, Phone, MapPin, Users, Percent, Building2, CreditCard, Save, Loader2 } from 'lucide-react';
+import { getActiveStoreHeaders } from '@/lib/api';
 
 const API = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -36,8 +37,7 @@ const EMPTY: Settings = {
 };
 
 function authHeaders() {
-  const token = localStorage.getItem('token');
-  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+  return getActiveStoreHeaders(true);
 }
 
 const inputCls =

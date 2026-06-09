@@ -17,6 +17,16 @@ type Check = {
 
 const dashboardLayout = path.join(process.cwd(), 'src', 'app', 'dashboard', 'layout.tsx');
 const sidebarComponent = path.join(process.cwd(), 'src', 'components', 'dashboard', 'Sidebar.tsx');
+const apiClient = path.join(process.cwd(), 'src', 'lib', 'api.ts');
+const apiAuth = path.join(process.cwd(), 'src', 'lib', 'api-auth.ts');
+const sellerOrdersRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'orders', 'route.ts');
+const sellerProductsRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'products', 'route.ts');
+const storeSettingsRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'settings', 'route.ts');
+const storeCategoriesRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'categories', 'route.ts');
+const storeStorefrontRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'storefront', 'route.ts');
+const storeSettingsPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'settings', 'page.tsx');
+const storeCategoriesPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'categories', 'page.tsx');
+const shopTypePage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'settings', 'shop-type', 'page.tsx');
 const scanRoots = [
   path.join(process.cwd(), 'src', 'app', 'dashboard'),
   path.join(process.cwd(), 'src', 'components', 'dashboard'),
@@ -117,6 +127,16 @@ function main() {
   const checks: Check[] = [];
   const layoutSource = fs.existsSync(dashboardLayout) ? fs.readFileSync(dashboardLayout, 'utf8') : '';
   const sidebarSource = fs.existsSync(sidebarComponent) ? fs.readFileSync(sidebarComponent, 'utf8') : '';
+  const apiClientSource = fs.existsSync(apiClient) ? fs.readFileSync(apiClient, 'utf8') : '';
+  const apiAuthSource = fs.existsSync(apiAuth) ? fs.readFileSync(apiAuth, 'utf8') : '';
+  const sellerOrdersSource = fs.existsSync(sellerOrdersRoute) ? fs.readFileSync(sellerOrdersRoute, 'utf8') : '';
+  const sellerProductsSource = fs.existsSync(sellerProductsRoute) ? fs.readFileSync(sellerProductsRoute, 'utf8') : '';
+  const storeSettingsSource = fs.existsSync(storeSettingsRoute) ? fs.readFileSync(storeSettingsRoute, 'utf8') : '';
+  const storeCategoriesSource = fs.existsSync(storeCategoriesRoute) ? fs.readFileSync(storeCategoriesRoute, 'utf8') : '';
+  const storeStorefrontSource = fs.existsSync(storeStorefrontRoute) ? fs.readFileSync(storeStorefrontRoute, 'utf8') : '';
+  const storeSettingsPageSource = fs.existsSync(storeSettingsPage) ? fs.readFileSync(storeSettingsPage, 'utf8') : '';
+  const storeCategoriesPageSource = fs.existsSync(storeCategoriesPage) ? fs.readFileSync(storeCategoriesPage, 'utf8') : '';
+  const shopTypePageSource = fs.existsSync(shopTypePage) ? fs.readFileSync(shopTypePage, 'utf8') : '';
 
   checks.push({
     label: 'dashboard layout exists',
@@ -146,6 +166,32 @@ function main() {
     label: 'active store controls tools',
     ok: layoutSource.includes('activeStore?.entityType') && layoutSource.includes('activeStore?.storeType') && layoutSource.includes('getSellerSections(effectiveShopType, userEntityType)'),
     detail: 'sidebar sections follow selected store type',
+  });
+
+  checks.push({
+    label: 'active shop helper exists',
+    ok: apiAuthSource.includes('getRequestedShopId') && apiAuthSource.includes("req.headers.get('x-eseller-shop-id')") && apiAuthSource.includes('id: requestedShopId, userId'),
+    detail: 'src/lib/api-auth.ts validates requested shop ownership',
+  });
+
+  checks.push({
+    label: 'seller APIs use active shop',
+    ok: [sellerOrdersSource, sellerProductsSource, storeSettingsSource, storeCategoriesSource, storeStorefrontSource]
+      .every((source) => source.includes('getShopForRequest(req, user.id)')),
+    detail: 'orders/products/settings/categories/storefront scoped by selected shop',
+  });
+
+  checks.push({
+    label: 'client sends active shop',
+    ok: apiClientSource.includes('ACTIVE_STORE_ID_KEY') && apiClientSource.includes("headers['x-eseller-shop-id'] = activeShopId"),
+    detail: 'src/lib/api.ts attaches active shop header',
+  });
+
+  checks.push({
+    label: 'dashboard saves active shop',
+    ok: [storeSettingsPageSource, storeCategoriesPageSource, shopTypePageSource]
+      .every((source) => source.includes('getActiveStoreHeaders')),
+    detail: 'settings/categories/type setup include active shop header',
   });
 
   for (const item of requiredStoreRoutes) {

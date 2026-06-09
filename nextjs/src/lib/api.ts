@@ -4,6 +4,18 @@
 // ══════════════════════════════════════════════════════════════
 
 const API_BASE = 'https://sarana-backend.onrender.com/api';
+export const ACTIVE_STORE_ID_KEY = 'eseller_active_store_id';
+
+export function getActiveStoreHeaders(includeJson = false): Record<string, string> {
+  const headers: Record<string, string> = includeJson ? { 'Content-Type': 'application/json' } : {};
+  if (typeof window === 'undefined') return headers;
+
+  const token = localStorage.getItem('token');
+  const activeShopId = localStorage.getItem(ACTIVE_STORE_ID_KEY) || localStorage.getItem('eseller_shop_id');
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (activeShopId) headers['x-eseller-shop-id'] = activeShopId;
+  return headers;
+}
 
 export interface ApiError {
   status: number;
@@ -21,6 +33,10 @@ async function apiFetch<T = Record<string, unknown>>(
     ...(opts.headers as Record<string, string>),
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
+  if (typeof window !== 'undefined') {
+    const activeShopId = localStorage.getItem(ACTIVE_STORE_ID_KEY) || localStorage.getItem('eseller_shop_id');
+    if (activeShopId) headers['x-eseller-shop-id'] = activeShopId;
+  }
 
   const res = await fetch(API_BASE + path, { ...opts, headers });
   const data = await res.json().catch(() => ({}));

@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useShopTypeStore, type ShopType } from '@/lib/shop-type-store';
 import { saveConfig } from '@/lib/store-config';
+import { getActiveStoreHeaders } from '@/lib/api';
 import { MediaUploader } from '@/components/shared/MediaUploader';
 import { cn } from '@/lib/utils';
 import {
@@ -198,7 +200,6 @@ const ITEM_FORMS: Record<string, { title: string; fields: FieldConfig[] }> = {
    ═══════════════════════════════════════════════════════ */
 
 export default function ShopTypeWizard() {
-  const currentType = useShopTypeStore((s) => s.shopType);
   const setShopType = useShopTypeStore((s) => s.setShopType);
 
   // Wizard state
@@ -289,10 +290,8 @@ export default function ShopTypeWizard() {
   const handleFinish = async () => {
     setSaving(true);
     try {
-      const token = localStorage.getItem('token');
       const shopId = localStorage.getItem('eseller_shop_id');
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (token) headers.Authorization = `Bearer ${token}`;
+      const headers = getActiveStoreHeaders(true);
 
       // 1. Save shop type
       if (shopId) {
@@ -642,20 +641,20 @@ export default function ShopTypeWizard() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-                <a
+                <Link
                   href={`/s/${slug}`}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-[#E8242C] text-white hover:bg-[#CC0000] transition no-underline"
                 >
                   <ExternalLink className="w-4 h-4" />
                   Live хуудас харах
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/dashboard/store"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-[var(--esl-bg-elevated)] text-white border border-[var(--esl-border)] hover:bg-[#3D3D3D] transition no-underline"
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard руу орох
-                </a>
+                </Link>
               </div>
             </div>
           );
