@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import type { Product } from '@/lib/api';
@@ -111,13 +111,17 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   const [zoomedImg, setZoomedImg] = useState<string | null>(null);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [reviewBreakdown, setReviewBreakdown] = useState<{ rating: number; count: number }[]>([]);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const zoomDialogRef = useRef<HTMLDivElement>(null);
+  const lastZoomTriggerRef = useRef<HTMLElement | null>(null);
   const cart = useCartStore();
   const toast = useToast();
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       setQty(1); setActiveImg(0); setSelectedSize(''); setSelectedColor('');
-      setAdded(false); setActiveTab('info'); setReviews([]);
+      setIsWished(false); setAdded(false); setActiveTab('info'); setZoomedImg(null);
+      setReviews([]); setReviewBreakdown([]);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [product?._id]);
@@ -125,36 +129,125 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   // Fetch reviews from API
   useEffect(() => {
     if (!product?._id) return;
-    fetch(`/api/products/${product._id}/reviews`)
+
+    const controller = new AbortController();
+    fetch(`/api/products/${product._id}/reviews`, { signal: controller.signal })
       .then(r => r.json())
       .then(data => {
         if (data.reviews) setReviews(data.reviews);
         if (data.breakdown) setReviewBreakdown(data.breakdown);
       })
       .catch(() => {});
+
+    return () => controller.abort();
   }, [product?._id]);
 
   useEffect(() => {
-    if (product) document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    if (!product) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = previousOverflow; };
   }, [product]);
+
+  useEffect(() => {
+    if (!product) return;
+    const frame = window.requestAnimationFrame(() => modalRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [product?._id, product]);
+
+  useEffect(() => {
+    if (!zoomedImg) return;
+    const frame = window.requestAnimationFrame(() => zoomDialogRef.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [zoomedImg]);
+
+  const openZoom = useCallback((url: string, trigger?: HTMLElement | null) => {
+    lastZoomTriggerRef.current = trigger || (document.activeElement instanceof HTMLElement ? document.activeElement : null);
+    setZoomedImg(url);
+  }, []);
+
+  const closeZoom = useCallback(() => {
+    setZoomedImg(null);
+    const trigger = lastZoomTriggerRef.current;
+    lastZoomTriggerRef.current = null;
+    window.requestAnimationFrame(() => trigger?.focus());
+  }, []);
 
   // Keyboard shortcuts for modal and media zoom
   useEffect(() => {
     if (!product) return;
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (zoomedImg) setZoomedImg(null);
+        if (zoomedImg) closeZoom();
         else onClose();
         return;
       }
-      if (zoomedImg) return;
+      if (zoomedImg) {
+        if (e.key === 'Tab') {
+          const zoomDialog = zoomDialogRef.current;
+          if (!zoomDialog) return;
+          const focusable = Array.from(
+            zoomDialog.querySelectorAll<HTMLElement>(
+              'button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+          ).filter(el => el.getClientRects().length > 0);
+
+          if (focusable.length === 0) {
+            e.preventDefault();
+            zoomDialog.focus();
+            return;
+          }
+
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          const active = document.activeElement;
+          if (e.shiftKey && (active === first || !zoomDialog.contains(active))) {
+            e.preventDefault();
+            last.focus();
+            return;
+          }
+          if (!e.shiftKey && active === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+        return;
+      }
+      if (e.key === 'Tab') {
+        const modal = modalRef.current;
+        if (!modal) return;
+        const focusable = Array.from(
+          modal.querySelectorAll<HTMLElement>(
+            'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter(el => el.getClientRects().length > 0);
+
+        if (focusable.length === 0) {
+          e.preventDefault();
+          modal.focus();
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+        if (e.shiftKey && (active === first || !modal.contains(active))) {
+          e.preventDefault();
+          last.focus();
+          return;
+        }
+        if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+        return;
+      }
       if (e.key === 'ArrowLeft' && hasPrev && onPrev) onPrev();
       if (e.key === 'ArrowRight' && hasNext && onNext) onNext();
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [product, zoomedImg, hasPrev, hasNext, onPrev, onNext, onClose]);
+  }, [product, zoomedImg, hasPrev, hasNext, onPrev, onNext, onClose, closeZoom]);
 
   if (!product) return null;
 
@@ -220,6 +313,11 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
 
       {/* Modal */}
       <motion.div
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="product-modal-title"
+        tabIndex={-1}
         className="fixed inset-2 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-5xl bg-[var(--esl-bg-card)] rounded-2xl z-[999] overflow-hidden flex flex-col md:flex-row max-h-[94vh] shadow-2xl"
         initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 30, stiffness: 350 }}>
@@ -240,7 +338,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   src={media[activeImg]?.url || images[0]}
                   alt={product.name}
                   className="w-full h-full object-cover transition-opacity duration-300 cursor-zoom-in"
-                  onClick={() => media[activeImg]?.type === 'image' && setZoomedImg(media[activeImg].url)}
+                  onClick={(e) => media[activeImg]?.type === 'image' && openZoom(media[activeImg].url, e.currentTarget)}
                 />
               )
             ) : (
@@ -286,7 +384,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                 <Heart className="w-4 h-4" fill={isWished ? '#E24B4A' : 'none'} color={isWished ? '#E24B4A' : '#666'} />
               </button>
               {media.length > 0 && media[activeImg]?.type === 'image' && (
-                <button onClick={() => setZoomedImg(media[activeImg].url)}
+                <button onClick={(e) => openZoom(media[activeImg].url, e.currentTarget)}
                   aria-label="Зургийг томруулах"
                   className="w-10 h-10 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-lg">
                   <ZoomIn className="w-4 h-4 text-[var(--esl-text-secondary)]" />
@@ -341,7 +439,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             )}
 
             {/* Title */}
-            <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-2 leading-tight">{product.name}</h2>
+            <h2 id="product-modal-title" className="text-xl font-bold text-[var(--esl-text-primary)] mb-2 leading-tight">{product.name}</h2>
 
             {/* Rating */}
             {product.rating != null && (
@@ -352,7 +450,13 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   ))}
                 </div>
                 <span className="text-xs text-[var(--esl-text-muted)]">{product.rating} ({product.reviewCount || 0} үнэлгээ)</span>
-                <span className="text-xs text-blue-500 font-medium cursor-pointer" onClick={() => setActiveTab('reviews')}>Үнэлгээ харах</span>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('reviews')}
+                  className="text-xs text-blue-500 font-medium cursor-pointer bg-transparent border-none p-0"
+                >
+                  Үнэлгээ харах
+                </button>
               </div>
             )}
 
@@ -621,12 +725,17 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
       {/* ═══ Fullscreen Zoom ═══ */}
       {zoomedImg && (
         <motion.div
+          ref={zoomDialogRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Zoomed product image"
+          tabIndex={-1}
           className="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center cursor-zoom-out"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          onClick={() => setZoomedImg(null)}
+          onClick={closeZoom}
         >
           <SafeImage src={zoomedImg} alt="" className="max-w-[95vw] max-h-[95vh] object-contain" />
-          <button onClick={() => setZoomedImg(null)}
+          <button onClick={closeZoom}
             aria-label="Томруулсан зураг хаах"
             className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 border-none cursor-pointer flex items-center justify-center text-white hover:bg-white/20 transition">
             <X className="w-5 h-5" />

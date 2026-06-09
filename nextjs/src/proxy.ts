@@ -9,6 +9,7 @@ import { jwtVerify } from 'jose';
 const JWT_SECRET_BYTES = new TextEncoder().encode(
   process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026',
 );
+const LEGACY_JWT_SECRET_BYTES = new TextEncoder().encode('eseller-secret-key-change-in-production');
 
 const AUTH_SESSION_COOKIES = [
   'auth-token',
@@ -131,7 +132,14 @@ export async function proxy(req: NextRequest) {
 
     let role = '';
     try {
-      const { payload } = await jwtVerify(token, JWT_SECRET_BYTES);
+      let payload: Record<string, unknown>;
+      try {
+        const verified = await jwtVerify(token, JWT_SECRET_BYTES);
+        payload = verified.payload;
+      } catch {
+        const verified = await jwtVerify(token, LEGACY_JWT_SECRET_BYTES);
+        payload = verified.payload;
+      }
       role = String(payload.role || '').toLowerCase();
     } catch {
       const res = NextResponse.redirect(loginUrl);

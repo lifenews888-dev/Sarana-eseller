@@ -47,20 +47,28 @@ export function getStoredToken(): string | null {
 export function saveAuth(token: string, user: User) {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `auth-token=${encodeURIComponent(token)}; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax${secure}`;
 }
 
 export function clearAuth() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  document.cookie = 'auth-token=; Path=/; Max-Age=0; SameSite=Lax';
 }
 
 export function roleHome(role?: string): string {
   const map: Record<string, string> = {
     buyer: '/',
     seller: '/dashboard/store',
+    agent: '/dashboard/store',
+    company: '/dashboard/store',
+    auto_dealer: '/dashboard/store',
+    service: '/dashboard/store',
     affiliate: '/dashboard/affiliate',
     delivery: '/dashboard/delivery',
     admin: '/dashboard/admin',
+    superadmin: '/dashboard/admin',
   };
   return map[role || ''] || '/';
 }

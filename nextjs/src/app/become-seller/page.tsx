@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/lib/auth';
+import { roleHome, useAuth } from '@/lib/auth';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import ImageUpload from '@/components/shared/ImageUpload';
 import {
@@ -16,6 +16,8 @@ import {
 
 /* ═══ Entity Type Definitions ═══ */
 type EntityType = 'store' | 'pre_order' | 'agent' | 'company' | 'auto_dealer' | 'service' | 'digital';
+
+const DASHBOARD_ROLES = new Set(['seller', 'agent', 'company', 'auto_dealer', 'service', 'affiliate', 'delivery', 'admin', 'superadmin']);
 
 const ENTITY_DEFS: Record<EntityType, {
   label: string; subtitle: string; Icon: React.ElementType; color: string;
@@ -117,8 +119,12 @@ export default function BecomeSellerPage() {
   useEffect(() => {
     if (isLoggedIn === false) {
       router.push('/login?redirect=/become-seller');
+      return;
     }
-  }, [isLoggedIn, router]);
+    if (isLoggedIn && user?.role && DASHBOARD_ROLES.has(user.role)) {
+      router.replace(roleHome(user.role));
+    }
+  }, [isLoggedIn, router, user?.role]);
 
   const def = entityType ? ENTITY_DEFS[entityType] : null;
   const updateForm = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));

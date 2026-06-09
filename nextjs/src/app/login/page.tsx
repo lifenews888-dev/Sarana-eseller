@@ -45,6 +45,12 @@ function buildAuthHref(path: string, params: Record<string, string | undefined>,
   return query ? `${path}?${query}` : path;
 }
 
+function postAuthTarget(target: string, role?: string): string {
+  const home = roleHome(role);
+  if (target === '/become-seller' && home !== '/') return home;
+  return target || home;
+}
+
 export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
@@ -62,7 +68,7 @@ export default function LoginPage() {
 
   // Pull `?redirect=/some/path` or legacy `?next=/some/path` to preserve in-progress flows.
   const getRedirectTarget = useCallback((role?: string): string => {
-    return redirectTarget || readRedirectTargetFromLocation() || roleHome(role);
+    return postAuthTarget(redirectTarget || readRedirectTargetFromLocation(), role);
   }, [redirectTarget]);
 
   useEffect(() => {
@@ -70,9 +76,13 @@ export default function LoginPage() {
   }, [isLoggedIn, user, router, getRedirectTarget]);
 
   useEffect(() => {
-    setRedirectTarget(readRedirectTargetFromLocation());
+    const nextRedirectTarget = readRedirectTargetFromLocation();
+    setRedirectTarget(nextRedirectTarget);
 
-    if (window.location.hash === '#register') setMode('register');
+    if (window.location.hash === '#register') {
+      setMode('register');
+      if (nextRedirectTarget === '/become-seller') setRole('seller');
+    }
 
     // Handle Google OAuth callback
     const hash = window.location.hash;
