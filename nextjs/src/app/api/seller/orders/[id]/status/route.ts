@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, errorJson } from '@/lib/api-auth';
 import { calculateOrderCommission } from '@/lib/commission';
 import { recordRevenue } from '@/lib/revenue';
 import { sendExpoPush } from '@/lib/push';
@@ -30,8 +30,10 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   const body = await req.json();
   const { status, note } = body;
+  const shopId = await getShopForRequest(req, user.id);
+  if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
-  const order = await prisma.order.findUnique({ where: { id } });
+  const order = await prisma.order.findFirst({ where: { id, shopId } });
   if (!order) return errorJson('Захиалга олдсонгүй', 404);
 
   // Update order

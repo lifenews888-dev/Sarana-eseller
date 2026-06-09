@@ -4,6 +4,10 @@ import { requireSeller, getShopForRequest, errorJson } from '@/lib/api-auth';
 import { checkShopLimit } from '@/lib/subscription-server';
 import { sanitizeImageUrls } from '@/lib/image-url';
 
+function serializeProduct<T extends { id: string }>(product: T) {
+  return { ...product, _id: product.id };
+}
+
 // POST /api/seller/products — create product with plan enforcement
 export async function POST(req: NextRequest) {
   const user = requireSeller(req);
@@ -29,6 +33,7 @@ export async function POST(req: NextRequest) {
     const product = await prisma.product.create({
       data: {
         userId: user.id,
+        shopId,
         name: body.name,
         price: body.price,
         salePrice: body.salePrice || null,
@@ -46,7 +51,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(product, { status: 201 });
+    return NextResponse.json(serializeProduct(product), { status: 201 });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
@@ -62,10 +67,17 @@ export async function GET(req: NextRequest) {
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     const products = await prisma.product.findMany({
-      where: { userId: user.id, isActive: true },
+      where: {
+        userId: user.id,
+        isActive: true,
+        OR: [
+          { shopId },
+          { shopId: null },
+        ],
+      },
       orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json({ products });
+    return NextResponse.json({ products: products.map(serializeProduct) });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

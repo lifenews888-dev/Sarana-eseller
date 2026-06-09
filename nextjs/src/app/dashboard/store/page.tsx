@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ProductsAPI, OrdersAPI, Product, Order } from '@/lib/api';
+import { SellerProductsAPI, SellerOrdersAPI, Product, Order } from '@/lib/api';
 import { formatPrice, getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import {
@@ -90,8 +90,8 @@ export default function SellerDashboardPage() {
         const token = localStorage.getItem('token');
         const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
         const [prodRes, ordRes, analyticsRes] = await Promise.allSettled([
-          ProductsAPI.list(),
-          OrdersAPI.list(),
+          SellerProductsAPI.list(),
+          SellerOrdersAPI.list(),
           fetch(`/api/seller/analytics?period=${analyticsPeriod}`, { headers: authHeaders }).then(r => r.json()),
         ]);
         if (!mounted) return;

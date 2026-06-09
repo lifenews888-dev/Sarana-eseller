@@ -19,13 +19,19 @@ const dashboardLayout = path.join(process.cwd(), 'src', 'app', 'dashboard', 'lay
 const sidebarComponent = path.join(process.cwd(), 'src', 'components', 'dashboard', 'Sidebar.tsx');
 const apiClient = path.join(process.cwd(), 'src', 'lib', 'api.ts');
 const apiAuth = path.join(process.cwd(), 'src', 'lib', 'api-auth.ts');
+const prismaSchema = path.join(process.cwd(), 'prisma', 'schema.prisma');
 const sellerOrdersRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'orders', 'route.ts');
+const sellerOrderStatusRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'orders', '[id]', 'status', 'route.ts');
 const sellerProductsRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'products', 'route.ts');
+const sellerProductRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'products', '[id]', 'route.ts');
 const storeSettingsRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'settings', 'route.ts');
 const storeCategoriesRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'categories', 'route.ts');
 const storeStorefrontRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'storefront', 'route.ts');
 const storeSettingsPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'settings', 'page.tsx');
 const storeCategoriesPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'categories', 'page.tsx');
+const storeProductsPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'products', 'page.tsx');
+const storeOrdersPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'orders', 'page.tsx');
+const storeDashboardPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'page.tsx');
 const shopTypePage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'settings', 'shop-type', 'page.tsx');
 const scanRoots = [
   path.join(process.cwd(), 'src', 'app', 'dashboard'),
@@ -129,13 +135,19 @@ function main() {
   const sidebarSource = fs.existsSync(sidebarComponent) ? fs.readFileSync(sidebarComponent, 'utf8') : '';
   const apiClientSource = fs.existsSync(apiClient) ? fs.readFileSync(apiClient, 'utf8') : '';
   const apiAuthSource = fs.existsSync(apiAuth) ? fs.readFileSync(apiAuth, 'utf8') : '';
+  const prismaSource = fs.existsSync(prismaSchema) ? fs.readFileSync(prismaSchema, 'utf8') : '';
   const sellerOrdersSource = fs.existsSync(sellerOrdersRoute) ? fs.readFileSync(sellerOrdersRoute, 'utf8') : '';
+  const sellerOrderStatusSource = fs.existsSync(sellerOrderStatusRoute) ? fs.readFileSync(sellerOrderStatusRoute, 'utf8') : '';
   const sellerProductsSource = fs.existsSync(sellerProductsRoute) ? fs.readFileSync(sellerProductsRoute, 'utf8') : '';
+  const sellerProductSource = fs.existsSync(sellerProductRoute) ? fs.readFileSync(sellerProductRoute, 'utf8') : '';
   const storeSettingsSource = fs.existsSync(storeSettingsRoute) ? fs.readFileSync(storeSettingsRoute, 'utf8') : '';
   const storeCategoriesSource = fs.existsSync(storeCategoriesRoute) ? fs.readFileSync(storeCategoriesRoute, 'utf8') : '';
   const storeStorefrontSource = fs.existsSync(storeStorefrontRoute) ? fs.readFileSync(storeStorefrontRoute, 'utf8') : '';
   const storeSettingsPageSource = fs.existsSync(storeSettingsPage) ? fs.readFileSync(storeSettingsPage, 'utf8') : '';
   const storeCategoriesPageSource = fs.existsSync(storeCategoriesPage) ? fs.readFileSync(storeCategoriesPage, 'utf8') : '';
+  const storeProductsPageSource = fs.existsSync(storeProductsPage) ? fs.readFileSync(storeProductsPage, 'utf8') : '';
+  const storeOrdersPageSource = fs.existsSync(storeOrdersPage) ? fs.readFileSync(storeOrdersPage, 'utf8') : '';
+  const storeDashboardPageSource = fs.existsSync(storeDashboardPage) ? fs.readFileSync(storeDashboardPage, 'utf8') : '';
   const shopTypePageSource = fs.existsSync(shopTypePage) ? fs.readFileSync(shopTypePage, 'utf8') : '';
 
   checks.push({
@@ -182,6 +194,24 @@ function main() {
   });
 
   checks.push({
+    label: 'products have shop relation',
+    ok: prismaSource.includes('shopId        String?  @db.ObjectId') && prismaSource.includes('shop            Shop?') && prismaSource.includes('products        Product[]'),
+    detail: 'Product.shopId enables per-store product ownership',
+  });
+
+  checks.push({
+    label: 'seller products scoped',
+    ok: sellerProductsSource.includes('shopId,') && sellerProductsSource.includes('{ shopId }') && sellerProductSource.includes('getOwnedProduct'),
+    detail: 'create/list/update/delete respect active shop',
+  });
+
+  checks.push({
+    label: 'seller order status scoped',
+    ok: sellerOrderStatusSource.includes('getShopForRequest(req, user.id)') && sellerOrderStatusSource.includes('findFirst({ where: { id, shopId } })'),
+    detail: 'order status updates cannot cross stores',
+  });
+
+  checks.push({
     label: 'client sends active shop',
     ok: apiClientSource.includes('ACTIVE_STORE_ID_KEY') && apiClientSource.includes("headers['x-eseller-shop-id'] = activeShopId"),
     detail: 'src/lib/api.ts attaches active shop header',
@@ -192,6 +222,12 @@ function main() {
     ok: [storeSettingsPageSource, storeCategoriesPageSource, shopTypePageSource]
       .every((source) => source.includes('getActiveStoreHeaders')),
     detail: 'settings/categories/type setup include active shop header',
+  });
+
+  checks.push({
+    label: 'dashboard uses seller APIs',
+    ok: storeProductsPageSource.includes('SellerProductsAPI') && storeOrdersPageSource.includes('SellerOrdersAPI') && storeDashboardPageSource.includes('SellerProductsAPI') && storeDashboardPageSource.includes('SellerOrdersAPI'),
+    detail: 'store dashboard avoids public/external product/order APIs',
   });
 
   for (const item of requiredStoreRoutes) {

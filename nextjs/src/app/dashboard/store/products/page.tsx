@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ProductsAPI, Product } from '@/lib/api';
+import { SellerProductsAPI, Product } from '@/lib/api';
 import { formatPrice, CATEGORIES, cn } from '@/lib/utils';
 import { useToast } from '@/components/shared/Toast';
 import StatCard from '@/components/dashboard/StatCard';
@@ -54,7 +54,7 @@ export default function ProductsPage() {
   useEffect(() => { loadProducts(); }, []);
   async function loadProducts() {
     setLoading(true);
-    try { const res = await ProductsAPI.list(); setProducts(res.products || []); }
+    try { const res = await SellerProductsAPI.list(); setProducts(res.products || []); }
     catch { setProducts([]); }
     finally { setLoading(false); }
   }
@@ -94,11 +94,11 @@ export default function ProductsPage() {
     };
     try {
       if (editingId) {
-        const updated = await ProductsAPI.update(editingId, data);
+        const updated = await SellerProductsAPI.update(editingId, data);
         setProducts((prev) => prev.map((p) => (p._id === editingId ? { ...p, ...updated } : p)));
         toast.show('Шинэчлэгдлээ', 'ok');
       } else {
-        const created = await ProductsAPI.create(data);
+        const created = await SellerProductsAPI.create(data);
         setProducts((prev) => [created, ...prev]);
         toast.show('Нэмэгдлээ', 'ok');
       }
@@ -113,7 +113,7 @@ export default function ProductsPage() {
 
   async function handleDelete(id: string) {
     if (!confirm('Устгах уу?')) return;
-    try { await ProductsAPI.delete(id); } catch {}
+    try { await SellerProductsAPI.delete(id); } catch {}
     setProducts((prev) => prev.filter((p) => p._id !== id));
     toast.show('Устгагдлаа', 'ok');
   }

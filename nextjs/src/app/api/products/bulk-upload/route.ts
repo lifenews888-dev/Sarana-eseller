@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSeller } from '@/lib/api-auth'
+import { getShopForRequest, requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { sanitizeImageUrls } from '@/lib/image-url'
 
@@ -33,15 +33,15 @@ export async function POST(req: NextRequest) {
   const file = formData.get('file') as File
   if (!file) return NextResponse.json({ error: 'Файл оруулна уу' }, { status: 400 })
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
-  if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
+  const shopId = await getShopForRequest(req, auth.id)
+  if (!shopId) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   const text = await file.text()
   let rows: Record<string, string>[]
   try {
     rows = parseCSV(text)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e as Error).message }, { status: 400 })
   }
 
   const results = { success: 0, failed: 0, errors: [] as string[] }
@@ -75,14 +75,15 @@ export async function POST(req: NextRequest) {
           stock: parseInt(row.stock || '0') || 0,
           category: row.category || 'other',
           userId: auth.id,
+          shopId,
           isActive: (row.active || 'true').toLowerCase() !== 'false',
         },
       })
       results.success++
-    } catch (e: any) {
+    } catch (e: unknown) {
       results.failed++
       if (results.errors.length < 20) {
-        results.errors.push(`${name}: ${e.message}`)
+        results.errors.push(`${name}: ${(e as Error).message}`)
       }
     }
   }

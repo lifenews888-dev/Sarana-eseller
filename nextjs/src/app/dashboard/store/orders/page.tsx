@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { OrdersAPI, Order } from '@/lib/api';
+import { SellerOrdersAPI, Order } from '@/lib/api';
 import { formatPrice, STATUS_MAP, timeAgo } from '@/lib/utils';
 import { useToast } from '@/components/shared/Toast';
 import StatCard from '@/components/dashboard/StatCard';
@@ -49,7 +49,7 @@ export default function OrdersPage() {
   async function loadOrders() {
     setLoading(true);
     try {
-      const res = await OrdersAPI.list();
+      const res = await SellerOrdersAPI.list();
       setOrders(res.orders || []);
     } catch {
       setOrders([]);
@@ -73,7 +73,7 @@ export default function OrdersPage() {
 
   async function handleStatusChange(orderId: string, newStatus: string) {
     try {
-      await OrdersAPI.updateStatus(orderId, newStatus);
+      await SellerOrdersAPI.updateStatus(orderId, newStatus);
       setOrders((prev) => prev.map((o) => (o._id === orderId ? { ...o, status: newStatus as Order['status'] } : o)));
       if (selectedOrder?._id === orderId) {
         setSelectedOrder((prev) => prev ? { ...prev, status: newStatus as Order['status'] } : null);
