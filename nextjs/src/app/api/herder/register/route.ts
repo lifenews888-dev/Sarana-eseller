@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if user already has a herder shop
-    const existingShop = await prisma.shop.findUnique({
-      where: { userId: auth.id },
+    const existingShop = await prisma.shop.findFirst({
+      where: { userId: auth.id, herderShop: { isNot: null } },
       include: { herderShop: true },
     });
 

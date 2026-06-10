@@ -200,6 +200,12 @@ function main() {
   });
 
   checks.push({
+    label: 'shops allow multiple per user',
+    ok: prismaSource.includes('shops     Shop[]') && prismaSource.includes('userId    String   @db.ObjectId') && prismaSource.includes('@@index([userId])'),
+    detail: 'Shop.userId is indexed but no longer unique',
+  });
+
+  checks.push({
     label: 'seller products scoped',
     ok: sellerProductsSource.includes('shopId,') && sellerProductsSource.includes('{ shopId }') && sellerProductSource.includes('getOwnedProduct'),
     detail: 'create/list/update/delete respect active shop',
@@ -228,6 +234,12 @@ function main() {
     label: 'dashboard uses seller APIs',
     ok: storeProductsPageSource.includes('SellerProductsAPI') && storeOrdersPageSource.includes('SellerOrdersAPI') && storeDashboardPageSource.includes('SellerProductsAPI') && storeDashboardPageSource.includes('SellerOrdersAPI'),
     detail: 'store dashboard avoids public/external product/order APIs',
+  });
+
+  checks.push({
+    label: 'auth returns latest shop summary',
+    ok: apiAuthSource.includes('getShopForUser') && fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'login', 'route.ts'), 'utf8').includes('user.shops[0]') && fs.readFileSync(path.join(process.cwd(), 'src', 'app', 'api', 'auth', 'me', 'route.ts'), 'utf8').includes('user.shops[0]'),
+    detail: 'login/me handle User.shops relation',
   });
 
   for (const item of requiredStoreRoutes) {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSeller } from '@/lib/api-auth'
+import { getShopForRequest, requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 // URL-аас бараа мэдээлэл scrape хийх
@@ -19,7 +19,7 @@ async function scrapeProduct(url: string) {
   }
 
   // JSON-LD structured data
-  let jsonLd: Record<string, any> = {}
+  let jsonLd: Record<string, unknown> = {}
   const ldMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i)
   if (ldMatch) {
     try { jsonLd = JSON.parse(ldMatch[1]) } catch {}
@@ -30,7 +30,10 @@ async function scrapeProduct(url: string) {
     /["']price["']\s*:\s*["']?([\d,\.]+)/i,
     /itemprop=["']price["'][^>]*content=["']([\d,\.]+)/i,
   ]
-  let price = jsonLd?.offers?.price || jsonLd?.price || ''
+  const offers = typeof jsonLd.offers === 'object' && jsonLd.offers !== null
+    ? jsonLd.offers as Record<string, unknown>
+    : null
+  let price = String(offers?.price || jsonLd.price || '')
   if (!price) {
     for (const p of pricePatterns) {
       const m = html.match(p)
@@ -63,8 +66,8 @@ async function scrapeProduct(url: string) {
           : 'custom'
 
   return {
-    name: getOG('title') || jsonLd?.name || html.match(/<title>([^<]+)/)?.[1] || '',
-    description: getOG('description') || jsonLd?.description || '',
+    name: String(getOG('title') || jsonLd.name || html.match(/<title>([^<]+)/)?.[1] || ''),
+    description: String(getOG('description') || jsonLd.description || ''),
     price: Math.round(parseFloat(String(price).replace(/[^\d.]/g, '')) || 0),
     images,
     sourceType,
@@ -83,13 +86,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'URL буруу байна' }, { status: 400 })
   }
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
-  if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
+  const shopId = await getShopForRequest(req, auth.id)
+  if (!shopId) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   // Integration байхгүй бол үүсгэх
   const integration = await prisma.storeIntegration.upsert({
-    where:  { shopId: shop.id },
-    create: { shopId: shop.id },
+    where:  { shopId },
+    create: { shopId },
     update: {},
   })
 
@@ -103,15 +106,16 @@ export async function POST(req: NextRequest) {
 
     await prisma.importedUrl.update({
       where: { id: imported.id },
-      data: { status: 'success', rawData: scraped as any, sourceType: scraped.sourceType },
+      data: { status: 'success', rawData: scraped, sourceType: scraped.sourceType },
     })
 
     return NextResponse.json({ success: true, data: scraped, importId: imported.id })
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = (e as Error).message
     await prisma.importedUrl.update({
       where: { id: imported.id },
-      data: { status: 'failed', error: e.message },
+      data: { status: 'failed', error: message },
     })
-    return NextResponse.json({ error: e.message }, { status: 422 })
+    return NextResponse.json({ error: message }, { status: 422 })
   }
 }

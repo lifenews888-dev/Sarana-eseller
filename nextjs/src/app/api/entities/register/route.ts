@@ -80,9 +80,8 @@ export async function POST(req: NextRequest) {
           digital: 'digital',
           pre_order: 'preorder',
         };
-        entity = await prisma.shop.upsert({
-          where: { userId: auth.id },
-          create: {
+        entity = await prisma.shop.create({
+          data: {
             userId: auth.id,
             name,
             slug: safeSlug,
@@ -93,16 +92,6 @@ export async function POST(req: NextRequest) {
             district,
             industry: industryMap[entityType] || 'general',
             locationStatus: 'pending',
-          },
-          update: {
-            name,
-            slug: safeSlug,
-            storefrontSlug: safeSlug,
-            logo: logo === undefined ? undefined : safeLogo,
-            phone: phone || undefined,
-            address: address || undefined,
-            district: district || undefined,
-            industry: industryMap[entityType] || 'general',
           },
         });
         break;
@@ -253,7 +242,11 @@ export async function POST(req: NextRequest) {
       where: { id: auth.id },
       data: { role: 'seller', entityType, username },
       include: {
-        shop: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        shops: {
+          where: { slug: safeSlug },
+          take: 1,
+          select: { name: true, slug: true, logo: true, phone: true, address: true },
+        },
         agent: { select: { name: true, slug: true, profilePhoto: true, phone: true, address: true } },
         company: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
         autoDealer: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
@@ -280,7 +273,7 @@ export async function POST(req: NextRequest) {
       entityType: updatedUser.entityType,
     });
     const entityStore =
-      updatedUser.shop ||
+      updatedUser.shops[0] ||
       (updatedUser.agent
         ? {
             name: updatedUser.agent.name,

@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
 
     // Auto-create Shop for sellers if none exists
     if (user.role === 'seller') {
-      const existingShop = await prisma.shop.findUnique({ where: { userId: user.id } });
+      const existingShop = await prisma.shop.findFirst({ where: { userId: user.id } });
       if (!existingShop) {
         const baseName = user.name || email.split('@')[0];
         const baseSlug = baseName

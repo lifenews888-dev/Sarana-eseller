@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { requireAuth, json, errorJson, getShopForRequest } from '@/lib/api-auth';
 import { invalidateShopCache } from '@/lib/shop-cache';
 
 // POST /api/enterprise/setup — create enterprise shop
@@ -18,7 +18,8 @@ export async function POST(req: NextRequest) {
   }
 
   // Get user's shop
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
+  const shopId = await getShopForRequest(req, user.id);
+  const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   // Check existing

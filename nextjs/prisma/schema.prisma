@@ -64,7 +64,7 @@ model User {
   products  Product[]
   orders    Order[]
   wallet    Wallet?
-  shop      Shop?
+  shops     Shop[]
   agent     Agent?
   company   Company?
   autoDealer AutoDealer?
@@ -335,7 +335,7 @@ model AffiliateClick {
 
 model Shop {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @unique @db.ObjectId
+  userId    String   @db.ObjectId
   name      String
   slug      String   @unique
   logo      String?
@@ -392,6 +392,7 @@ model Shop {
   liveCount    Int       @default(0)       // Энэ сарын live тоо
   liveResetAt  DateTime?                   // Сар шинэчлэгдэх огноо
 
+  @@index([userId])
   @@map("stores")
 }
 
