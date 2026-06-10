@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import LocationForm, { LocationData } from '@/components/seller/LocationForm';
+import { getActiveStoreHeaders } from '@/lib/api';
 
 export default function EditLocationPage() {
   const params = useParams();
@@ -12,9 +13,8 @@ export default function EditLocationPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     fetch(`/api/seller/locations/${id}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: getActiveStoreHeaders(),
     })
       .then((r) => {
         if (!r.ok) throw new Error('Байршил олдсонгүй');

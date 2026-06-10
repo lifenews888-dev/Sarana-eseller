@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, errorJson } from '@/lib/api-auth';
 import { validateCoords } from '@/lib/location/validateCoords';
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, ctx: Ctx) {
 
   try {
     const { id } = await ctx.params;
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForRequest(req, user.id);
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     const location = await prisma.storeLocation.findFirst({
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 
   try {
     const { id } = await ctx.params;
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForRequest(req, user.id);
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     // Ownership check
@@ -71,7 +71,7 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
 
   try {
     const { id } = await ctx.params;
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForRequest(req, user.id);
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     const location = await prisma.storeLocation.findFirst({

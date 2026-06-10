@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { json, errorJson, requireSeller, getShopForUser } from '@/lib/api-auth';
+import { json, errorJson, requireSeller, getShopForRequest } from '@/lib/api-auth';
 import { sanitizeImageUrls } from '@/lib/image-url';
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -11,7 +11,7 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
   if (auth instanceof Response) return auth;
 
   const { id } = await ctx.params;
-  const shopId = await getShopForUser(auth.id);
+  const shopId = await getShopForRequest(req, auth.id);
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   // Verify ownership
@@ -43,7 +43,7 @@ export async function DELETE(req: NextRequest, ctx: Ctx) {
   if (auth instanceof Response) return auth;
 
   const { id } = await ctx.params;
-  const shopId = await getShopForUser(auth.id);
+  const shopId = await getShopForRequest(req, auth.id);
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const existing = await prisma.service.findFirst({ where: { id, shopId } });

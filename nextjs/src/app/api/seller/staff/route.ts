@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, errorJson } from '@/lib/api-auth';
 import { checkShopLimit } from '@/lib/subscription-server';
 
 // GET /api/seller/staff
 export async function GET(req: NextRequest) {
   const user = requireSeller(req);
   if (user instanceof NextResponse) return user;
-  const shopId = await getShopForUser(user.id);
+  const shopId = await getShopForRequest(req, user.id);
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const staff = await prisma.staff.findMany({
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const user = requireSeller(req);
   if (user instanceof NextResponse) return user;
-  const shopId = await getShopForUser(user.id);
+  const shopId = await getShopForRequest(req, user.id);
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const check = await checkShopLimit(shopId, 'staff');

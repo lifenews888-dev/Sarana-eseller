@@ -1,13 +1,13 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, json, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, json, errorJson } from '@/lib/api-auth';
 
 // GET /api/store/commissions — commissions for this shop
 export async function GET(req: NextRequest) {
   const user = requireSeller(req);
   if (user instanceof Response) return user;
 
-  const shopId = await getShopForUser(user.id);
+  const shopId = await getShopForRequest(req, user.id);
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const commissions = await prisma.sellerCommission.findMany({

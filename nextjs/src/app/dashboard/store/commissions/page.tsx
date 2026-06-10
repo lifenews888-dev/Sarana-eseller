@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { Search, Loader2, DollarSign, Clock, Users, Inbox } from 'lucide-react';
+import { getActiveStoreHeaders } from '@/lib/api';
 
 interface Commission {
   id: string;
@@ -54,9 +55,8 @@ export default function StoreCommissionsPage() {
   const [tab, setTab] = useState('all');
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     fetch('/api/store/commissions', {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: getActiveStoreHeaders(),
     })
       .then(r => r.json())
       .then(res => {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, errorJson } from '@/lib/api-auth';
 import { geocodeAddress } from '@/lib/maps/googleMaps';
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, ctx: Ctx) {
 
   try {
     const { id } = await ctx.params;
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForRequest(req, user.id);
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     const location = await prisma.storeLocation.findFirst({

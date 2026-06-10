@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { GoogleMapPicker } from './GoogleMapPicker';
 import { AutoVerifyButton } from './AutoVerifyButton';
+import { getActiveStoreHeaders } from '@/lib/api';
 import { ArrowLeft, Save, Clock, MapPin, Phone, Star, ParkingSquare, ArrowUpDown, CreditCard, Globe, Truck, Undo2, Accessibility, Lock, type LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -192,14 +193,9 @@ export default function LocationForm({ initialData, isEdit }: Props) {
         ? `/api/seller/locations/${initialData?.id}`
         : '/api/seller/locations';
 
-      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
       const res = await fetch(url, {
         method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: getActiveStoreHeaders(true),
         body: JSON.stringify({ ...form, lat: mapCoords.lat, lng: mapCoords.lng }),
       });
 

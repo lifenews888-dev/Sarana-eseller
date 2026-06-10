@@ -1,17 +1,17 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, json, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, json, errorJson } from '@/lib/api-auth';
 
 // GET /api/store/sellers — list sellers for this shop
 export async function GET(req: NextRequest) {
   const user = requireSeller(req);
   if (user instanceof Response) return user;
 
-  const shopId = await getShopForUser(user.id);
+  const shopId = await getShopForRequest(req, user.id);
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const sellers = await prisma.sellerProduct.findMany({
-    where: { product: { userId: user.id } },
+    where: { product: { userId: user.id, shopId } },
     include: {
       seller: { include: { user: { select: { name: true, email: true, avatar: true } } } },
       product: { select: { name: true, price: true } },
@@ -19,7 +19,28 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: 'desc' },
   });
 
-  const sellerMap = new Map<string, any>();
+  type SellerSummary = {
+    id: string;
+    name: string;
+    username: string;
+    avatar: string | null;
+    email: string;
+    isVerified: boolean;
+    commissionRate: number;
+    totalSales: number;
+    totalEarned: number;
+    products: Array<{
+      id: string;
+      productName: string;
+      isApproved: boolean;
+      clicks: number;
+      conversions: number;
+    }>;
+    pendingCount: number;
+    approvedCount: number;
+  };
+
+  const sellerMap = new Map<string, SellerSummary>();
   for (const sp of sellers) {
     const sid = sp.sellerProfileId;
     if (!sellerMap.has(sid)) {
