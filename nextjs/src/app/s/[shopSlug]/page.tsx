@@ -1,21 +1,41 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getShopBySlug } from '@/lib/shop-data';
-import { SERVICE_INDUSTRIES } from '@/lib/types/service';
 import ServiceProfileClient from '@/components/service-profile/ServiceProfileClient';
 import StorefrontClient from '@/components/storefront/StorefrontClient';
 
 type Props = { params: Promise<{ shopSlug: string }> };
 
+async function findShopByPublicSlug(shopSlug: string) {
+  const shop = await prisma.shop.findFirst({
+    where: { OR: [{ slug: shopSlug }, { storefrontSlug: shopSlug }] },
+    include: {
+      user: { select: { name: true, avatar: true } },
+    },
+  });
+  if (shop) return shop;
+
+  const owner = await prisma.user.findFirst({
+    where: { username: shopSlug },
+    select: { id: true },
+  });
+  if (!owner) return null;
+
+  return prisma.shop.findFirst({
+    where: { userId: owner.id, isBlocked: false },
+    include: {
+      user: { select: { name: true, avatar: true } },
+    },
+    orderBy: { createdAt: 'desc' },
+  });
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { shopSlug } = await params;
 
   try {
-    const shop = await prisma.shop.findFirst({
-      where: { OR: [{ slug: shopSlug }, { storefrontSlug: shopSlug }] },
-      select: { name: true, address: true, logo: true, industry: true, slug: true },
-    });
+    const shop = await findShopByPublicSlug(shopSlug);
     if (!shop) return { title: 'Олдсонгүй — eseller.mn' };
 
     const title = `${shop.name} — eseller.mn`;
@@ -39,12 +59,7 @@ export default async function ShopProfilePage({ params }: Props) {
   // Find the shop — simplified query to avoid relation issues
   let shop;
   try {
-    shop = await prisma.shop.findFirst({
-      where: { OR: [{ slug: shopSlug }, { storefrontSlug: shopSlug }] },
-      include: {
-        user: { select: { name: true, avatar: true } },
-      },
-    });
+    shop = await findShopByPublicSlug(shopSlug);
   } catch (e) {
     console.error('[/s/ page] DB error:', (e as Error).message);
     notFound();
@@ -64,7 +79,14 @@ export default async function ShopProfilePage({ params }: Props) {
 
   // Product-type shop → StorefrontClient
   const products = await prisma.product.findMany({
-    where: { userId: shop.userId, isActive: true },
+    where: {
+      userId: shop.userId,
+      isActive: true,
+      OR: [
+        { shopId: shop.id },
+        { shopId: null },
+      ],
+    },
     take: 20,
     orderBy: { createdAt: 'desc' },
   });

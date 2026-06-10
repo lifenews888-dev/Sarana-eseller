@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { SellerProductsAPI, SellerOrdersAPI, Product, Order } from '@/lib/api';
+import { SellerProductsAPI, SellerOrdersAPI, Product, Order, getActiveStoreHeaders } from '@/lib/api';
 import { formatPrice, getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import {
@@ -22,6 +22,20 @@ import {
 type AnalyticsData = {
   daily?: Array<{ revenue: number }>;
 };
+
+async function withTimeout<T>(promise: Promise<T>, ms = 8000): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 function getEntityActions(entityType?: string) {
   if (entityType === 'agent') {
@@ -87,16 +101,16 @@ export default function SellerDashboardPage() {
     let mounted = true;
     async function load() {
       try {
-        const token = localStorage.getItem('token');
-        const authHeaders: Record<string, string> = token ? { Authorization: `Bearer ${token}` } : {};
         const [prodRes, ordRes, analyticsRes] = await Promise.allSettled([
-          SellerProductsAPI.list(),
-          SellerOrdersAPI.list(),
-          fetch(`/api/seller/analytics?period=${analyticsPeriod}`, { headers: authHeaders }).then(r => r.json()),
+          withTimeout(SellerProductsAPI.list()),
+          withTimeout(SellerOrdersAPI.list()),
+          withTimeout(fetch(`/api/seller/analytics?period=${analyticsPeriod}`, {
+            headers: getActiveStoreHeaders(),
+          }).then(r => r.json())),
         ]);
         if (!mounted) return;
-        if (prodRes.status === 'fulfilled') setProducts(prodRes.value.products || []);
-        if (ordRes.status === 'fulfilled') setOrders(ordRes.value.orders || []);
+        if (prodRes.status === 'fulfilled' && prodRes.value) setProducts(prodRes.value.products || []);
+        if (ordRes.status === 'fulfilled' && ordRes.value) setOrders(ordRes.value.orders || []);
         if (analyticsRes.status === 'fulfilled' && analyticsRes.value?.data) setAnalytics(analyticsRes.value.data as AnalyticsData);
       } catch {}
       finally { if (mounted) setLoading(false); }

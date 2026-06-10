@@ -452,7 +452,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     ? {
         id: activeStore?.id,
         name: activeStore?.name || user?.store?.name || user?.name + 'ийн дэлгүүр',
-        url: activeStore?.slug ? `eseller.mn/${activeStore.slug}` : (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
+        url: activeStore?.href ? `eseller.mn${activeStore.href}` : activeStore?.slug ? `eseller.mn/s/${activeStore.slug}` : (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
         href: activeStore?.href,
         entityType: userEntityType,
         plan: 'Үнэгүй',
