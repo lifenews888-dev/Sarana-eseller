@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAdminDB as requireAdmin } from '@/lib/api-auth';
+import { REALISTIC_BANNER_IMAGES } from '@/lib/realistic-banner-assets';
 
 // GET — бүх hero banner жагсаалт
 export async function GET(req: NextRequest) {
@@ -24,7 +25,7 @@ export async function POST(req: NextRequest) {
       title: body.title || 'Шинэ баннер',
       subtitle: body.subtitle || null,
       videoUrl: body.videoUrl || null,
-      imageUrl: body.imageUrl || null,
+      imageUrl: body.imageUrl || REALISTIC_BANNER_IMAGES.summerSale,
       buttonText: body.buttonText || null,
       buttonLink: body.buttonLink || null,
       badge: body.badge || null,

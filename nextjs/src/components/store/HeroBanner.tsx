@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Search, ChevronRight, ChevronLeft, Truck, Shield, Clock, Sparkles } from 'lucide-react';
+import SafeImage from '@/components/ui/SafeImage';
+import { REALISTIC_BANNER_IMAGES } from '@/lib/realistic-banner-assets';
 
 const FEATURES = [
   { icon: Truck, title: 'Үнэгүй хүргэлт', sub: '50,000₮-с дээш', color: '#059669' },
@@ -11,14 +13,26 @@ const FEATURES = [
   { icon: Sparkles, title: 'Шинэ ирэлтүүд', sub: 'Долоо хоног бүр', color: '#7C3AED' },
 ];
 
+type StoreHeroBanner = {
+  id: string;
+  title: string;
+  subtitle: string;
+  bgColor: string;
+  gradient: string;
+  imageUrl?: string | null;
+  linkUrl: string;
+  cta: string;
+};
+
 // Demo banners (will be replaced by API data)
-const DEMO_BANNERS = [
+const DEMO_BANNERS: StoreHeroBanner[] = [
   {
     id: 'b1',
     title: 'Зуны Мега Хямдрал',
     subtitle: '70% хүртэл хөнгөлөлт · 500+ бараанд',
     bgColor: '#E8242C',
     gradient: 'from-[#E31E24] via-[#C41A1F] to-[#8B0000]',
+    imageUrl: REALISTIC_BANNER_IMAGES.summerSale,
     linkUrl: '/store?deal=1',
     cta: 'Хямдралтай бараа',
   },
@@ -28,6 +42,7 @@ const DEMO_BANNERS = [
     subtitle: 'Үнэгүй хүргэлт · 2x оноо · Онцгой хямдрал',
     bgColor: '#D97706',
     gradient: 'from-[#D97706] via-[#B45309] to-[#78350F]',
+    imageUrl: REALISTIC_BANNER_IMAGES.gold,
     linkUrl: '/gold',
     cta: 'Gold болох',
   },
@@ -37,6 +52,7 @@ const DEMO_BANNERS = [
     subtitle: 'Өдөр бүр шинэ брэнд · 5,000+ бараа',
     bgColor: '#6366F1',
     gradient: 'from-[#6366F1] via-[#4F46E5] to-[#3730A3]',
+    imageUrl: REALISTIC_BANNER_IMAGES.storefronts,
     linkUrl: '/shops',
     cta: 'Дэлгүүрүүд',
   },
@@ -46,6 +62,7 @@ const DEMO_BANNERS = [
     subtitle: 'Гадаадаас захиалга · Pre-order систем',
     bgColor: '#059669',
     gradient: 'from-[#059669] via-[#047857] to-[#064E3B]',
+    imageUrl: REALISTIC_BANNER_IMAGES.warehouse,
     linkUrl: '/become-seller',
     cta: 'Дэлгэрэнгүй',
   },
@@ -61,7 +78,7 @@ type ApiBanner = {
 };
 
 export default function HeroBanner({ onSearch }: { onSearch: () => void }) {
-  const [banners, setBanners] = useState(DEMO_BANNERS);
+  const [banners, setBanners] = useState<StoreHeroBanner[]>(DEMO_BANNERS);
   const [active, setActive] = useState(0);
 
   // Try fetch from API, fallback to demo
@@ -79,7 +96,7 @@ export default function HeroBanner({ onSearch }: { onSearch: () => void }) {
             gradient: `from-[${b.bgColor || '#E8242C'}]`,
             linkUrl: b.linkUrl || '/store',
             cta: 'Дэлгэрэнгүй',
-            imageUrl: b.imageUrl,
+            imageUrl: b.imageUrl || REALISTIC_BANNER_IMAGES.storefronts,
           })));
         }
       })
@@ -116,8 +133,14 @@ export default function HeroBanner({ onSearch }: { onSearch: () => void }) {
           className={`absolute inset-0 bg-gradient-to-br ${current.gradient} transition-all duration-700`}
           style={{ backgroundColor: current.bgColor }}
         />
-        <div className="absolute top-[-100px] right-[-80px] w-[400px] h-[400px] rounded-full bg-white/[.06]" />
-        <div className="absolute bottom-[-60px] left-[-40px] w-[250px] h-[250px] rounded-full bg-white/[.04]" />
+        {current.imageUrl && (
+          <SafeImage
+            src={current.imageUrl}
+            alt={current.title}
+            className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/45 to-black/20" />
 
         {/* Content */}
         <div className="max-w-[1320px] mx-auto px-4 py-14 md:py-20 relative z-10">
