@@ -3,7 +3,25 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { ArrowLeft, Upload, Save, Eye } from 'lucide-react';
+import { ArrowLeft, Save, Eye } from 'lucide-react';
+import { REALISTIC_BANNER_IMAGES } from '@/lib/realistic-banner-assets';
+
+const SLOT_DEFAULT_IMAGES: Record<string, string> = {
+  HERO: REALISTIC_BANNER_IMAGES.summerSale,
+  ANNOUNCEMENT: REALISTIC_BANNER_IMAGES.delivery,
+  MID_PAGE: REALISTIC_BANNER_IMAGES.gold,
+  IN_FEED: REALISTIC_BANNER_IMAGES.summerSale,
+  SIDEBAR_RIGHT: REALISTIC_BANNER_IMAGES.sellers,
+  SECTION_SEPARATOR: REALISTIC_BANNER_IMAGES.delivery,
+  CATEGORY_TOP: REALISTIC_BANNER_IMAGES.storefronts,
+  PRODUCT_BELOW: REALISTIC_BANNER_IMAGES.gold,
+};
+
+function datetimeLocalAfterDays(days: number) {
+  const value = new Date();
+  value.setDate(value.getDate() + days);
+  return value.toISOString().slice(0, 16);
+}
 
 const SLOTS = [
   { value: 'HERO', label: 'Hero баннер' },
@@ -30,19 +48,31 @@ export default function NewBannerPage() {
   const [form, setForm] = useState({
     title: '',
     slot: 'HERO',
-    imageUrl: '',
+    imageUrl: SLOT_DEFAULT_IMAGES.HERO,
     imageMobile: '',
     linkUrl: '',
     altText: '',
     bgColor: '#E8242C',
     status: 'DRAFT',
     startsAt: new Date().toISOString().slice(0, 16),
-    endsAt: '',
+    endsAt: datetimeLocalAfterDays(30),
     sortOrder: 0,
   });
 
   const update = (field: string, value: string | number) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      if (field === 'slot') {
+        const currentDefault = SLOT_DEFAULT_IMAGES[prev.slot];
+        const nextDefault = SLOT_DEFAULT_IMAGES[String(value)];
+        const shouldReplaceImage = !prev.imageUrl || prev.imageUrl === currentDefault;
+        return {
+          ...prev,
+          slot: String(value),
+          imageUrl: shouldReplaceImage && nextDefault ? nextDefault : prev.imageUrl,
+        };
+      }
+      return { ...prev, [field]: value };
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +80,6 @@ export default function NewBannerPage() {
     setError(null);
 
     if (!form.title.trim()) { setError('Гарчиг оруулна уу'); return; }
-    if (!form.imageUrl.trim()) { setError('Зургийн URL оруулна уу'); return; }
     if (!form.linkUrl.trim()) { setError('Холбоос URL оруулна уу'); return; }
     if (!form.endsAt) { setError('Дуусах огноо сонгоно уу'); return; }
 
@@ -73,8 +102,8 @@ export default function NewBannerPage() {
       }
 
       router.push('/dashboard/admin/banners');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Баннер үүсгэхэд алдаа гарлаа');
     } finally {
       setSaving(false);
     }
