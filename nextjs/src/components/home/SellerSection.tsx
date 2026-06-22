@@ -22,7 +22,7 @@ export default function SellerSection() {
             <Link href="/become-seller" className="bg-[#E8242C] text-white px-6 py-3 rounded-xl no-underline font-bold text-sm hover:bg-[#c91f26] transition-colors">
               Борлуулагч болох →
             </Link>
-            <Link href="/open-shop" className="bg-white/12 text-white px-6 py-3 rounded-xl no-underline font-bold text-sm border border-white/25 hover:border-[#E8242C] transition-colors">
+            <Link href="/become-seller?source=open-shop" className="bg-white/12 text-white px-6 py-3 rounded-xl no-underline font-bold text-sm border border-white/25 hover:border-[#E8242C] transition-colors">
               Дэлгүүр нээх →
             </Link>
           </div>

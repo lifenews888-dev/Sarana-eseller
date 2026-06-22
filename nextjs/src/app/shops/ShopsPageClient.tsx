@@ -323,7 +323,7 @@ export default function ShopsPageClient() {
           </nav>
 
           <Link
-            href="/open-shop"
+            href="/become-seller?source=open-shop"
             className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#E8242C] px-4 text-sm font-black text-white no-underline transition hover:bg-[#c91f26]"
           >
             <PlusCircle className="h-4 w-4" />
@@ -810,7 +810,7 @@ function EmptyState({ hasFilters, onReset }: { hasFilters: boolean; onReset: () 
           </button>
         )}
         <Link
-          href="/open-shop"
+          href="/become-seller?source=open-shop"
           className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#E8242C] px-4 text-sm font-black text-white no-underline transition hover:bg-[#c91f26]"
         >
           <PlusCircle className="h-4 w-4" />

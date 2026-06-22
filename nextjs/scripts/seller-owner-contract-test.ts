@@ -19,6 +19,15 @@ const registerRoute = path.join(process.cwd(), 'src', 'app', 'api', 'entities', 
 const becomeSellerPage = path.join(process.cwd(), 'src', 'app', 'become-seller', 'page.tsx');
 const openShopPage = path.join(process.cwd(), 'src', 'app', 'open-shop', 'page.tsx');
 const myStoresRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'my-stores', 'route.ts');
+const publicCtaFiles = [
+  path.join(process.cwd(), 'src', 'components', 'shared', 'Navbar.tsx'),
+  path.join(process.cwd(), 'src', 'components', 'shared', 'Footer.tsx'),
+  path.join(process.cwd(), 'src', 'components', 'home', 'HeroVideoSlider.tsx'),
+  path.join(process.cwd(), 'src', 'components', 'home', 'SellerSection.tsx'),
+  path.join(process.cwd(), 'src', 'app', 'about', 'page.tsx'),
+  path.join(process.cwd(), 'src', 'app', 'shops', 'ShopsPageClient.tsx'),
+  path.join(process.cwd(), 'src', 'app', 'compare', 'page.tsx'),
+];
 
 function readSource(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -33,6 +42,7 @@ function main() {
   const onboardingSource = readSource(becomeSellerPage);
   const openShopSource = readSource(openShopPage);
   const myStoresSource = readSource(myStoresRoute);
+  const publicCtaSources = publicCtaFiles.map(readSource);
 
   const checks: Check[] = [
     {
@@ -107,8 +117,8 @@ function main() {
     },
     {
       label: 'onboarding auth redirect',
-      ok: onboardingSource.includes("router.push('/login?redirect=/become-seller')"),
-      detail: 'logged-out users return to onboarding after login',
+      ok: includesAll(onboardingSource, ['currentSellerOnboardingPath', 'encodeURIComponent(currentSellerOnboardingPath())']),
+      detail: 'logged-out users return to the same onboarding URL after login',
     },
     {
       label: 'create more stores intent',
@@ -119,6 +129,11 @@ function main() {
       label: 'open-shop canonical redirect',
       ok: includesAll(openShopSource, ["redirect('/become-seller?source=open-shop')"]),
       detail: '/open-shop cannot become a second store creation flow',
+    },
+    {
+      label: 'public CTAs use canonical flow',
+      ok: publicCtaSources.every((source) => !source.includes('href="/open-shop"') && !source.includes("buttonLink: '/open-shop'")),
+      detail: 'visible store-opening links go straight to /become-seller',
     },
     {
       label: 'my-stores route requires auth',

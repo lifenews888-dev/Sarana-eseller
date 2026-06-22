@@ -126,7 +126,7 @@ export default function ComparePage() {
         <h2 className="text-white text-[28px] font-black mb-2.5">Өнөөдөр эхлэ</h2>
         <p className="text-white/60 text-[16px] mb-7">Эхний 3 сар 0% комисс · Бүртгэл үнэгүй</p>
         <div className="flex gap-3 justify-center flex-wrap">
-          <Link href="/open-shop" className="bg-[#E8242C] text-white px-7 py-3.5 rounded-xl no-underline font-extrabold text-[16px] inline-flex items-center gap-2">
+          <Link href="/become-seller?source=open-shop" className="bg-[#E8242C] text-white px-7 py-3.5 rounded-xl no-underline font-extrabold text-[16px] inline-flex items-center gap-2">
             <Store className="w-5 h-5" /> Дэлгүүр нээх
           </Link>
           <Link href="/become-seller" className="text-white px-7 py-3.5 rounded-xl no-underline font-bold text-[16px] border border-white/20 inline-flex items-center gap-2">

@@ -52,7 +52,7 @@ const FALLBACK_SLIDES: BannerData[] = [
   {
     id: 'f5', badge: 'Дэлгүүрийн эзэн', title: 'Дэлгүүрээ нээж онлайн борлуул',
     subtitle: 'Эхний 3 сар 0% комисс · Бүрэн dashboard',
-    buttonText: 'Дэлгүүр нээх', buttonLink: '/open-shop',
+    buttonText: 'Дэлгүүр нээх', buttonLink: '/become-seller?source=open-shop',
     imageUrl: REALISTIC_BANNER_IMAGES.storefronts,
     color: '#1D9E75', gradient: 'from-[#0a1a10] to-[#0d3a20]',
   },
