@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getShopBySlug } from '@/lib/shop-data';
+import { getDemoStorefrontBySlug } from '@/lib/demo-storefront';
 import ServiceProfileClient from '@/components/service-profile/ServiceProfileClient';
 import StorefrontClient from '@/components/storefront/StorefrontClient';
 
@@ -33,10 +34,36 @@ async function findShopByPublicSlug(shopSlug: string) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { shopSlug } = await params;
+  const demoStorefront = getDemoStorefrontBySlug(shopSlug);
+  if (demoStorefront) {
+    const title = `${demoStorefront.shop.name} â€” eseller.mn`;
+    return {
+      title,
+      description: demoStorefront.shop.address || demoStorefront.shop.name,
+      openGraph: {
+        title,
+        url: `https://eseller.mn/s/${demoStorefront.shop.slug}`,
+        images: [],
+      },
+    };
+  }
 
   try {
     const shop = await findShopByPublicSlug(shopSlug);
     if (!shop) {
+      const demoStorefront = getDemoStorefrontBySlug(shopSlug);
+      if (demoStorefront) {
+        const title = `${demoStorefront.shop.name} â€” eseller.mn`;
+        return {
+          title,
+          description: demoStorefront.shop.address || demoStorefront.shop.name,
+          openGraph: {
+            title,
+            url: `https://eseller.mn/s/${demoStorefront.shop.slug}`,
+            images: [],
+          },
+        };
+      }
       const fallback = await getShopBySlug(shopSlug);
       if (fallback) {
         const title = `${fallback.shop.name} â€” eseller.mn`;
@@ -70,6 +97,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ShopProfilePage({ params }: Props) {
   const { shopSlug } = await params;
+  const demoStorefront = getDemoStorefrontBySlug(shopSlug);
+  if (demoStorefront) {
+    return (
+      <StorefrontClient
+        shop={demoStorefront.shop}
+        products={demoStorefront.products}
+      />
+    );
+  }
 
   // Find the shop — simplified query to avoid relation issues
   let shop;
@@ -81,6 +117,15 @@ export default async function ShopProfilePage({ params }: Props) {
   }
 
   if (!shop) {
+    const demoStorefront = getDemoStorefrontBySlug(shopSlug);
+    if (demoStorefront) {
+      return (
+        <StorefrontClient
+          shop={demoStorefront.shop}
+          products={demoStorefront.products}
+        />
+      );
+    }
     const fallback = await getShopBySlug(shopSlug);
     if (!fallback) notFound();
     return <ServiceProfileClient data={fallback} />;
