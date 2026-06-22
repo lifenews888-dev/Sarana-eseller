@@ -1,6 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useShopTypeStore, type ShopType } from '@/lib/shop-type-store';
@@ -357,6 +357,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const shopType = useShopTypeStore((s) => s.shopType);
   const loadShopType = useShopTypeStore((s) => s.load);
+  const setActiveShopType = useShopTypeStore((s) => s.setActiveShop);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -372,6 +373,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false);
   const role = user?.role || 'buyer';
   const isSellerRole = ['seller', 'agent', 'company', 'auto_dealer', 'service'].includes(role);
+
+  const syncActiveStore = useCallback((store: SellerStoreOption, options: { refresh: boolean }) => {
+    setActiveStoreId(store.id);
+    localStorage.setItem('eseller_active_store_id', store.id);
+    localStorage.setItem('eseller_shop_id', store.id);
+    localStorage.setItem('eseller_active_store_type', store.entityType);
+    localStorage.setItem('eseller_active_store_business_type', store.storeType);
+    setActiveShopType(store.id, store.storeType);
+    if (options.refresh) router.refresh();
+  }, [router, setActiveShopType]);
 
   useEffect(() => {
     if (!isSellerRole) return;
@@ -394,15 +405,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         const savedStillExists = savedId && nextStores.some((store: SellerStoreOption) => store.id === savedId);
         const nextActiveId = savedStillExists ? savedId : nextStores[0]?.id || null;
 
-        setActiveStoreId(nextActiveId);
-        if (nextActiveId) {
-          const active = nextStores.find((store: SellerStoreOption) => store.id === nextActiveId);
-          localStorage.setItem('eseller_active_store_id', nextActiveId);
-          localStorage.setItem('eseller_shop_id', nextActiveId);
-          if (active) {
-            localStorage.setItem('eseller_active_store_type', active.entityType);
-            localStorage.setItem('eseller_active_store_business_type', active.storeType);
-          }
+        const active = nextStores.find((store: SellerStoreOption) => store.id === nextActiveId);
+        if (active) {
+          syncActiveStore(active, { refresh: false });
+        } else {
+          setActiveStoreId(null);
         }
       })
       .catch(() => {
@@ -412,25 +419,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return () => {
       cancelled = true;
     };
-  }, [isSellerRole]);
+  }, [isSellerRole, syncActiveStore]);
 
   const handleStoreChange = (storeId: string) => {
     const active = stores.find((store) => store.id === storeId);
-    setActiveStoreId(storeId);
-    localStorage.setItem('eseller_active_store_id', storeId);
-    localStorage.setItem('eseller_shop_id', storeId);
-    if (active) {
-      localStorage.setItem('eseller_active_store_type', active.entityType);
-      localStorage.setItem('eseller_active_store_business_type', active.storeType);
-      let config: Record<string, unknown> = {};
-      try {
-        const raw = localStorage.getItem('eseller_store_config');
-        config = raw ? JSON.parse(raw) : {};
-      } catch {}
-      config.businessType = active.storeType;
-      config.shopId = storeId;
-      localStorage.setItem('eseller_store_config', JSON.stringify(config));
-    }
+    if (!active) return;
+    syncActiveStore(active, { refresh: true });
   };
 
   if (!ready) {

@@ -7,6 +7,7 @@ interface ShopTypeState {
   shopId: string | null;
   loaded: boolean;
   setShopType: (type: ShopType) => void;
+  setActiveShop: (shopId: string, type: ShopType) => void;
   load: () => Promise<void>;
 }
 
@@ -16,6 +17,17 @@ export const useShopTypeStore = create<ShopTypeState>((set, get) => ({
   loaded: false,
 
   setShopType: (type) => set({ shopType: type }),
+
+  setActiveShop: (shopId, type) => {
+    set({ shopType: type, shopId, loaded: true });
+    try {
+      const raw = localStorage.getItem('eseller_store_config');
+      const config = raw ? JSON.parse(raw) : {};
+      config.businessType = type;
+      config.shopId = shopId;
+      localStorage.setItem('eseller_store_config', JSON.stringify(config));
+    } catch {}
+  },
 
   load: async () => {
     if (get().loaded) return;

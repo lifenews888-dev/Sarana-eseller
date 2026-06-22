@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { X, Send, CheckCircle, Store } from 'lucide-react';
 import { formatPrice } from '@/lib/cards/entityCardConfig';
 import SafeImage from '@/components/ui/SafeImage';
@@ -35,8 +36,10 @@ export default function StartSellingModal({ item, isOpen, onClose }: StartSellin
 
   useEffect(() => {
     if (!isOpen) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setStatus('idle');
     setSelectedStore('');
+    setLoadingStores(true);
     const token = localStorage.getItem('token');
     fetch('/api/seller/my-stores', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
@@ -96,7 +99,7 @@ export default function StartSellingModal({ item, isOpen, onClose }: StartSellin
           {status === 'sent' ? (
             <div className="text-center py-8">
               <CheckCircle size={48} className="mx-auto mb-3 text-green-500" />
-              <p className="text-lg font-semibold text-[var(--esl-text)]">Хүсэлт явуулсан!</p>
+              <p className="text-lg font-semibold text-[var(--esl-text)]">Хүсэлт илгээгдлээ!</p>
               <p className="text-sm text-[var(--esl-text-secondary)] mt-1">
                 Дэлгүүрийн эзэн зөвшөөрсний дараа таны дэлгүүрт нэмэгдэнэ.
               </p>
@@ -125,7 +128,7 @@ export default function StartSellingModal({ item, isOpen, onClose }: StartSellin
               {/* Commission preview */}
               <div className="bg-[var(--esl-bg-page)] rounded-lg p-3">
                 <p className="text-xs text-[var(--esl-text-secondary)] mb-2">
-                  Commission тооцоо ({commission}%)
+                  Комисс тооцоо ({commission}%)
                 </p>
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div>
@@ -154,9 +157,9 @@ export default function StartSellingModal({ item, isOpen, onClose }: StartSellin
                   <div className="bg-blue-50 rounded-lg p-3 text-sm text-blue-700">
                     <Store size={16} className="inline mr-1" />
                     Дэлгүүр байхгүй байна.{' '}
-                    <a href="/dashboard/store/settings/shop-type" className="underline font-medium">
+                    <Link href="/become-seller?intent=create-store" className="underline font-medium">
                       Дэлгүүр нээх →
-                    </a>
+                    </Link>
                   </div>
                 ) : (
                   <div className="space-y-2">
