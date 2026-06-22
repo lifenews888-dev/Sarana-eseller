@@ -8,6 +8,10 @@ import StorefrontClient from '@/components/storefront/StorefrontClient';
 
 type Props = { params: Promise<{ shopSlug: string }> };
 
+function isDemoServiceSlug(slug: string) {
+  return slug === 'demo-salon' || slug === 'demo';
+}
+
 async function findShopByPublicSlug(shopSlug: string) {
   const shop = await prisma.shop.findFirst({
     where: { OR: [{ slug: shopSlug }, { storefrontSlug: shopSlug }] },
@@ -46,6 +50,22 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         images: [],
       },
     };
+  }
+
+  if (isDemoServiceSlug(shopSlug)) {
+    const fallback = await getShopBySlug(shopSlug);
+    if (fallback) {
+      const title = `${fallback.shop.name} — eseller.mn`;
+      return {
+        title,
+        description: fallback.shop.address || fallback.shop.name,
+        openGraph: {
+          title,
+          url: `https://eseller.mn/s/${fallback.shop.slug}`,
+          images: fallback.shop.logo ? [{ url: fallback.shop.logo }] : [],
+        },
+      };
+    }
   }
 
   try {
@@ -108,6 +128,12 @@ export default async function ShopProfilePage({ params }: Props) {
   }
 
   // Find the shop — simplified query to avoid relation issues
+  if (isDemoServiceSlug(shopSlug)) {
+    const fallback = await getShopBySlug(shopSlug);
+    if (!fallback) notFound();
+    return <ServiceProfileClient data={fallback} />;
+  }
+
   let shop;
   try {
     shop = await findShopByPublicSlug(shopSlug);
