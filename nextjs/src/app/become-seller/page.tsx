@@ -87,6 +87,28 @@ function toSellerSlug(value: string): string {
     .slice(0, 48);
 }
 
+function currentSellerOnboardingPath() {
+  if (typeof window === 'undefined') return '/become-seller';
+  return window.location.pathname + window.location.search;
+}
+
+function businessTypeForEntity(type: EntityType) {
+  return type === 'service' ? 'service' : 'product';
+}
+
+function rememberActiveStore(entity: { id?: string } | null | undefined, type: EntityType) {
+  if (!entity?.id || typeof window === 'undefined') return;
+  const businessType = businessTypeForEntity(type);
+  localStorage.setItem('eseller_active_store_id', entity.id);
+  localStorage.setItem('eseller_shop_id', entity.id);
+  localStorage.setItem('eseller_active_store_type', type);
+  localStorage.setItem('eseller_active_store_business_type', businessType);
+  localStorage.setItem('eseller_store_config', JSON.stringify({
+    shopId: entity.id,
+    businessType,
+  }));
+}
+
 const PLANS: Record<string, { name: string; price: string; priceNum: number; features: string[]; Icon: React.ElementType; color: string; popular?: boolean }> = {
   free:     { name: 'Үнэгүй', price: '0₮/сар', priceNum: 0, Icon: Zap, color: '#10B981', features: ['10 бараа хүртэл', 'Үндсэн аналитик', 'Стандарт дэмжлэг'] },
   pro:      { name: 'Pro', price: '29,900₮/сар', priceNum: 29900, Icon: Star, color: '#3B82F6', popular: true, features: ['Хязгааргүй бараа', 'Дэлгэрэнгүй аналитик', 'Хямдрал & купон', 'Тэргүүлэх дэмжлэг', 'Custom domain'] },
@@ -121,7 +143,7 @@ export default function BecomeSellerPage() {
   // Нэвтрээгүй бол login руу redirect
   useEffect(() => {
     if (isLoggedIn === false) {
-      router.push('/login?redirect=/become-seller');
+      router.push(`/login?redirect=${encodeURIComponent(currentSellerOnboardingPath())}`);
       return;
     }
     if (isLoggedIn && user?.role && DASHBOARD_ROLES.has(user.role) && !isCreateStoreIntent) {
@@ -167,6 +189,7 @@ export default function BecomeSellerPage() {
       if (!res.ok || payload?.success === false) {
         throw new Error(payload?.error || data?.error || 'Бүртгэл амжилтгүй боллоо');
       }
+      rememberActiveStore(data?.entity, entityType);
       if (data?.token && data?.user) login(data.token, data.user);
       setSubmitted(true);
     } catch (err) {
