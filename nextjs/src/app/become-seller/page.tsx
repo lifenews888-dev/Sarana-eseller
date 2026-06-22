@@ -207,13 +207,13 @@ export default function BecomeSellerPage() {
           <div className="w-16 h-16 rounded-full bg-[rgba(16,185,129,0.15)] flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-[#10B981]" />
           </div>
-          <h2 className="text-xl font-black text-white mb-2">Амжилттай илгээлээ!</h2>
-          <p className="text-sm text-[var(--esl-text-muted)] mb-6">Таны хүсэлтийг хянаж байна. Баталгаажуулалт дууссаны дараа имэйлээр мэдэгдэнэ.</p>
+          <h2 className="text-xl font-black text-white mb-2">Дэлгүүр үүслээ!</h2>
+          <p className="text-sm text-[var(--esl-text-muted)] mb-6">Таны шинэ дэлгүүр идэвхтэй сонгогдлоо. Одоо төрлөөс нь хамаарсан тохиргоогоо үргэлжлүүлээрэй.</p>
           <div className="bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)] rounded-xl p-3 mb-6">
             <p className="text-xs text-[#F59E0B]"><Shield className="w-3.5 h-3.5 inline mr-1" /> Баталгаажуулалт 1-3 ажлын өдөрт хийгдэнэ</p>
           </div>
-          <Link href="/dashboard/store" className="inline-flex items-center gap-2 bg-[#E8242C] text-white px-6 py-3 rounded-xl text-sm font-bold no-underline hover:bg-[#CC0000] transition">
-            Dashboard руу очих <ArrowRight className="w-4 h-4" />
+          <Link href="/dashboard/store/settings/shop-type" className="inline-flex items-center gap-2 bg-[#E8242C] text-white px-6 py-3 rounded-xl text-sm font-bold no-underline hover:bg-[#CC0000] transition">
+            Тохиргоогоо үргэлжлүүлэх <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
       </div>

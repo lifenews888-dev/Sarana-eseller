@@ -126,6 +126,11 @@ function main() {
       detail: 'logged-in sellers can re-enter onboarding to add another store type',
     },
     {
+      label: 'success continues setup',
+      ok: onboardingSource.includes('href="/dashboard/store/settings/shop-type"'),
+      detail: 'new store owners continue into the setup wizard',
+    },
+    {
       label: 'open-shop canonical redirect',
       ok: includesAll(openShopSource, ["redirect('/become-seller?source=open-shop')"]),
       detail: '/open-shop cannot become a second store creation flow',
