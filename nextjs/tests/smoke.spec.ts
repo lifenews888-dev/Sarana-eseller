@@ -9,6 +9,8 @@ const PUBLIC_PAGES = [
   { url: '/shops',               name: 'Дэлгүүрүүд' },
   { url: '/s/sarana-fashion',    name: 'Shop /s/ route' },
   { url: '/sarana-fashion',      name: 'Shop [slug] route' },
+  { url: '/s/demo-salon',         name: 'Service shop /s/ route' },
+  { url: '/s/demo',               name: 'Service shop demo alias' },
   { url: '/login',               name: 'Нэвтрэх' },
   { url: '/become-seller',       name: 'Seller болох' },
   { url: '/terms',               name: 'Нөхцөл' },
