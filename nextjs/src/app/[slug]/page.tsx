@@ -26,7 +26,14 @@ export default async function StorefrontPage({ params }: { params: Promise<{ slu
   if (!shop) notFound();
 
   const products = await prisma.product.findMany({
-    where: { userId: shop.userId, isActive: true },
+    where: {
+      userId: shop.userId,
+      isActive: true,
+      OR: [
+        { shopId: shop.id },
+        { shopId: null },
+      ],
+    },
     take: 20,
     orderBy: { createdAt: 'desc' },
   });

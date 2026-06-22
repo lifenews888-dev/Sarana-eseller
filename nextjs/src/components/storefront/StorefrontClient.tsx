@@ -55,7 +55,7 @@ function discountPct(price: number, sale?: number | null) {
 export default function StorefrontClient({ shop, products }: { shop: ShopData; products: ProductData[] }) {
   const badge = ENTITY_BADGES[shop.industry || 'store'] || ENTITY_BADGES.store;
   const [shareOpen, setShareOpen] = useState(false);
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/${shop.slug}` : `https://eseller.mn/${shop.slug}`;
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/s/${shop.slug}` : `https://eseller.mn/s/${shop.slug}`;
 
   // Read storefront config
   const cfg = (shop.storefrontConfig || {}) as Record<string, unknown>;

@@ -3,6 +3,13 @@ import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth, signToken } from '@/lib/api-auth';
 import { isValidPublicImageUrl } from '@/lib/image-url';
 
+const RESERVED_SLUGS = new Set([
+  'store', 'feed', 'login', 'checkout', 'dashboard', 'admin', 'api',
+  'seller', 'gold', 'shops', 'become-seller', 'about', 'contact',
+  'terms', 'privacy', 'help', 'support', 'blog', 'sitemap', 's',
+  'entity', 'product', 'cart', 'orders', 'settings',
+]);
+
 function normalizeSlug(value: unknown): string {
   if (typeof value !== 'string') return '';
   return value
@@ -68,20 +75,23 @@ export async function POST(req: NextRequest) {
   const safeLogo = publicImageOrNull(logo);
   const safeCoverImage = publicImageOrNull(coverImage);
 
+  if (RESERVED_SLUGS.has(safeSlug)) {
+    return errorJson('This store URL is reserved by the system');
+  }
+
   try {
     const [slugExistsInShops, slugExistsInAgents, slugExistsInCompanies, slugExistsInAutoDealers, slugExistsInServices] =
       await Promise.all([
         prisma.shop.findFirst({
           where: {
-            NOT: { userId: auth.id },
             OR: [{ slug: safeSlug }, { storefrontSlug: safeSlug }],
           },
           select: { id: true },
         }),
-        prisma.agent.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
-        prisma.company.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
-        prisma.autoDealer.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
-        prisma.serviceProvider.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
+        prisma.agent.findFirst({ where: { slug: safeSlug }, select: { id: true } }),
+        prisma.company.findFirst({ where: { slug: safeSlug }, select: { id: true } }),
+        prisma.autoDealer.findFirst({ where: { slug: safeSlug }, select: { id: true } }),
+        prisma.serviceProvider.findFirst({ where: { slug: safeSlug }, select: { id: true } }),
       ]);
     if (slugExistsInShops || slugExistsInAgents || slugExistsInCompanies || slugExistsInAutoDealers || slugExistsInServices) {
       return errorJson('Энэ slug аль хэдийн бүртгэлтэй байна');
