@@ -36,6 +36,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   try {
     const shop = await findShopByPublicSlug(shopSlug);
+    if (!shop) {
+      const fallback = await getShopBySlug(shopSlug);
+      if (fallback) {
+        const title = `${fallback.shop.name} â€” eseller.mn`;
+        return {
+          title,
+          description: fallback.shop.address || fallback.shop.name,
+          openGraph: {
+            title,
+            url: `https://eseller.mn/s/${fallback.shop.slug}`,
+            images: fallback.shop.logo ? [{ url: fallback.shop.logo }] : [],
+          },
+        };
+      }
+    }
     if (!shop) return { title: 'Олдсонгүй — eseller.mn' };
 
     const title = `${shop.name} — eseller.mn`;
@@ -65,7 +80,11 @@ export default async function ShopProfilePage({ params }: Props) {
     notFound();
   }
 
-  if (!shop) notFound();
+  if (!shop) {
+    const fallback = await getShopBySlug(shopSlug);
+    if (!fallback) notFound();
+    return <ServiceProfileClient data={fallback} />;
+  }
 
   // Detect service shop by industry
   const serviceIndustries = ['salon', 'service', 'clinic', 'gym', 'spa', 'beauty'];
