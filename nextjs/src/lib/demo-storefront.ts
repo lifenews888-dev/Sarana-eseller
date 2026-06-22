@@ -31,3 +31,14 @@ export function getDemoStorefrontBySlug(slug: string) {
 
   return { shop, products };
 }
+
+export function getDemoStorefrontMetadata(slug: string) {
+  const demo = getDemoStorefrontBySlug(slug);
+  if (!demo) return null;
+
+  return {
+    title: `${demo.shop.name} - eseller.mn`,
+    description: demo.shop.address || demo.shop.name,
+    openGraph: { title: demo.shop.name, images: [] },
+  };
+}
