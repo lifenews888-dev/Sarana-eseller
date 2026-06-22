@@ -15,9 +15,17 @@ type SellerStore = {
 }
 
 function shopEntityType(industry?: string | null): SellerStore['entityType'] {
+  if (industry === 'agent') return 'agent'
+  if (industry === 'company') return 'company'
+  if (industry === 'auto_dealer') return 'auto_dealer'
+  if (industry === 'service') return 'service'
   if (industry === 'preorder') return 'pre_order'
   if (industry === 'digital') return 'digital'
   return 'store'
+}
+
+function shopBusinessType(industry?: string | null): SellerStore['storeType'] {
+  return industry === 'service' ? 'service' : 'product'
 }
 
 export async function GET(req: NextRequest) {
@@ -42,7 +50,7 @@ export async function GET(req: NextRequest) {
       name: s.name,
       slug: s.storefrontSlug || s.slug,
       entityType: shopEntityType(s.industry),
-      storeType: (s.shopType?.type as SellerStore['storeType']) || (s.industry === 'service' ? 'service' : 'product'),
+      storeType: (s.shopType?.type as SellerStore['storeType']) || shopBusinessType(s.industry),
       href: `/s/${s.storefrontSlug || s.slug}`,
       logo: s.logo,
       isVerified: s.locationStatus === 'verified',

@@ -17,6 +17,26 @@ function publicImageOrNull(value: unknown): string | null {
   return isValidPublicImageUrl(value) ? value : null;
 }
 
+function industryForEntity(entityType: string): string {
+  const industryMap: Record<string, string> = {
+    store: 'general',
+    order_store: 'order',
+    digital: 'digital',
+    pre_order: 'preorder',
+    agent: 'agent',
+    real_estate: 'agent',
+    company: 'company',
+    construction: 'company',
+    auto_dealer: 'auto_dealer',
+    service: 'service',
+  };
+  return industryMap[entityType] || 'general';
+}
+
+function shopTypeForEntity(entityType: string): string {
+  return entityType === 'service' ? 'service' : 'product';
+}
+
 // POST /api/entities/register
 // Auto-upsert the selected seller entity for the current user and refresh auth
 // so the dashboard immediately switches to the matching seller tools.
@@ -73,13 +93,13 @@ export async function POST(req: NextRequest) {
       case 'store':
       case 'order_store':
       case 'digital':
-      case 'pre_order': {
-        const industryMap: Record<string, string> = {
-          store: 'general',
-          order_store: 'order',
-          digital: 'digital',
-          pre_order: 'preorder',
-        };
+      case 'pre_order':
+      case 'agent':
+      case 'real_estate':
+      case 'company':
+      case 'construction':
+      case 'auto_dealer':
+      case 'service': {
         entity = await prisma.shop.create({
           data: {
             userId: auth.id,
@@ -90,14 +110,16 @@ export async function POST(req: NextRequest) {
             phone,
             address,
             district,
-            industry: industryMap[entityType] || 'general',
+            industry: industryForEntity(entityType),
             locationStatus: 'pending',
+            shopType: {
+              create: { type: shopTypeForEntity(entityType) },
+            },
           },
         });
         break;
       }
-      case 'agent':
-      case 'real_estate': {
+      case 'legacy_agent': {
         const existing = await prisma.agent.findFirst({ where: { userId: auth.id } });
         entity = existing
           ? await prisma.agent.update({
@@ -131,8 +153,7 @@ export async function POST(req: NextRequest) {
             });
         break;
       }
-      case 'company':
-      case 'construction': {
+      case 'legacy_company': {
         const existing = await prisma.company.findFirst({ where: { userId: auth.id } });
         const socialLinks = { website, facebook: socialFb, instagram: socialIg };
         entity = existing
@@ -169,7 +190,7 @@ export async function POST(req: NextRequest) {
             });
         break;
       }
-      case 'auto_dealer': {
+      case 'legacy_auto_dealer': {
         const existing = await prisma.autoDealer.findFirst({ where: { userId: auth.id } });
         entity = existing
           ? await prisma.autoDealer.update({
@@ -201,7 +222,7 @@ export async function POST(req: NextRequest) {
             });
         break;
       }
-      case 'service': {
+      case 'legacy_service': {
         const existing = await prisma.serviceProvider.findFirst({ where: { userId: auth.id } });
         entity = existing
           ? await prisma.serviceProvider.update({
