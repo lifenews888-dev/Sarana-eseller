@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-const BASE = 'https://eseller.mn';
+const BASE = (process.env.BASE_URL || 'https://eseller.mn').replace(/\/+$/, '');
 
 const PUBLIC_PAGES = [
   { url: '/',                    name: 'Нүүр хуудас' },
