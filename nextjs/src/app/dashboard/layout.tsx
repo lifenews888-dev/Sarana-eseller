@@ -342,6 +342,14 @@ const OTHER_ROLE_SECTIONS: Record<string, SidebarSection[]> = {
   buyer: BUYER_SECTIONS,
 };
 
+const STORE_LIST_TIMEOUT_MS = 8000;
+const ACTIVE_STORE_STORAGE_KEYS = [
+  'eseller_active_store_id',
+  'eseller_shop_id',
+  'eseller_active_store_type',
+  'eseller_active_store_business_type',
+];
+
 // ═══════════════════════════════════════════════════════
 // Layout
 // ═══════════════════════════════════════════════════════
@@ -384,6 +392,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (options.refresh) router.refresh();
   }, [router, setActiveShopType]);
 
+  const clearActiveStore = useCallback(() => {
+    setActiveStoreId(null);
+    ACTIVE_STORE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+    try {
+      const raw = localStorage.getItem('eseller_store_config');
+      if (!raw) return;
+      const config = JSON.parse(raw) as Record<string, unknown>;
+      delete config.shopId;
+      localStorage.setItem('eseller_store_config', JSON.stringify(config));
+    } catch {}
+  }, []);
+
   useEffect(() => {
     if (!isSellerRole) return;
 
@@ -391,9 +411,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!token) return;
 
     let cancelled = false;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), STORE_LIST_TIMEOUT_MS);
 
     fetch('/api/seller/my-stores', {
       headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
     })
       .then((response) => response.ok ? response.json() : { stores: [] })
       .then((data) => {
@@ -409,17 +432,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (active) {
           syncActiveStore(active, { refresh: false });
         } else {
-          setActiveStoreId(null);
+          clearActiveStore();
         }
       })
       .catch(() => {
-        if (!cancelled) setStores([]);
+        if (cancelled) return;
+        setStores([]);
+        clearActiveStore();
+      })
+      .finally(() => {
+        window.clearTimeout(timeout);
       });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeout);
+      controller.abort();
     };
-  }, [isSellerRole, syncActiveStore]);
+  }, [clearActiveStore, isSellerRole, syncActiveStore]);
 
   const handleStoreChange = (storeId: string) => {
     const active = stores.find((store) => store.id === storeId);
