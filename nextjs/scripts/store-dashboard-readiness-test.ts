@@ -205,9 +205,27 @@ function main() {
   });
 
   checks.push({
+    label: 'store selector cannot hang dashboard',
+    ok: layoutSource.includes('STORE_LIST_TIMEOUT_MS')
+      && layoutSource.includes('new AbortController()')
+      && layoutSource.includes('controller.abort()')
+      && layoutSource.includes('signal: controller.signal'),
+    detail: 'my-stores fetch has timeout and abort cleanup',
+  });
+
+  checks.push({
     label: 'active store persists',
     ok: layoutSource.includes("localStorage.setItem('eseller_active_store_id'") && layoutSource.includes("localStorage.setItem('eseller_active_store_type'"),
     detail: 'active store survives dashboard refresh',
+  });
+
+  checks.push({
+    label: 'stale active store clears',
+    ok: layoutSource.includes('clearActiveStore')
+      && layoutSource.includes('ACTIVE_STORE_STORAGE_KEYS')
+      && layoutSource.includes("localStorage.removeItem(key)")
+      && layoutSource.includes('delete config.shopId'),
+    detail: 'missing/failed store list does not keep stale shop id',
   });
 
   checks.push({
