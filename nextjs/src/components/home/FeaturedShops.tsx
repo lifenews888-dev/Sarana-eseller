@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import SafeImage from '@/components/ui/SafeImage';
+import { publicShopHref } from '@/lib/public-shop-url';
 
 type FeaturedShop = {
   id: string;
@@ -28,7 +29,7 @@ export default function FeaturedShops({ entities }: { entities: FeaturedShop[] }
 
       <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {entities.map((e) => (
-          <Link key={e.id} href={`/s/${e.storefrontSlug}`} className="no-underline">
+          <Link key={e.id} href={publicShopHref(e.storefrontSlug)} className="no-underline">
             <div className="bg-[var(--esl-bg-card)] rounded-2xl p-5 border border-[var(--esl-border)] text-center min-w-[150px] hover:border-[#E8242C] hover:-translate-y-0.5 transition-all cursor-pointer">
               <div
                 className="w-16 h-16 rounded-full mx-auto mb-3 overflow-hidden flex items-center justify-center"

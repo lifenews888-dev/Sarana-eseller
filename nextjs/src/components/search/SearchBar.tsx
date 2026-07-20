@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, X } from 'lucide-react';
 import SafeImage from '@/components/ui/SafeImage';
+import { publicShopHref } from '@/lib/public-shop-url';
 
 interface Suggestion {
   products: { id: string; name: string; price: number; images?: string[]; emoji?: string }[];
@@ -80,7 +81,7 @@ export default function SearchBar({ placeholder = 'Бараа, дэлгүүр х
             <div className="p-2 border-t" style={{ borderColor: 'var(--esl-border)' }}>
               <p className="text-[10px] font-bold uppercase px-2 mb-1" style={{ color: 'var(--esl-text-muted)' }}>Дэлгүүр</p>
               {suggestions!.shops.map(s => (
-                <div key={s.id} onClick={() => { router.push(`/s/${s.storefrontSlug || s.slug}`); setOpen(false); }}
+                <div key={s.id} onClick={() => { router.push(publicShopHref(s.storefrontSlug || s.slug)); setOpen(false); }}
                   className="flex items-center gap-3 px-2 py-2 rounded-lg cursor-pointer hover:bg-[var(--esl-bg-section)] transition-colors">
                   {s.logo ? <SafeImage src={s.logo} alt="" className="w-8 h-8 rounded-lg object-cover" /> :
                     <div className="w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold text-white" style={{ background: '#E8242C' }}>{s.name[0]}</div>}

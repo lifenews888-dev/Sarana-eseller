@@ -21,6 +21,7 @@ const openShopPage = path.join(process.cwd(), 'src', 'app', 'open-shop', 'page.t
 const myStoresRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'my-stores', 'route.ts');
 const searchBar = path.join(process.cwd(), 'src', 'components', 'search', 'SearchBar.tsx');
 const featuredShops = path.join(process.cwd(), 'src', 'components', 'home', 'FeaturedShops.tsx');
+const publicShopUrl = path.join(process.cwd(), 'src', 'lib', 'public-shop-url.ts');
 const publicCtaFiles = [
   path.join(process.cwd(), 'src', 'components', 'shared', 'Navbar.tsx'),
   path.join(process.cwd(), 'src', 'components', 'shared', 'Footer.tsx'),
@@ -46,6 +47,7 @@ function main() {
   const myStoresSource = readSource(myStoresRoute);
   const searchBarSource = readSource(searchBar);
   const featuredShopsSource = readSource(featuredShops);
+  const publicShopUrlSource = readSource(publicShopUrl);
   const publicCtaSources = publicCtaFiles.map(readSource);
 
   const checks: Check[] = [
@@ -161,9 +163,8 @@ function main() {
     },
     {
       label: 'public shop links use namespace',
-      ok: includesAll(myStoresSource, ['href: `/s/${s.storefrontSlug || s.slug}`'])
-        && includesAll(searchBarSource, ['router.push(`/s/${s.storefrontSlug || s.slug}`)'])
-        && includesAll(featuredShopsSource, ['href={`/s/${e.storefrontSlug}`}']),
+      ok: includesAll(publicShopUrlSource, ['function publicShopHref', "return value ? `/s/${value}` : '/shops'"])
+        && [myStoresSource, searchBarSource, featuredShopsSource].every((source) => source.includes('publicShopHref')),
       detail: 'dashboard/search/home links resolve stores through /s/{slug}',
     },
     {

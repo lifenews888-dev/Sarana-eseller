@@ -1,5 +1,6 @@
 import { MetadataRoute } from 'next';
 import { prisma } from '@/lib/prisma';
+import { publicShopUrl } from '@/lib/public-shop-url';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://eseller.mn';
@@ -31,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
 
     const shopPages: MetadataRoute.Sitemap = shops.map(shop => ({
-      url: `${baseUrl}/${shop.storefrontSlug}`,
+      url: publicShopUrl(baseUrl, shop.storefrontSlug),
       lastModified: shop.updatedAt,
       changeFrequency: 'daily' as const,
       priority: 0.8,

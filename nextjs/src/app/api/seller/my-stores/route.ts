@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { requireAuth } from '@/lib/api-auth'
+import { publicShopHref } from '@/lib/public-shop-url'
 
 type SellerStore = {
   id: string
@@ -51,7 +52,7 @@ export async function GET(req: NextRequest) {
       slug: s.storefrontSlug || s.slug,
       entityType: shopEntityType(s.industry),
       storeType: (s.shopType?.type as SellerStore['storeType']) || shopBusinessType(s.industry),
-      href: `/s/${s.storefrontSlug || s.slug}`,
+      href: publicShopHref(s.storefrontSlug || s.slug),
       logo: s.logo,
       isVerified: s.locationStatus === 'verified',
       createdAt: s.createdAt.toISOString(),
