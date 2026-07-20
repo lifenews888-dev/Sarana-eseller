@@ -6,9 +6,10 @@ import { MapPin, Phone, Star, Shield, ShoppingBag, Users, Share2, Mail, Clock } 
 import { ShareModal } from '@/components/shared/ShareModal';
 import ChatWidget from '@/components/chat/ChatWidget';
 import SafeImage from '@/components/ui/SafeImage';
+import { publicShopUrl } from '@/lib/public-shop-url';
 
 interface ShopData {
-  id: string; name: string; slug: string; logo?: string | null; phone?: string | null;
+  id: string; name: string; slug: string; storefrontSlug?: string | null; logo?: string | null; phone?: string | null;
   address?: string | null; industry?: string | null; district?: string | null;
   allowSellers?: boolean; sellerCommission?: number;
   storefrontConfig?: Record<string, unknown> | null;
@@ -55,7 +56,8 @@ function discountPct(price: number, sale?: number | null) {
 export default function StorefrontClient({ shop, products }: { shop: ShopData; products: ProductData[] }) {
   const badge = ENTITY_BADGES[shop.industry || 'store'] || ENTITY_BADGES.store;
   const [shareOpen, setShareOpen] = useState(false);
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/s/${shop.slug}` : `https://eseller.mn/s/${shop.slug}`;
+  const publicSlug = shop.storefrontSlug || shop.slug;
+  const shareUrl = publicShopUrl(typeof window !== 'undefined' ? window.location.origin : 'https://eseller.mn', publicSlug);
 
   // Read storefront config
   const cfg = (shop.storefrontConfig || {}) as Record<string, unknown>;

@@ -7,6 +7,7 @@ import {
   Palette, Store, Smartphone, Search, Image, Megaphone, FolderOpen,
   Phone, Save,
 } from 'lucide-react';
+import { publicShopHref } from '@/lib/public-shop-url';
 
 interface StoreConfig {
   storeName: string;
@@ -78,6 +79,7 @@ export default function StoreSettingsPage() {
     try {
       const saved = localStorage.getItem(STORE_CONFIG_KEY);
       if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the local draft once from browser storage.
         setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
       } else {
         setConfig({
@@ -93,7 +95,7 @@ export default function StoreSettingsPage() {
     toast.show('✅ Тохиргоо хадгалагдлаа');
   };
 
-  const update = (key: keyof StoreConfig, value: any) => {
+  const update = (key: keyof StoreConfig, value: StoreConfig[keyof StoreConfig]) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -106,7 +108,7 @@ export default function StoreSettingsPage() {
 
   const storeSlug = (config.storeName || 'store').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   const storeUrl = storeSlug + '.eseller.mn';
-  const storePreviewUrl = `/s/${storeSlug}`;
+  const storePreviewUrl = publicShopHref(storeSlug);
 
   return (
     <div className="min-h-screen">

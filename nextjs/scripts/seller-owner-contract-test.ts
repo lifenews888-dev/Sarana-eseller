@@ -22,6 +22,12 @@ const myStoresRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'm
 const searchBar = path.join(process.cwd(), 'src', 'components', 'search', 'SearchBar.tsx');
 const featuredShops = path.join(process.cwd(), 'src', 'components', 'home', 'FeaturedShops.tsx');
 const publicShopUrl = path.join(process.cwd(), 'src', 'lib', 'public-shop-url.ts');
+const storefrontClient = path.join(process.cwd(), 'src', 'components', 'storefront', 'StorefrontClient.tsx');
+const sitemap = path.join(process.cwd(), 'src', 'app', 'sitemap.ts');
+const publicShopPage = path.join(process.cwd(), 'src', 'app', 's', '[shopSlug]', 'page.tsx');
+const dashboardLayout = path.join(process.cwd(), 'src', 'app', 'dashboard', 'layout.tsx');
+const storeSettingsPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'store-settings', 'page.tsx');
+const shopTypePage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'settings', 'shop-type', 'page.tsx');
 const publicCtaFiles = [
   path.join(process.cwd(), 'src', 'components', 'shared', 'Navbar.tsx'),
   path.join(process.cwd(), 'src', 'components', 'shared', 'Footer.tsx'),
@@ -48,6 +54,12 @@ function main() {
   const searchBarSource = readSource(searchBar);
   const featuredShopsSource = readSource(featuredShops);
   const publicShopUrlSource = readSource(publicShopUrl);
+  const storefrontClientSource = readSource(storefrontClient);
+  const sitemapSource = readSource(sitemap);
+  const publicShopPageSource = readSource(publicShopPage);
+  const dashboardLayoutSource = readSource(dashboardLayout);
+  const storeSettingsPageSource = readSource(storeSettingsPage);
+  const shopTypePageSource = readSource(shopTypePage);
   const publicCtaSources = publicCtaFiles.map(readSource);
 
   const checks: Check[] = [
@@ -164,8 +176,10 @@ function main() {
     {
       label: 'public shop links use namespace',
       ok: includesAll(publicShopUrlSource, ['function publicShopHref', "return value ? `/s/${value}` : '/shops'"])
-        && [myStoresSource, searchBarSource, featuredShopsSource].every((source) => source.includes('publicShopHref')),
-      detail: 'dashboard/search/home links resolve stores through /s/{slug}',
+        && [myStoresSource, searchBarSource, featuredShopsSource, dashboardLayoutSource, storeSettingsPageSource, shopTypePageSource].every((source) => source.includes('publicShopHref'))
+        && [storefrontClientSource, sitemapSource, publicShopPageSource].every((source) => source.includes('publicShopUrl'))
+        && storefrontClientSource.includes('shop.storefrontSlug || shop.slug'),
+      detail: 'dashboard/search/home/share/sitemap links resolve stores through /s/{slug}',
     },
     {
       label: 'onboarding terms gate',

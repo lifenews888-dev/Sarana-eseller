@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useShopTypeStore, type ShopType } from '@/lib/shop-type-store';
 import { saveConfig } from '@/lib/store-config';
 import { getActiveStoreHeaders } from '@/lib/api';
+import { publicShopHref } from '@/lib/public-shop-url';
 import { MediaUploader } from '@/components/shared/MediaUploader';
 import { cn } from '@/lib/utils';
 import {
@@ -642,7 +643,7 @@ export default function ShopTypeWizard() {
 
               <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
                 <Link
-                  href={`/s/${slug}`}
+                  href={publicShopHref(slug)}
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-[#E8242C] text-white hover:bg-[#CC0000] transition no-underline"
                 >
                   <ExternalLink className="w-4 h-4" />

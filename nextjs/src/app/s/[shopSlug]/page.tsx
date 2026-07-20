@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getShopBySlug } from '@/lib/shop-data';
 import { getDemoStorefrontBySlug, getDemoStorefrontMetadata } from '@/lib/demo-storefront';
+import { publicShopUrl } from '@/lib/public-shop-url';
 import ServiceProfileClient from '@/components/service-profile/ServiceProfileClient';
 import StorefrontClient from '@/components/storefront/StorefrontClient';
 
@@ -48,7 +49,7 @@ async function getDemoServiceMetadata(shopSlug: string): Promise<Metadata | null
     description: fallback.shop.address || fallback.shop.name,
     openGraph: {
       title,
-      url: `https://eseller.mn/s/${fallback.shop.slug}`,
+      url: publicShopUrl('https://eseller.mn', fallback.shop.slug),
       images: fallback.shop.logo ? [{ url: fallback.shop.logo }] : [],
     },
   };
@@ -70,7 +71,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: shop.address || shop.name,
       openGraph: {
         title,
-        url: `https://eseller.mn/s/${shop.slug}`,
+        url: publicShopUrl('https://eseller.mn', shop.storefrontSlug || shop.slug),
         images: shop.logo ? [{ url: shop.logo }] : [],
       },
     };
