@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/shared/Toast';
+import SafeImage from '@/components/ui/SafeImage';
 import {
-  Palette, Store, Smartphone, Search, Image, Megaphone, FolderOpen,
+  Palette, Store, Smartphone, Search, ImageIcon, Megaphone, FolderOpen,
   Phone, Save,
 } from 'lucide-react';
 import { publicShopHref } from '@/lib/public-shop-url';
@@ -156,7 +157,7 @@ export default function StoreSettingsPage() {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-[var(--esl-bg-card)] shadow-sm border border-[var(--esl-border)] flex items-center justify-center text-2xl overflow-hidden">
                   {config.logo ? (
-                    <img loading="lazy" src={config.logo} alt="" className="w-full h-full object-cover" />
+                    <SafeImage src={config.logo} alt={config.storeName || 'Store logo'} className="w-full h-full object-cover" />
                   ) : (
                     <Store className="w-8 h-8 text-[var(--esl-text-muted)]" />
                   )}
@@ -252,7 +253,7 @@ export default function StoreSettingsPage() {
           <div className="space-y-6">
             {/* Hero Section */}
             <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-2xl p-6">
-              <h3 className="text-base font-bold text-[var(--esl-text-primary)] mb-5 flex items-center gap-2"><Image className="w-4 h-4" /> Нүүр хуудасны Hero</h3>
+              <h3 className="text-base font-bold text-[var(--esl-text-primary)] mb-5 flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Нүүр хуудасны Hero</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-[var(--esl-text-secondary)] uppercase tracking-wider mb-1.5">Гарчиг</label>
