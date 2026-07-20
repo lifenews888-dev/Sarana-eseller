@@ -16,6 +16,7 @@
     "test:details": "npx tsx scripts/detail-readiness-test.ts",
     "test:store-dashboard": "npx tsx scripts/store-dashboard-readiness-test.ts",
     "test:seller-owner": "npx tsx scripts/seller-owner-contract-test.ts",
+    "test:public-shop-url": "npx tsx scripts/public-shop-url-test.ts",
     "test:login-redirect": "npx tsx scripts/login-redirect-contract-test.ts",
     "test:image-url": "npx tsx scripts/test-image-url.ts",
     "test:readiness": "npx tsx scripts/marketplace-readiness-test.ts",

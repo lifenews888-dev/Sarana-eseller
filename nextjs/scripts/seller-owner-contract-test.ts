@@ -175,7 +175,7 @@ function main() {
     },
     {
       label: 'public shop links use namespace',
-      ok: includesAll(publicShopUrlSource, ['function publicShopHref', "return value ? `/s/${value}` : '/shops'"])
+      ok: includesAll(publicShopUrlSource, ['function publicShopHref', "replace(/^s\\//, '')", "return value ? `/s/${value}` : '/shops'"])
         && [myStoresSource, searchBarSource, featuredShopsSource, dashboardLayoutSource, storeSettingsPageSource, shopTypePageSource].every((source) => source.includes('publicShopHref'))
         && [storefrontClientSource, sitemapSource, publicShopPageSource].every((source) => source.includes('publicShopUrl'))
         && storefrontClientSource.includes('shop.storefrontSlug || shop.slug'),
