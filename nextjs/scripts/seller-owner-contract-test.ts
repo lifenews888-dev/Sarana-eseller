@@ -19,6 +19,8 @@ const registerRoute = path.join(process.cwd(), 'src', 'app', 'api', 'entities', 
 const becomeSellerPage = path.join(process.cwd(), 'src', 'app', 'become-seller', 'page.tsx');
 const openShopPage = path.join(process.cwd(), 'src', 'app', 'open-shop', 'page.tsx');
 const myStoresRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'my-stores', 'route.ts');
+const searchBar = path.join(process.cwd(), 'src', 'components', 'search', 'SearchBar.tsx');
+const featuredShops = path.join(process.cwd(), 'src', 'components', 'home', 'FeaturedShops.tsx');
 const publicCtaFiles = [
   path.join(process.cwd(), 'src', 'components', 'shared', 'Navbar.tsx'),
   path.join(process.cwd(), 'src', 'components', 'shared', 'Footer.tsx'),
@@ -42,6 +44,8 @@ function main() {
   const onboardingSource = readSource(becomeSellerPage);
   const openShopSource = readSource(openShopPage);
   const myStoresSource = readSource(myStoresRoute);
+  const searchBarSource = readSource(searchBar);
+  const featuredShopsSource = readSource(featuredShops);
   const publicCtaSources = publicCtaFiles.map(readSource);
 
   const checks: Check[] = [
@@ -154,6 +158,13 @@ function main() {
       label: 'my-stores typed entries',
       ok: includesAll(myStoresSource, ['entityType:', 'storeType:', 'href:']),
       detail: 'dashboard can select tools by active store type',
+    },
+    {
+      label: 'public shop links use namespace',
+      ok: includesAll(myStoresSource, ['href: `/s/${s.storefrontSlug || s.slug}`'])
+        && includesAll(searchBarSource, ['router.push(`/s/${s.storefrontSlug || s.slug}`)'])
+        && includesAll(featuredShopsSource, ['href={`/s/${e.storefrontSlug}`}']),
+      detail: 'dashboard/search/home links resolve stores through /s/{slug}',
     },
     {
       label: 'onboarding terms gate',
