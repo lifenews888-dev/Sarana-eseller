@@ -124,7 +124,17 @@ export default function MediaCarousel({
 
     return (
       <>
-        <div className={cn('relative overflow-hidden rounded-2xl bg-black', aspectRatio, className)}>
+        <div className="md:hidden">
+          <MediaCarousel
+            media={orderedMedia}
+            layout="carousel"
+            aspectRatio="aspect-square"
+            className={className}
+            mediaLabel={mediaLabel}
+          />
+        </div>
+
+        <div className={cn('relative hidden overflow-hidden rounded-2xl bg-black md:block', aspectRatio, className)}>
           <div className="absolute inset-0 grid grid-cols-4 grid-rows-2 gap-1.5">
             <button
               type="button"
