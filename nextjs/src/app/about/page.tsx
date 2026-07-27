@@ -141,7 +141,7 @@ export default function AboutPage() {
             Өнөөдөр дэлгүүрээ нээж, Монголын хамгийн хурдан өсөж буй платформд нэгдээрэй
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Link href="/open-shop" className="inline-flex items-center gap-2 bg-white text-[#E8242C] px-8 py-3 rounded-xl font-bold text-sm no-underline hover:bg-white/90 transition">
+            <Link href="/become-seller?source=open-shop" className="inline-flex items-center gap-2 bg-white text-[#E8242C] px-8 py-3 rounded-xl font-bold text-sm no-underline hover:bg-white/90 transition">
               <Store className="w-4 h-4" /> Дэлгүүр нээх <ArrowRight className="w-4 h-4" />
             </Link>
             <Link href="/contact" className="inline-flex items-center gap-2 bg-white/10 text-white border border-white/20 px-8 py-3 rounded-xl font-bold text-sm no-underline hover:bg-white/20 transition">

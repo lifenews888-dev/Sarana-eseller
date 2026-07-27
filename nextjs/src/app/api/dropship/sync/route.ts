@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSeller } from '@/lib/api-auth'
+import { getShopForRequest, requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 
 async function getUsdRate(): Promise<number> {
@@ -19,11 +19,11 @@ export async function POST(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
-  if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
+  const shopId = await getShopForRequest(req, auth.id)
+  if (!shopId) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   const dropships = await prisma.dropshipProduct.findMany({
-    where: { product: { userId: auth.id }, autoSync: true },
+    where: { product: { userId: auth.id, shopId }, autoSync: true },
     include: { product: true },
   })
 
@@ -64,10 +64,10 @@ export async function POST(req: NextRequest) {
       })
 
       synced++
-    } catch (e: any) {
+    } catch (e: unknown) {
       await prisma.dropshipProduct.update({
         where: { id: d.id },
-        data: { syncStatus: 'error', syncError: e.message },
+        data: { syncStatus: 'error', syncError: (e as Error).message },
       })
       errors++
     }
@@ -81,8 +81,11 @@ export async function GET(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
 
+  const shopId = await getShopForRequest(req, auth.id)
+  if (!shopId) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
+
   const products = await prisma.dropshipProduct.findMany({
-    where: { product: { userId: auth.id } },
+    where: { product: { userId: auth.id, shopId } },
     include: { product: true },
     orderBy: { createdAt: 'desc' },
   })

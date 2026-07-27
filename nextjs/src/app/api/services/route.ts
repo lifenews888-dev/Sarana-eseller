@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { json, errorJson, requireSeller, getShopForUser } from '@/lib/api-auth';
+import { json, errorJson, requireSeller, getShopForRequest } from '@/lib/api-auth';
 import { sanitizeImageUrls } from '@/lib/image-url';
 
 // GET /api/services?shopId=... | shopId=all returns all active services across shops
@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
   const auth = requireSeller(req);
   if (auth instanceof Response) return auth;
 
-  const shopId = await getShopForUser(auth.id);
+  const shopId = await getShopForRequest(req, auth.id);
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const body = await req.json();

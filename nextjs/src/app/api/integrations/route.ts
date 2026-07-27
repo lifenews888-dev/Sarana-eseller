@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSeller } from '@/lib/api-auth'
+import { getShopForRequest, requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import crypto from 'crypto'
 
@@ -8,14 +8,15 @@ export async function GET(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
 
-  const shop = await prisma.shop.findUnique({
-    where: { userId: auth.id },
+  const shopId = await getShopForRequest(req, auth.id)
+  const shop = shopId ? await prisma.shop.findUnique({
+    where: { id: shopId },
     include: {
       integration: {
         include: { importedUrls: { take: 10, orderBy: { createdAt: 'desc' } } },
       },
     },
-  })
+  }) : null
   if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   if (!shop.integration) {
@@ -37,7 +38,8 @@ export async function POST(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
+  const shopId = await getShopForRequest(req, auth.id)
+  const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null
   if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   const integration = await prisma.storeIntegration.upsert({

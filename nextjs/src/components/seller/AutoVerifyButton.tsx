@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { MapPin, Check, X, Loader2 } from 'lucide-react';
+import { getActiveStoreHeaders } from '@/lib/api';
 
 interface Props {
   locationId: string;
@@ -15,10 +16,9 @@ export function AutoVerifyButton({ locationId, onVerified }: Props) {
   const handleVerify = async () => {
     setStatus('loading');
     try {
-      const token = localStorage.getItem('token');
       const res = await fetch(`/api/seller/locations/${locationId}/verify`, {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: getActiveStoreHeaders(),
       });
       const data = await res.json();
 

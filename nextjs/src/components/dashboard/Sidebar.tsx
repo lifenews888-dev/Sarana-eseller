@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { getInitials } from '@/lib/utils';
 import {
@@ -11,7 +11,7 @@ import {
   Megaphone, Palette, Sparkles, Brain, Bot, Wallet,
   Globe, Building2, UserCog, Settings, Bell, ScrollText,
   ChevronDown, ExternalLink, LogOut, Crown, Zap,
-  CalendarDays, Clock, Scissors, Shield, Link2, Layers,
+  CalendarDays, Clock, Shield, Link2, Layers,
   MapPin, BookOpen, PlusCircle, Map, MailOpen, User,
   Construction, Image, FileText, Folder, Download, KeyRound,
   Heart, Home, Car, MessageSquare, Truck, ClipboardList,
@@ -55,23 +55,33 @@ export interface SidebarSection {
 interface SidebarProps {
   sections: SidebarSection[];
   storeInfo?: {
+    id?: string;
     name: string;
     url?: string;
     plan?: string;
     planBadge?: string;
+    entityType?: string;
+    href?: string;
   };
+  stores?: {
+    id: string;
+    name: string;
+    slug: string;
+    entityType: string;
+    storeType: string;
+    href: string;
+  }[];
+  activeStoreId?: string | null;
+  onStoreChange?: (storeId: string) => void;
 }
 
-export default function Sidebar({ sections, storeInfo }: SidebarProps) {
+export default function Sidebar({ sections, storeInfo, stores = [], activeStoreId, onStoreChange }: SidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAuth();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => (
+    typeof window !== 'undefined' && localStorage.getItem('sb-collapsed') === 'true'
+  ));
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    const saved = localStorage.getItem('sb-collapsed');
-    if (saved === 'true') setCollapsed(true);
-  }, []);
 
   const toggle = () => {
     const next = !collapsed;
@@ -107,6 +117,25 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
       {/* ═══ Store Info ═══ */}
       {storeInfo && !collapsed && (
         <div className="px-4 py-3 border-b border-[var(--esl-border)]">
+          <div className="mb-2">
+            <label className="mb-1 block text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--esl-text-disabled)]">
+              Дэлгүүр сонгох
+            </label>
+            <select
+              value={activeStoreId || storeInfo.id || ''}
+              onChange={(event) => onStoreChange?.(event.target.value)}
+              disabled={stores.length === 0}
+              className="h-9 w-full rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2 text-[12px] font-semibold text-[var(--esl-text-secondary)] outline-none disabled:opacity-70"
+            >
+              {stores.length > 0 ? stores.map((store) => (
+                <option key={`${store.entityType}:${store.id}`} value={store.id}>
+                  {store.name}
+                </option>
+              )) : (
+                <option value={storeInfo.id || ''}>{storeInfo.name}</option>
+              )}
+            </select>
+          </div>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#E8242C] to-[#FF4D53] flex items-center justify-center text-white text-[11px] font-bold shrink-0">
               {getInitials(storeInfo.name)}
@@ -118,7 +147,7 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
               )}
             </div>
             <Link
-              href="/store"
+              href={storeInfo.href || '/store'}
               target="_blank"
               className="w-6 h-6 rounded-md bg-[var(--esl-bg-card)] hover:bg-[rgba(232,36,44,0.12)] flex items-center justify-center text-[var(--esl-text-disabled)] hover:text-[#E8242C] transition-colors no-underline"
             >
@@ -135,6 +164,13 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
               </span>
             </div>
           )}
+          <Link
+            href="/become-seller?intent=create-store"
+            className="mt-2 flex h-8 items-center justify-center gap-1.5 rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-[11px] font-semibold text-[var(--esl-text-muted)] no-underline hover:border-[#E8242C] hover:text-[#E8242C]"
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            Шинэ дэлгүүр нэмэх
+          </Link>
         </div>
       )}
 

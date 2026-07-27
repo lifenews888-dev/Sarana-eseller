@@ -17,6 +17,27 @@ type Check = {
 
 const registerRoute = path.join(process.cwd(), 'src', 'app', 'api', 'entities', 'register', 'route.ts');
 const becomeSellerPage = path.join(process.cwd(), 'src', 'app', 'become-seller', 'page.tsx');
+const openShopPage = path.join(process.cwd(), 'src', 'app', 'open-shop', 'page.tsx');
+const myStoresRoute = path.join(process.cwd(), 'src', 'app', 'api', 'seller', 'my-stores', 'route.ts');
+const searchBar = path.join(process.cwd(), 'src', 'components', 'search', 'SearchBar.tsx');
+const featuredShops = path.join(process.cwd(), 'src', 'components', 'home', 'FeaturedShops.tsx');
+const publicShopUrl = path.join(process.cwd(), 'src', 'lib', 'public-shop-url.ts');
+const storefrontClient = path.join(process.cwd(), 'src', 'components', 'storefront', 'StorefrontClient.tsx');
+const sitemap = path.join(process.cwd(), 'src', 'app', 'sitemap.ts');
+const publicShopPage = path.join(process.cwd(), 'src', 'app', 's', '[shopSlug]', 'page.tsx');
+const checkSlugRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'check-slug', 'route.ts');
+const dashboardLayout = path.join(process.cwd(), 'src', 'app', 'dashboard', 'layout.tsx');
+const storeSettingsPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'store-settings', 'page.tsx');
+const shopTypePage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'settings', 'shop-type', 'page.tsx');
+const publicCtaFiles = [
+  path.join(process.cwd(), 'src', 'components', 'shared', 'Navbar.tsx'),
+  path.join(process.cwd(), 'src', 'components', 'shared', 'Footer.tsx'),
+  path.join(process.cwd(), 'src', 'components', 'home', 'HeroVideoSlider.tsx'),
+  path.join(process.cwd(), 'src', 'components', 'home', 'SellerSection.tsx'),
+  path.join(process.cwd(), 'src', 'app', 'about', 'page.tsx'),
+  path.join(process.cwd(), 'src', 'app', 'shops', 'ShopsPageClient.tsx'),
+  path.join(process.cwd(), 'src', 'app', 'compare', 'page.tsx'),
+];
 
 function readSource(filePath: string): string {
   return fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
@@ -29,6 +50,19 @@ function includesAll(source: string, snippets: string[]): boolean {
 function main() {
   const registerSource = readSource(registerRoute);
   const onboardingSource = readSource(becomeSellerPage);
+  const openShopSource = readSource(openShopPage);
+  const myStoresSource = readSource(myStoresRoute);
+  const searchBarSource = readSource(searchBar);
+  const featuredShopsSource = readSource(featuredShops);
+  const publicShopUrlSource = readSource(publicShopUrl);
+  const storefrontClientSource = readSource(storefrontClient);
+  const sitemapSource = readSource(sitemap);
+  const publicShopPageSource = readSource(publicShopPage);
+  const checkSlugRouteSource = readSource(checkSlugRoute);
+  const dashboardLayoutSource = readSource(dashboardLayout);
+  const storeSettingsPageSource = readSource(storeSettingsPage);
+  const shopTypePageSource = readSource(shopTypePage);
+  const publicCtaSources = publicCtaFiles.map(readSource);
 
   const checks: Check[] = [
     {
@@ -103,8 +137,61 @@ function main() {
     },
     {
       label: 'onboarding auth redirect',
-      ok: onboardingSource.includes("router.push('/login?redirect=/become-seller')"),
-      detail: 'logged-out users return to onboarding after login',
+      ok: includesAll(onboardingSource, ['currentSellerOnboardingPath', 'encodeURIComponent(currentSellerOnboardingPath())']),
+      detail: 'logged-out users return to the same onboarding URL after login',
+    },
+    {
+      label: 'create more stores intent',
+      ok: includesAll(onboardingSource, ["new URLSearchParams(window.location.search).get('intent') === 'create-store'", '!isCreateStoreIntent']),
+      detail: 'logged-in sellers can re-enter onboarding to add another store type',
+    },
+    {
+      label: 'success continues setup',
+      ok: onboardingSource.includes('href="/dashboard/store/settings/shop-type"'),
+      detail: 'new store owners continue into the setup wizard',
+    },
+    {
+      label: 'open-shop canonical redirect',
+      ok: includesAll(openShopSource, ["redirect('/become-seller?source=open-shop')"]),
+      detail: '/open-shop cannot become a second store creation flow',
+    },
+    {
+      label: 'public CTAs use canonical flow',
+      ok: publicCtaSources.every((source) => !source.includes('href="/open-shop"') && !source.includes("buttonLink: '/open-shop'")),
+      detail: 'visible store-opening links go straight to /become-seller',
+    },
+    {
+      label: 'my-stores route requires auth',
+      ok: includesAll(myStoresSource, ['requireAuth(req)', 'auth instanceof Response']),
+      detail: 'store switcher is scoped to the logged-in owner',
+    },
+    {
+      label: 'my-stores owner filter',
+      ok: includesAll(myStoresSource, ['where: { userId: auth.id', 'prisma.agent.findUnique({ where: { userId: auth.id } })']),
+      detail: 'store switcher does not list unrelated stores',
+    },
+    {
+      label: 'my-stores typed entries',
+      ok: includesAll(myStoresSource, ['entityType:', 'storeType:', 'href:']),
+      detail: 'dashboard can select tools by active store type',
+    },
+    {
+      label: 'public shop links use namespace',
+      ok: includesAll(publicShopUrlSource, ['function publicShopHref', "replace(/^s\\//, '')", "return value ? `/s/${value}` : '/shops'"])
+        && [myStoresSource, searchBarSource, featuredShopsSource, dashboardLayoutSource, storeSettingsPageSource, shopTypePageSource].every((source) => source.includes('publicShopHref'))
+        && [storefrontClientSource, sitemapSource, publicShopPageSource].every((source) => source.includes('publicShopUrl'))
+        && storefrontClientSource.includes('shop.storefrontSlug || shop.slug'),
+      detail: 'dashboard/search/home/share/sitemap links resolve stores through /s/{slug}',
+    },
+    {
+      label: 'slug checker returns public namespace',
+      ok: includesAll(checkSlugRouteSource, ['publicShopHref', 'url: `eseller.mn${publicShopHref(slug)}`']),
+      detail: 'wizard availability response mirrors the live /s/{slug} URL',
+    },
+    {
+      label: 'service shop route uses resolved slug',
+      ok: includesAll(publicShopPageSource, ['const resolvedSlug = shop.storefrontSlug || shop.slug || shopSlug', 'getShopBySlug(resolvedSlug)']),
+      detail: '/s/{username} service fallback does not refetch with the wrong slug',
     },
     {
       label: 'onboarding terms gate',

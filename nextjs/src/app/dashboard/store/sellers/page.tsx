@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { formatPrice } from '@/lib/utils';
 import { useToast } from '@/components/shared/Toast';
+import { getActiveStoreHeaders } from '@/lib/api';
 import {
   Users, Check, X, Clock, Search, ShoppingBag, Loader2,
   BadgeCheck, Package, TrendingUp,
@@ -44,10 +45,7 @@ export default function SellersPage() {
   const [search, setSearch] = useState('');
   const [acting, setActing] = useState<string | null>(null);
 
-  const headers = useCallback(() => ({
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
-  }), []);
+  const headers = useCallback(() => getActiveStoreHeaders(true), []);
 
   const fetchSellers = useCallback(async () => {
     try {

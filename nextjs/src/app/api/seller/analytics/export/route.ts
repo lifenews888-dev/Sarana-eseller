@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireSeller, getShopForUser } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/seller/analytics/export?format=csv&period=30d
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
   const fromDate = new Date();
   fromDate.setDate(fromDate.getDate() - days);
 
-  const shopId = await getShopForUser(auth.id);
+  const shopId = await getShopForRequest(req, auth.id);
 
   const orders = await prisma.order.findMany({
     where: {
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const header = 'Захиалга,Огноо,Статус,Төлбөр,Дүн,Бараа\n';
     const rows = orders
       .map((o) => {
-        const items = (o.items as any[]).map((i: any) => i.name || '').join('; ');
+        const items = (o.items as Array<{ name?: string }>).map((i) => i.name || '').join('; ');
         return `${o.orderNumber || o.id.slice(-6)},${o.createdAt.toISOString().split('T')[0]},${o.status},${o.paymentMethod || ''},${o.total || 0},"${items}"`;
       })
       .join('\n');

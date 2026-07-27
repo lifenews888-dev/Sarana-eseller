@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, errorJson, json } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, errorJson, json } from '@/lib/api-auth';
 import { getSafeImageList } from '@/lib/image-url';
 
 // POST /api/digital/upload — create a digital product record
@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   try {
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForRequest(req, user.id);
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     const body = await req.json();
@@ -21,12 +21,24 @@ export async function POST(req: NextRequest) {
 
     // Verify product belongs to this seller
     const product = await prisma.product.findFirst({
-      where: { id: productId, userId: user.id },
+      where: {
+        id: productId,
+        userId: user.id,
+        OR: [
+          { shopId },
+          { shopId: null },
+        ],
+      },
     });
 
     if (!product) {
       return errorJson('Бүтээгдэхүүн олдсонгүй', 404);
     }
+
+    await prisma.product.update({
+      where: { id: productId },
+      data: { entityType: 'DIGITAL', shopId },
+    });
 
     // Check if digital product already exists for this product
     const existing = await prisma.digitalProduct.findUnique({
@@ -58,12 +70,6 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Mark product as DIGITAL entityType
-    await prisma.product.update({
-      where: { id: productId },
-      data: { entityType: 'DIGITAL' },
-    });
-
     return json(digital, 201);
   } catch (e: unknown) {
     return errorJson((e as Error).message, 500);
@@ -76,8 +82,17 @@ export async function GET(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   try {
+    const shopId = await getShopForRequest(req, user.id);
+    if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
+
     const products = await prisma.product.findMany({
-      where: { userId: user.id },
+      where: {
+        userId: user.id,
+        OR: [
+          { shopId },
+          { shopId: null },
+        ],
+      },
       select: { id: true, name: true, price: true, images: true, emoji: true },
       orderBy: { name: 'asc' },
     });

@@ -3,15 +3,15 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
+import { getActiveStoreHeaders } from '@/lib/api';
 
 // Dashboard дээд хэсэгт харуулах шар banner
 export function LocationCoordReminder() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
     fetch('/api/seller/locations?filter=needs_coords', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: getActiveStoreHeaders(),
     })
       .then((r) => r.json())
       .then((data) => {

@@ -4,6 +4,18 @@
 // ══════════════════════════════════════════════════════════════
 
 const API_BASE = 'https://sarana-backend.onrender.com/api';
+export const ACTIVE_STORE_ID_KEY = 'eseller_active_store_id';
+
+export function getActiveStoreHeaders(includeJson = false): Record<string, string> {
+  const headers: Record<string, string> = includeJson ? { 'Content-Type': 'application/json' } : {};
+  if (typeof window === 'undefined') return headers;
+
+  const token = localStorage.getItem('token');
+  const activeShopId = localStorage.getItem(ACTIVE_STORE_ID_KEY) || localStorage.getItem('eseller_shop_id');
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (activeShopId) headers['x-eseller-shop-id'] = activeShopId;
+  return headers;
+}
 
 export interface ApiError {
   status: number;
@@ -21,6 +33,10 @@ async function apiFetch<T = Record<string, unknown>>(
     ...(opts.headers as Record<string, string>),
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
+  if (typeof window !== 'undefined') {
+    const activeShopId = localStorage.getItem(ACTIVE_STORE_ID_KEY) || localStorage.getItem('eseller_shop_id');
+    if (activeShopId) headers['x-eseller-shop-id'] = activeShopId;
+  }
 
   const res = await fetch(API_BASE + path, { ...opts, headers });
   const data = await res.json().catch(() => ({}));
@@ -34,10 +50,31 @@ async function apiFetch<T = Record<string, unknown>>(
   return data as T;
 }
 
+async function localApiFetch<T = Record<string, unknown>>(
+  path: string,
+  opts: RequestInit = {}
+): Promise<T> {
+  const headers = {
+    ...getActiveStoreHeaders(true),
+    ...(opts.headers as Record<string, string>),
+  };
+  const res = await fetch(path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw {
+      status: res.status,
+      message: data.error || data.message || 'Алдаа гарлаа',
+      data,
+    } as ApiError;
+  }
+  return data as T;
+}
+
 // ══════ AUTH ══════
 export interface User {
   _id: string;
   id?: string;
+  shopId?: string | null;
   name: string;
   email: string;
   phone?: string;
@@ -136,6 +173,16 @@ export const ProductsAPI = {
     apiFetch('/products/' + id, { method: 'DELETE' }),
 };
 
+export const SellerProductsAPI = {
+  list: () => localApiFetch<{ products: Product[] }>('/api/seller/products', { method: 'GET' }),
+  create: (data: Partial<Product>) =>
+    localApiFetch<Product>('/api/seller/products', { method: 'POST', body: JSON.stringify(data) }),
+  update: (id: string, data: Partial<Product>) =>
+    localApiFetch<Product>('/api/seller/products/' + id, { method: 'PATCH', body: JSON.stringify(data) }),
+  delete: (id: string) =>
+    localApiFetch('/api/seller/products/' + id, { method: 'DELETE' }),
+};
+
 // ══════ ORDERS ══════
 export interface OrderItem {
   product?: Product;
@@ -177,6 +224,18 @@ export const OrdersAPI = {
   updateStatus: (id: string, status: string) =>
     apiFetch('/orders/' + id + '/status', {
       method: 'PUT',
+      body: JSON.stringify({ status }),
+    }),
+};
+
+export const SellerOrdersAPI = {
+  list: (params: Record<string, string> = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return localApiFetch<{ orders: Order[] }>('/api/seller/orders' + (qs ? '?' + qs : ''));
+  },
+  updateStatus: (id: string, status: string) =>
+    localApiFetch('/api/seller/orders/' + id + '/status', {
+      method: 'PATCH',
       body: JSON.stringify({ status }),
     }),
 };

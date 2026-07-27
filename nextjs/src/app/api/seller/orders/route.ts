@@ -1,21 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { requireAuth, json, errorJson, getShopForRequest } from '@/lib/api-auth';
 
 // GET /api/seller/orders?status=pending
 export async function GET(req: NextRequest) {
   const user = requireAuth(req);
   if (user instanceof NextResponse) return user;
 
-  // Shop.userId is the owner
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
-  if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
+  const shopId = await getShopForRequest(req, user.id);
+  if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const status = req.nextUrl.searchParams.get('status');
 
   const orders = await prisma.order.findMany({
     where: {
-      shopId: shop.id,
+      shopId,
       ...(status ? { status } : {}),
     },
     orderBy: { createdAt: 'desc' },

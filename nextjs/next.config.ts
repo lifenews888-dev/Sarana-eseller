@@ -72,7 +72,16 @@ const nextConfig: NextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
   async headers() {
-    return [{ source: '/(.*)', headers: securityHeaders }];
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          ...securityHeaders,
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate, proxy-revalidate' },
+        ],
+      },
+      { source: '/(.*)', headers: securityHeaders },
+    ];
   },
   async rewrites() {
     // Production: proxy.ts handles *.eseller.mn → /shop-sub/:slug

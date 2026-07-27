@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/api-auth';
+import { getShopForRequest, requireAuth } from '@/lib/api-auth';
 import { ok, fail } from '@/lib/api-envelope';
 
 /**
@@ -23,7 +23,8 @@ export async function GET(req: NextRequest) {
     const endOf = new Date(date);
     endOf.setHours(23, 59, 59, 999);
 
-    const shop = await prisma.shop.findUnique({ where: { userId: authUser.id } });
+    const shopId = await getShopForRequest(req, authUser.id);
+    const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
     if (!shop) {
       return ok({
         sales: [],

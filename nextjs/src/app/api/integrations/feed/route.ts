@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSeller } from '@/lib/api-auth'
+import { getShopForRequest, requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { sanitizeImageUrls } from '@/lib/image-url'
+
+type FeedProductRow = {
+  name?: unknown
+  title?: unknown
+  description?: unknown
+  price?: unknown
+  image?: unknown
+  images?: unknown
+}
 
 // PUT — Feed URL тохируулах
 export async function PUT(req: NextRequest) {
@@ -10,12 +19,12 @@ export async function PUT(req: NextRequest) {
 
   const { feedUrl, feedType, feedInterval } = await req.json()
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
-  if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
+  const shopId = await getShopForRequest(req, auth.id)
+  if (!shopId) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   const integration = await prisma.storeIntegration.upsert({
-    where:  { shopId: shop.id },
-    create: { shopId: shop.id, feedUrl, feedType, feedInterval: feedInterval || 60 },
+    where:  { shopId },
+    create: { shopId, feedUrl, feedType, feedInterval: feedInterval || 60 },
     update: { feedUrl, feedType, feedInterval: feedInterval || 60 },
   })
 
@@ -27,10 +36,11 @@ export async function POST(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
 
-  const shop = await prisma.shop.findUnique({
-    where: { userId: auth.id },
+  const shopId = await getShopForRequest(req, auth.id)
+  const shop = shopId ? await prisma.shop.findUnique({
+    where: { id: shopId },
     include: { integration: true },
-  })
+  }) : null
 
   if (!shop?.integration?.feedUrl) {
     return NextResponse.json({ error: 'Feed URL тохируулагдаагүй' }, { status: 400 })
@@ -47,11 +57,16 @@ export async function POST(req: NextRequest) {
     const res = await fetch(integration.feedUrl!, { signal: AbortSignal.timeout(30000) })
     const content = await res.text()
 
-    let products: any[] = []
+    let products: FeedProductRow[] = []
 
     if (integration.feedType === 'json') {
       const data = JSON.parse(content)
-      products = Array.isArray(data) ? data : data.products || data.items || []
+      const rows = Array.isArray(data)
+        ? data
+        : typeof data === 'object' && data !== null
+          ? ((data as Record<string, unknown>).products || (data as Record<string, unknown>).items)
+          : []
+      products = Array.isArray(rows) ? rows as FeedProductRow[] : []
     } else if (integration.feedType === 'csv') {
       const lines = content.split('\n').filter(Boolean)
       const headers = lines[0].split(',').map((h: string) => h.trim().replace(/"/g, ''))
@@ -80,17 +95,20 @@ export async function POST(req: NextRequest) {
     // Бараа DB-д хадгалах
     let synced = 0
     for (const p of products.slice(0, 500)) {
-      const name = p.name || p.title
+      const name = String(p.name || p.title || '')
       if (!name) continue
 
       try {
+        const image = typeof p.image === 'string' ? p.image : null
+        const images = Array.isArray(p.images) ? p.images : undefined
         await prisma.product.create({
           data: {
             name,
-            description: p.description || '',
-            price: Math.round(parseFloat(String(p.price).replace(/[^\d.]/g, '')) || 0),
-            images: sanitizeImageUrls(p.image ? [p.image] : p.images),
+            description: typeof p.description === 'string' ? p.description : '',
+            price: Math.round(parseFloat(String(p.price || '').replace(/[^\d.]/g, '')) || 0),
+            images: sanitizeImageUrls(image ? [image] : images),
             userId: auth.id,
+            shopId,
             isActive: true,
           },
         })
@@ -109,11 +127,12 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ success: true, synced, total: products.length })
-  } catch (e: any) {
+  } catch (e: unknown) {
+    const message = (e as Error).message
     await prisma.storeIntegration.update({
       where: { id: integration.id },
-      data: { syncStatus: 'error', syncError: e.message },
+      data: { syncStatus: 'error', syncError: message },
     })
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

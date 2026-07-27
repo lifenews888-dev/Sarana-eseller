@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/shared/Toast';
+import SafeImage from '@/components/ui/SafeImage';
 import {
-  Palette, Store, Smartphone, Search, Image, Megaphone, FolderOpen,
+  Palette, Store, Smartphone, Search, ImageIcon, Megaphone, FolderOpen,
   Phone, Save,
 } from 'lucide-react';
+import { publicShopHref } from '@/lib/public-shop-url';
 
 interface StoreConfig {
   storeName: string;
@@ -78,6 +80,7 @@ export default function StoreSettingsPage() {
     try {
       const saved = localStorage.getItem(STORE_CONFIG_KEY);
       if (saved) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hydrate the local draft once from browser storage.
         setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
       } else {
         setConfig({
@@ -93,7 +96,7 @@ export default function StoreSettingsPage() {
     toast.show('✅ Тохиргоо хадгалагдлаа');
   };
 
-  const update = (key: keyof StoreConfig, value: any) => {
+  const update = (key: keyof StoreConfig, value: StoreConfig[keyof StoreConfig]) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
@@ -106,7 +109,7 @@ export default function StoreSettingsPage() {
 
   const storeSlug = (config.storeName || 'store').toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
   const storeUrl = storeSlug + '.eseller.mn';
-  const storePreviewUrl = `/s/${storeSlug}`;
+  const storePreviewUrl = publicShopHref(storeSlug);
 
   return (
     <div className="min-h-screen">
@@ -154,7 +157,7 @@ export default function StoreSettingsPage() {
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-[var(--esl-bg-card)] shadow-sm border border-[var(--esl-border)] flex items-center justify-center text-2xl overflow-hidden">
                   {config.logo ? (
-                    <img loading="lazy" src={config.logo} alt="" className="w-full h-full object-cover" />
+                    <SafeImage src={config.logo} alt={config.storeName || 'Store logo'} className="w-full h-full object-cover" />
                   ) : (
                     <Store className="w-8 h-8 text-[var(--esl-text-muted)]" />
                   )}
@@ -250,7 +253,7 @@ export default function StoreSettingsPage() {
           <div className="space-y-6">
             {/* Hero Section */}
             <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-2xl p-6">
-              <h3 className="text-base font-bold text-[var(--esl-text-primary)] mb-5 flex items-center gap-2"><Image className="w-4 h-4" /> Нүүр хуудасны Hero</h3>
+              <h3 className="text-base font-bold text-[var(--esl-text-primary)] mb-5 flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Нүүр хуудасны Hero</h3>
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-[var(--esl-text-secondary)] uppercase tracking-wider mb-1.5">Гарчиг</label>

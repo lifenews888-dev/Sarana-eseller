@@ -288,7 +288,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   return (
     <AnimatePresence>
       {/* Backdrop */}
-      <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998]"
+      <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10020]"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
 
       {/* Prev/Next product arrows */}
@@ -296,7 +296,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         <button
           onClick={onPrev}
           aria-label="Өмнөх бараа"
-          className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
+          className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[10060] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
         >
           <ChevronLeft className="w-5 h-5 text-[var(--esl-text-primary)]" />
         </button>
@@ -305,7 +305,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         <button
           onClick={onNext}
           aria-label="Дараагийн бараа"
-          className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
+          className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[10060] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
         >
           <ChevronRight className="w-5 h-5 text-[var(--esl-text-primary)]" />
         </button>
@@ -318,14 +318,14 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         aria-modal="true"
         aria-labelledby="product-modal-title"
         tabIndex={-1}
-        className="fixed inset-2 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-5xl bg-[var(--esl-bg-card)] rounded-2xl z-[999] overflow-hidden flex flex-col md:flex-row max-h-[94vh] shadow-2xl"
+        className="fixed inset-x-2 top-2 bottom-[calc(8px+env(safe-area-inset-bottom))] md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-5xl bg-[var(--esl-bg-card)] rounded-2xl z-[10050] overflow-hidden flex flex-col md:flex-row min-h-0 md:max-h-[94vh] shadow-2xl"
         initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 30, stiffness: 350 }}>
 
         {/* ═══ LEFT: Image Gallery ═══ */}
-        <div className="md:w-[55%] bg-[var(--esl-bg-section)] relative shrink-0 flex flex-col">
+        <div className="md:w-[55%] bg-[var(--esl-bg-section)] relative shrink-0 flex flex-col max-md:h-[34dvh] max-md:min-h-[210px] max-md:max-h-[300px]">
           {/* Main image/video */}
-          <div className="relative flex-1 min-h-[280px] md:min-h-[400px] flex items-center justify-center overflow-hidden">
+          <div className="relative flex-1 min-h-0 md:min-h-[400px] flex items-center justify-center overflow-hidden">
             {media.length > 0 ? (
               media[activeImg]?.type === 'video' ? (
                 <video
@@ -423,7 +423,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         </div>
 
         {/* ═══ RIGHT: Product Details ═══ */}
-        <div className="md:w-[45%] flex flex-col">
+        <div className="md:w-[45%] flex min-h-0 flex-1 flex-col">
           {/* Close */}
           <button onClick={onClose}
             aria-label="Барааны цонх хаах"
@@ -432,7 +432,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
           </button>
 
           {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-4">
+          <div className="flex-1 overflow-y-auto px-5 pb-4 pt-3 md:px-6 md:pt-0">
             {/* Store */}
             {product.store?.name && (
               <div className="text-xs text-[var(--esl-text-muted)] font-medium mb-1">{product.store.name}</div>
@@ -650,7 +650,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
               </div>
             )}
           </div>
-          <div className="px-6 py-4 border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]/50">
+          <div className="shrink-0 px-5 py-3 border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]/50 md:px-6 md:py-4">
             <h4 className="text-xs font-bold text-[var(--esl-text-secondary)] uppercase tracking-wider mb-3">Барааны товч</h4>
             <div className="grid grid-cols-2 gap-2">
               {productFacts.map((fact) => {
@@ -668,7 +668,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             </div>
           </div>
           {/* ═══ Footer: Qty + Add to Cart ═══ */}
-          <div className="px-6 py-4 border-t border-[var(--esl-border)] shrink-0 space-y-3 bg-[var(--esl-bg-card)]">
+          <div className="shrink-0 space-y-2.5 border-t border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-5 py-3 pb-[calc(12px+env(safe-area-inset-bottom))] md:space-y-3 md:px-6 md:py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-[var(--esl-text-secondary)]">Тоо:</span>
@@ -730,7 +730,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
           aria-modal="true"
           aria-label="Zoomed product image"
           tabIndex={-1}
-          className="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center cursor-zoom-out"
+          className="fixed inset-0 z-[10070] bg-black/95 flex items-center justify-center cursor-zoom-out"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={closeZoom}
         >

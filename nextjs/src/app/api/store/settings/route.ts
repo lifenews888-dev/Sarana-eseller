@@ -1,13 +1,14 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, json, errorJson } from '@/lib/api-auth';
+import { requireSeller, json, errorJson, getShopForRequest } from '@/lib/api-auth';
 
 // GET /api/store/settings
 export async function GET(req: NextRequest) {
   const user = requireSeller(req);
   if (user instanceof Response) return user;
 
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
+  const shopId = await getShopForRequest(req, user.id);
+  const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const bankInfo = await prisma.user.findUnique({ where: { id: user.id }, select: { bankInfo: true, phone: true } });
@@ -34,7 +35,8 @@ export async function PUT(req: NextRequest) {
   if (user instanceof Response) return user;
 
   const body = await req.json();
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
+  const shopId = await getShopForRequest(req, user.id);
+  const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   await prisma.shop.update({

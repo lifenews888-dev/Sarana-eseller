@@ -117,7 +117,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
           <span className="px-2 py-0.5 rounded-full text-[10px] font-bold text-white" style={{ background: config.color }}>{config.badge}</span>
         </div>
         {/* Breadcrumb */}
-        <nav className="max-w-6xl mx-auto px-4 py-2 flex items-center gap-1.5 text-xs text-[var(--esl-text-muted)] overflow-x-auto">
+        <nav className="max-w-6xl mx-auto px-4 py-2 hidden items-center gap-1.5 overflow-x-auto text-xs text-[var(--esl-text-muted)] md:flex">
           <Link href="/" className="hover:text-[var(--esl-text-primary)] no-underline">Нүүр</Link>
           <span>›</span>
           <Link href="/store" className="hover:text-[var(--esl-text-primary)] no-underline">Дэлгүүр</Link>
@@ -132,10 +132,10 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
         </nav>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="max-w-6xl mx-auto px-3 py-3 pb-24 sm:px-4 sm:py-6 lg:pb-6">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-8">
           {/* Left: Media */}
-          <div>
+          <div className="lg:sticky lg:top-24 lg:self-start">
             <MediaCarousel
               media={media}
               layout="grid"
@@ -144,7 +144,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
           </div>
 
           {/* Right: Info */}
-          <div className="space-y-5">
+          <div className="space-y-4 sm:space-y-5">
             {/* Entity-specific layout */}
             {et === 'STORE' && <StoreLayout product={product} price={price} hasDiscount={!!hasDiscount} discount={discount} config={config} />}
             {et === 'REAL_ESTATE' && <RealEstateLayout product={product} price={price} config={config} contactHref={ownerPhoneHref} />}
@@ -188,7 +188,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
         {relatedProducts.length > 0 && (
           <div className="mt-12">
             <h2 className="text-lg font-bold mb-4">Ижил төстэй</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
               {relatedProducts.slice(0, 4).map(rp => (
                 <Link
                   key={rp._id}
@@ -228,9 +228,9 @@ function StoreLayout({ product, price, hasDiscount, discount, config }: {
     <>
       {/* Name + Price */}
       <div>
-        <h1 className="text-2xl font-bold leading-tight">{product.name}</h1>
-        <div className="flex items-center gap-3 mt-2">
-          <span className="text-2xl font-black text-[#E8242C]">{formatPrice(price)}</span>
+        <h1 className="text-xl font-bold leading-tight sm:text-2xl">{product.name}</h1>
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <span className="text-2xl font-black text-[#E8242C] sm:text-3xl">{formatPrice(price)}</span>
           {hasDiscount && (
             <>
               <span className="text-base text-[var(--esl-text-muted)] line-through">{formatPrice(product.price)}</span>
@@ -265,9 +265,9 @@ function StoreLayout({ product, price, hasDiscount, discount, config }: {
       )}
 
       {/* Delivery */}
-      <div className="flex items-center gap-4 py-3 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)]">
-        <Truck size={18} className="text-[var(--esl-text-muted)]" />
-        <div className="text-sm">
+      <div className="flex items-start gap-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-3 sm:px-4">
+        <Truck size={18} className="mt-0.5 shrink-0 text-[var(--esl-text-muted)]" />
+        <div className="min-w-0 text-sm">
           <span className="font-medium">Хүргэлт:</span>{' '}
           {product.deliveryFee ? `${formatPrice(product.deliveryFee)}` : 'Үнэгүй'}
           {product.estimatedMins && <span className="text-[var(--esl-text-muted)]"> · ~{product.estimatedMins} мин</span>}

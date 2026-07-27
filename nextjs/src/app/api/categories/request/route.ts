@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, json, errorJson } from '@/lib/api-auth';
-import { getShopForUser } from '@/lib/api-auth';
+import { requireAuth, json, errorJson, getShopForRequest } from '@/lib/api-auth';
 
 // POST /api/categories/request — suggest new category
 export async function POST(req: NextRequest) {
@@ -11,7 +10,8 @@ export async function POST(req: NextRequest) {
   const { name, parentId, parentName, reason } = await req.json();
   if (!name) return errorJson('Ангилалын нэр шаардлагатай');
 
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id }, select: { name: true } });
+  const shopId = await getShopForRequest(req, user.id);
+  const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId }, select: { name: true } }) : null;
 
   await prisma.categoryRequest.create({
     data: {

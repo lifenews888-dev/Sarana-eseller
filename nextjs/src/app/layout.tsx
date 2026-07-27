@@ -88,7 +88,35 @@ export default function RootLayout({
         {process.env.NODE_ENV === 'production' ? (
           <Script id="sw-register" strategy="afterInteractive">{`
             if ('serviceWorker' in navigator) {
-              navigator.serviceWorker.register('/sw.js').catch(() => {});
+              var esellerSwRefreshing = false;
+              navigator.serviceWorker.addEventListener('controllerchange', function () {
+                if (esellerSwRefreshing) return;
+                esellerSwRefreshing = true;
+                window.location.reload();
+              });
+
+              window.addEventListener('load', function () {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(function (registration) {
+                    registration.update();
+
+                    if (registration.waiting) {
+                      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+                    }
+
+                    registration.addEventListener('updatefound', function () {
+                      var worker = registration.installing;
+                      if (!worker) return;
+
+                      worker.addEventListener('statechange', function () {
+                        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+                          worker.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                      });
+                    });
+                  })
+                  .catch(() => {});
+              });
             }
           `}</Script>
         ) : (

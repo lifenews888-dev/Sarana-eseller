@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireSeller } from '@/lib/api-auth'
+import { getShopForRequest, requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
 import { sanitizeImageUrls } from '@/lib/image-url'
 import { getPublicProductQualityIssue } from '@/lib/product-visibility'
@@ -49,12 +49,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid supplier price' }, { status: 400 })
   }
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
-  if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
+  const shopId = await getShopForRequest(req, auth.id)
+  if (!shopId) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   // Аль хэдийн импортлогдсон эсэх шалгах
   const existing = await prisma.dropshipProduct.findFirst({
-    where: { supplierId, supplierName },
+    where: {
+      supplierId,
+      supplierName,
+      product: {
+        is: {
+          userId: auth.id,
+          OR: [
+            { shopId },
+            { shopId: null },
+          ],
+        },
+      },
+    },
     include: { product: true },
   })
   if (existing) {
@@ -94,6 +106,7 @@ export async function POST(req: NextRequest) {
       images: cleanImages,
       stock: supplierStock || 0,
       userId: auth.id,
+      shopId,
       isActive: true,
       category: category || 'dropship',
     },

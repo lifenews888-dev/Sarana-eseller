@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth } from '@/lib/api-auth';
+import { getShopForRequest, requireAuth } from '@/lib/api-auth';
 import { Prisma } from '@prisma/client';
 import { ok, fail } from '@/lib/api-envelope';
 
@@ -46,7 +46,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Seller/store owner must have a shop
-    const shop = await prisma.shop.findUnique({ where: { userId: authUser.id } });
+    const shopId = await getShopForRequest(req, authUser.id);
+    const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
     if (!shop) {
       return fail('Дэлгүүр олдсонгүй', 404);
     }

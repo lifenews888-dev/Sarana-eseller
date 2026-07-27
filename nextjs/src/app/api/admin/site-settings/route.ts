@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { REALISTIC_BANNER_IMAGES } from '@/lib/realistic-banner-assets';
 
 const CONFIG_KEY = 'site_settings';
 
@@ -43,7 +44,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   loginPage: {
     heroTitle: 'Борлуулагчтай л\nборлуулалт байна.',
     heroSubtitle: 'eseller.mn — Монголын seller-powered marketplace',
-    heroBgImage: '',
+    heroBgImage: REALISTIC_BANNER_IMAGES.login,
     buttonColor: '#CC0000',
     showDanLogin: false,
     roles: [

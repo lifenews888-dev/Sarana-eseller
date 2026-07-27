@@ -3,6 +3,8 @@
 // AI-driven unique storefront for every seller
 // ══════════════════════════════════════════════════════════════
 
+import { REALISTIC_BANNER_IMAGES } from '@/lib/realistic-banner-assets';
+
 export type FontFamily =
   | 'Cormorant Garamond'
   | 'Space Grotesk'
@@ -145,9 +147,9 @@ export function createDefaultConfig(sellerId: string): StorefrontConfig {
       subheadline: 'Чанартай бараа, хурдан хүргэлт',
       ctaText: 'Дэлгүүр үзэх',
       ctaUrl: '#products',
-      backgroundType: 'solid_color',
-      backgroundValue: '#F5F5F5',
-      overlayOpacity: 0,
+      backgroundType: 'image',
+      backgroundValue: REALISTIC_BANNER_IMAGES.storefronts,
+      overlayOpacity: 0.55,
     },
     sections: [
       { id: 's1', type: 'hero_centered', order: 0, visible: true, content: {} },

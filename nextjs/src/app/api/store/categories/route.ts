@@ -1,16 +1,17 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, json, errorJson } from '@/lib/api-auth';
+import { requireSeller, json, errorJson, getShopForRequest } from '@/lib/api-auth';
 
 // GET /api/store/categories — get shop's selected categories
 export async function GET(req: NextRequest) {
   const user = requireSeller(req);
   if (user instanceof Response) return user;
 
-  const shop = await prisma.shop.findUnique({
-    where: { userId: user.id },
+  const shopId = await getShopForRequest(req, user.id);
+  const shop = shopId ? await prisma.shop.findUnique({
+    where: { id: shopId },
     select: { categoryIds: true },
-  });
+  }) : null;
 
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
@@ -34,7 +35,8 @@ export async function POST(req: NextRequest) {
   const { categoryIds } = await req.json();
   if (!Array.isArray(categoryIds)) return errorJson('categoryIds array шаардлагатай');
 
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
+  const shopId = await getShopForRequest(req, user.id);
+  const shop = shopId ? await prisma.shop.findUnique({ where: { id: shopId } }) : null;
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   try {

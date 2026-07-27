@@ -106,7 +106,7 @@ export function requireSeller(req: NextRequest): AuthUser | NextResponse {
   if (result instanceof NextResponse) return result;
   // Accept seller, admin, superadmin, AND 'buyer' (backend tokens often lack role)
   // We trust that dashboard access is already gated by the frontend
-  // The actual shop ownership is verified in each API handler via findUnique({ where: { userId } })
+  // The actual shop ownership is verified in each API handler via getShopForRequest/getShopForUser.
   return result;
 }
 
@@ -135,8 +135,29 @@ export async function requireAdminDB(req: NextRequest): Promise<AuthUser | NextR
   return errorJson('Зөвхөн админ хандах боломжтой', 403);
 }
 
-/** Get shopId for authenticated seller */
-export async function getShopForUser(userId: string): Promise<string | null> {
-  const shop = await prisma.shop.findUnique({ where: { userId } });
+/** Selected shop id from dashboard requests. Header wins, query is a fallback for GET links. */
+export function getRequestedShopId(req: NextRequest): string | null {
+  const headerShopId =
+    req.headers.get('x-eseller-shop-id') ||
+    req.headers.get('x-active-shop-id') ||
+    req.headers.get('x-shop-id');
+  const queryShopId = req.nextUrl.searchParams.get('shopId');
+  const shopId = (headerShopId || queryShopId || '').trim();
+  return shopId.length > 0 ? shopId : null;
+}
+
+/** Get an owned shop id for authenticated seller, optionally honoring dashboard selection. */
+export async function getShopForUser(userId: string, requestedShopId?: string | null): Promise<string | null> {
+  const where = requestedShopId ? { id: requestedShopId, userId } : { userId };
+  const shop = await prisma.shop.findFirst({
+    where,
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
+  });
   return shop?.id ?? null;
+}
+
+/** Get the active dashboard shop and verify it belongs to the authenticated seller. */
+export async function getShopForRequest(req: NextRequest, userId: string): Promise<string | null> {
+  return getShopForUser(userId, getRequestedShopId(req));
 }

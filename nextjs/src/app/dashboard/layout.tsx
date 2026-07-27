@@ -1,10 +1,21 @@
 ﻿'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useShopTypeStore, type ShopType } from '@/lib/shop-type-store';
+import { publicShopHref } from '@/lib/public-shop-url';
 import Sidebar, { type SidebarSection } from '@/components/dashboard/Sidebar';
+
+type SellerStoreOption = {
+  id: string;
+  name: string;
+  slug: string;
+  entityType: string;
+  storeType: ShopType;
+  href: string;
+  logo?: string | null;
+};
 
 // ═══════════════════════════════════════════════════════
 // Shared sections (used by both product and service)
@@ -332,6 +343,14 @@ const OTHER_ROLE_SECTIONS: Record<string, SidebarSection[]> = {
   buyer: BUYER_SECTIONS,
 };
 
+const STORE_LIST_TIMEOUT_MS = 8000;
+const ACTIVE_STORE_STORAGE_KEYS = [
+  'eseller_active_store_id',
+  'eseller_shop_id',
+  'eseller_active_store_type',
+  'eseller_active_store_business_type',
+];
+
 // ═══════════════════════════════════════════════════════
 // Layout
 // ═══════════════════════════════════════════════════════
@@ -340,9 +359,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { user } = useAuth();
   const router = useRouter();
   const [ready] = useState(() => (typeof window !== 'undefined' ? !!localStorage.getItem('token') : false));
+  const [stores, setStores] = useState<SellerStoreOption[]>([]);
+  const [activeStoreId, setActiveStoreId] = useState<string | null>(() => (
+    typeof window !== 'undefined' ? localStorage.getItem('eseller_active_store_id') : null
+  ));
 
   const shopType = useShopTypeStore((s) => s.shopType);
   const loadShopType = useShopTypeStore((s) => s.load);
+  const setActiveShopType = useShopTypeStore((s) => s.setActiveShop);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -356,6 +380,83 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }, [router, loadShopType]);
 
   const [mobileOpen, setMobileOpen] = useState(false);
+  const role = user?.role || 'buyer';
+  const isSellerRole = ['seller', 'agent', 'company', 'auto_dealer', 'service'].includes(role);
+
+  const syncActiveStore = useCallback((store: SellerStoreOption, options: { refresh: boolean }) => {
+    setActiveStoreId(store.id);
+    localStorage.setItem('eseller_active_store_id', store.id);
+    localStorage.setItem('eseller_shop_id', store.id);
+    localStorage.setItem('eseller_active_store_type', store.entityType);
+    localStorage.setItem('eseller_active_store_business_type', store.storeType);
+    setActiveShopType(store.id, store.storeType);
+    if (options.refresh) router.refresh();
+  }, [router, setActiveShopType]);
+
+  const clearActiveStore = useCallback(() => {
+    setActiveStoreId(null);
+    ACTIVE_STORE_STORAGE_KEYS.forEach((key) => localStorage.removeItem(key));
+    try {
+      const raw = localStorage.getItem('eseller_store_config');
+      if (!raw) return;
+      const config = JSON.parse(raw) as Record<string, unknown>;
+      delete config.shopId;
+      localStorage.setItem('eseller_store_config', JSON.stringify(config));
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    if (!isSellerRole) return;
+
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) return;
+
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), STORE_LIST_TIMEOUT_MS);
+
+    fetch('/api/seller/my-stores', {
+      headers: { Authorization: `Bearer ${token}` },
+      signal: controller.signal,
+    })
+      .then((response) => response.ok ? response.json() : { stores: [] })
+      .then((data) => {
+        if (cancelled) return;
+        const nextStores = Array.isArray(data.stores) ? data.stores : [];
+        setStores(nextStores);
+
+        const savedId = localStorage.getItem('eseller_active_store_id');
+        const savedStillExists = savedId && nextStores.some((store: SellerStoreOption) => store.id === savedId);
+        const nextActiveId = savedStillExists ? savedId : nextStores[0]?.id || null;
+
+        const active = nextStores.find((store: SellerStoreOption) => store.id === nextActiveId);
+        if (active) {
+          syncActiveStore(active, { refresh: false });
+        } else {
+          clearActiveStore();
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setStores([]);
+        clearActiveStore();
+      })
+      .finally(() => {
+        window.clearTimeout(timeout);
+      });
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [clearActiveStore, isSellerRole, syncActiveStore]);
+
+  const handleStoreChange = (storeId: string) => {
+    const active = stores.find((store) => store.id === storeId);
+    if (!active) return;
+    syncActiveStore(active, { refresh: true });
+  };
 
   if (!ready) {
     return (
@@ -365,17 +466,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
-  const role = user?.role || 'buyer';
-  const userEntityType = user?.entityType || undefined;
-  const isSellerRole = ['seller', 'agent', 'company', 'auto_dealer', 'service'].includes(role);
+  const activeStore = stores.find((store) => store.id === activeStoreId) || stores[0] || null;
+  const userEntityType = activeStore?.entityType || user?.entityType || undefined;
+  const effectiveShopType = activeStore?.storeType || shopType;
   const sections = isSellerRole
-    ? getSellerSections(shopType, userEntityType)
+    ? getSellerSections(effectiveShopType, userEntityType)
     : OTHER_ROLE_SECTIONS[role] || BUYER_SECTIONS;
 
   const storeInfo = isSellerRole
     ? {
-        name: user?.store?.name || user?.name + 'ийн дэлгүүр',
-        url: (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
+        id: activeStore?.id,
+        name: activeStore?.name || user?.store?.name || user?.name + 'ийн дэлгүүр',
+        url: activeStore?.href ? `eseller.mn${activeStore.href}` : activeStore?.slug ? `eseller.mn${publicShopHref(activeStore.slug)}` : (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
+        href: activeStore?.href,
+        entityType: userEntityType,
         plan: 'Үнэгүй',
         planBadge: 'Үнэгүй туршилт',
       }
@@ -398,7 +502,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Sidebar — hidden on mobile, slide-in when open */}
       <div className={`md:block ${mobileOpen ? 'block' : 'hidden'}`}>
-        <Sidebar sections={sections} storeInfo={storeInfo} />
+        <Sidebar
+          sections={sections}
+          storeInfo={storeInfo}
+          stores={stores}
+          activeStoreId={activeStoreId}
+          onStoreChange={handleStoreChange}
+        />
       </div>
 
       <main className="ml-0 md:ml-[260px] min-h-screen transition-all duration-300 p-4 pt-20 md:pt-6 md:p-6 lg:p-8">

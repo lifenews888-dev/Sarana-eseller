@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { json, requireSeller, getShopForUser } from '@/lib/api-auth';
+import { json, requireSeller, getShopForRequest } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/seller/analytics?period=7d|30d|90d
@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
   const fromDate = new Date();
   fromDate.setDate(fromDate.getDate() - days);
 
-  const shopId = await getShopForUser(auth.id);
+  const shopId = await getShopForRequest(req, auth.id);
 
   // Get orders for this seller
   const orders = await prisma.order.findMany({
@@ -49,7 +49,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Track product sales
-    const items = order.items as any[];
+    const items = order.items as Array<{
+      productId?: string;
+      id?: string;
+      name?: string;
+      quantity?: number;
+      price?: number;
+    }>;
     for (const item of items) {
       const pid = item.productId || item.id || 'unknown';
       const existing = productSales.get(pid) || { name: item.name || 'Бараа', sold: 0, revenue: 0 };
@@ -85,7 +91,6 @@ export async function GET(req: NextRequest) {
     .slice(0, 10);
 
   // Customer segments
-  const allBuyerIds = orders.map((o) => o.id); // simplified
   const returnRate = orders.filter((o) => o.status === 'cancelled').length / Math.max(orders.length, 1);
 
   // Funnel (simplified)

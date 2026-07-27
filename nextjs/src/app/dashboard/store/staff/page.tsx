@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
 import StatCard from '@/components/dashboard/StatCard';
+import { getActiveStoreHeaders } from '@/lib/api';
 
 interface StaffMember {
   id: string;
@@ -39,8 +40,7 @@ export default function StaffPage() {
 
   // Fetch from DB, fallback to demo
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    fetch('/api/seller/staff', { headers: token ? { Authorization: `Bearer ${token}` } : {} })
+    fetch('/api/seller/staff', { headers: getActiveStoreHeaders() })
       .then(r => r.json())
       .then(data => { if (Array.isArray(data) && data.length > 0) setStaff(data); })
       .catch(() => {});

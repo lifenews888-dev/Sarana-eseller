@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { filterPublicLaunchProducts, publicProductWhere } from '@/lib/product-visibility';
 import { sanitizeImageUrls } from '@/lib/image-url';
+import { publicShopHref } from '@/lib/public-shop-url';
 import {
   STORE_DIRECTORY_TYPES,
   type StoreDirectoryFacet,
@@ -302,7 +303,7 @@ function mapShop(shop: ShopWithRelations, assets: ShopDirectoryAssets): StoreDir
     ownerId: shop.userId,
     name: shop.name,
     slug: shop.slug,
-    href: `/s/${shop.storefrontSlug || shop.slug}`,
+    href: publicShopHref(shop.storefrontSlug || shop.slug),
     logo: shop.logo,
     coverImage: assets.coverImage || shop.logo,
     previewImages: assets.previewImages,

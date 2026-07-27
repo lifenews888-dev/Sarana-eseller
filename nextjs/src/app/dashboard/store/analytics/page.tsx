@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import StatCard from '@/components/dashboard/StatCard';
 import { formatPrice } from '@/lib/utils';
+import { getActiveStoreHeaders } from '@/lib/api';
 import {
   Eye, Wallet, Target, ShoppingCart, TrendingUp, Globe, Trophy,
 } from 'lucide-react';
@@ -36,14 +37,12 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     const apiPeriod = PERIOD_MAP[period];
-    setLoading(true);
     fetch(`/api/seller/analytics?period=${apiPeriod}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: getActiveStoreHeaders(),
     })
       .then((r) => r.json())
-      .then((data) => setStats({ ...FALLBACK, ...data }))
+      .then((data) => setStats({ ...FALLBACK, ...(data?.data || data) }))
       .catch(() => setStats(FALLBACK))
       .finally(() => setLoading(false));
   }, [period]);
@@ -66,7 +65,10 @@ export default function AnalyticsPage() {
         {([['today', 'Өнөөдөр'], ['week', '7 хоног'], ['month', 'Сар']] as [Period, string][]).map(([key, label]) => (
           <button
             key={key}
-            onClick={() => setPeriod(key)}
+            onClick={() => {
+              setLoading(true);
+              setPeriod(key);
+            }}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               period === key ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
             }`}

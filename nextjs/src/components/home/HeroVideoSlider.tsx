@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 import SafeImage from '@/components/ui/SafeImage';
+import { REALISTIC_BANNER_IMAGES } from '@/lib/realistic-banner-assets';
 
 interface BannerData {
   id: string;
@@ -24,30 +25,35 @@ const FALLBACK_SLIDES: BannerData[] = [
     id: 'f1', badge: 'Шинэ сезон', title: 'Зуны мега хямдрал эхэллээ',
     subtitle: '70% хүртэл хөнгөлөлт · Шинэ бараа нэмэгдсээр',
     buttonText: 'Бараа үзэх', buttonLink: '/store',
+    imageUrl: REALISTIC_BANNER_IMAGES.summerSale,
     color: '#E8242C', gradient: 'from-[#0d1b2e] to-[#1a3a5c]',
   },
   {
     id: 'f2', badge: 'Gold гишүүнчлэл', title: 'Gold болж давуу эрх эдлэ',
     subtitle: 'Үнэгүй хүргэлт · 2x оноо · Flash sale',
     buttonText: 'Gold авах', buttonLink: '/gold',
+    imageUrl: REALISTIC_BANNER_IMAGES.gold,
     color: '#C0953C', gradient: 'from-[#1a1200] to-[#3d2e00]',
   },
   {
     id: 'f3', badge: 'Борлуулагч', title: 'Share хийж орлого ол',
     subtitle: '10-20% комисс · QR код + богино линк',
     buttonText: 'Эхлэх', buttonLink: '/become-seller',
+    imageUrl: REALISTIC_BANNER_IMAGES.sellers,
     color: '#534AB7', gradient: 'from-[#1a0d2e] to-[#2d1a5c]',
   },
   {
     id: 'f4', badge: 'Жолооч', title: 'Жолоочоор ажиллаж орлоготой бол',
     subtitle: 'GPS навигаци · Хүргэлт бүрт орлого',
     buttonText: 'Бүртгүүлэх', buttonLink: '/become-driver',
+    imageUrl: REALISTIC_BANNER_IMAGES.delivery,
     color: '#D85A30', gradient: 'from-[#1a0a00] to-[#3d1a00]',
   },
   {
     id: 'f5', badge: 'Дэлгүүрийн эзэн', title: 'Дэлгүүрээ нээж онлайн борлуул',
     subtitle: 'Эхний 3 сар 0% комисс · Бүрэн dashboard',
-    buttonText: 'Дэлгүүр нээх', buttonLink: '/open-shop',
+    buttonText: 'Дэлгүүр нээх', buttonLink: '/become-seller?source=open-shop',
+    imageUrl: REALISTIC_BANNER_IMAGES.storefronts,
     color: '#1D9E75', gradient: 'from-[#0a1a10] to-[#0d3a20]',
   },
 ];

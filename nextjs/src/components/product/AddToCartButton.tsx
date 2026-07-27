@@ -58,9 +58,9 @@ export default function AddToCartButton({ product, label = 'Сагслах', cla
   };
 
   return (
-    <div className={cn('flex flex-wrap items-center gap-3', className)}>
+    <div className={cn('flex w-full flex-wrap items-center gap-3', className)}>
       {/* Qty selector */}
-      <div className="flex items-center gap-0 border border-[var(--esl-border)] rounded-xl overflow-hidden">
+      <div className="flex shrink-0 items-center gap-0 overflow-hidden rounded-xl border border-[var(--esl-border)]">
         <button
           type="button"
           onClick={decreaseQty}
@@ -88,7 +88,7 @@ export default function AddToCartButton({ product, label = 'Сагслах', cla
         onClick={handleAdd}
         disabled={outOfStock}
         className={cn(
-          'min-w-[160px] flex-1 h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50',
+          'h-12 min-w-0 flex-1 rounded-xl px-3 text-sm font-semibold flex items-center justify-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[160px]',
           variant === 'primary'
             ? 'bg-[#E8242C] text-white hover:bg-[#C41E25] disabled:opacity-50'
             : 'bg-[var(--esl-bg-card)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-muted)]'

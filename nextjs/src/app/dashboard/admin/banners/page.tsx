@@ -5,8 +5,9 @@ import Link from 'next/link';
 import {
   Search, ChevronLeft, ChevronRight, Plus, Pencil, Trash2,
   ToggleLeft, ToggleRight, TrendingUp, Eye, Clock, DollarSign,
-  BarChart3, Image, ChevronDown,
+  BarChart3, Image as ImageIcon, ChevronDown,
 } from 'lucide-react';
+import { REALISTIC_BANNER_IMAGES } from '@/lib/realistic-banner-assets';
 
 /* ═══════════════════════════════════════════════════════════
    Types
@@ -28,7 +29,7 @@ interface SlotInfo {
   priceRange: string;
 }
 
-type BannerStatus = 'active' | 'scheduled' | 'pending' | 'expired' | 'draft';
+type BannerStatus = 'active' | 'scheduled' | 'pending' | 'expired' | 'draft' | 'paused' | 'rejected';
 
 interface Banner {
   id: string;
@@ -72,14 +73,18 @@ const STATUS_LABELS: Record<string, string> = {
   pending: 'Хүлээгдэж буй',
   expired: 'Дууссан',
   draft: 'Ноорог',
+  paused: 'Түр зогссон',
+  rejected: 'Татгалзсан',
 };
 
 const STATUS_COLORS: Record<BannerStatus, { bg: string; text: string }> = {
   active: { bg: 'bg-emerald-500/20', text: 'text-emerald-400' },
   scheduled: { bg: 'bg-blue-500/20', text: 'text-blue-400' },
   pending: { bg: 'bg-amber-500/20', text: 'text-amber-400' },
-  expired: { bg: 'bg-[var(--esl-bg-section)]0/20', text: 'text-[var(--esl-text-muted)]' },
+  expired: { bg: 'bg-white/10', text: 'text-white/40' },
   draft: { bg: 'bg-purple-500/20', text: 'text-purple-400' },
+  paused: { bg: 'bg-white/10', text: 'text-white/50' },
+  rejected: { bg: 'bg-red-500/20', text: 'text-red-400' },
 };
 
 /* ═══════════════════════════════════════════════════════════
@@ -106,16 +111,16 @@ const DEMO_SLOTS: SlotInfo[] = [
 ];
 
 const DEMO_BANNERS: Banner[] = [
-  { id: '1', title: 'Зуны хямдрал 50%', refId: 'BNR-001', thumbnailUrl: '', slot: 'HERO', entityName: 'FashionMN', startDate: '2026-03-15', endDate: '2026-04-15', status: 'active', ctr: 4.2 },
-  { id: '2', title: 'Шинэ брэнд нээлт', refId: 'BNR-002', thumbnailUrl: '', slot: 'MID_PAGE', entityName: 'AutoCity Mongolia', startDate: '2026-04-01', endDate: '2026-04-30', status: 'active', ctr: 3.1 },
-  { id: '3', title: 'Гар утасны хямдрал', refId: 'BNR-003', thumbnailUrl: '', slot: 'IN_FEED', entityName: 'DigitalMN Studio', startDate: '2026-04-10', endDate: '2026-05-10', status: 'scheduled', ctr: 0 },
-  { id: '4', title: 'Хүргэлт үнэгүй', refId: 'BNR-004', thumbnailUrl: '', slot: 'ANNOUNCEMENT', entityName: 'Sarana Salon', startDate: '2026-03-01', endDate: '2026-03-31', status: 'expired', ctr: 2.8 },
-  { id: '5', title: 'VIP гишүүнчлэл', refId: 'BNR-005', thumbnailUrl: '', slot: 'SIDEBAR_RIGHT', entityName: 'Premium Auto', startDate: '2026-04-05', endDate: '2026-05-05', status: 'pending', ctr: 0 },
-  { id: '6', title: 'Цахилгаан тоног төхөөрөмж', refId: 'BNR-006', thumbnailUrl: '', slot: 'CATEGORY_TOP', entityName: 'ElectroniX', startDate: '2026-04-02', endDate: '2026-04-20', status: 'active', ctr: 5.7 },
-  { id: '7', title: 'Хүүхдийн хувцас', refId: 'BNR-007', thumbnailUrl: '', slot: 'PRODUCT_BELOW', entityName: 'KidsMN', startDate: '2026-03-20', endDate: '2026-04-04', status: 'expired', ctr: 1.9 },
-  { id: '8', title: 'Тавилга хямдрал', refId: 'BNR-008', thumbnailUrl: '', slot: 'SECTION_SEPARATOR', entityName: 'HomePlus', startDate: '2026-04-08', endDate: '2026-05-08', status: 'draft', ctr: 0 },
-  { id: '9', title: 'Гоо сайхан 30%', refId: 'BNR-009', thumbnailUrl: '', slot: 'HERO', entityName: 'BeautyBox', startDate: '2026-04-01', endDate: '2026-04-30', status: 'active', ctr: 6.3 },
-  { id: '10', title: 'Спорт хэрэгсэл', refId: 'BNR-010', thumbnailUrl: '', slot: 'IN_FEED', entityName: 'SportZone', startDate: '2026-04-12', endDate: '2026-05-12', status: 'pending', ctr: 0 },
+  { id: '1', title: 'Зуны хямдрал 50%', refId: 'BNR-001', thumbnailUrl: REALISTIC_BANNER_IMAGES.summerSale, slot: 'HERO', entityName: 'FashionMN', startDate: '2026-03-15', endDate: '2026-04-15', status: 'active', ctr: 4.2 },
+  { id: '2', title: 'Шинэ брэнд нээлт', refId: 'BNR-002', thumbnailUrl: REALISTIC_BANNER_IMAGES.gold, slot: 'MID_PAGE', entityName: 'AutoCity Mongolia', startDate: '2026-04-01', endDate: '2026-04-30', status: 'active', ctr: 3.1 },
+  { id: '3', title: 'Гар утасны хямдрал', refId: 'BNR-003', thumbnailUrl: REALISTIC_BANNER_IMAGES.summerSale, slot: 'IN_FEED', entityName: 'DigitalMN Studio', startDate: '2026-04-10', endDate: '2026-05-10', status: 'scheduled', ctr: 0 },
+  { id: '4', title: 'Хүргэлт үнэгүй', refId: 'BNR-004', thumbnailUrl: REALISTIC_BANNER_IMAGES.delivery, slot: 'ANNOUNCEMENT', entityName: 'Sarana Salon', startDate: '2026-03-01', endDate: '2026-03-31', status: 'expired', ctr: 2.8 },
+  { id: '5', title: 'VIP гишүүнчлэл', refId: 'BNR-005', thumbnailUrl: REALISTIC_BANNER_IMAGES.sellers, slot: 'SIDEBAR_RIGHT', entityName: 'Premium Auto', startDate: '2026-04-05', endDate: '2026-05-05', status: 'pending', ctr: 0 },
+  { id: '6', title: 'Цахилгаан тоног төхөөрөмж', refId: 'BNR-006', thumbnailUrl: REALISTIC_BANNER_IMAGES.storefronts, slot: 'CATEGORY_TOP', entityName: 'ElectroniX', startDate: '2026-04-02', endDate: '2026-04-20', status: 'active', ctr: 5.7 },
+  { id: '7', title: 'Хүүхдийн хувцас', refId: 'BNR-007', thumbnailUrl: REALISTIC_BANNER_IMAGES.gold, slot: 'PRODUCT_BELOW', entityName: 'KidsMN', startDate: '2026-03-20', endDate: '2026-04-04', status: 'expired', ctr: 1.9 },
+  { id: '8', title: 'Тавилга хямдрал', refId: 'BNR-008', thumbnailUrl: REALISTIC_BANNER_IMAGES.delivery, slot: 'SECTION_SEPARATOR', entityName: 'HomePlus', startDate: '2026-04-08', endDate: '2026-05-08', status: 'draft', ctr: 0 },
+  { id: '9', title: 'Гоо сайхан 30%', refId: 'BNR-009', thumbnailUrl: REALISTIC_BANNER_IMAGES.summerSale, slot: 'HERO', entityName: 'BeautyBox', startDate: '2026-04-01', endDate: '2026-04-30', status: 'active', ctr: 6.3 },
+  { id: '10', title: 'Спорт хэрэгсэл', refId: 'BNR-010', thumbnailUrl: REALISTIC_BANNER_IMAGES.summerSale, slot: 'IN_FEED', entityName: 'SportZone', startDate: '2026-04-12', endDate: '2026-05-12', status: 'pending', ctr: 0 },
 ];
 
 /* ═══════════════════════════════════════════════════════════
@@ -212,9 +217,11 @@ export default function AdminBannersPage() {
       .finally(() => setLoading(false));
   }, [statusFilter, slotFilter, search, page]);
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { fetchBanners(); }, [fetchBanners]);
 
   // Reset page on filter change
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setPage(1); }, [statusFilter, slotFilter, search]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
@@ -260,7 +267,7 @@ export default function AdminBannersPage() {
       {/* ── Stats Row ── */}
       <div className="grid grid-cols-5 gap-4">
         {([
-          { label: 'Идэвхтэй баннер', value: stats.activeBanners, icon: Image, color: 'text-emerald-400', iconBg: 'bg-emerald-500/15' },
+          { label: 'Идэвхтэй баннер', value: stats.activeBanners, icon: ImageIcon, color: 'text-emerald-400', iconBg: 'bg-emerald-500/15' },
           { label: 'Өнөөдөр дуусах', value: stats.expiringToday, icon: Clock, color: 'text-amber-400', iconBg: 'bg-amber-500/15' },
           { label: 'Хүлээгдэж буй', value: stats.pending, icon: Eye, color: 'text-blue-400', iconBg: 'bg-blue-500/15' },
           { label: 'Энэ сарын орлого', value: formatCurrency(stats.revenueThisMonth), icon: DollarSign, color: 'text-[#E8242C]', iconBg: 'bg-[#E8242C]/15' },
@@ -390,9 +397,9 @@ export default function AdminBannersPage() {
                         <div className="flex items-center gap-3">
                           <div className="w-12 h-8 rounded-md bg-[var(--esl-bg-elevated)] flex items-center justify-center shrink-0 overflow-hidden">
                             {b.thumbnailUrl ? (
-                              <img loading="lazy" src={b.thumbnailUrl} alt="" className="w-full h-full object-cover" />
+                              <img loading="lazy" src={b.thumbnailUrl} alt={b.title} className="w-full h-full object-cover" />
                             ) : (
-                              <Image className="w-4 h-4 text-white/20" />
+                              <ImageIcon aria-hidden="true" className="w-4 h-4 text-white/20" />
                             )}
                           </div>
                           <div>

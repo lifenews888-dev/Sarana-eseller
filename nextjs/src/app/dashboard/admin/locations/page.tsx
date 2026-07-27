@@ -119,7 +119,7 @@ export default function AdminLocationsPage() {
         district: editDistrict || selected.district,
         khoroo: editKhoroo || selected.khoroo,
       };
-      await fetch(`/api/seller/locations/${selected.id}`, {
+      await fetch(`/api/admin/locations/${selected.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify(body),

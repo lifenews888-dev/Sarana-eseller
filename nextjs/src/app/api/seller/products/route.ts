@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
+import { requireSeller, getShopForRequest, errorJson } from '@/lib/api-auth';
 import { checkShopLimit } from '@/lib/subscription-server';
 import { sanitizeImageUrls } from '@/lib/image-url';
+
+function serializeProduct<T extends { id: string }>(product: T) {
+  return { ...product, _id: product.id };
+}
 
 // POST /api/seller/products — create product with plan enforcement
 export async function POST(req: NextRequest) {
@@ -10,7 +14,7 @@ export async function POST(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   try {
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForRequest(req, user.id);
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     // Plan enforcement
@@ -29,6 +33,7 @@ export async function POST(req: NextRequest) {
     const product = await prisma.product.create({
       data: {
         userId: user.id,
+        shopId,
         name: body.name,
         price: body.price,
         salePrice: body.salePrice || null,
@@ -46,7 +51,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    return NextResponse.json(product, { status: 201 });
+    return NextResponse.json(serializeProduct(product), { status: 201 });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }
@@ -58,11 +63,21 @@ export async function GET(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   try {
+    const shopId = await getShopForRequest(req, user.id);
+    if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
+
     const products = await prisma.product.findMany({
-      where: { userId: user.id, isActive: true },
+      where: {
+        userId: user.id,
+        isActive: true,
+        OR: [
+          { shopId },
+          { shopId: null },
+        ],
+      },
       orderBy: { createdAt: 'desc' },
     });
-    return NextResponse.json({ products });
+    return NextResponse.json({ products: products.map(serializeProduct) });
   } catch (e: unknown) {
     return NextResponse.json({ error: (e as Error).message }, { status: 500 });
   }

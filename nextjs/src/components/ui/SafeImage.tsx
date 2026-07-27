@@ -5,7 +5,6 @@ import type { CSSProperties, MouseEventHandler } from 'react';
 import { cn } from '@/lib/utils';
 
 const UNRELIABLE_PLACEHOLDER_HOSTS = new Set([
-  'images.unsplash.com',
   'picsum.photos',
 ]);
 

@@ -95,11 +95,11 @@ export async function POST(req: NextRequest) {
       if (firstProductId) {
         const product = await prisma.product.findUnique({
           where: { id: firstProductId },
-          select: { userId: true },
+          select: { userId: true, shopId: true },
         });
         if (product?.userId) {
-          const shop = await prisma.shop.findUnique({
-            where: { userId: product.userId },
+          const shop = await prisma.shop.findFirst({
+            where: product.shopId ? { id: product.shopId } : { userId: product.userId },
             select: { id: true, user: { select: { pushToken: true } } },
           });
           if (shop?.id) {

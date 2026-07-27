@@ -23,7 +23,11 @@ export async function POST(req: NextRequest) {
         ],
       },
       include: {
-        shop: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        shops: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+          select: { name: true, slug: true, logo: true, phone: true, address: true },
+        },
         agent: { select: { name: true, slug: true, profilePhoto: true, phone: true, address: true } },
         company: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
         autoDealer: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
@@ -47,7 +51,7 @@ export async function POST(req: NextRequest) {
     );
 
     const entityStore =
-      user.shop ||
+      user.shops[0] ||
       (user.agent
         ? { name: user.agent.name, slug: user.agent.slug, logo: user.agent.profilePhoto, phone: user.agent.phone, address: user.agent.address }
         : null) ||

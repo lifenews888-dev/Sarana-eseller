@@ -87,6 +87,28 @@ function toSellerSlug(value: string): string {
     .slice(0, 48);
 }
 
+function currentSellerOnboardingPath() {
+  if (typeof window === 'undefined') return '/become-seller';
+  return window.location.pathname + window.location.search;
+}
+
+function businessTypeForEntity(type: EntityType) {
+  return type === 'service' ? 'service' : 'product';
+}
+
+function rememberActiveStore(entity: { id?: string } | null | undefined, type: EntityType) {
+  if (!entity?.id || typeof window === 'undefined') return;
+  const businessType = businessTypeForEntity(type);
+  localStorage.setItem('eseller_active_store_id', entity.id);
+  localStorage.setItem('eseller_shop_id', entity.id);
+  localStorage.setItem('eseller_active_store_type', type);
+  localStorage.setItem('eseller_active_store_business_type', businessType);
+  localStorage.setItem('eseller_store_config', JSON.stringify({
+    shopId: entity.id,
+    businessType,
+  }));
+}
+
 const PLANS: Record<string, { name: string; price: string; priceNum: number; features: string[]; Icon: React.ElementType; color: string; popular?: boolean }> = {
   free:     { name: 'Үнэгүй', price: '0₮/сар', priceNum: 0, Icon: Zap, color: '#10B981', features: ['10 бараа хүртэл', 'Үндсэн аналитик', 'Стандарт дэмжлэг'] },
   pro:      { name: 'Pro', price: '29,900₮/сар', priceNum: 29900, Icon: Star, color: '#3B82F6', popular: true, features: ['Хязгааргүй бараа', 'Дэлгэрэнгүй аналитик', 'Хямдрал & купон', 'Тэргүүлэх дэмжлэг', 'Custom domain'] },
@@ -97,6 +119,9 @@ const PLANS: Record<string, { name: string; price: string; priceNum: number; fea
 export default function BecomeSellerPage() {
   const { user, isLoggedIn, login } = useAuth();
   const router = useRouter();
+  const [isCreateStoreIntent] = useState(() => (
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('intent') === 'create-store'
+  ));
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
@@ -118,13 +143,13 @@ export default function BecomeSellerPage() {
   // Нэвтрээгүй бол login руу redirect
   useEffect(() => {
     if (isLoggedIn === false) {
-      router.push('/login?redirect=/become-seller');
+      router.push(`/login?redirect=${encodeURIComponent(currentSellerOnboardingPath())}`);
       return;
     }
-    if (isLoggedIn && user?.role && DASHBOARD_ROLES.has(user.role)) {
+    if (isLoggedIn && user?.role && DASHBOARD_ROLES.has(user.role) && !isCreateStoreIntent) {
       router.replace(roleHome(user.role));
     }
-  }, [isLoggedIn, router, user?.role]);
+  }, [isCreateStoreIntent, isLoggedIn, router, user?.role]);
 
   const def = entityType ? ENTITY_DEFS[entityType] : null;
   const updateForm = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
@@ -164,6 +189,7 @@ export default function BecomeSellerPage() {
       if (!res.ok || payload?.success === false) {
         throw new Error(payload?.error || data?.error || 'Бүртгэл амжилтгүй боллоо');
       }
+      rememberActiveStore(data?.entity, entityType);
       if (data?.token && data?.user) login(data.token, data.user);
       setSubmitted(true);
     } catch (err) {
@@ -181,13 +207,13 @@ export default function BecomeSellerPage() {
           <div className="w-16 h-16 rounded-full bg-[rgba(16,185,129,0.15)] flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-[#10B981]" />
           </div>
-          <h2 className="text-xl font-black text-white mb-2">Амжилттай илгээлээ!</h2>
-          <p className="text-sm text-[var(--esl-text-muted)] mb-6">Таны хүсэлтийг хянаж байна. Баталгаажуулалт дууссаны дараа имэйлээр мэдэгдэнэ.</p>
+          <h2 className="text-xl font-black text-white mb-2">Дэлгүүр үүслээ!</h2>
+          <p className="text-sm text-[var(--esl-text-muted)] mb-6">Таны шинэ дэлгүүр идэвхтэй сонгогдлоо. Одоо төрлөөс нь хамаарсан тохиргоогоо үргэлжлүүлээрэй.</p>
           <div className="bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)] rounded-xl p-3 mb-6">
             <p className="text-xs text-[#F59E0B]"><Shield className="w-3.5 h-3.5 inline mr-1" /> Баталгаажуулалт 1-3 ажлын өдөрт хийгдэнэ</p>
           </div>
-          <Link href="/dashboard/store" className="inline-flex items-center gap-2 bg-[#E8242C] text-white px-6 py-3 rounded-xl text-sm font-bold no-underline hover:bg-[#CC0000] transition">
-            Dashboard руу очих <ArrowRight className="w-4 h-4" />
+          <Link href="/dashboard/store/settings/shop-type" className="inline-flex items-center gap-2 bg-[#E8242C] text-white px-6 py-3 rounded-xl text-sm font-bold no-underline hover:bg-[#CC0000] transition">
+            Тохиргоогоо үргэлжлүүлэх <ArrowRight className="w-4 h-4" />
           </Link>
         </motion.div>
       </div>
