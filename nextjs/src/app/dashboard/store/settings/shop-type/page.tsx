@@ -223,6 +223,8 @@ export default function ShopTypeWizard() {
   const themes = THEMES_BY_TYPE[selectedType] || THEMES_BY_TYPE.product;
   const themeOption = themes.find(t => t.id === selectedTheme);
   const itemForm = ITEM_FORMS[selectedType] || ITEM_FORMS.product;
+  const publicSlugPreview = `eseller.mn${publicShopHref(slug || 'mystore')}`;
+  const publicSlugValue = slug ? `eseller.mn${publicShopHref(slug)}` : 'eseller.mn/s/mystore';
 
   /* ─── Slug auto-generation ─── */
   const generateSlug = useCallback((name: string) => {
@@ -489,7 +491,7 @@ export default function ShopTypeWizard() {
               <label className="block text-sm font-semibold text-[var(--esl-text-secondary)] mb-2">URL хаяг</label>
               <div className="flex items-center gap-0 rounded-xl overflow-hidden border border-[var(--esl-border)] focus-within:border-[#E8242C] transition">
                 <span className="px-3 py-3 text-sm text-[var(--esl-text-muted)] bg-[var(--esl-bg-elevated)] whitespace-nowrap border-r border-[var(--esl-border)]">
-                  eseller.mn/
+                  eseller.mn/s/
                 </span>
                 <input
                   type="text"
@@ -511,7 +513,7 @@ export default function ShopTypeWizard() {
                 {slugStatus === 'available' && (
                   <>
                     <CheckCircle2 className="w-4 h-4 text-[#22C55E]" />
-                    <span className="text-xs text-[#22C55E] font-medium">Боломжтой — eseller.mn/{slug}</span>
+                    <span className="text-xs text-[#22C55E] font-medium">Боломжтой — {publicSlugValue}</span>
                   </>
                 )}
                 {slugStatus === 'taken' && (
@@ -604,7 +606,7 @@ export default function ShopTypeWizard() {
                   <CheckCircle2 className="w-5 h-5 text-[#22C55E]" />
                 </div>
                 <div>
-                  <div className="text-sm font-bold text-white">eseller.mn/{slug || 'mystore'}</div>
+                  <div className="text-sm font-bold text-white">{publicSlugPreview}</div>
                   <div className="text-xs text-[#22C55E] font-medium mt-0.5">Үнэгүй — идэвхтэй</div>
                 </div>
               </div>
@@ -637,7 +639,7 @@ export default function ShopTypeWizard() {
               <div>
                 <h2 className="text-2xl font-extrabold text-white">Таны дэлгүүр бэлэн боллоо!</h2>
                 <p className="text-sm text-[var(--esl-text-muted)] mt-2">
-                  <strong className="text-white">{storeName}</strong> — eseller.mn/{slug}
+                  <strong className="text-white">{storeName}</strong> — {publicSlugValue}
                 </p>
               </div>
 
@@ -673,7 +675,7 @@ export default function ShopTypeWizard() {
               <SummaryRow label="Төрөл" value={typeOption?.label || ''} color={typeOption?.color} icon={typeOption?.icon} />
               <SummaryRow label="Загвар" value={themeOption?.name || ''} color={themeOption?.primaryColor} />
               <SummaryRow label="Нэр" value={storeName} />
-              <SummaryRow label="URL" value={`eseller.mn/${slug}`} />
+              <SummaryRow label="URL" value={publicSlugValue} />
               {logo[0] && <SummaryRow label="Лого" value="Байршуулсан" color="#22C55E" />}
               {cover[0] && <SummaryRow label="Cover" value="Байршуулсан" color="#22C55E" />}
               {itemFields.name && <SummaryRow label="Анхны бараа" value={itemFields.name} />}

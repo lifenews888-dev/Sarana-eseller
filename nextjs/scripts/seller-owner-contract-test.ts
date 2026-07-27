@@ -25,6 +25,7 @@ const publicShopUrl = path.join(process.cwd(), 'src', 'lib', 'public-shop-url.ts
 const storefrontClient = path.join(process.cwd(), 'src', 'components', 'storefront', 'StorefrontClient.tsx');
 const sitemap = path.join(process.cwd(), 'src', 'app', 'sitemap.ts');
 const publicShopPage = path.join(process.cwd(), 'src', 'app', 's', '[shopSlug]', 'page.tsx');
+const checkSlugRoute = path.join(process.cwd(), 'src', 'app', 'api', 'store', 'check-slug', 'route.ts');
 const dashboardLayout = path.join(process.cwd(), 'src', 'app', 'dashboard', 'layout.tsx');
 const storeSettingsPage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'store-settings', 'page.tsx');
 const shopTypePage = path.join(process.cwd(), 'src', 'app', 'dashboard', 'store', 'settings', 'shop-type', 'page.tsx');
@@ -57,6 +58,7 @@ function main() {
   const storefrontClientSource = readSource(storefrontClient);
   const sitemapSource = readSource(sitemap);
   const publicShopPageSource = readSource(publicShopPage);
+  const checkSlugRouteSource = readSource(checkSlugRoute);
   const dashboardLayoutSource = readSource(dashboardLayout);
   const storeSettingsPageSource = readSource(storeSettingsPage);
   const shopTypePageSource = readSource(shopTypePage);
@@ -180,6 +182,16 @@ function main() {
         && [storefrontClientSource, sitemapSource, publicShopPageSource].every((source) => source.includes('publicShopUrl'))
         && storefrontClientSource.includes('shop.storefrontSlug || shop.slug'),
       detail: 'dashboard/search/home/share/sitemap links resolve stores through /s/{slug}',
+    },
+    {
+      label: 'slug checker returns public namespace',
+      ok: includesAll(checkSlugRouteSource, ['publicShopHref', 'url: `eseller.mn${publicShopHref(slug)}`']),
+      detail: 'wizard availability response mirrors the live /s/{slug} URL',
+    },
+    {
+      label: 'service shop route uses resolved slug',
+      ok: includesAll(publicShopPageSource, ['const resolvedSlug = shop.storefrontSlug || shop.slug || shopSlug', 'getShopBySlug(resolvedSlug)']),
+      detail: '/s/{username} service fallback does not refetch with the wrong slug',
     },
     {
       label: 'onboarding terms gate',

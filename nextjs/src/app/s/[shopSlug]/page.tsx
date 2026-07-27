@@ -117,7 +117,8 @@ export default async function ShopProfilePage({ params }: Props) {
   const isService = serviceIndustries.includes(shop.industry || '');
 
   if (isService) {
-    const data = await getShopBySlug(shopSlug);
+    const resolvedSlug = shop.storefrontSlug || shop.slug || shopSlug;
+    const data = await getShopBySlug(resolvedSlug);
     if (!data) notFound();
     return <ServiceProfileClient data={data} />;
   }

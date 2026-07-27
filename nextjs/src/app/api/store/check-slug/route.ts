@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { publicShopHref } from '@/lib/public-shop-url';
 
 const RESERVED_SLUGS = new Set([
   'store', 'feed', 'login', 'checkout', 'dashboard', 'admin', 'api',
@@ -27,9 +28,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ available: false, reason: 'Энэ нэр аль хэдийн бүртгэгдсэн' });
     }
 
-    return NextResponse.json({ available: true, slug, url: `eseller.mn/${slug}` });
-  } catch (error: any) {
-    console.error('[check-slug] Error:', error?.message || error);
+    return NextResponse.json({ available: true, slug, url: `eseller.mn${publicShopHref(slug)}` });
+  } catch (error: unknown) {
+    console.error('[check-slug] Error:', error instanceof Error ? error.message : error);
     // Return available on DB error so wizard isn't blocked
     return NextResponse.json({
       available: true,
