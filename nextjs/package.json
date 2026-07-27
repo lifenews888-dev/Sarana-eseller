@@ -18,6 +18,7 @@
     "test:seller-owner": "npx tsx scripts/seller-owner-contract-test.ts",
     "test:public-shop-url": "npx tsx scripts/public-shop-url-test.ts",
     "test:sw-cache": "npx tsx scripts/service-worker-cache-contract-test.ts",
+    "test:mobile-product-modal": "npx tsx scripts/mobile-product-modal-contract-test.ts",
     "test:login-redirect": "npx tsx scripts/login-redirect-contract-test.ts",
     "test:image-url": "npx tsx scripts/test-image-url.ts",
     "test:readiness": "npx tsx scripts/marketplace-readiness-test.ts",
