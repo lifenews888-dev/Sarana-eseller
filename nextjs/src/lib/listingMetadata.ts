@@ -1,4 +1,5 @@
 import { categoryPathInfo, normalizeMarketplaceCategory } from './marketplaceCategories';
+import { generatedFieldsForCategoryKey } from './generated/categoryAttributes';
 
 export type ListingMetadataFieldType = 'text' | 'number' | 'select' | 'boolean' | 'list';
 export type ListingMetadataValue = string | number | boolean | string[];
@@ -277,8 +278,12 @@ export function inferListingMetadataDraftFromCategory(category?: string | null):
 
   if (root === 'jobs') {
     const labelText = labels.join(' ').toLowerCase();
+    const primaryLabel = (labels[0] || '').toLowerCase();
     const leaf = path.leafLabel;
-    if (/part-time|hourly|цагийн|оюут/i.test(labelText)) {
+    if (/full-time|бүтэн/i.test(primaryLabel)) {
+      setIfMissing(draft, 'jobType', 'Бүтэн цагийн');
+      setIfMissing(draft, 'salaryPeriod', 'Сарын');
+    } else if (/part-time|hourly|цагийн|оюут/i.test(labelText)) {
       setIfMissing(draft, 'jobType', 'Цагийн');
       setIfMissing(draft, 'salaryPeriod', 'Цагийн');
     } else if (/contract|temporary|түр|гэрээт/i.test(labelText)) {
@@ -313,16 +318,38 @@ export function inferListingMetadataDraftFromCategory(category?: string | null):
   return draft;
 }
 
+/**
+ * Prefer rich hand-tuned schemas for high-traffic verticals; otherwise use
+ * master-file generated attributes (eseller_angilal_master.xlsx).
+ * Merge: generated fields fill gaps not present in hand-tuned lists.
+ */
+function mergeFields(
+  preferred: ListingMetadataField[],
+  fallback: ListingMetadataField[],
+): ListingMetadataField[] {
+  if (preferred.length === 0) return fallback;
+  if (fallback.length === 0) return preferred;
+  const seen = new Set(preferred.map((f) => f.key));
+  const extras = fallback.filter((f) => !seen.has(f.key));
+  return [...preferred, ...extras];
+}
+
 export function metadataFieldsForCategory(category?: string | null): ListingMetadataField[] {
   const root = normalizeMarketplaceCategory(category);
-  if (root === 'vehicles') return VEHICLE_FIELDS;
-  if (root === 'real-estate') return REAL_ESTATE_FIELDS;
-  if (root === 'new-buildings') return NEW_BUILDING_FIELDS;
-  if (root === 'jobs') return JOB_FIELDS;
-  if (root === 'phones') return PHONE_FIELDS;
-  if (root === 'technology' || root === 'digital-goods' || root === 'esports') return TECHNOLOGY_FIELDS;
-  if (SERVICE_ROOTS.has(root)) return SERVICE_FIELDS;
   if (!category || root === 'all') return [];
+
+  const generated = generatedFieldsForCategoryKey(root);
+
+  if (root === 'vehicles') return mergeFields(VEHICLE_FIELDS, generated);
+  if (root === 'real-estate') return mergeFields(REAL_ESTATE_FIELDS, generated);
+  if (root === 'new-buildings') return mergeFields(NEW_BUILDING_FIELDS, generated);
+  if (root === 'jobs') return mergeFields(JOB_FIELDS, generated);
+  if (root === 'phones') return mergeFields(PHONE_FIELDS, generated);
+  if (root === 'technology' || root === 'digital' || root === 'digital-goods' || root === 'esports') {
+    return mergeFields(TECHNOLOGY_FIELDS, generated);
+  }
+  if (SERVICE_ROOTS.has(root)) return mergeFields(SERVICE_FIELDS, generated);
+  if (generated.length > 0) return mergeFields(generated, GENERIC_PRODUCT_FIELDS);
   return GENERIC_PRODUCT_FIELDS;
 }
 
