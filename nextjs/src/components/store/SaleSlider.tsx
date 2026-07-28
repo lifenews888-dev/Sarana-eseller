@@ -20,76 +20,67 @@ export default function SaleSlider({ products, quickAdd, findProduct, setSelProd
 
   const scroll = (dir: 'left' | 'right') => {
     if (!scrollRef.current) return;
-    const amount = scrollRef.current.clientWidth * 0.85;
+    const amount = 480;
     scrollRef.current.scrollBy({ left: dir === 'left' ? -amount : amount, behavior: 'smooth' });
   };
 
   return (
-    <section className="border-y border-[var(--esl-border)] bg-[var(--esl-bg-section)]">
-      <div className="relative mx-auto max-w-[1320px] px-3 py-5 sm:px-4 sm:py-8">
+    <section style={{ background: '#0F0F0F', borderTop: '1px solid #1A1A1A', borderBottom: '1px solid #1A1A1A' }}>
+      <div style={{ maxWidth: 1320, margin: '0 auto', padding: '32px 16px', position: 'relative' }}>
         {/* Header */}
-        <div className="mb-4 flex items-center justify-between gap-2 sm:mb-6">
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <div className="h-5 w-1 shrink-0 rounded bg-[#E31E24] sm:h-6" />
-            <h2 className="truncate text-base font-black text-[var(--esl-text-primary)] sm:text-xl">
-              Хямдралтай бараа
-            </h2>
-            <span className="shrink-0 rounded bg-[#E31E24] px-1.5 py-0.5 text-[10px] font-extrabold uppercase text-white">
-              Sale
-            </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 4, height: 24, borderRadius: 4, background: '#E31E24' }} />
+            <h2 style={{ fontSize: 20, fontWeight: 900, color: '#FFF', margin: 0 }}>Хямдралтай бараа</h2>
+            <span style={{ background: '#E31E24', color: '#FFF', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' }}>Sale</span>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
-            <button
-              type="button"
-              onClick={() => scroll('left')}
-              aria-label="Зүүн тийш гүйлгэх"
-              className="hidden h-9 w-9 items-center justify-center rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-[var(--esl-text-muted)] cursor-pointer sm:flex"
-            >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button onClick={() => scroll('left')} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--esl-bg-card)', border: '1px solid #3D3D3D', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
               <ChevronLeft size={18} />
             </button>
-            <button
-              type="button"
-              onClick={() => scroll('right')}
-              aria-label="Баруун тийш гүйлгэх"
-              className="hidden h-9 w-9 items-center justify-center rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-[var(--esl-text-muted)] cursor-pointer sm:flex"
-            >
+            <button onClick={() => scroll('right')} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--esl-bg-card)', border: '1px solid #3D3D3D', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
               <ChevronRight size={18} />
             </button>
-            <button
-              type="button"
-              onClick={onViewDeals}
-              className="flex items-center gap-0.5 border-0 bg-transparent text-xs font-semibold text-[#E31E24] cursor-pointer sm:text-sm"
-            >
+            <button onClick={onViewDeals} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E31E24', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
               Бүгд <ChevronRight size={16} />
             </button>
           </div>
         </div>
 
-        {/* Scrollable row — snap + touch-friendly card width */}
+        {/* Scrollable row */}
         <div
           ref={scrollRef}
-          className="flex gap-2.5 overflow-x-auto overflow-y-hidden pb-1 [-ms-overflow-style:none] [scrollbar-width:none] sm:gap-4 [&::-webkit-scrollbar]:hidden"
-          style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}
+          style={{
+            display: 'flex',
+            gap: 16,
+            overflowX: 'scroll',
+            overflowY: 'hidden',
+            paddingBottom: 8,
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch',
+          }}
         >
-          {products.map((p) => {
+          {products.map(p => {
             const productId = p._id || p.id || p.name;
             return (
-              <div
-                key={productId}
-                className="w-[148px] min-w-[148px] shrink-0 snap-start sm:w-[200px] sm:min-w-[200px] md:w-[224px] md:min-w-[224px]"
-              >
-                <ProductCard
-                  product={p}
-                  onQuickAdd={quickAdd}
-                  onClick={(id) => setSelProduct(findProduct(id))}
-                  isWished={wishlist.has(productId)}
-                  onToggleWish={toggleWL}
-                />
-              </div>
-            );
-          })}
+            // Keep ~224 brand card width; slightly narrower only on very small phones
+            <div key={productId} style={{ flex: '0 0 min(224px, 72vw)', minWidth: 'min(224px, 72vw)' }}>
+              <ProductCard
+                product={p}
+                onQuickAdd={quickAdd}
+                onClick={id => setSelProduct(findProduct(id))}
+                isWished={wishlist.has(productId)}
+                onToggleWish={toggleWL}
+              />
+            </div>
+          );})}
         </div>
       </div>
+
+      <style>{`
+        div[style*="overflowX: scroll"]::-webkit-scrollbar { display: none; }
+      `}</style>
     </section>
   );
 }

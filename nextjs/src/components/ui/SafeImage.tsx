@@ -4,11 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, MouseEventHandler } from 'react';
 import { cn } from '@/lib/utils';
 
-const UNRELIABLE_PLACEHOLDER_HOSTS = new Set([
-  'images.unsplash.com',
-  'picsum.photos',
-]);
-
 type SafeImageProps = {
   src?: string | null;
   alt: string;
@@ -28,15 +23,18 @@ const FALLBACK_PALETTES = {
   service: 'linear-gradient(135deg, #111827 0%, #374151 48%, #b91c1c 100%)',
 };
 
+/**
+ * Display gate only — try loading any public http(s) URL.
+ * Broken hosts fall back via onError (do not hard-block CDN demos like Unsplash,
+ * or store cards become empty gradients and lose brand product identity).
+ */
 function isPublicImageUrl(src?: string | null) {
   if (!src) return false;
   if (src.startsWith('/')) return true;
 
   try {
     const url = new URL(src);
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') return false;
-    if (UNRELIABLE_PLACEHOLDER_HOSTS.has(url.hostname)) return false;
-    return true;
+    return url.protocol === 'https:' || url.protocol === 'http:';
   } catch {
     return false;
   }

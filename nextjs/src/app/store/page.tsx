@@ -602,7 +602,7 @@ export default function StorePage() {
                 Бүгдийг харах <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-2 sm:gap-3 md:grid-cols-8">
+            <div className="grid grid-cols-4 md:grid-cols-8 gap-3">
               {CATEGORY_ICONS.map(cat => {
                 const isRootActive = activeRootCategory === cat.key;
                 const isExactActive = activeCat === cat.key;
@@ -611,23 +611,23 @@ export default function StorePage() {
                     key={cat.key}
                     aria-pressed={isRootActive}
                     onClick={() => handleCategoryChange(isExactActive ? 'all' : cat.key)}
-                    className="group flex min-h-[72px] cursor-pointer flex-col items-center gap-1.5 rounded-xl border-none px-1.5 py-2.5 transition-all sm:min-h-0 sm:gap-2 sm:px-2 sm:py-3"
+                    className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl border-none cursor-pointer transition-all group"
                     style={{
                       background: isRootActive ? cat.color + '14' : 'var(--esl-bg-card)',
                       border: isRootActive ? `1.5px solid ${cat.color}40` : '1.5px solid var(--esl-border)',
                     }}
                   >
                     <div
-                      className="flex h-10 w-10 items-center justify-center rounded-xl transition-transform sm:h-11 sm:w-11 [@media(hover:hover)]:group-hover:scale-110"
+                      className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110"
                       style={{
                         background: isRootActive ? cat.color + '22' : cat.color + '10',
                         color: cat.color,
                       }}
                     >
-                      <cat.icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={2} />
+                      <cat.icon className="w-5 h-5" strokeWidth={2} />
                     </div>
                     <span
-                      className="line-clamp-2 text-center text-[10px] font-semibold leading-tight sm:text-xs"
+                      className="text-xs font-semibold text-center leading-tight"
                       style={{ color: isRootActive ? cat.color : 'var(--esl-text-primary)' }}
                     >
                       {cat.label}
