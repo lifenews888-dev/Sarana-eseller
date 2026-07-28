@@ -1,0 +1,730 @@
+/** AUTO-GENERATED from data/eseller_angilal_master.xlsx — do not edit by hand. */
+/** Run: python scripts/generate-categories-from-master.py */
+
+import type { MarketplaceCategory } from '../marketplaceCategories';
+
+export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
+  {
+    key: "jobs",
+    label: "Ажлын зар",
+    shortLabel: "Ажил",
+    emoji: "💼",
+    icon: "BriefcaseBusiness",
+    color: "#4F46E5",
+    section: "listing",
+    entityTypes: ["STORE", "SERVICE", "USER", "COMPANY"],
+    aliases: ["job", "jobs", "work", "career", "hiring", "part-time", "ажил"],
+    subcategories: [
+      {
+        name: "Ажил санал болгож байна",
+        aliases: ["01-01", "ажил-санал-болгож-байна"],
+        children: [
+          "Худалдаа, үйлчилгээ",
+          "Оффис, мэргэжилтэн",
+          "Барилга, үйлдвэрлэл",
+          "Тээвэр, логистик",
+          "IT, дижитал",
+          "Боловсрол, эрүүл мэнд",
+          "Аюулгүй байдал, харуул",
+          "Гэрийн ажил, асаргаа"
+        ],
+      },
+      "Ажил хайж байна (CV)",
+      "Цагийн ажил, гиг"
+    ],
+  },
+  {
+    key: "women",
+    label: "Эмэгтэй",
+    emoji: "👗",
+    icon: "Venus",
+    color: "#DB2777",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["fashion", "female", "women-fashion", "эмэгтэй"],
+    subcategories: [
+      "Даашинз",
+      "Цамц, блуз",
+      "Өмд, жинс",
+      "Юбка",
+      {
+        name: "Гадуур хувцас",
+        aliases: ["02-05", "гадуур-хувцас"],
+        children: [
+          "Куртка",
+          "Пальто",
+          "Дээл, үндэсний хувцас"
+        ],
+      },
+      "Спорт хувцас",
+      "Дотуур хувцас",
+      "Гутал",
+      "Цүнх",
+      "Аксессуар (ороолт, малгай, бүс)"
+    ],
+  },
+  {
+    key: "men",
+    label: "Эрэгтэй",
+    emoji: "👔",
+    icon: "Mars",
+    color: "#2563EB",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["men-fashion", "эрэгтэй"],
+    subcategories: [
+      "Цамц",
+      "Футболк, поло",
+      "Өмд, жинс",
+      "Костюм",
+      {
+        name: "Гадуур хувцас",
+        aliases: ["03-05", "гадуур-хувцас"],
+        children: [
+          "Куртка",
+          "Пальто",
+          "Дээл, үндэсний хувцас"
+        ],
+      },
+      "Спорт хувцас",
+      "Гутал",
+      "Аксессуар (бүс, малгай, зангиа)"
+    ],
+  },
+  {
+    key: "beauty-health",
+    label: "Гоо сайхан",
+    emoji: "💄",
+    icon: "Sparkles",
+    color: "#C026D3",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["beauty", "salon", "гоо"],
+    subcategories: [
+      "Арьс арчилгаа",
+      "Нүүр будалт",
+      "Үс арчилгаа",
+      "Үнэртэн",
+      "Хумсны бүтээгдэхүүн",
+      "Эрэгтэй арчилгаа",
+      "Гоо сайхны багаж хэрэгсэл"
+    ],
+  },
+  {
+    key: "home-decor",
+    label: "Гэр декор",
+    emoji: "🏡",
+    icon: "Home",
+    color: "#059669",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["home", "decor", "interior", "гэр"],
+    subcategories: [
+      "Гэрэлтүүлэг",
+      "Хивс, дэвсгэр",
+      "Хөшиг",
+      "Ханын чимэглэл, зураг",
+      "Гэрийн текстиль (ор дэрний даавуу, хөнжил)",
+      "Гал тогооны хэрэгсэл, аяга таваг",
+      "Ваар, чимэглэлийн ургамал",
+      "Цаг, толь"
+    ],
+  },
+  {
+    key: "real-estate",
+    label: "Үл хөдлөх",
+    emoji: "🏢",
+    icon: "Building2",
+    color: "#0F766E",
+    section: "listing",
+    entityTypes: ["REAL_ESTATE", "STORE", "COMPANY"],
+    aliases: ["property", "apartment", "house", "үл-хөдлөх", "ul-hudluh"],
+    subcategories: [
+      "Орон сууц зарна",
+      "Орон сууц түрээслүүлнэ",
+      "Богино хугацааны түрээс",
+      "Хашаа байшин, АОС",
+      "Газар",
+      "Оффис",
+      "Үйлчилгээний талбай",
+      "Агуулах, үйлдвэрийн байр",
+      "Гараж, зогсоол"
+    ],
+  },
+  {
+    key: "new-buildings",
+    label: "Шинэ төсөл",
+    emoji: "🏗️",
+    icon: "Construction",
+    color: "#B45309",
+    section: "listing",
+    entityTypes: ["REAL_ESTATE", "COMPANY"],
+    aliases: ["new-building", "project", "шинэ-төсөл"],
+    subcategories: [
+      "Урьдчилсан захиалга",
+      "Ашиглалтад орсон төсөл",
+      "Хямдрал, урамшуулалтай төсөл"
+    ],
+  },
+  {
+    key: "vehicles",
+    label: "Машин",
+    emoji: "🚗",
+    icon: "Car",
+    color: "#DC2626",
+    section: "listing",
+    entityTypes: ["AUTO", "STORE"],
+    aliases: ["auto", "car", "cars", "vehicle", "машин"],
+    subcategories: [
+      "Суудлын автомашин",
+      "Жийп, SUV",
+      "Микро, автобус",
+      "Ачааны машин",
+      "Мотоцикл, скутер",
+      {
+        name: "Тусгай зориулалтын техник",
+        aliases: ["08-06", "тусгай-зориулалтын-техник"],
+        children: [
+          "Барилгын техник",
+          "ХАА-н техник",
+          "Өргөгч, ачигч"
+        ],
+      },
+      "Усан ба агаарын тээвэр"
+    ],
+  },
+  {
+    key: "jewelry",
+    label: "Гоёл",
+    emoji: "💍",
+    icon: "Gem",
+    color: "#A855F7",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["jewellery", "accessories-jewelry", "гоёл"],
+    subcategories: [
+      "Бөгж",
+      "Ээмэг",
+      "Зүүлт, хэлхээ",
+      "Бугуйвч",
+      "Гар цаг",
+      "Эрдэнийн чулуу",
+      "Мөнгөн эдлэл"
+    ],
+  },
+  {
+    key: "kids",
+    label: "Хүүхдийн",
+    emoji: "🧸",
+    icon: "Baby",
+    color: "#F59E0B",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["children", "baby", "хүүхэд", "kids-toys"],
+    subcategories: [
+      {
+        name: "Хүүхдийн хувцас, гутал",
+        aliases: ["10-01", "хүүхдийн-хувцас-гутал"],
+        children: [
+          "0–2 нас",
+          "3–7 нас",
+          "8–14 нас"
+        ],
+      },
+      "Тоглоом",
+      "Тэрэг, авто суудал",
+      "Хүүхдийн тавилга",
+      "Хооллолт, асаргааны хэрэгсэл",
+      "Сургалтын хэрэглэл"
+    ],
+  },
+  {
+    key: "adult",
+    label: "18+",
+    emoji: "🔞",
+    icon: "Shield",
+    color: "#7C3AED",
+    section: "product",
+    entityTypes: ["STORE"],
+    aliases: ["18plus", "adult"],
+    subcategories: [
+      "Бүтээгдэхүүн",
+      "Дотуур хувцас",
+      "Бусад"
+    ],
+  },
+  {
+    key: "health",
+    label: "Эрүүл мэнд",
+    emoji: "💊",
+    icon: "HeartPulse",
+    color: "#16A34A",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["medicine", "pharmacy", "эрүүл", "health-vitamins"],
+    subcategories: [
+      "Витамин, нэмэлт тэжээл",
+      "Спорт тэжээл",
+      "Эмнэлгийн хэрэгсэл",
+      "Уламжлалт, байгалийн бүтээгдэхүүн",
+      "Нүдний шил, линз"
+    ],
+  },
+  {
+    key: "phones",
+    label: "Утас",
+    emoji: "📱",
+    icon: "Smartphone",
+    color: "#0284C7",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["phone", "mobile", "smartphone", "утас"],
+    subcategories: [
+      "Ухаалаг утас",
+      "Энгийн утас",
+      "Таблет",
+      {
+        name: "Дагалдах хэрэгсэл",
+        aliases: ["13-04", "дагалдах-хэрэгсэл"],
+        children: [
+          "Чехол, хамгаалалт",
+          "Чихэвч",
+          "Цэнэглэгч, кабель",
+          "Бусад дагалдах"
+        ],
+      },
+      "Сэлбэг, засварын эд анги"
+    ],
+  },
+  {
+    key: "technology",
+    label: "Технологи",
+    emoji: "💻",
+    icon: "Laptop",
+    color: "#0891B2",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER", "DIGITAL"],
+    aliases: ["tech", "electronics", "компьютер", "технологи"],
+    subcategories: [
+      "Ноутбук",
+      "Суурин компьютер",
+      "Дэлгэц",
+      "Принтер, скайнер",
+      "Сүлжээний төхөөрөмж",
+      "Ухаалаг цаг, гаджет",
+      "Камер, дрон",
+      "Аудио (чихэвч, спикер)",
+      "Эд анги (RAM, SSD, видео карт)"
+    ],
+  },
+  {
+    key: "gifts",
+    label: "Бэлэг",
+    emoji: "🎁",
+    icon: "Gift",
+    color: "#E11D48",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["gift", "бэлэг", "gifts-hobby"],
+    subcategories: [
+      "Бэлэг дурсгалын зүйлс",
+      "Цэцэг, баглаа",
+      "Гар урлал",
+      "Цуглуулгын зүйлс",
+      "Board game, хобби"
+    ],
+  },
+  {
+    key: "furniture",
+    label: "Тавилга",
+    emoji: "🛋️",
+    icon: "Armchair",
+    color: "#92400E",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["тавилга"],
+    subcategories: [
+      "Зөөлөн тавилга (буйдан, сандал)",
+      "Унтлагын өрөө (ор, матрас)",
+      "Гал тогооны тавилга",
+      "Ажлын ширээ, сандал",
+      "Шүүгээ, тавиур",
+      "Хүүхдийн тавилга",
+      "Оффисын тавилга"
+    ],
+  },
+  {
+    key: "appliances",
+    label: "Цахилгаан",
+    emoji: "🔌",
+    icon: "Plug",
+    color: "#EA580C",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["appliance", "цахилгаан"],
+    subcategories: [
+      "Хөргөгч, хөлдөөгч",
+      "Угаалгын машин",
+      "Плита, зуух",
+      "Агааржуулагч, халаагч",
+      "Тоос сорогч",
+      "Жижиг цахилгаан хэрэгсэл",
+      "Телевизор"
+    ],
+  },
+  {
+    key: "auto-parts",
+    label: "Авто сэлбэг",
+    emoji: "🛠️",
+    icon: "Wrench",
+    color: "#B91C1C",
+    section: "product",
+    entityTypes: ["STORE", "AUTO"],
+    aliases: ["parts", "spare-parts", "сэлбэг"],
+    subcategories: [
+      "Хөдөлгүүрийн сэлбэг",
+      "Явах эд анги",
+      "Их бие, оптик",
+      "Дугуй, обуд",
+      "Тос, шингэн",
+      "Аккумлятор",
+      "Дотор аксессуар",
+      "Авто электроник (камер, регистратор)"
+    ],
+  },
+  {
+    key: "books",
+    label: "Ном",
+    emoji: "📚",
+    icon: "BookOpen",
+    color: "#1D4ED8",
+    section: "product",
+    entityTypes: ["STORE", "DIGITAL"],
+    aliases: ["book", "ном", "books-stationery"],
+    subcategories: [
+      "Уран зохиол",
+      "Бизнес, хувь хүний хөгжил",
+      "Хүүхдийн ном",
+      "Сурах бичиг",
+      "Гадаад хэлний ном",
+      "Бичиг хэргийн хэрэгсэл"
+    ],
+  },
+  {
+    key: "construction",
+    label: "Барилга",
+    emoji: "🧱",
+    icon: "Construction",
+    color: "#78716C",
+    section: "product",
+    entityTypes: ["STORE", "COMPANY"],
+    aliases: ["building-materials", "барилга", "construction-tools"],
+    subcategories: [
+      "Барилгын материал",
+      "Цахилгааны бараа",
+      "Сантехник",
+      "Хаалга, цонх",
+      "Шал, бүрээс",
+      "Будаг, химийн бодис",
+      "Гар багаж",
+      "Цахилгаан багаж",
+      "Хамгаалалтын хэрэгсэл"
+    ],
+  },
+  {
+    key: "travel",
+    label: "Аялал",
+    emoji: "✈️",
+    icon: "TentTree",
+    color: "#0EA5E9",
+    section: "product",
+    entityTypes: ["STORE", "SERVICE"],
+    aliases: ["tourism", "аялал"],
+    subcategories: [
+      "Майхан, кемпингийн хэрэгсэл",
+      "Аяллын цүнх",
+      "Унтлагын уут",
+      "Аяллын жижиг хэрэгсэл",
+      "Аяллын багц (тур)"
+    ],
+  },
+  {
+    key: "sports",
+    label: "Спорт",
+    emoji: "⚽",
+    icon: "Dumbbell",
+    color: "#16A34A",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["sport", "спорт"],
+    subcategories: [
+      "Фитнес хэрэгсэл",
+      "Унадаг дугуй, скүүтер",
+      "Өвлийн спорт",
+      "Усан спорт",
+      "Бөмбөгт спорт",
+      "Спорт хувцас, гутал",
+      "Ан агнуур, загасчлал"
+    ],
+  },
+  {
+    key: "food",
+    label: "Хүнс",
+    emoji: "🍲",
+    icon: "UtensilsCrossed",
+    color: "#F97316",
+    section: "product",
+    entityTypes: ["STORE", "PRE_ORDER"],
+    aliases: ["grocery", "хүнс", "food-beverage"],
+    subcategories: [
+      "Мах, махан бүтээгдэхүүн",
+      "Сүү, цагаан идээ",
+      "Гурил, будаа",
+      "Жимс, ногоо",
+      "Ундаа",
+      "Бэлэн хоол, нарийн боов",
+      "Органик, эко бүтээгдэхүүн"
+    ],
+  },
+  {
+    key: "esports",
+    label: "E-Спорт",
+    emoji: "🎮",
+    icon: "Gamepad2",
+    color: "#7C3AED",
+    section: "product",
+    entityTypes: ["STORE", "DIGITAL"],
+    aliases: ["gaming", "e-sport"],
+    subcategories: [
+      "Gaming компьютер",
+      "Консол (PS, Xbox, Nintendo)",
+      "Тоглоомын хулгана, гар",
+      "Gaming сандал, ширээ",
+      "Тоглоом (game titles)",
+      "Stream хэрэгсэл"
+    ],
+  },
+  {
+    key: "pets-plants",
+    label: "Амьтан ургамал",
+    emoji: "🐾",
+    icon: "Dog",
+    color: "#65A30D",
+    section: "product",
+    entityTypes: ["STORE"],
+    aliases: ["pets", "plants", "амьтан"],
+    subcategories: [
+      {
+        name: "Гэрийн тэжээвэр амьтан",
+        aliases: ["25-01", "гэрийн-тэжээвэр-амьтан"],
+        children: [
+          "Нохой",
+          "Муур",
+          "Шувуу, загас",
+          "Бусад амьтан"
+        ],
+      },
+      "Амьтны хоол, хэрэгсэл",
+      "Мал, ХАА-н амьтад",
+      "Ургамал, цэцэг",
+      "Үр, бордоо"
+    ],
+  },
+  {
+    key: "digital",
+    label: "Дижитал",
+    emoji: "💾",
+    icon: "Monitor",
+    color: "#6366F1",
+    section: "product",
+    entityTypes: ["STORE", "DIGITAL"],
+    aliases: ["digital-goods", "дижитал", "digital-goods"],
+    subcategories: [
+      "Программ, лиценз",
+      "Тоглоомын данс, item",
+      "Гишүүнчлэл, эрх (subscription)",
+      "Онлайн курс, контент",
+      "Домэйн, вэбсайт"
+    ],
+  }
+];
+
+export const GENERATED_SERVICE_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
+  {
+    key: "education-training",
+    label: "Сургалт",
+    emoji: "🎓",
+    icon: "GraduationCap",
+    color: "#2563EB",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["tutoring", "боловсрол", "сургалт"],
+    subcategories: [
+      "Хэлний сургалт",
+      "Мэргэжлийн сургалт",
+      "Хүүхдийн сургалт",
+      "Онлайн курс",
+      "Хувийн багш (tutor)"
+    ],
+  },
+  {
+    key: "beauty-services",
+    label: "Гоо үйлчилгээ",
+    emoji: "💅",
+    icon: "Scissors",
+    color: "#DB2777",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["salon", "beauty_service", "haircut"],
+    subcategories: [
+      "Үс засалт",
+      "Хумс",
+      "Гоо сайхны эмчилгээ",
+      "Массаж, спа",
+      "Шивээс"
+    ],
+  },
+  {
+    key: "tech-it-services",
+    label: "IT үйлчилгээ",
+    emoji: "🧑‍💻",
+    icon: "Laptop",
+    color: "#0891B2",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["web_dev", "design-it", "it"],
+    subcategories: [
+      "Вэб хөгжүүлэлт",
+      "Апп хөгжүүлэлт",
+      "Компьютер засвар",
+      "Сүлжээ, камер угсралт",
+      "Дата, AI үйлчилгээ"
+    ],
+  },
+  {
+    key: "professional-consulting",
+    label: "Зөвлөх",
+    emoji: "💼",
+    icon: "BriefcaseBusiness",
+    color: "#4F46E5",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["consulting", "зөвлөх"],
+    subcategories: [
+      "Хууль зүй",
+      "Санхүү, татвар",
+      "Бизнес зөвлөгөө",
+      "Маркетинг",
+      "Даатгал, зуучлал"
+    ],
+  },
+  {
+    key: "auto-services",
+    label: "Авто үйлчилгээ",
+    emoji: "🚙",
+    icon: "Car",
+    color: "#DC2626",
+    section: "service",
+    entityTypes: ["SERVICE", "AUTO"],
+    aliases: ["car-service"],
+    subcategories: [
+      "Засвар, оношилгоо",
+      "Угаалга, дотор цэвэрлэгээ",
+      "Дугуй солих, засвар",
+      "Будаг, их биеийн засвар",
+      "Дуудлагын үйлчилгээ, чирэгч"
+    ],
+  },
+  {
+    key: "repair-services",
+    label: "Засвар",
+    emoji: "🔧",
+    icon: "Wrench",
+    color: "#EA580C",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["repair", "засвар"],
+    subcategories: [
+      "Орон сууцны засвар",
+      "Сантехникийн засвар",
+      "Цахилгааны засвар",
+      "Тавилга угсралт, засвар",
+      "Гэр ахуйн техник засвар",
+      "Утас, компьютер засвар"
+    ],
+  },
+  {
+    key: "printing-services",
+    label: "Хэвлэл",
+    emoji: "🖨️",
+    icon: "Printer",
+    color: "#475569",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["printing", "хэвлэл"],
+    subcategories: [
+      "Нэрийн хуудас, танилцуулга",
+      "Баннер, наалт",
+      "Хувцас хэвлэл",
+      "Бэлэг дурсгал хэвлэл",
+      "3D хэвлэл"
+    ],
+  },
+  {
+    key: "manufacturing-custom",
+    label: "Захиалгат",
+    emoji: "🏭",
+    icon: "Factory",
+    color: "#7C2D12",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["factory", "custom"],
+    subcategories: [
+      "Оёдол, хувцас захиалга",
+      "Тавилга захиалга",
+      "Төмөр хийц",
+      "Модон эдлэл",
+      "Бялуу, хүнс захиалга"
+    ],
+  },
+  {
+    key: "photo-video",
+    label: "Зураг авалт",
+    emoji: "📷",
+    icon: "Camera",
+    color: "#9333EA",
+    section: "service",
+    entityTypes: ["SERVICE"],
+    aliases: ["photo", "video"],
+    subcategories: [
+      "Хурим, эвент",
+      "Бүтээгдэхүүний зураг",
+      "Видео продакшн",
+      "Дрон зураг авалт",
+      "Стүдио түрээс"
+    ],
+  },
+  {
+    key: "design-creative",
+    label: "Дизайн",
+    emoji: "🎨",
+    icon: "Palette",
+    color: "#C026D3",
+    section: "service",
+    entityTypes: ["SERVICE", "DIGITAL"],
+    aliases: ["design", "дизайн"],
+    subcategories: [
+      "Лого, брэндинг",
+      "График дизайн",
+      "Интерьер дизайн",
+      "UI/UX дизайн",
+      "Архитектур, зураг төсөл"
+    ],
+  }
+];
+
+export const GENERATED_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
+  ...GENERATED_PRODUCT_MARKETPLACE_CATEGORIES,
+  ...GENERATED_SERVICE_MARKETPLACE_CATEGORIES,
+];
+
