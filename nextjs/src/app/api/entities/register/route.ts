@@ -2,19 +2,15 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth, signToken } from '@/lib/api-auth';
 import { isValidPublicImageUrl } from '@/lib/image-url';
-
-function normalizeSlug(value: unknown): string {
-  if (typeof value !== 'string') return '';
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
-}
+import { ensureSlug, normalizeSlug } from '@/lib/slug';
 
 function publicImageOrNull(value: unknown): string | null {
   return isValidPublicImageUrl(value) ? value : null;
+}
+
+function isUniqueConstraintError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return /unique|E11000|duplicate key|userId_key|stores_userId/i.test(message);
 }
 
 // POST /api/entities/register
@@ -43,8 +39,11 @@ export async function POST(req: NextRequest) {
   } = body;
 
   if (!entityType || !name) return errorJson('entityType, name шаардлагатай');
+  if (typeof phone === 'string' && phone.trim() && phone.replace(/\D/g, '').length < 8) {
+    return errorJson('Утасны дугаар буруу байна (дор хаяж 8 орон)');
+  }
 
-  const safeSlug = normalizeSlug(slug) || normalizeSlug(name) || `seller-${auth.id.slice(-8).toLowerCase()}`;
+  const safeSlug = ensureSlug(slug || name, `seller-${auth.id.slice(-8).toLowerCase()}`);
   const safeLogo = publicImageOrNull(logo);
   const safeCoverImage = publicImageOrNull(coverImage);
 
@@ -64,7 +63,7 @@ export async function POST(req: NextRequest) {
         prisma.serviceProvider.findFirst({ where: { slug: safeSlug, NOT: { userId: auth.id } }, select: { id: true } }),
       ]);
     if (slugExistsInShops || slugExistsInAgents || slugExistsInCompanies || slugExistsInAutoDealers || slugExistsInServices) {
-      return errorJson('Энэ slug аль хэдийн бүртгэлтэй байна');
+      return errorJson('Энэ slug аль хэдийн бүртгэлтэй байна. Өөр URL сонгоно уу.');
     }
 
     let entity;
@@ -81,6 +80,7 @@ export async function POST(req: NextRequest) {
           pre_order: 'preorder',
         };
         const industry = industryMap[entityType] || 'general';
+        // Prefer same industry / same slug shop for this owner (multi-shop allowed).
         const existingShop = await prisma.shop.findFirst({
           where: {
             userId: auth.id,
@@ -88,34 +88,55 @@ export async function POST(req: NextRequest) {
           },
           orderBy: { createdAt: 'asc' },
         });
-        entity = existingShop
-          ? await prisma.shop.update({
-              where: { id: existingShop.id },
-              data: {
-                name,
-                slug: safeSlug,
-                storefrontSlug: safeSlug,
-                logo: logo === undefined ? undefined : safeLogo,
-                phone: phone || undefined,
-                address: address || undefined,
-                district: district || undefined,
-                industry,
-              },
-            })
-          : await prisma.shop.create({
-              data: {
-                userId: auth.id,
-                name,
-                slug: safeSlug,
-                storefrontSlug: safeSlug,
-                logo: safeLogo,
-                phone,
-                address,
-                district,
-                industry,
-                locationStatus: 'pending',
-              },
-            });
+        try {
+          entity = existingShop
+            ? await prisma.shop.update({
+                where: { id: existingShop.id },
+                data: {
+                  name,
+                  slug: safeSlug,
+                  storefrontSlug: safeSlug,
+                  logo: logo === undefined ? undefined : safeLogo,
+                  phone: phone || undefined,
+                  address: address || undefined,
+                  district: district || undefined,
+                  industry,
+                  isDemo: false,
+                },
+              })
+            : await prisma.shop.create({
+                data: {
+                  userId: auth.id,
+                  name,
+                  slug: safeSlug,
+                  storefrontSlug: safeSlug,
+                  logo: safeLogo,
+                  phone,
+                  address,
+                  district,
+                  industry,
+                  locationStatus: 'pending',
+                  isDemo: false,
+                },
+              });
+        } catch (shopError) {
+          if (isUniqueConstraintError(shopError)) {
+            return errorJson(
+              'Нэг хэрэглэгч олон дэлгүүр үүсгэх боломжгүй (DB index). Админ stores_userId_key-г салгах шаардлагатай.',
+              409,
+            );
+          }
+          throw shopError;
+        }
+
+        // Ensure shop type row for dashboard tools
+        const shopTypeKey =
+          entityType === 'digital' ? 'product' : entityType === 'pre_order' || entityType === 'order_store' ? 'product' : 'product';
+        await prisma.shopType.upsert({
+          where: { shopId: entity.id },
+          create: { shopId: entity.id, type: shopTypeKey },
+          update: { type: shopTypeKey },
+        }).catch(() => null);
         break;
       }
       case 'agent':
@@ -294,14 +315,18 @@ export async function POST(req: NextRequest) {
       name: updatedUser.name,
       entityType: updatedUser.entityType,
     });
-    const primaryShop = updatedUser.shops[0]
+    const matchedShop =
+      updatedUser.shops.find((shop) => shop.slug === safeSlug) ||
+      updatedUser.shops[updatedUser.shops.length - 1] ||
+      null;
+    const primaryShop = matchedShop
       ? {
-          id: updatedUser.shops[0].id,
-          name: updatedUser.shops[0].name,
-          slug: updatedUser.shops[0].slug,
-          logo: updatedUser.shops[0].logo,
-          phone: updatedUser.shops[0].phone,
-          address: updatedUser.shops[0].address,
+          id: matchedShop.id,
+          name: matchedShop.name,
+          slug: matchedShop.slug,
+          logo: matchedShop.logo,
+          phone: matchedShop.phone,
+          address: matchedShop.address,
         }
       : null;
     const entityStore =
@@ -333,8 +358,10 @@ export async function POST(req: NextRequest) {
         avatar: updatedUser.avatar,
         entityType: updatedUser.entityType,
         store: entityStore,
+        shops: updatedUser.shops,
       },
       message: 'Амжилттай бүртгэгдлээ',
+      next: '/dashboard/store',
     }, 201);
     res.cookies.set('auth-token', token, {
       httpOnly: true,

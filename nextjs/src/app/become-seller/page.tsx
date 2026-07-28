@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { roleHome, useAuth } from '@/lib/auth';
+import { ensureSlug, normalizeSlug } from '@/lib/slug';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import ImageUpload from '@/components/shared/ImageUpload';
 import {
@@ -16,8 +17,6 @@ import {
 
 /* ═══ Entity Type Definitions ═══ */
 type EntityType = 'store' | 'pre_order' | 'agent' | 'company' | 'auto_dealer' | 'service' | 'digital';
-
-const DASHBOARD_ROLES = new Set(['seller', 'agent', 'company', 'auto_dealer', 'service', 'affiliate', 'delivery', 'admin', 'superadmin']);
 
 const ENTITY_DEFS: Record<EntityType, {
   label: string; subtitle: string; Icon: React.ElementType; color: string;
@@ -79,12 +78,7 @@ const STEPS = ['Төрөл сонгох', 'Үндсэн мэдээлэл', 'Ба
 const DISTRICTS = ['СБД', 'ЧД', 'БЗД', 'ХУД', 'СХД', 'БГД', 'НД', 'Хан-Уул', 'Налайх', 'Багануур'];
 
 function toSellerSlug(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 48);
+  return normalizeSlug(value);
 }
 
 const PLANS: Record<string, { name: string; price: string; priceNum: number; features: string[]; Icon: React.ElementType; color: string; popular?: boolean }> = {
@@ -115,33 +109,53 @@ export default function BecomeSellerPage() {
     sourceCountry: '', deliveryDays: '', minimumOrderQty: '', advancePaymentPct: '30',
   });
 
-  // Нэвтрээгүй бол login руу redirect
+  // Нэвтрээгүй бол login руу redirect.
+  // Already-seller users stay — they can open additional store types.
   useEffect(() => {
     if (isLoggedIn === false) {
       router.push('/login?redirect=/become-seller');
-      return;
     }
-    if (isLoggedIn && user?.role && DASHBOARD_ROLES.has(user.role)) {
-      router.replace(roleHome(user.role));
-    }
-  }, [isLoggedIn, router, user?.role]);
+  }, [isLoggedIn, router]);
+
+  // Prefill contact from auth profile once available
+  useEffect(() => {
+    if (!user) return;
+    setForm((prev) => ({
+      ...prev,
+      email: prev.email || user.email || '',
+      phone: prev.phone || user.phone || '',
+    }));
+  }, [user]);
 
   const def = entityType ? ENTITY_DEFS[entityType] : null;
   const updateForm = (key: string, value: string) => setForm(prev => ({ ...prev, [key]: value }));
 
   const handleNameChange = (name: string) => {
-    const generatedSlug = toSellerSlug(name);
-    setForm(prev => ({ ...prev, name, slug: generatedSlug || prev.slug || `seller-${Date.now().toString(36).slice(-6)}` }));
+    const generatedSlug = ensureSlug(name, `shop-${Date.now().toString(36).slice(-6)}`);
+    setForm((prev) => ({
+      ...prev,
+      name,
+      // Only auto-fill slug while user hasn't manually customized it
+      slug: !prev.slug || prev.slug === toSellerSlug(prev.name) || prev.slug.startsWith('shop-')
+        ? generatedSlug
+        : prev.slug,
+    }));
   };
 
   const canNext = () => {
     if (step === 0) return !!entityType;
-    if (step === 1) return form.name.length >= 2 && form.phone.length >= 4 && form.slug.length >= 3;
+    if (step === 1) {
+      const phoneDigits = form.phone.replace(/\D/g, '');
+      const slug = ensureSlug(form.slug || form.name, 'shop');
+      return form.name.trim().length >= 2 && phoneDigits.length >= 8 && slug.length >= 3;
+    }
     return true;
   };
 
   const canSubmit = () => {
-    return !!entityType && form.name.length >= 2 && form.phone.length >= 4 && form.slug.length >= 3 && acceptedTerms && !submitting;
+    const phoneDigits = form.phone.replace(/\D/g, '');
+    const slug = ensureSlug(form.slug || form.name, 'shop');
+    return !!entityType && form.name.trim().length >= 2 && phoneDigits.length >= 8 && slug.length >= 3 && acceptedTerms && !submitting;
   };
 
   const handleSubmit = async () => {
@@ -150,14 +164,31 @@ export default function BecomeSellerPage() {
       setSubmitError('Үйлчилгээний нөхцөл болон нууцлалын бодлогыг зөвшөөрнө үү.');
       return;
     }
+    const phoneDigits = form.phone.replace(/\D/g, '');
+    if (phoneDigits.length < 8) {
+      setSubmitError('Утасны дугаар буруу байна (дор хаяж 8 орон).');
+      return;
+    }
+    const safeSlug = ensureSlug(form.slug || form.name, `shop-${Date.now().toString(36).slice(-6)}`);
     setSubmitting(true);
     setSubmitError('');
     try {
       const token = localStorage.getItem('token');
+      if (!token) {
+        router.push('/login?redirect=/become-seller');
+        return;
+      }
       const res = await fetch('/api/entities/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-        body: JSON.stringify({ entityType, plan: selectedPlan, ...form }),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        credentials: 'include',
+        body: JSON.stringify({
+          entityType,
+          plan: selectedPlan,
+          ...form,
+          slug: safeSlug,
+          phone: phoneDigits,
+        }),
       });
       const payload = await res.json().catch(() => null);
       const data = payload?.data || payload;
@@ -166,6 +197,11 @@ export default function BecomeSellerPage() {
       }
       if (data?.token && data?.user) login(data.token, data.user);
       setSubmitted(true);
+      // Soft continue into dashboard after a short success pause
+      const next = typeof data?.next === 'string' ? data.next : roleHome('seller');
+      window.setTimeout(() => {
+        router.push(next);
+      }, 1200);
     } catch (err) {
       setSubmitError(err instanceof Error ? err.message : 'Бүртгэл амжилтгүй боллоо');
     }
@@ -181,10 +217,12 @@ export default function BecomeSellerPage() {
           <div className="w-16 h-16 rounded-full bg-[rgba(16,185,129,0.15)] flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-[#10B981]" />
           </div>
-          <h2 className="text-xl font-black text-white mb-2">Амжилттай илгээлээ!</h2>
-          <p className="text-sm text-[var(--esl-text-muted)] mb-6">Таны хүсэлтийг хянаж байна. Баталгаажуулалт дууссаны дараа имэйлээр мэдэгдэнэ.</p>
-          <div className="bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)] rounded-xl p-3 mb-6">
-            <p className="text-xs text-[#F59E0B]"><Shield className="w-3.5 h-3.5 inline mr-1" /> Баталгаажуулалт 1-3 ажлын өдөрт хийгдэнэ</p>
+          <h2 className="text-xl font-black text-white mb-2">Дэлгүүр амжилттай нээгдлээ!</h2>
+          <p className="text-sm text-[var(--esl-text-muted)] mb-6">
+            Та одоо Dashboard-аас бараа нэмж, дэлгүүрээ тохируулж эхлэх боломжтой.
+          </p>
+          <div className="bg-[rgba(16,185,129,0.1)] border border-[rgba(16,185,129,0.2)] rounded-xl p-3 mb-6">
+            <p className="text-xs text-[#10B981]"><Shield className="w-3.5 h-3.5 inline mr-1" /> KYC баталгаажуулалт сонголттой — дараа нь бөглөж болно</p>
           </div>
           <Link href="/dashboard/store" className="inline-flex items-center gap-2 bg-[#E8242C] text-white px-6 py-3 rounded-xl text-sm font-bold no-underline hover:bg-[#CC0000] transition">
             Dashboard руу очих <ArrowRight className="w-4 h-4" />

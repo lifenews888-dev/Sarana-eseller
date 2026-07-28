@@ -38,12 +38,12 @@ function main() {
     },
     {
       label: 'server slug normalization',
-      ok: includesAll(registerSource, ['function normalizeSlug', 'const safeSlug = normalizeSlug(slug)']),
+      ok: includesAll(registerSource, ["from '@/lib/slug'", 'ensureSlug', 'safeSlug']),
       detail: 'slug is normalized server-side',
     },
     {
       label: 'server fallback slug',
-      ok: registerSource.includes('seller-${auth.id.slice(-8).toLowerCase()}'),
+      ok: registerSource.includes('ensureSlug') && registerSource.includes('seller-'),
       detail: 'Cyrillic-only names cannot leave slug empty',
     },
     {
@@ -88,18 +88,18 @@ function main() {
     },
     {
       label: 'response carries store object',
-      ok: includesAll(registerSource, ['store: entityStore', 'updatedUser.shop', 'updatedUser.agent']),
+      ok: includesAll(registerSource, ['store: entityStore', 'updatedUser.shops', 'updatedUser.agent']),
       detail: 'client auth state receives the owner profile summary',
     },
     {
       label: 'onboarding slug helper',
-      ok: includesAll(onboardingSource, ['function toSellerSlug', 'generatedSlug || prev.slug']),
+      ok: includesAll(onboardingSource, ['ensureSlug', 'toSellerSlug', 'normalizeSlug']),
       detail: 'client does not submit empty slugs for Cyrillic names',
     },
     {
       label: 'onboarding slug step validation',
-      ok: onboardingSource.includes('form.slug.length >= 3'),
-      detail: 'next button waits for a valid visible slug',
+      ok: onboardingSource.includes('ensureSlug(form.slug || form.name') && onboardingSource.includes('phoneDigits.length >= 8'),
+      detail: 'next button waits for a valid visible slug and phone',
     },
     {
       label: 'onboarding auth redirect',
