@@ -55,55 +55,79 @@ export default function LoginPage() {
   const [showPw, setShowPw] = useState(false);
   const [redirectTarget, setRedirectTarget] = useState('');
 
-  const { login, isLoggedIn, user } = useAuth();
+  const { login, isLoggedIn, refreshUser } = useAuth();
   const router = useRouter();
+  const [checkingSession, setCheckingSession] = useState(true);
 
   // Pull `?redirect=/some/path` or legacy `?next=/some/path` to preserve in-progress flows.
   const getRedirectTarget = useCallback((role?: string): string => {
     return postAuthTarget(redirectTarget || readRedirectTargetFromLocation(), role);
   }, [redirectTarget]);
 
+  /** Hard navigation so httpOnly cookie from Set-Cookie is always applied. */
+  const goAfterAuth = useCallback((role?: string) => {
+    const dest = getRedirectTarget(role);
+    window.location.assign(dest || '/');
+  }, [getRedirectTarget]);
+
+  // Validate existing session before auto-leaving /login (stale JWT was bouncing users).
   useEffect(() => {
-    if (isLoggedIn && user) router.replace(getRedirectTarget(user.role));
-  }, [isLoggedIn, user, router, getRedirectTarget]);
+    let cancelled = false;
+    (async () => {
+      const nextRedirectTarget = readRedirectTargetFromLocation();
+      setRedirectTarget(nextRedirectTarget);
 
-  useEffect(() => {
-    const nextRedirectTarget = readRedirectTargetFromLocation();
-    setRedirectTarget(nextRedirectTarget);
+      if (window.location.hash === '#register') {
+        setMode('register');
+        if (nextRedirectTarget === '/become-seller') setRole('buyer');
+      }
 
-    if (window.location.hash === '#register') {
-      setMode('register');
-      // Keep buyer for shop onboarding — /become-seller upgrades role + creates the shop.
-      // Registering as "seller" without the wizard leaves an incomplete owner account.
-      if (nextRedirectTarget === '/become-seller') setRole('buyer');
-    }
-
-    // Handle Google OAuth callback
-    const hash = window.location.hash;
-    if (hash.startsWith('#google_auth=')) {
-      try {
-        const data = JSON.parse(decodeURIComponent(hash.slice('#google_auth='.length)));
-        if (data.token && data.user) {
-          login(data.token, data.user);
-          setSuccess('Google-ээр амжилттай нэвтэрлээ!');
-          window.location.hash = '';
-          setTimeout(() => router.push(getRedirectTarget(data.user.role)), 700);
+      // Google OAuth return
+      const hash = window.location.hash;
+      if (hash.startsWith('#google_auth=')) {
+        try {
+          const data = JSON.parse(decodeURIComponent(hash.slice('#google_auth='.length)));
+          if (data.token && data.user) {
+            login(data.token, data.user);
+            setSuccess('Google-ээр амжилттай нэвтэрлээ!');
+            window.location.hash = '';
+            window.setTimeout(() => goAfterAuth(data.user.role), 300);
+            return;
+          }
+        } catch {
+          setError('Google нэвтрэлтийн өгөгдөл буруу байна');
         }
-      } catch {}
-    }
+      }
 
-    // Handle Google OAuth errors
-    const params = new URLSearchParams(window.location.search);
-    const googleError = params.get('error');
-    if (googleError) {
-      const msgs: Record<string, string> = {
-        google_denied: 'Google нэвтрэлтийг цуцаллаа',
-        token_failed: 'Google токен авахад алдаа гарлаа',
-        server_error: 'Серверийн алдаа гарлаа',
-      };
-      setError(msgs[googleError] || 'Google нэвтрэлтийн алдаа');
-    }
-  }, [getRedirectTarget, login, router]);
+      const params = new URLSearchParams(window.location.search);
+      const googleError = params.get('error');
+      if (googleError) {
+        const msgs: Record<string, string> = {
+          google_denied: 'Google нэвтрэлтийг цуцаллаа',
+          token_failed: 'Google токен авахад алдаа гарлаа',
+          server_error: 'Серверийн алдаа гарлаа',
+          dan_invalid_state: 'ДАН нэвтрэлт амжилтгүй (state)',
+        };
+        setError(msgs[googleError] || 'Google/ДАН нэвтрэлтийн алдаа');
+      }
+
+      // If localStorage still has a token, prove it against /api/auth/me
+      if (isLoggedIn) {
+        const fresh = await refreshUser();
+        if (cancelled) return;
+        if (fresh) {
+          goAfterAuth(fresh.role);
+          return;
+        }
+        // Invalid session cleared by refreshUser — stay on login form
+      }
+
+      if (!cancelled) setCheckingSession(false);
+    })();
+    return () => { cancelled = true; };
+    // Intentionally once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const pwStrength = (v: string) => {
     if (!v) return { score: 0, label: '', color: '' };
@@ -127,18 +151,18 @@ export default function LoginPage() {
       if (token && authUser) {
         login(token, authUser);
         setSuccess('Амжилттай нэвтэрлээ!');
-        const dest = getRedirectTarget(authUser.role);
-        window.setTimeout(() => {
-          router.replace(dest);
-        }, 400);
+        // Full page nav so Set-Cookie (httpOnly) is used by middleware immediately
+        window.setTimeout(() => goAfterAuth(authUser.role), 250);
       } else {
         setError('Имэйл эсвэл нууц үг буруу');
+        setLoading(false);
       }
     } catch (e: unknown) {
       const apiErr = e as { message?: string; status?: number };
       const msg = apiErr?.message || (e instanceof Error ? e.message : 'Нэвтрэхэд алдаа гарлаа');
       setError(msg);
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
 
   const doRegister = async () => {
@@ -157,18 +181,25 @@ export default function LoginPage() {
       if (data.token && data.user) {
         login(data.token, data.user);
         setSuccess('Бүртгэл амжилттай!');
-        const dest = getRedirectTarget(data.user.role);
-        window.setTimeout(() => {
-          router.replace(dest);
-        }, 400);
+        window.setTimeout(() => goAfterAuth(data.user.role), 250);
       } else {
         setError('Бүртгэл амжилтгүй боллоо');
+        setLoading(false);
       }
     } catch (e: unknown) {
       const apiErr = e as { message?: string };
       setError(apiErr?.message || (e instanceof Error ? e.message : 'Бүртгэхэд алдаа гарлаа'));
-    } finally { setLoading(false); }
+      setLoading(false);
+    }
   };
+
+  if (checkingSession) {
+    return (
+      <div className="flex min-h-screen items-center justify-center" style={{ background: 'var(--esl-bg-page)' }}>
+        <div className="text-sm font-semibold" style={{ color: 'var(--esl-text-muted)' }}>Шалгаж байна…</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex">
@@ -293,6 +324,7 @@ export default function LoginPage() {
                       onKeyDown={(e) => e.key === 'Enter' && doLogin()}
                     />
                     <button
+                      type="button"
                       onClick={() => setShowPw(!showPw)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-sm"
                       tabIndex={-1}
@@ -306,6 +338,7 @@ export default function LoginPage() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={doLogin}
                   disabled={loading}
                   className="w-full bg-brand text-white py-3.5 rounded-xl font-bold text-base border-none cursor-pointer shadow-[0_2px_8px_rgba(204,0,0,.25)] hover:bg-brand-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -436,6 +469,7 @@ export default function LoginPage() {
                       onKeyDown={(e) => e.key === 'Enter' && doRegister()}
                     />
                     <button
+                      type="button"
                       onClick={() => setShowPw(!showPw)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-sm"
                       tabIndex={-1}

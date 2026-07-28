@@ -83,19 +83,23 @@ function main() {
     },
     {
       label: 'already logged-in redirect',
-      ok: loginSource.includes('if (isLoggedIn && user) router.replace(getRedirectTarget(user.role))'),
-      detail: 'authenticated users return to the requested flow',
+      ok: loginSource.includes('refreshUser') &&
+        loginSource.includes('goAfterAuth(fresh.role)') &&
+        loginSource.includes('window.location.assign'),
+      detail: 'validated sessions hard-navigate to the requested flow',
     },
     {
       label: 'email login redirect',
-      ok: loginSource.includes('router.push(getRedirectTarget(data.user.role))'),
-      detail: 'password login preserves /become-seller target',
+      ok: loginSource.includes('goAfterAuth(authUser.role)') &&
+        loginSource.includes('window.location.assign'),
+      detail: 'password login preserves /become-seller target via hard nav',
     },
     {
       label: 'register redirect',
       ok: loginSource.includes('const data = await AuthAPI.register') &&
-        loginSource.includes('router.push(getRedirectTarget(data.user.role))'),
-      detail: 'new account registration preserves /become-seller target',
+        loginSource.includes('goAfterAuth(data.user.role)') &&
+        loginSource.includes('window.location.assign'),
+      detail: 'new account registration preserves /become-seller target via hard nav',
     },
     {
       label: 'register alias redirect',
