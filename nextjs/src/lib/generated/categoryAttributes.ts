@@ -44,7 +44,7 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "field3", label: "Байршил (дүүрэг, хороо)", type: "text", required: true, hint: "Газрын зурган дээр цэг тавих сонголт" },
     { key: "field4", label: "Давхар / Нийт давхар", type: "text", options: ["5", "16"] },
     { key: "field5", label: "Ашиглалтад орсон он", type: "number", hint: "4 оронтой он" },
-    { key: "field6", label: "Хаалганы тоо, цонх", type: "text" },
+    { key: "field6", label: "Цонхны тоо, хаалга", type: "text" },
     { key: "field7", label: "Төлбөрийн нөхцөл", type: "select", options: ["Бэлэн", "Лизинг", "Барьцаа+түрээс"] }
   ],
   "new-buildings": [
@@ -75,7 +75,7 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "field3", label: "Гэрчилгээтэй эсэх", type: "boolean", hint: "Гэрчилгээний зураг хавсаргах" }
   ],
   "kids": [
-    { key: "field", label: "Нас", type: "select", required: true, options: ["0–1", "1–3", "3–7", "8–14"] },
+    { key: "field", label: "Нас", type: "select", required: true, options: ["0–1", "1–3", "4–7", "8–14"] },
     { key: "field2", label: "Хүйс", type: "select", options: ["Охин", "Хүү"] },
     { key: "size", label: "Хэмжээ", type: "text" },
     { key: "brand", label: "Брэнд", type: "text" },
