@@ -323,7 +323,7 @@ export default function ProductGrid({
             {products.map((p) => {
               const productId = p._id || p.id || p.name;
               return (
-              <motion.div key={productId} className="min-w-0" variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
+              <motion.div key={productId} className="min-w-0 h-full" variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
                 <ProductCard product={p} onQuickAdd={onQuickAdd} onClick={onProductClick}
                   isWished={wishlist.has(productId)} onToggleWish={onToggleWish} />
               </motion.div>
