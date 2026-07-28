@@ -97,7 +97,7 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
             <Zap className="w-4 h-4 text-white" />
           </div>
           {!collapsed && (
-            <span className="text-[15px] font-bold text-white tracking-tight">
+            <span className="text-[15px] font-bold tracking-tight text-[var(--esl-text-primary)]">
               eseller<span className="text-[#E8242C]">.mn</span>
             </span>
           )}
@@ -205,7 +205,7 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
 
               {/* Section divider */}
               {si < sections.length - 1 && !collapsed && (
-                <div className="mx-3 mt-1 border-b border-slate-100" />
+                <div className="mx-3 mt-1 border-b border-[var(--esl-border)]" />
               )}
             </div>
           );

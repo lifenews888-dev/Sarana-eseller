@@ -312,13 +312,16 @@ const BUYER_SECTIONS: SidebarSection[] = [
       { href: '/store', icon: '🛒', label: 'Дэлгүүр' },
       { href: '/dashboard/orders', icon: '📦', label: 'Захиалгууд' },
       { href: '/dashboard/wishlist', icon: '❤️', label: 'Хүслийн жагсаалт' },
+      { href: '/dashboard/chat', icon: '💬', label: 'Чат', isNew: true },
+      { href: '/dashboard/addresses', icon: '📍', label: 'Хаягууд' },
     ],
   },
   {
-    title: 'Миний профайл',
+    title: 'Нээгдэх боломж',
     items: [
       { href: '/gold', icon: '👑', label: 'Loyalty & Gold' },
       { href: '/feed', icon: '📋', label: 'Зарын булан' },
+      { href: '/become-seller', icon: '🏪', label: 'Дэлгүүр нээх' },
       { href: '/dashboard/settings', icon: '⚙️', label: 'Тохиргоо' },
     ],
   },
