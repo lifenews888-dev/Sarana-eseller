@@ -169,8 +169,18 @@ export async function GET(
       fileType: product.fileType,
       fileSize: product.fileSize,
       downloadCount: product.downloadCount,
+      shopId: shopSummary?.id || product.shopId || null,
       shop: shopSummary,
       seller: product.user ? { id: product.user.id, name: product.user.name, avatar: product.user.avatar } : null,
+      user: product.user
+        ? {
+            id: product.user.id,
+            _id: product.user.id,
+            name: product.user.name,
+            avatar: product.user.avatar,
+            shops: product.user.shops || [],
+          }
+        : null,
       // Null for non-dropship products; populated flat object otherwise so
       // clients can `if (product.dropship) {...}` without a null check on
       // each field.

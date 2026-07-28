@@ -147,7 +147,20 @@ export default async function ProductPage({ params }: Props) {
       where: { id },
       include: {
         categoryRef: true,
-        user: { select: { name: true, id: true, username: true, phone: true } },
+        shop: { select: { id: true, name: true, slug: true, logo: true } },
+        user: {
+          select: {
+            name: true,
+            id: true,
+            username: true,
+            phone: true,
+            shops: {
+              select: { id: true, name: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
+          },
+        },
       },
     });
   } catch { notFound(); }
@@ -181,10 +194,22 @@ export default async function ProductPage({ params }: Props) {
     related = [...related, ...fallback];
   }
 
+  const resolvedShopId =
+    product.shopId ||
+    product.shop?.id ||
+    product.user?.shops?.[0]?.id ||
+    null;
+
   const safeImages = getSafeImageList(product.images);
   const clientProduct = {
     ...product,
     _id: product.id,
+    shopId: resolvedShopId,
+    shop: product.shop
+      ? { ...product.shop, _id: product.shop.id }
+      : resolvedShopId
+        ? { id: resolvedShopId, _id: resolvedShopId, name: product.user?.name }
+        : null,
     images: safeImages,
     media: media.map(m => ({
       id: m.id,

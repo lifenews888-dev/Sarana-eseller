@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import {
+  requireSeller,
+  getShopForUser,
+  getPreferredShopId,
+  errorJson,
+} from '@/lib/api-auth';
 
 // GET — widget config (public)
 export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ entityId: string }> }
+  _req: NextRequest,
+  { params }: { params: Promise<{ entityId: string }> },
 ) {
   const { entityId } = await params;
 
-  // Try to find shop and return its chat config
   const shop = await prisma.shop.findFirst({
-    where: { OR: [{ id: entityId }, { slug: entityId }, { storefrontSlug: entityId }] },
+    where: {
+      OR: [
+        { id: entityId },
+        { slug: entityId },
+        { storefrontSlug: entityId },
+        { userId: entityId },
+      ],
+    },
     select: { id: true, name: true, storefrontConfig: true },
   });
 
@@ -31,22 +43,42 @@ export async function GET(
     quickReplies: (config.chatQuickReplies as string[]) || ['Үнэ хэд вэ?', 'Хэзээ хүргэх вэ?', 'Захиалах'],
     botName: (config.chatBotName as string) || shop.name,
     shopName: shop.name,
+    shopId: shop.id,
   });
 }
 
-// PUT — update widget config
+// PUT — update widget config (owner only)
 export async function PUT(
   req: NextRequest,
-  { params }: { params: Promise<{ entityId: string }> }
+  { params }: { params: Promise<{ entityId: string }> },
 ) {
+  const user = requireSeller(req);
+  if (user instanceof NextResponse) return user;
+
   const { entityId } = await params;
   const body = await req.json();
 
-  const shop = await prisma.shop.findFirst({
-    where: { OR: [{ id: entityId }, { userId: entityId }] },
-  });
+  // Prefer active shop for multi-store owners; also accept entityId match
+  const preferred = getPreferredShopId(req);
+  let shopId = await getShopForUser(user.id, preferred || entityId);
 
-  if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 });
+  if (!shopId || (entityId !== 'me' && entityId !== shopId && entityId !== user.id)) {
+    const owned = await prisma.shop.findFirst({
+      where: {
+        userId: user.id,
+        OR: [{ id: entityId }, { slug: entityId }, { storefrontSlug: entityId }],
+      },
+      select: { id: true },
+    });
+    if (owned) shopId = owned.id;
+  }
+
+  if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
+
+  const shop = await prisma.shop.findFirst({
+    where: { id: shopId, userId: user.id },
+  });
+  if (!shop) return errorJson('Хандах эрхгүй', 403);
 
   const existing = (shop.storefrontConfig as Record<string, unknown>) || {};
 
@@ -64,5 +96,5 @@ export async function PUT(
     },
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true, shopId: shop.id });
 }
