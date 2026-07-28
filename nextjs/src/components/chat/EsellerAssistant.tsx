@@ -1,11 +1,8 @@
 'use client';
 
 /**
- * Unified eseller assistant — one FAB, two modes:
- *  - help: support FAQ / order / delivery (/api/chat/bot)
- *  - shop: product recommendations (/api/ai/shop)
- *
- * Replaces dual ChatWidget + AIShopperWidget FABs that cluttered mobile UI.
+ * Unified eseller assistant — one FAB, two modes.
+ * Mobile UX focus: shop (AI худалдаа) mode sheet, keyboard-safe input, budget chips.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,24 +29,48 @@ const ts = () =>
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
+/** Minimal **bold** + plain text for chat bubbles (no full markdown). */
+function renderChatText(text: string) {
+  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**') && part.length > 4) {
+      return (
+        <strong key={i} className="font-bold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 const WELCOME: Record<Mode, string> = {
   help:
-    'Сайн байна уу! Би **eseller туслах**. Захиалга, төлбөр, хүргэлт, дэлгүүр нээх талаар асуугаарай 😊',
+    'Сайн байна уу! Би eseller туслах. Захиалга, төлбөр, хүргэлт, дэлгүүр нээх талаар асуугаарай 😊',
   shop:
-    'Сайн байна уу! Би **AI худалдааны туслах**. Юу хайж байгаагаа хэлээрэй — төсөв, бэлэг, бараа санал болгоё 🛍️',
+    'Сайн байна уу! Би AI худалдааны туслах. Юу хайж байгаагаа хэлээрэй — төсөв, бэлэг, бараа санал болгоё 🛍️',
 };
 
 const QUICK: Record<Mode, string[]> = {
   help: ['Захиалга хянах', 'QPay төлбөр', 'Буцаалт', 'Дэлгүүр нээх'],
-  shop: ['50,000₮-н бэлэг', 'Гэрийн тавилга', 'Хямдралтай бараа'],
+  shop: ['50,000₮-н бэлэг', 'Гэрийн тавилга', 'Хямдралтай бараа', 'Хүүхдийн'],
 };
+
+const BUDGETS = [
+  { label: '25мян', value: 25_000 },
+  { label: '50мян', value: 50_000 },
+  { label: '100мян', value: 100_000 },
+  { label: '250мян', value: 250_000 },
+  { label: 'Бүгд', value: 0 },
+];
 
 const MODE_META: Record<
   Mode,
-  { label: string; short: string; Icon: typeof Bot; accent: string; header: string }
+  { label: string; title: string; short: string; Icon: typeof Bot; accent: string; header: string }
 > = {
   help: {
     label: 'Тусламж',
+    title: 'eseller туслах',
     short: 'Захиалга · хүргэлт · QPay',
     Icon: Headphones,
     accent: '#E8242C',
@@ -57,6 +78,7 @@ const MODE_META: Record<
   },
   shop: {
     label: 'Бараа хайх',
+    title: 'AI Худалдааны туслах',
     short: 'Санал · төсөв · бэлэг',
     Icon: Sparkles,
     accent: '#7C3AED',
@@ -66,32 +88,50 @@ const MODE_META: Record<
 
 export default function EsellerAssistant() {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<Mode>('help');
+  const [mode, setMode] = useState<Mode>('shop');
   const [messages, setMessages] = useState<Message[]>([
-    { id: '0', role: 'assistant', content: WELCOME.help, time: ts() },
+    { id: '0', role: 'assistant', content: WELCOME.shop, time: ts() },
   ]);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [budget, setBudget] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, open]);
+    if (!open) return;
+    const id = window.requestAnimationFrame(() => {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
+    return () => window.cancelAnimationFrame(id);
+  }, [messages, open, mode]);
 
+  // Avoid iOS focusing input on open (keyboard covers half the sheet) — focus only desktop
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (!open) return;
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      inputRef.current?.focus();
+    }
   }, [open, mode]);
+
+  // Lock body scroll while sheet open on mobile
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
 
   const switchMode = (next: Mode) => {
     if (next === mode) return;
     setMode(next);
     setHistory([]);
-    setMessages([
-      { id: uid(), role: 'assistant', content: WELCOME[next], time: ts() },
-    ]);
+    setMessages([{ id: uid(), role: 'assistant', content: WELCOME[next], time: ts() }]);
     setInput('');
     setLoading(false);
   };
@@ -135,12 +175,14 @@ export default function EsellerAssistant() {
           const res = await fetch('/api/ai/shop', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: text, history }),
+            body: JSON.stringify({
+              message: text,
+              history,
+              ...(budget > 0 ? { budget } : {}),
+            }),
           });
 
-          if (!res.ok) {
-            throw new Error('shop api');
-          }
+          if (!res.ok) throw new Error('shop api');
 
           const contentType = res.headers.get('content-type') ?? '';
           if (contentType.includes('text/event-stream') && res.body) {
@@ -173,8 +215,10 @@ export default function EsellerAssistant() {
                 }
               }
             }
-            const finalText = full || 'Бараа олдсонгүй. Өөр түлхүүр үгээр хайна уу.';
-            if (!full) {
+            const finalText =
+              full.trim() ||
+              'Одоогоор тохирох бараа олдсонгүй. Төсөв эсвэл түлхүүр үгээ өөрчилж үзнэ үү.';
+            if (!full.trim()) {
               setMessages((prev) =>
                 prev.map((m) =>
                   m.id === assistantId ? { ...m, content: finalText } : m,
@@ -206,7 +250,13 @@ export default function EsellerAssistant() {
         setMessages((prev) =>
           prev.map((m) =>
             m.id === assistantId
-              ? { ...m, content: 'Алдаа гарлаа. Дахин оролдоно уу.' }
+              ? {
+                  ...m,
+                  content:
+                    mode === 'shop'
+                      ? 'Бараа хайлт түр ажиллахгүй байна. Дахин оролдоно уу эсвэл /store-оос хайна уу.'
+                      : 'Алдаа гарлаа. Дахин оролдоно уу.',
+                }
               : m,
           ),
         );
@@ -214,164 +264,209 @@ export default function EsellerAssistant() {
         setLoading(false);
       }
     },
-    [history, input, loading, mode],
+    [budget, history, input, loading, mode],
   );
 
   const meta = MODE_META[mode];
 
   return (
     <>
-      {/* Single FAB — above MobileNav */}
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-label={open ? 'Туслах хаах' : 'eseller туслах нээх'}
-        aria-expanded={open}
-        className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem)] right-4 z-[9000] flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-gradient-to-br from-[#E8242C] to-[#9F1239] text-white shadow-lg shadow-red-900/30 transition active:scale-95 hover:scale-105 md:bottom-6 md:right-6"
-      >
-        {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-6 w-6" />}
-      </button>
+      {/* FAB — hidden while open so it doesn't cover the input on phones */}
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="AI худалдааны туслах нээх"
+          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem)] right-4 z-[9000] flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-gradient-to-br from-violet-600 to-[#E8242C] text-white shadow-lg shadow-violet-900/25 transition active:scale-95 md:bottom-6 md:right-6"
+        >
+          <MessageCircle className="h-6 w-6" />
+        </button>
+      )}
 
       {open && (
-        <div
-          role="dialog"
-          aria-label="eseller туслах"
-          className="fixed inset-x-0 bottom-0 top-auto z-[8990] flex max-h-[min(88dvh,640px)] w-full flex-col overflow-hidden rounded-t-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl sm:inset-x-auto sm:bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+4.5rem)] sm:right-4 sm:top-auto sm:max-h-[min(560px,calc(100dvh-8rem))] sm:w-[min(400px,calc(100vw-1.5rem))] sm:rounded-2xl md:bottom-[5.5rem] md:right-6"
-          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
-        >
-          {/* Drag handle (mobile) */}
-          <div className="flex shrink-0 justify-center pt-2 pb-0 sm:hidden" aria-hidden>
-            <div className="h-1 w-10 rounded-full bg-[var(--esl-border)]" />
-          </div>
+        <>
+          {/* Backdrop — tap to close; keeps focus on sheet */}
+          <button
+            type="button"
+            aria-label="Туслах хаах"
+            className="fixed inset-0 z-[8980] cursor-default border-0 bg-black/45 backdrop-blur-[2px] md:bg-black/30"
+            onClick={() => setOpen(false)}
+          />
 
-          {/* Header */}
-          <div className={`flex shrink-0 items-center gap-3 bg-gradient-to-r ${meta.header} px-4 py-3`}>
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white/20">
-              <Bot className="h-5 w-5 text-white" />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={meta.title}
+            className="fixed inset-x-0 bottom-0 z-[8990] flex h-[min(90dvh,100%)] max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(580px,calc(100dvh-3rem))] sm:max-h-[calc(100dvh-3rem)] sm:w-[min(400px,calc(100vw-2rem))] sm:rounded-2xl"
+          >
+            {/* Handle */}
+            <div className="flex shrink-0 justify-center pt-2 sm:hidden" aria-hidden>
+              <div className="h-1 w-10 rounded-full bg-[var(--esl-border)]" />
             </div>
-            <div className="min-w-0 flex-1">
-              <div className="text-sm font-bold text-white">eseller туслах</div>
-              <div className="truncate text-[11px] text-white/75">{meta.short}</div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              aria-label="Хаах"
-              className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-0 bg-white/15 text-white hover:bg-white/25"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </div>
 
-          {/* Mode tabs */}
-          <div className="flex shrink-0 gap-1 border-b border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-1.5">
-            {(Object.keys(MODE_META) as Mode[]).map((key) => {
-              const m = MODE_META[key];
-              const active = mode === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => switchMode(key)}
-                  className={`flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-lg border-0 px-2 py-2 text-xs font-bold transition ${
-                    active
-                      ? 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] shadow-sm'
-                      : 'bg-transparent text-[var(--esl-text-muted)]'
-                  }`}
-                >
-                  <m.Icon className="h-3.5 w-3.5" style={active ? { color: m.accent } : undefined} />
-                  {m.label}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Messages */}
-          <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain p-3">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`max-w-[88%] whitespace-pre-wrap px-3.5 py-2.5 text-[13px] leading-relaxed ${
-                    msg.role === 'user'
-                      ? 'rounded-[16px_16px_4px_16px] text-white'
-                      : 'rounded-[16px_16px_16px_4px] bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)]'
-                  }`}
-                  style={
-                    msg.role === 'user'
-                      ? { background: meta.accent }
-                      : undefined
-                  }
-                >
-                  {msg.content ? (
-                    <>
-                      {msg.content}
-                      <div className="mt-1 text-right text-[10px] opacity-50">{msg.time}</div>
-                    </>
-                  ) : (
-                    <span className="flex gap-1">
-                      {[0, 1, 2].map((i) => (
-                        <span
-                          key={i}
-                          className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60"
-                          style={{ animationDelay: `${i * 0.15}s` }}
-                        />
-                      ))}
-                    </span>
-                  )}
-                </div>
+            {/* Header */}
+            <div className={`flex shrink-0 items-center gap-3 bg-gradient-to-r ${meta.header} px-3 py-2.5 sm:px-4 sm:py-3`}>
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
+                <meta.Icon className="h-5 w-5 text-white" />
               </div>
-            ))}
-            <div ref={bottomRef} />
-          </div>
-
-          {/* Quick prompts */}
-          {messages.length <= 2 && (
-            <div className="flex shrink-0 flex-wrap gap-1.5 px-3 pb-1">
-              {QUICK[mode].map((q) => (
-                <button
-                  key={q}
-                  type="button"
-                  onClick={() => send(q)}
-                  disabled={loading}
-                  className="cursor-pointer rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-2.5 py-1 text-[11px] font-medium text-[var(--esl-text-muted)] transition hover:border-[#E8242C]/50 disabled:opacity-50"
-                >
-                  {q}
-                </button>
-              ))}
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-bold text-white">{meta.title}</div>
+                <div className="truncate text-[11px] text-white/80">{meta.short}</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Хаах"
+                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 bg-white/15 text-white hover:bg-white/25"
+              >
+                <X className="h-5 w-5" />
+              </button>
             </div>
-          )}
 
-          {/* Input */}
-          <div className="flex shrink-0 gap-2 border-t border-[var(--esl-border)] p-2.5">
-            <input
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  void send();
-                }
-              }}
-              placeholder={mode === 'help' ? 'Асуултаа бичнэ үү…' : 'Юу хайж байна вэ?'}
-              disabled={loading}
-              className="min-w-0 flex-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3.5 py-2.5 text-[13px] text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] disabled:opacity-50"
-            />
-            <button
-              type="button"
-              onClick={() => void send()}
-              disabled={!input.trim() || loading}
-              aria-label="Илгээх"
-              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 text-white transition disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: input.trim() && !loading ? meta.accent : 'var(--esl-bg-section)' }}
+            {/* Mode tabs — large hit area */}
+            <div className="flex shrink-0 gap-1 border-b border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-1.5">
+              {(Object.keys(MODE_META) as Mode[]).map((key) => {
+                const m = MODE_META[key];
+                const active = mode === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => switchMode(key)}
+                    className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 px-2 text-xs font-bold transition ${
+                      active
+                        ? 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] shadow-sm'
+                        : 'bg-transparent text-[var(--esl-text-muted)]'
+                    }`}
+                  >
+                    <m.Icon className="h-4 w-4" style={active ? { color: m.accent } : undefined} />
+                    {m.label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Shop budget chips */}
+            {mode === 'shop' && (
+              <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-[var(--esl-border)] px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <span className="shrink-0 self-center text-[10px] font-semibold text-[var(--esl-text-muted)]">
+                  Төсөв:
+                </span>
+                {BUDGETS.map((b) => {
+                  const active = budget === b.value;
+                  return (
+                    <button
+                      key={b.label}
+                      type="button"
+                      onClick={() => setBudget(b.value)}
+                      className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                        active
+                          ? 'border-violet-500 bg-violet-500/15 text-violet-600'
+                          : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
+                      }`}
+                    >
+                      {b.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Messages — flex-1 needs explicit parent height (sheet h-[90dvh]) */}
+            <div
+              ref={listRef}
+              className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
             >
-              <SendHorizonal className="h-5 w-5" />
-            </button>
+              {messages.map((msg) => (
+                <div
+                  key={msg.id}
+                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[90%] whitespace-pre-wrap break-words px-3.5 py-2.5 text-[13px] leading-relaxed sm:max-w-[85%] ${
+                      msg.role === 'user'
+                        ? 'rounded-[16px_16px_4px_16px] text-white'
+                        : 'rounded-[16px_16px_16px_4px] bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)]'
+                    }`}
+                    style={msg.role === 'user' ? { background: meta.accent } : undefined}
+                  >
+                    {msg.content ? (
+                      <>
+                        {renderChatText(msg.content)}
+                        <div className="mt-1 text-right text-[10px] opacity-50">{msg.time}</div>
+                      </>
+                    ) : (
+                      <span className="flex gap-1.5 py-0.5" aria-label="Бичиж байна">
+                        {[0, 1, 2].map((i) => (
+                          <span
+                            key={i}
+                            className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400"
+                            style={{ animationDelay: `${i * 0.15}s` }}
+                          />
+                        ))}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div ref={bottomRef} className="h-px shrink-0" />
+            </div>
+
+            {/* Quick prompts — larger touch targets */}
+            {messages.length <= 2 && (
+              <div className="flex shrink-0 flex-wrap gap-2 border-t border-[var(--esl-border)]/60 px-3 py-2">
+                {QUICK[mode].map((q) => (
+                  <button
+                    key={q}
+                    type="button"
+                    onClick={() => void send(q)}
+                    disabled={loading}
+                    className="min-h-9 cursor-pointer rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-1.5 text-[12px] font-semibold text-[var(--esl-text-muted)] transition active:scale-95 disabled:opacity-50"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Composer — 16px font prevents iOS zoom; safe-area padding */}
+            <div
+              className="flex shrink-0 gap-2 border-t border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-2.5"
+              style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom, 0px))' }}
+            >
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    void send();
+                  }
+                }}
+                enterKeyHint="send"
+                autoComplete="off"
+                autoCorrect="on"
+                placeholder={mode === 'help' ? 'Асуултаа бичнэ үү…' : 'Юу хайж байна вэ?'}
+                disabled={loading}
+                className="min-w-0 flex-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3.5 py-3 text-base text-[var(--esl-text-primary)] outline-none focus:border-violet-500 disabled:opacity-50 sm:text-[13px] sm:py-2.5"
+              />
+              <button
+                type="button"
+                onClick={() => void send()}
+                disabled={!input.trim() || loading}
+                aria-label="Илгээх"
+                className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+                style={{
+                  background: input.trim() && !loading ? meta.accent : 'var(--esl-bg-section)',
+                  color: input.trim() && !loading ? '#fff' : 'var(--esl-text-muted)',
+                }}
+              >
+                <SendHorizonal className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </>
   );
