@@ -35,7 +35,8 @@ async function main() {
 
   for (const role of ROLES) {
     const email = `smoke.${role}.${ts}@eseller-test.mn`;
-    const phone = `9${String(ts).slice(-7)}${ROLES.indexOf(role)}`.slice(0, 8);
+    // 8-digit unique phone per role (avoid truncating the role digit)
+    const phone = `9${String(ts).slice(-6)}${ROLES.indexOf(role)}`;
 
     const reg = await post<{ token: string; user: { role: string; shops?: unknown[] } }>(
       '/api/auth/register',
