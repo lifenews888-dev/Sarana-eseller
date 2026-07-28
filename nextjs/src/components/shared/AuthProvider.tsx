@@ -27,6 +27,13 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       });
       const payload = await res.json().catch(() => null);
       const freshUser = payload?.data?.user || payload?.user;
+      // Stale/invalid JWT: clear so /login is usable again (no fake "logged in" state).
+      if (res.status === 401 || res.status === 403) {
+        clearAuth();
+        setToken(null);
+        setUser(null);
+        return null;
+      }
       if (!res.ok || !freshUser) return null;
 
       saveAuth(currentToken, freshUser);
