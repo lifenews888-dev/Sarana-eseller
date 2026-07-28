@@ -52,6 +52,27 @@ const publicProductBaseWhere: Prisma.ProductWhereInput = {
   ],
 };
 
+/** True when salePrice is set above list price (broken "SALE" badge). */
+export function hasInvertedSalePrice(product: PublicProductInput): boolean {
+  const price = typeof product.price === 'number' && Number.isFinite(product.price) ? product.price : null;
+  const salePrice =
+    typeof product.salePrice === 'number' && Number.isFinite(product.salePrice) ? product.salePrice : null;
+  return price !== null && salePrice !== null && salePrice > 0 && salePrice > price;
+}
+
+/**
+ * Normalize inverted sale prices for public display:
+ * if sale > price, treat sale as the list price and clear the discount.
+ */
+export function normalizePublicPricing<T extends PublicProductInput>(product: T): T {
+  if (!hasInvertedSalePrice(product)) return product;
+  return {
+    ...product,
+    price: product.salePrice as number,
+    salePrice: null,
+  };
+}
+
 export function publicProductWhere(...clauses: Prisma.ProductWhereInput[]): Prisma.ProductWhereInput {
   return {
     AND: [
@@ -125,6 +146,8 @@ export function getPublicProductQualityIssue(product: PublicProductInput): strin
   if (product.isDemo === true) return 'demo product';
   if (hasBlockedPublicProductName(product)) return 'placeholder product name';
 
+  // Inverted sale is data corruption, not a hide reason — normalizePublicPricing
+  // repairs it for display. Effective price still uses list price when inverted.
   const effectivePrice = getPublicProductEffectivePrice(product);
   if (effectivePrice === null || effectivePrice < PUBLIC_PRODUCT_MIN_PRICE) {
     return `public product price below ${PUBLIC_PRODUCT_MIN_PRICE} MNT`;
@@ -139,7 +162,23 @@ export function isPublicLaunchProduct(product: PublicProductInput) {
 }
 
 export function filterPublicLaunchProducts<T extends PublicProductInput>(products: T[]): T[] {
-  return products.filter(isPublicLaunchProduct);
+  return products.filter(isPublicLaunchProduct).map(normalizePublicPricing);
+}
+
+/** Validate salePrice on write paths. Returns error message or null. */
+export function getSalePriceWriteError(price: unknown, salePrice: unknown): string | null {
+  if (salePrice === null || salePrice === undefined || salePrice === '' || salePrice === 0) {
+    return null;
+  }
+  const p = Number(price);
+  const s = Number(salePrice);
+  if (!Number.isFinite(p) || p < 0) return 'price must be a non-negative number';
+  if (!Number.isFinite(s) || s < 0) return 'salePrice must be a non-negative number';
+  if (s > 0 && s >= p) return 'salePrice must be lower than price';
+  if (s > 0 && s < PUBLIC_PRODUCT_MIN_PRICE) {
+    return `salePrice must be at least ${PUBLIC_PRODUCT_MIN_PRICE} MNT`;
+  }
+  return null;
 }
 
 export async function fetchPublicLaunchProductPage<T extends PublicProductInput>({

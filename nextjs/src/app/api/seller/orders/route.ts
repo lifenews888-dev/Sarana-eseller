@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   // Shop.userId is the owner
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
+  const shop = await prisma.shop.findFirst({ where: { userId: user.id } });
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   const status = req.nextUrl.searchParams.get('status');

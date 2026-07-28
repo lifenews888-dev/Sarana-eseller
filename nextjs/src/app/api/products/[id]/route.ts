@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { ok, fail } from '@/lib/api-envelope';
 import { DEMO_PRODUCTS } from '@/lib/utils';
 import { getSafeImageList } from '@/lib/image-url';
-import { isPublicLaunchProduct } from '@/lib/product-visibility';
+import { isPublicLaunchProduct, normalizePublicPricing } from '@/lib/product-visibility';
 
 type DemoProduct = (typeof DEMO_PRODUCTS)[number] & { images?: string[]; stock?: number };
 
@@ -85,9 +85,14 @@ export async function GET(
             id: true,
             name: true,
             avatar: true,
-            shop: { select: { id: true, name: true, slug: true, logo: true } },
+            shops: {
+              select: { id: true, name: true, slug: true, logo: true },
+              orderBy: { createdAt: 'asc' },
+              take: 1,
+            },
           },
         },
+        shop: { select: { id: true, name: true, slug: true, logo: true } },
         // DropshipProduct is 1:1 via productId. When present the mobile +
         // web UIs render "imported from abroad" badges and longer ETAs.
         dropship: {
@@ -105,12 +110,18 @@ export async function GET(
       return fail('Бараа олдсонгүй', 404);
     }
 
+    const priced = normalizePublicPricing(product);
+    const shopSummary =
+      product.shop ||
+      product.user?.shops?.[0] ||
+      null;
+
     return ok({
       id: product.id,
       _id: product.id,
       name: product.name,
-      price: product.price,
-      salePrice: product.salePrice,
+      price: priced.price,
+      salePrice: priced.salePrice,
       description: product.description,
       images: getSafeImageList(product.images),
       stock: product.stock,
@@ -158,7 +169,7 @@ export async function GET(
       fileType: product.fileType,
       fileSize: product.fileSize,
       downloadCount: product.downloadCount,
-      shop: product.user?.shop || null,
+      shop: shopSummary,
       seller: product.user ? { id: product.user.id, name: product.user.name, avatar: product.user.avatar } : null,
       // Null for non-dropship products; populated flat object otherwise so
       // clients can `if (product.dropship) {...}` without a null check on

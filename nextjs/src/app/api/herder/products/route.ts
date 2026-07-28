@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     // Build product filter
     const productWhere: Record<string, unknown> = {
       isActive: true,
-      user: { shop: { id: { in: shopIds } } },
+      shopId: { in: shopIds },
     };
 
     if (category && (HERDER_CATEGORIES as readonly string[]).includes(category)) {
@@ -58,15 +58,8 @@ export async function GET(req: NextRequest) {
         skip: (page - 1) * limit,
         take: limit,
         include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              shop: {
-                select: { id: true, name: true, slug: true },
-              },
-            },
-          },
+          shop: { select: { id: true, name: true, slug: true } },
+          user: { select: { id: true, name: true } },
         },
       }),
       prisma.product.count({ where: productWhere }),
@@ -74,7 +67,7 @@ export async function GET(req: NextRequest) {
 
     // Attach herder context to each product
     const enriched = products.map(p => {
-      const shopId = p.user?.shop?.id;
+      const shopId = p.shopId || p.shop?.id;
       const herder = shopId ? herderMap.get(shopId) : null;
       return {
         ...p,

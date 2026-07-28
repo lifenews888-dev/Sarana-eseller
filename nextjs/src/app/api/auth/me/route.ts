@@ -49,7 +49,11 @@ export async function GET(req: NextRequest) {
         avatar: true,
         store: true,
         entityType: true,
-        shop: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        shops: {
+          select: { id: true, name: true, slug: true, logo: true, phone: true, address: true },
+          orderBy: { createdAt: 'asc' },
+          take: 20,
+        },
         agent: { select: { name: true, slug: true, profilePhoto: true, phone: true, address: true } },
         company: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
         autoDealer: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
@@ -59,8 +63,19 @@ export async function GET(req: NextRequest) {
 
     if (!user) return fail('Хэрэглэгч олдсонгүй', 404);
 
+    const primaryShop = user.shops[0]
+      ? {
+          id: user.shops[0].id,
+          name: user.shops[0].name,
+          slug: user.shops[0].slug,
+          logo: user.shops[0].logo,
+          phone: user.shops[0].phone,
+          address: user.shops[0].address,
+        }
+      : null;
+
     const entityStore =
-      user.shop ||
+      primaryShop ||
       (user.agent
         ? { name: user.agent.name, slug: user.agent.slug, logo: user.agent.profilePhoto, phone: user.agent.phone, address: user.agent.address }
         : null) ||
@@ -81,6 +96,7 @@ export async function GET(req: NextRequest) {
         avatar: user.avatar,
         entityType: user.entityType,
         store: entityStore,
+        shops: user.shops,
       },
     });
   } catch (e: unknown) {

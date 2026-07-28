@@ -7,8 +7,7 @@ export async function GET(req: NextRequest) {
   const user = requireSeller(req);
   if (user instanceof Response) return user;
 
-  const shop = await prisma.shop.findUnique({
-    where: { userId: user.id },
+  const shop = await prisma.shop.findFirst({ where: { userId: user.id },
     select: { categoryIds: true },
   });
 
@@ -34,7 +33,7 @@ export async function POST(req: NextRequest) {
   const { categoryIds } = await req.json();
   if (!Array.isArray(categoryIds)) return errorJson('categoryIds array шаардлагатай');
 
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
+  const shop = await prisma.shop.findFirst({ where: { userId: user.id } });
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   try {

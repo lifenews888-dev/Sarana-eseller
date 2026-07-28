@@ -80,31 +80,42 @@ export async function POST(req: NextRequest) {
           digital: 'digital',
           pre_order: 'preorder',
         };
-        entity = await prisma.shop.upsert({
-          where: { userId: auth.id },
-          create: {
+        const industry = industryMap[entityType] || 'general';
+        const existingShop = await prisma.shop.findFirst({
+          where: {
             userId: auth.id,
-            name,
-            slug: safeSlug,
-            storefrontSlug: safeSlug,
-            logo: safeLogo,
-            phone,
-            address,
-            district,
-            industry: industryMap[entityType] || 'general',
-            locationStatus: 'pending',
+            OR: [{ slug: safeSlug }, { storefrontSlug: safeSlug }, { industry }],
           },
-          update: {
-            name,
-            slug: safeSlug,
-            storefrontSlug: safeSlug,
-            logo: logo === undefined ? undefined : safeLogo,
-            phone: phone || undefined,
-            address: address || undefined,
-            district: district || undefined,
-            industry: industryMap[entityType] || 'general',
-          },
+          orderBy: { createdAt: 'asc' },
         });
+        entity = existingShop
+          ? await prisma.shop.update({
+              where: { id: existingShop.id },
+              data: {
+                name,
+                slug: safeSlug,
+                storefrontSlug: safeSlug,
+                logo: logo === undefined ? undefined : safeLogo,
+                phone: phone || undefined,
+                address: address || undefined,
+                district: district || undefined,
+                industry,
+              },
+            })
+          : await prisma.shop.create({
+              data: {
+                userId: auth.id,
+                name,
+                slug: safeSlug,
+                storefrontSlug: safeSlug,
+                logo: safeLogo,
+                phone,
+                address,
+                district,
+                industry,
+                locationStatus: 'pending',
+              },
+            });
         break;
       }
       case 'agent':
@@ -253,7 +264,11 @@ export async function POST(req: NextRequest) {
       where: { id: auth.id },
       data: { role: 'seller', entityType, username },
       include: {
-        shop: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
+        shops: {
+          select: { id: true, name: true, slug: true, logo: true, phone: true, address: true },
+          orderBy: { createdAt: 'asc' },
+          take: 20,
+        },
         agent: { select: { name: true, slug: true, profilePhoto: true, phone: true, address: true } },
         company: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
         autoDealer: { select: { name: true, slug: true, logo: true, phone: true, address: true } },
@@ -279,8 +294,18 @@ export async function POST(req: NextRequest) {
       name: updatedUser.name,
       entityType: updatedUser.entityType,
     });
+    const primaryShop = updatedUser.shops[0]
+      ? {
+          id: updatedUser.shops[0].id,
+          name: updatedUser.shops[0].name,
+          slug: updatedUser.shops[0].slug,
+          logo: updatedUser.shops[0].logo,
+          phone: updatedUser.shops[0].phone,
+          address: updatedUser.shops[0].address,
+        }
+      : null;
     const entityStore =
-      updatedUser.shop ||
+      primaryShop ||
       (updatedUser.agent
         ? {
             name: updatedUser.agent.name,

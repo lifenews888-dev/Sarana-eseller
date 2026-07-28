@@ -8,8 +8,7 @@ export async function GET(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
 
-  const shop = await prisma.shop.findUnique({
-    where: { userId: auth.id },
+  const shop = await prisma.shop.findFirst({ where: { userId: auth.id },
     include: {
       integration: {
         include: { importedUrls: { take: 10, orderBy: { createdAt: 'desc' } } },
@@ -37,7 +36,7 @@ export async function POST(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
+  const shop = await prisma.shop.findFirst({ where: { userId: auth.id } })
   if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   const integration = await prisma.storeIntegration.upsert({

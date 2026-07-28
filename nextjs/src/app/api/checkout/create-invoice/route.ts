@@ -98,9 +98,10 @@ export async function POST(req: NextRequest) {
           select: { userId: true },
         });
         if (product?.userId) {
-          const shop = await prisma.shop.findUnique({
+          const shop = await prisma.shop.findFirst({
             where: { userId: product.userId },
-            select: { id: true, user: { select: { pushToken: true } } },
+            orderBy: { createdAt: 'asc' },
+            select: { id: true, userId: true },
           });
           if (shop?.id) {
             await prisma.order.update({
@@ -108,8 +109,12 @@ export async function POST(req: NextRequest) {
               data: { shopId: shop.id },
             });
           }
-          if (shop?.user?.pushToken) {
-            await sendExpoPush(shop.user.pushToken, {
+          const seller = await prisma.user.findUnique({
+            where: { id: product.userId },
+            select: { pushToken: true },
+          });
+          if (seller?.pushToken) {
+            await sendExpoPush(seller.pushToken, {
               title: '🛍️ Шинэ захиалга ирлээ!',
               body: `${normalizedItems.length} бараа — ${amount.toLocaleString()}₮`,
               data: { orderId: order.id, screen: 'seller-orders' },
