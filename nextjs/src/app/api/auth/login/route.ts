@@ -39,7 +39,17 @@ export async function POST(req: NextRequest) {
       return fail('Хэрэглэгч олдсонгүй', 401);
     }
 
-    const isValid = await bcrypt.compare(password, user.password);
+    // OTP-only accounts may have empty password hash — force reset / OTP path.
+    if (!user.password) {
+      return fail('Энэ данс нууц үггүй. OTP эсвэл Google/ДАН-аар нэвтэрнэ үү', 401);
+    }
+
+    let isValid = false;
+    try {
+      isValid = await bcrypt.compare(password, user.password);
+    } catch {
+      isValid = false;
+    }
     if (!isValid) {
       return fail('Имэйл эсвэл нууц үг буруу', 401);
     }
