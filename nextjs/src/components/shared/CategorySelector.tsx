@@ -144,14 +144,14 @@ export default function CategorySelector({ value, onChange, label }: CategorySel
 
   return (
     <div className="space-y-2">
-      {label && <label className="text-sm font-medium text-[var(--esl-text)]">{label}</label>}
+      {label && <label className="text-sm font-medium text-[var(--esl-text-secondary)]">{label}</label>}
 
       {selectLevels.map((level, index) => (
         <div key={index} className="relative">
           <select
             value={level.value}
             onChange={(e) => handleLevelChange(index, e.target.value)}
-            className="w-full px-3 py-2 bg-[var(--esl-bg-section)] border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text)] appearance-none pr-8"
+            className="w-full appearance-none rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5 pr-8 text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C]"
           >
             <option value="">{level.placeholder}</option>
             {level.options.map((c) => (

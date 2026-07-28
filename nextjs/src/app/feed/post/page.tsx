@@ -181,6 +181,7 @@ function genericProductMetadataGroups(fields: ListingMetadataField[]): MetadataF
 
 function metadataPreviewTitle(category: string) {
   const root = normalizeMarketplaceCategory(category);
+  if (root === 'jobs') return 'Ажлын байрны мэдээлэл';
   if (root === 'phones') return 'Утасны мэдээлэл';
   if (root === 'vehicles') return 'Машины мэдээлэл';
   if (root === 'real-estate') return 'Байрны мэдээлэл';
@@ -212,6 +213,8 @@ function suggestedTitleForCategory(
   const projectStatus = cleanTitlePart(draft.projectStatus);
   const buildingName = cleanTitlePart(draft.buildingName || draft.microDistrict);
   const productType = cleanTitlePart(draft.productType || leafLabel);
+  const positionTitle = cleanTitlePart(draft.positionTitle || leafLabel);
+  const employerName = cleanTitlePart(draft.employerName);
 
   if (root === 'vehicles') return trimSuggestedTitle([brand, model, year]);
   if (root === 'phones') return trimSuggestedTitle([brand, model, storage]);
@@ -226,6 +229,10 @@ function suggestedTitleForCategory(
     return trimSuggestedTitle([cleanTitlePart(leafLabel), projectStatus]);
   }
 
+  if (root === 'jobs') {
+    return trimSuggestedTitle([positionTitle, employerName ? `- ${employerName}` : '']);
+  }
+
   if (category && root !== 'all') return trimSuggestedTitle([brand, model, productType]);
   return '';
 }
@@ -237,6 +244,14 @@ function appendDetail(lines: string[], label: string, value?: string, suffix = '
 
 function descriptionGuidanceForCategory(category: string): DescriptionGuidance {
   const root = normalizeMarketplaceCategory(category);
+
+  if (root === 'jobs') {
+    return {
+      title: 'Ажлын зарын тайлбарт заавал оруулах зүйлс',
+      placeholder: 'Албан тушаал, ажил үүрэг, хуваарь, цалин/цагийн үнэлгээ, байршил, шаардлага, давуу тал, анкет авах хэлбэрээ тодорхой бичнэ...',
+      tips: ['Ажиллах хэлбэр, ээлж/цаг, цалинг тодорхой бич', 'Гүйцэтгэх ажил болон шаардлагыг богино жагсаа', 'Анкет авах утас, чат, имэйл эсвэл хугацааг заавал оруул'],
+    };
+  }
 
   if (root === 'vehicles') {
     return {
@@ -287,6 +302,22 @@ function suggestedDescriptionForCategory(
   const brand = cleanTitlePart(draft.brand);
   const model = cleanTitlePart(draft.model);
   const leaf = cleanTitlePart(leafLabel);
+
+  if (root === 'jobs') {
+    const title = trimSuggestedTitle([draft.positionTitle || leaf, draft.employerName]);
+    if (title) lines.push(`${title} ажилд урьж байна.`);
+    appendDetail(lines, 'Ажлын хэлбэр', draft.jobType);
+    appendDetail(lines, 'Ажиллах орчин', draft.workplaceType);
+    appendDetail(lines, 'Хуваарь', draft.schedule);
+    appendDetail(lines, 'Цалин', draft.salaryMin && draft.salaryMax ? `${draft.salaryMin}-${draft.salaryMax}₮` : draft.salaryMin, draft.salaryMin && !draft.salaryMax ? '₮' : '');
+    appendDetail(lines, 'Цагийн үнэлгээ', draft.hourlyRate, draft.hourlyRate ? '₮' : '');
+    appendDetail(lines, 'Туршлага', draft.experienceLevel);
+    appendDetail(lines, 'Гүйцэтгэх ажил', draft.responsibilities);
+    appendDetail(lines, 'Шаардлага', draft.requirements);
+    appendDetail(lines, 'Давуу тал', draft.benefits);
+    appendDetail(lines, 'Анкет авах', draft.applicationMethod);
+    return lines.join('\n');
+  }
 
   if (root === 'vehicles') {
     const title = trimSuggestedTitle([brand, model, draft.year]);
@@ -364,7 +395,7 @@ function suggestedDescriptionForCategory(
 function isGenericProductCategory(category: string) {
   const root = normalizeMarketplaceCategory(category);
   return Boolean(category)
-    && !['phones', 'vehicles', 'real-estate', 'new-buildings'].includes(root)
+    && !['phones', 'vehicles', 'real-estate', 'new-buildings', 'jobs'].includes(root)
     && ![
       'education-training',
       'beauty-services',
@@ -381,6 +412,19 @@ function isGenericProductCategory(category: string) {
 
 function postQualityProfileForCategory(category: string): PostQualityProfile {
   const root = normalizeMarketplaceCategory(category);
+
+  if (root === 'jobs') {
+    return {
+      title: 'Ажлын зарын чанарын checklist',
+      minImages: 0,
+      recommendedImages: 1,
+      tips: [
+        'Ажил олгогчийн logo, ажлын байр эсвэл багийн зураг байвал итгэл нэмнэ',
+        'Цалин, хуваарь, байршил, анкет авах хэлбэрээ тодорхой бич',
+        'Цагийн ажил бол цагийн үнэлгээ болон ээлжийн цагийг заавал оруул',
+      ],
+    };
+  }
 
   if (root === 'vehicles') {
     return {
@@ -511,6 +555,8 @@ export default function PostAdPage() {
   const selectedCategory = findMarketplaceCategory(category);
   const selectedCategoryPath = categoryPathInfo(category);
   const selectedCategoryPathLabel = selectedCategoryPath?.label || selectedCategory?.label || '';
+  const isJobListing = normalizeMarketplaceCategory(category) === 'jobs';
+  const priceLabel = isJobListing ? 'Цалин / үнэлгээ' : 'Үнэ';
   const showCategoryPrefillNotice = Boolean(
     prefilledCategory
     && category === prefilledCategory
@@ -1002,7 +1048,7 @@ export default function PostAdPage() {
             required={field.required}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
-            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
+            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-[var(--esl-text-primary)] outline-none transition focus:border-[#E8242C]"
           >
             <option value="">Сонгох</option>
             {(field.options || []).map((option) => (
@@ -1020,7 +1066,7 @@ export default function PostAdPage() {
             required={field.required}
             value={value}
             onChange={(e) => updateMetadata(field.key, e.target.value)}
-            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition focus:border-[#E8242C]"
+            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-[var(--esl-text-primary)] outline-none transition focus:border-[#E8242C]"
           >
             <option value="">Сонгох</option>
             <option value="true">Тийм</option>
@@ -1039,7 +1085,7 @@ export default function PostAdPage() {
             onChange={(e) => updateMetadata(field.key, e.target.value)}
             placeholder={field.placeholder}
             rows={3}
-            className="w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#E8242C]"
+            className="w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2 text-sm text-[var(--esl-text-primary)] outline-none transition placeholder:text-[var(--esl-text-muted)] focus:border-[#E8242C]"
           />
         ) : (
           <input
@@ -1058,7 +1104,7 @@ export default function PostAdPage() {
               field.type === 'number' ? e.target.value.replace(/[^0-9.]/g, '') : e.target.value,
             )}
             placeholder={field.placeholder}
-            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-white outline-none transition placeholder:text-[#555] focus:border-[#E8242C]"
+            className="h-11 w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 text-sm text-[var(--esl-text-primary)] outline-none transition placeholder:text-[var(--esl-text-muted)] focus:border-[#E8242C]"
           />
         )}
 
@@ -1077,13 +1123,13 @@ export default function PostAdPage() {
               type="button"
               onClick={() => setShowPreview(false)}
               aria-label="Засварлах горим руу буцах"
-              className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-white cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition"
+              className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-primary)] cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="flex-1">
-              <h1 className="text-lg font-black text-white">Зарын урьдчилсан харагдац</h1>
-              <p className={`text-xs ${publishedItemId ? 'text-green-400' : 'text-[var(--esl-text-muted)]'}`}>
+              <h1 className="text-lg font-black text-[var(--esl-text-primary)]">Зарын урьдчилсан харагдац</h1>
+              <p className={`text-xs ${publishedItemId ? 'text-green-600 dark:text-green-400' : 'text-[var(--esl-text-muted)]'}`}>
                 {publishedItemId ? 'Зар амжилттай нийтлэгдлээ.' : 'Мэдээллээ нягтлаад нийтлэх товч дарна уу.'}
               </p>
             </div>
@@ -1108,7 +1154,7 @@ export default function PostAdPage() {
                   </div>
                 )}
                 {isVip && (
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-[rgba(212,175,55,0.2)] text-[#D4AF37]">
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold bg-[rgba(212,175,55,0.2)] text-amber-700 dark:text-amber-300">
                     <Crown className="w-3.5 h-3.5" /> ВИП
                   </div>
                 )}
@@ -1122,27 +1168,27 @@ export default function PostAdPage() {
               <div className="flex-1 p-4 sm:p-5">
                 <div className="flex items-center gap-2 text-xs text-[var(--esl-text-muted)] mb-2">
                   <span className="flex items-center gap-1"><User className="w-3.5 h-3.5" /> Та</span>
-                  {district && <><span className="text-[#3D3D3D]">·</span><span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{district}</span></>}
+                  {district && <><span className="text-[var(--esl-border)]">·</span><span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{district}</span></>}
                 </div>
-                <h3 className={`text-base font-extrabold mb-1.5 leading-snug ${isVip ? 'text-[#FFD700]' : 'text-white'}`}>{title || 'Гарчиг...'}</h3>
-                <p className="text-sm text-[#888] line-clamp-2 mb-3">{description || 'Тайлбар...'}</p>
+                <h3 className={`text-base font-extrabold mb-1.5 leading-snug ${isVip ? 'text-amber-700 dark:text-amber-300' : 'text-[var(--esl-text-primary)]'}`}>{title || 'Гарчиг...'}</h3>
+                <p className="text-sm text-[var(--esl-text-muted)] line-clamp-2 mb-3">{description || 'Тайлбар...'}</p>
                 {condition && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
-                    <span className="text-[11px] font-semibold text-[#D0D0D0] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">{CONDITIONS.find(c => c.key === condition)?.label}</span>
+                    <span className="text-[11px] font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">{CONDITIONS.find(c => c.key === condition)?.label}</span>
                   </div>
                 )}
                 {previewMetadataItems.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {previewMetadataItems.slice(0, 4).map((item) => (
-                      <span key={item.key} className="text-[11px] font-semibold text-[#D0D0D0] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">
+                      <span key={item.key} className="text-[11px] font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-2 py-1 rounded">
                         {item.value}
                       </span>
                     ))}
                   </div>
                 )}
                 <div className="flex items-end justify-between">
-                  <span className={`text-xl font-black ${isVip ? 'text-[#FFD700]' : 'text-[#E8242C]'}`}>{formatPrice(Number(price) || 0)}</span>
-                  <div className="flex items-center gap-3 text-[11px] text-[#555]">
+                  <span className={`text-xl font-black ${isVip ? 'text-amber-700 dark:text-amber-300' : 'text-[#E8242C]'}`}>{formatPrice(Number(price) || 0)}</span>
+                  <div className="flex items-center gap-3 text-[11px] text-[var(--esl-text-muted)]">
                     <span className="flex items-center gap-1"><Eye className="w-3 h-3" />0</span>
                     <span className="flex items-center gap-1"><Clock className="w-3 h-3" />Өнөөдөр</span>
                   </div>
@@ -1234,7 +1280,7 @@ export default function PostAdPage() {
                 </>
               )}
               {isVip && (
-                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-[rgba(212,175,55,0.25)] text-[#D4AF37]" style={{ backdropFilter: 'blur(8px)' }}>
+                <div className="absolute top-4 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-[rgba(212,175,55,0.25)] text-amber-700 dark:text-amber-300" style={{ backdropFilter: 'blur(8px)' }}>
                   <Crown className="w-4 h-4" /> ВИП
                 </div>
               )}
@@ -1245,16 +1291,16 @@ export default function PostAdPage() {
               <div className="flex items-center gap-2 text-sm text-[var(--esl-text-muted)] mb-3">
                 <User className="w-4 h-4" />
                 <span className="font-semibold text-[var(--esl-text-secondary)]">Та</span>
-                <span className="text-[#3D3D3D]">·</span>
+                <span className="text-[var(--esl-border)]">·</span>
                 <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{district || '—'}</span>
               </div>
-              <h2 className={`text-2xl font-black mb-2 ${isVip ? 'text-[#FFD700]' : 'text-white'}`}>{title || 'Гарчиг...'}</h2>
+              <h2 className={`text-2xl font-black mb-2 ${isVip ? 'text-amber-700 dark:text-amber-300' : 'text-[var(--esl-text-primary)]'}`}>{title || 'Гарчиг...'}</h2>
               <div className="flex items-center gap-3 mb-4">
-                <span className={`text-3xl font-black ${isVip ? 'text-[#FFD700]' : 'text-[#E8242C]'}`}>{formatPrice(Number(price) || 0)}</span>
+                <span className={`text-3xl font-black ${isVip ? 'text-amber-700 dark:text-amber-300' : 'text-[#E8242C]'}`}>{formatPrice(Number(price) || 0)}</span>
               </div>
               {condition && (
                 <div className="flex flex-wrap gap-2 mb-5">
-                  <span className="text-xs font-semibold text-[#D0D0D0] bg-[var(--esl-bg-elevated)] px-3 py-1.5 rounded-lg">
+                  <span className="text-xs font-semibold text-[var(--esl-text-secondary)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 rounded-lg">
                     {CONDITIONS.find(c => c.key === condition)?.label}
                   </span>
                 </div>
@@ -1268,7 +1314,7 @@ export default function PostAdPage() {
                         {group.items.map((item) => (
                           <div key={item.key} className="rounded-lg bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] px-3 py-2">
                             <p className="text-[11px] text-[var(--esl-text-muted)]">{item.label}</p>
-                            <p className="text-sm font-semibold text-white mt-0.5 leading-tight">{item.value}</p>
+                            <p className="text-sm font-semibold text-[var(--esl-text-primary)] mt-0.5 leading-tight">{item.value}</p>
                           </div>
                         ))}
                       </div>
@@ -1278,10 +1324,10 @@ export default function PostAdPage() {
               )}
               <div className="mb-6">
                 <h3 className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2">Тайлбар</h3>
-                <p className="text-sm text-[#999] leading-relaxed whitespace-pre-wrap">{description || 'Тайлбар оруулаагүй'}</p>
+                <p className="text-sm text-[var(--esl-text-muted)] leading-relaxed whitespace-pre-wrap">{description || 'Тайлбар оруулаагүй'}</p>
               </div>
               {phone && (
-                <div className="flex items-center gap-2 text-sm text-[#999] mb-6 pb-6 border-b border-[var(--esl-border)]">
+                <div className="flex items-center gap-2 text-sm text-[var(--esl-text-muted)] mb-6 pb-6 border-b border-[var(--esl-border)]">
                   <Phone className="w-3.5 h-3.5" /> +976 {phone}
                 </div>
               )}
@@ -1289,7 +1335,7 @@ export default function PostAdPage() {
                 <div className="flex-1 flex items-center justify-center gap-2 h-12 bg-[#E8242C] text-white font-bold rounded-xl text-sm">
                   <Phone className="w-4 h-4" /> Залгах
                 </div>
-                <div className="flex-1 flex items-center justify-center gap-2 h-12 bg-[var(--esl-bg-elevated)] text-white font-bold rounded-xl border border-[var(--esl-border)] text-sm">
+                <div className="flex-1 flex items-center justify-center gap-2 h-12 bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] font-bold rounded-xl border border-[var(--esl-border)] text-sm">
                   💬 Мессеж
                 </div>
               </div>
@@ -1329,12 +1375,12 @@ export default function PostAdPage() {
               role="status"
               aria-labelledby="feed-post-publish-success-title"
               aria-describedby="feed-post-publish-success-message"
-              className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-100"
+              className="mb-4 flex items-center gap-3 rounded-xl border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-800 dark:text-green-100"
             >
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-400" />
+              <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
               <div>
                 <p id="feed-post-publish-success-title" className="font-bold">Зар нийтлэгдлээ</p>
-                <p id="feed-post-publish-success-message" className="mt-1 text-xs text-green-100/80">Одоо хэрэглэгчид зарын буланд харах боломжтой.</p>
+                <p id="feed-post-publish-success-message" className="mt-1 text-xs text-green-800 dark:text-green-100/80">Одоо хэрэглэгчид зарын буланд харах боломжтой.</p>
               </div>
             </div>
           )}
@@ -1348,7 +1394,7 @@ export default function PostAdPage() {
                   onClick={() => { setShowPreview(false); }}
                   disabled={publishing}
                   aria-label="Зарыг засах"
-                  className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] text-sm font-bold border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <ArrowLeft className="w-4 h-4" /> Засах
                 </button>
@@ -1369,7 +1415,7 @@ export default function PostAdPage() {
                 <Link href={`/feed/${publishedItemId}`} className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold no-underline hover:bg-[#CC0000] transition flex items-center justify-center gap-2">
                   Дэлгэрэнгүй харах
                 </Link>
-                <button type="button" onClick={() => router.push('/feed')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-white text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition flex items-center justify-center gap-2">
+                <button type="button" onClick={() => router.push('/feed')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] text-sm font-bold border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center gap-2">
                   Зарын булан
                 </button>
               </>
@@ -1402,12 +1448,12 @@ export default function PostAdPage() {
             type="button"
             onClick={() => router.back()}
             aria-label="Өмнөх хуудас руу буцах"
-            className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-white cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition"
+            className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-primary)] cursor-pointer hover:bg-[var(--esl-bg-elevated)] transition"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex-1">
-            <h1 className="text-lg font-black text-white">Зар оруулах</h1>
+            <h1 className="text-lg font-black text-[var(--esl-text-primary)]">Зар оруулах</h1>
             <p className="text-xs text-[var(--esl-text-muted)]">Зурагтай зар 5x илүү олон хүнд хүрнэ</p>
           </div>
           <Link href="/" className="flex items-center gap-2 no-underline">
@@ -1425,14 +1471,14 @@ export default function PostAdPage() {
             aria-describedby="feed-post-draft-notice-message"
             className="mb-6 flex flex-col gap-3 rounded-2xl border border-blue-500/25 bg-blue-500/10 p-4 sm:flex-row sm:items-center"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-300">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-500/15 text-blue-700 dark:text-blue-300">
               <Clock className="h-5 w-5" />
             </div>
             <div className="flex-1">
-              <p id="feed-post-draft-notice-title" className="text-sm font-extrabold text-blue-100">
+              <p id="feed-post-draft-notice-title" className="text-sm font-extrabold text-blue-800 dark:text-blue-100">
                 {draftRestored ? 'Өмнөх ноорог сэргээгдлээ' : 'Ноорог автоматаар хадгалагдлаа'}
               </p>
-              <p id="feed-post-draft-notice-message" className="mt-1 text-xs leading-relaxed text-blue-100/70">
+              <p id="feed-post-draft-notice-message" className="mt-1 text-xs leading-relaxed text-blue-700/90 dark:text-blue-100/70">
                 Нэвтрэх шаардлага гарсан ч бөглөсөн талбарууд хадгалагдана. Зураг, видео файлыг хөтөч дахин сэргээдэггүй тул нийтлэхийн өмнө дахин сонгоно.
                 {draftSavedAt && (
                   <>
@@ -1446,7 +1492,7 @@ export default function PostAdPage() {
               type="button"
               onClick={() => setDraftNoticeDismissed(true)}
               aria-label="Ноорог хадгалалтын мэдэгдлийг хаах"
-              className="h-9 rounded-xl border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-bold text-blue-100 transition hover:bg-blue-500/20"
+              className="h-9 rounded-xl border border-blue-300/20 bg-blue-500/10 px-3 text-xs font-bold text-blue-800 dark:text-blue-100 transition hover:bg-blue-500/20"
             >
               Мэдэгдлийг хаах
             </button>
@@ -1463,9 +1509,9 @@ export default function PostAdPage() {
           className={jumpTargetClass('feed-post-media', 'mb-8 scroll-mt-24')}
         >
           <label id="feed-post-media-label" htmlFor="feed-post-media-input" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-1 block">
-            Зураг & Видео <span className="text-[#888] font-normal">({mediaFiles.length}/10)</span>
+            Зураг & Видео <span className="text-[var(--esl-text-muted)] font-normal">({mediaFiles.length}/10)</span>
           </label>
-          <p id="feed-post-media-help" className="text-xs text-[#555] mb-3">Зураг: JPG, PNG, WebP (10MB хүртэл) · Видео: MP4, WebM (50MB хүртэл, 3 хүртэл)</p>
+          <p id="feed-post-media-help" className="text-xs text-[var(--esl-text-muted)] mb-3">Зураг: JPG, PNG, WebP (10MB хүртэл) · Видео: MP4, WebM (50MB хүртэл, 3 хүртэл)</p>
 
           <div
             role="group"
@@ -1490,7 +1536,7 @@ export default function PostAdPage() {
               >
                 <Camera className="w-6 h-6" />
                 <span className="text-xs font-semibold">Нэмэх</span>
-                <span className="text-[10px] text-[#555]">{mediaFiles.length}/10</span>
+                <span className="text-[10px] text-[var(--esl-text-muted)]">{mediaFiles.length}/10</span>
               </button>
             )}
 
@@ -1500,7 +1546,7 @@ export default function PostAdPage() {
                 {m.type === 'video' ? (
                   <div className="w-full h-full bg-black relative">
                     <video src={m.preview} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/10 dark:bg-black/30">
                       <Play className="w-6 h-6 text-white" fill="white" />
                     </div>
                   </div>
@@ -1571,7 +1617,7 @@ export default function PostAdPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-sm font-black text-white">{qualityProfile.title}</p>
+                    <p className="text-sm font-black text-[var(--esl-text-primary)]">{qualityProfile.title}</p>
                     <p
                       id="feed-post-media-requirement"
                       role="status"
@@ -1585,20 +1631,20 @@ export default function PostAdPage() {
                   <div className="mt-3 grid gap-2 sm:grid-cols-3">
                     <div className={`rounded-xl border px-3 py-2 ${mediaRequirementSatisfied ? 'border-green-500/25 bg-green-500/10' : 'border-amber-500/25 bg-amber-500/10'}`}>
                       <div className="flex items-center gap-2">
-                        {mediaRequirementSatisfied ? <CheckCircle2 className="h-4 w-4 text-green-400" /> : <AlertCircle className="h-4 w-4 text-amber-300" />}
-                        <span className="text-xs font-bold text-white">Доод тал нь {qualityProfile.minImages} зураг</span>
+                        {mediaRequirementSatisfied ? <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" /> : <AlertCircle className="h-4 w-4 text-amber-700 dark:text-amber-300" />}
+                        <span className="text-xs font-bold text-[var(--esl-text-primary)]">Доод тал нь {qualityProfile.minImages} зураг</span>
                       </div>
                     </div>
                     <div className={`rounded-xl border px-3 py-2 ${missingRequiredMetadata.length === 0 ? 'border-green-500/25 bg-green-500/10' : 'border-amber-500/25 bg-amber-500/10'}`}>
                       <div className="flex items-center gap-2">
-                        {missingRequiredMetadata.length === 0 ? <CheckCircle2 className="h-4 w-4 text-green-400" /> : <AlertCircle className="h-4 w-4 text-amber-300" />}
-                        <span className="text-xs font-bold text-white">Заавал талбар {metadataFields.length - missingRequiredMetadata.length}/{metadataFields.length}</span>
+                        {missingRequiredMetadata.length === 0 ? <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" /> : <AlertCircle className="h-4 w-4 text-amber-700 dark:text-amber-300" />}
+                        <span className="text-xs font-bold text-[var(--esl-text-primary)]">Заавал талбар {metadataFields.length - missingRequiredMetadata.length}/{metadataFields.length}</span>
                       </div>
                     </div>
                     <div className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2">
                       <div className="flex items-center gap-2">
-                        <Info className="h-4 w-4 text-blue-300" />
-                        <span className="text-xs font-bold text-white">Дэлгэрэнгүй {completedMetadataCount}/{metadataFields.length}</span>
+                        <Info className="h-4 w-4 text-blue-700 dark:text-blue-300" />
+                        <span className="text-xs font-bold text-[var(--esl-text-primary)]">Дэлгэрэнгүй {completedMetadataCount}/{metadataFields.length}</span>
                       </div>
                     </div>
                   </div>
@@ -1628,7 +1674,7 @@ export default function PostAdPage() {
             placeholder="Жишээ: iPhone 15 Pro, бараг шинэ"
             maxLength={100}
             required
-            className="w-full h-12 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all"
+            className="w-full h-12 px-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text-primary)] text-sm outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-muted)] transition-all"
           />
           {suggestedTitle && (
             <div className="mt-3 flex flex-col gap-3 rounded-xl border border-[#E8242C]/25 bg-[#E8242C]/10 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1636,7 +1682,7 @@ export default function PostAdPage() {
                 <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B72]" />
                 <div className="min-w-0">
                   <p className="text-[11px] font-black uppercase tracking-wide text-[#FF9EA3]">Ангиллаас санал болгосон гарчиг</p>
-                  <p className="mt-0.5 truncate text-sm font-bold text-white">{suggestedTitle}</p>
+                  <p className="mt-0.5 truncate text-sm font-bold text-[var(--esl-text-primary)]">{suggestedTitle}</p>
                 </div>
               </div>
               <button
@@ -1644,13 +1690,13 @@ export default function PostAdPage() {
                 onClick={() => setTitle(suggestedTitle)}
                 disabled={!canApplySuggestedTitle}
                 aria-label="Санал болгосон гарчгийг зарын гарчигт ашиглах"
-                className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-white transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
+                className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-[var(--esl-text-primary)] transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
               >
                 Ашиглах
               </button>
             </div>
           )}
-          <p id="feed-post-title-count" className="text-right text-[11px] text-[#555] mt-1">{title.length}/100</p>
+          <p id="feed-post-title-count" className="text-right text-[11px] text-[var(--esl-text-muted)] mt-1">{title.length}/100</p>
         </div>
 
         {/* Category */}
@@ -1681,12 +1727,12 @@ export default function PostAdPage() {
           {selectedCategoryPathLabel && (
             <div className="mt-3 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-2">
               <p className="text-[11px] font-bold text-[var(--esl-text-muted)]">Сонгосон ангилал</p>
-              <p className="mt-0.5 text-sm font-semibold text-white">{selectedCategoryPathLabel}</p>
+              <p className="mt-0.5 text-sm font-semibold text-[var(--esl-text-primary)]">{selectedCategoryPathLabel}</p>
               {autoFilledMetadataItems.length > 0 && (
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {autoFilledMetadataItems.map((item) => (
                     <span key={item.key} className="rounded-lg bg-[var(--esl-bg-card)] px-2 py-1 text-[11px] font-bold text-[var(--esl-text-secondary)]">
-                      {item.label}: <span className="text-white">{item.value}</span>
+                      {item.label}: <span className="text-[var(--esl-text-primary)]">{item.value}</span>
                     </span>
                   ))}
                 </div>
@@ -1702,7 +1748,7 @@ export default function PostAdPage() {
             className={jumpTargetClass('feed-post-metadata', 'mb-6 scroll-mt-24 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-4')}
           >
             <div className="mb-4">
-              <h2 id="feed-post-metadata-title" className="text-sm font-black text-white">{previewMetadataTitle}</h2>
+              <h2 id="feed-post-metadata-title" className="text-sm font-black text-[var(--esl-text-primary)]">{previewMetadataTitle}</h2>
               <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
                 Сонгосон ангилалд хэрэгтэй мэдээллээ бөглөнө. Одтой талбарууд зарын чанарт заавал хэрэгтэй.
               </p>
@@ -1715,7 +1761,7 @@ export default function PostAdPage() {
                 return (
                   <div key={group.title} role="group" aria-labelledby={groupTitleId}>
                     <div className="mb-3">
-                      <p id={groupTitleId} className="text-xs font-black text-white">{group.title}</p>
+                      <p id={groupTitleId} className="text-xs font-black text-[var(--esl-text-primary)]">{group.title}</p>
                       <p className="mt-0.5 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{group.description}</p>
                     </div>
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -1730,6 +1776,11 @@ export default function PostAdPage() {
 
         {/* Price */}
         <div id="feed-post-price" className={jumpTargetClass('feed-post-price', 'mb-6 scroll-mt-24')}>
+          {isJobListing && (
+            <div className="mb-3 rounded-xl border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs leading-relaxed text-blue-800 dark:text-blue-100">
+              Ажлын зар нийтлэх нь үнэгүй. {priceLabel} талбарт үндсэн цалин эсвэл цагийн үнэлгээг оруулна.
+            </div>
+          )}
           <label htmlFor="feed-post-price-input" className="text-sm font-bold text-[var(--esl-text-secondary)] mb-2 block">Үнэ <span className="text-[#E8242C]">*</span></label>
           <div className="flex">
             <input
@@ -1742,14 +1793,14 @@ export default function PostAdPage() {
               onChange={(e) => setPrice(e.target.value.replace(/[^0-9]/g, ''))}
               placeholder="0"
               required
-              className="flex-1 h-12 px-4 rounded-l-xl bg-[var(--esl-bg-card)] border border-r-0 border-[var(--esl-border)] text-white text-lg font-bold outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all"
+              className="flex-1 h-12 px-4 rounded-l-xl bg-[var(--esl-bg-card)] border border-r-0 border-[var(--esl-border)] text-[var(--esl-text-primary)] text-lg font-bold outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-muted)] transition-all"
             />
             <div className="h-12 px-5 bg-[var(--esl-bg-elevated)] border border-l-0 border-[var(--esl-border)] rounded-r-xl flex items-center">
-              <span className="text-lg font-black text-white">₮</span>
+              <span className="text-lg font-black text-[var(--esl-text-primary)]">₮</span>
             </div>
           </div>
           {price && Number(price) >= 1000000 && (
-            <p id="feed-post-price-readable" className="text-xs text-[#888] mt-1">{formatPrice(Number(price))}</p>
+            <p id="feed-post-price-readable" className="text-xs text-[var(--esl-text-muted)] mt-1">{formatPrice(Number(price))}</p>
           )}
         </div>
 
@@ -1816,7 +1867,7 @@ export default function PostAdPage() {
             <div className="flex items-start gap-2">
               <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#FF6B72]" />
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-black text-white">{descriptionGuidance.title}</p>
+                <p className="text-xs font-black text-[var(--esl-text-primary)]">{descriptionGuidance.title}</p>
                 <div className="mt-2 grid gap-1.5 sm:grid-cols-3">
                   {descriptionGuidance.tips.map((tip) => (
                     <p key={tip} className="rounded-lg bg-[var(--esl-bg-card)] px-2 py-1.5 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">
@@ -1832,14 +1883,14 @@ export default function PostAdPage() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div className="min-w-0">
                     <p className="text-[11px] font-black uppercase tracking-wide text-[#FF9EA3]">Бөглөсөн мэдээллээс үүссэн тайлбар</p>
-                    <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs leading-relaxed text-white">{suggestedDescription}</p>
+                    <p className="mt-1 line-clamp-3 whitespace-pre-line text-xs leading-relaxed text-[var(--esl-text-primary)]">{suggestedDescription}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setDescription(suggestedDescription)}
                     disabled={!canApplySuggestedDescription}
                     aria-label="Санал болгосон тайлбарыг зарын тайлбарт оруулах"
-                    className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-white transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
+                    className="h-9 shrink-0 rounded-lg border border-[#E8242C]/30 px-3 text-xs font-black text-[var(--esl-text-primary)] transition hover:bg-[#E8242C]/20 disabled:cursor-not-allowed disabled:opacity-45"
                   >
                     Тайлбарт оруулах
                   </button>
@@ -1855,9 +1906,9 @@ export default function PostAdPage() {
             placeholder={descriptionGuidance.placeholder}
             maxLength={1000}
             rows={5}
-            className="w-full px-4 py-3 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all resize-y leading-relaxed"
+            className="w-full px-4 py-3 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] text-[var(--esl-text-primary)] text-sm outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-muted)] transition-all resize-y leading-relaxed"
           />
-          <p id="feed-post-description-count" className="text-right text-[11px] text-[#555] mt-1">{description.length}/1000</p>
+          <p id="feed-post-description-count" className="text-right text-[11px] text-[var(--esl-text-muted)] mt-1">{description.length}/1000</p>
         </div>
 
         {/* Phone */}
@@ -1875,11 +1926,26 @@ export default function PostAdPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/[^0-9]/g, '').slice(0, 8))}
               placeholder="9911 2233"
-              className="flex-1 h-12 px-4 rounded-r-xl bg-[var(--esl-bg-card)] border border-l-0 border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] placeholder:text-[#555] transition-all"
+              className="flex-1 h-12 px-4 rounded-r-xl bg-[var(--esl-bg-card)] border border-l-0 border-[var(--esl-border)] text-[var(--esl-text-primary)] text-sm outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-muted)] transition-all"
             />
           </div>
           <p id="feed-post-phone-help" className="mt-1 text-xs text-[var(--esl-text-muted)]">8 оронтой Монгол утасны дугаар оруулна.</p>
         </div>
+
+        {isJobListing && (
+          <section className="mb-6 rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+            <div className="flex items-start gap-3">
+              <BriefcaseBusiness className="mt-0.5 h-5 w-5 shrink-0 text-emerald-700 dark:text-emerald-300" />
+              <div>
+                <p className="text-sm font-black text-[var(--esl-text-primary)]">Ажлын зар үнэгүй нийтлэгдэнэ</p>
+                <p className="mt-1 text-xs leading-relaxed text-emerald-800/90 dark:text-emerald-100/80">
+                  Eseller.mn ашиг олох загвар нь үнэгүй зар дээр биш, харин optional онцлох байрлал,
+                  баталгаажсан ажил олгогч, яаралтай кандидат авах багц, dashboard-ийн applicant tools дээр байна.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* VIP Upgrade */}
         <button
@@ -1892,18 +1958,18 @@ export default function PostAdPage() {
               : 'bg-[var(--esl-bg-card)] border-[rgba(212,175,55,0.25)] hover:border-[rgba(212,175,55,0.5)]'
           }`}
         >
-          <Crown className="w-8 h-8 text-[#FFD700]" />
+          <Crown className="w-8 h-8 text-amber-700 dark:text-amber-300" />
           <div className="flex-1">
-            <p className="text-sm font-extrabold text-[#FFD700]">ВИП зар болгох</p>
-            <p className="text-xs text-[#999] mt-1">Зарыг дээд талд байрлуулж, илүү олон хүнд харуулна</p>
+            <p className="text-sm font-extrabold text-amber-700 dark:text-amber-300">ВИП зар болгох</p>
+            <p className="text-xs text-[var(--esl-text-muted)] mt-1">Зарыг дээд талд байрлуулж, илүү олон хүнд харуулна</p>
           </div>
           <div className="text-right flex items-center gap-3">
             <div>
-              <p className="text-lg font-black text-[#FFD700]">5,000₮</p>
-              <p className="text-[10px] text-[#999]">7 хоног</p>
+              <p className="text-lg font-black text-amber-700 dark:text-amber-300">5,000₮</p>
+              <p className="text-[10px] text-[var(--esl-text-muted)]">7 хоног</p>
             </div>
-            <div className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${isVip ? 'bg-[#D4AF37]' : 'bg-[#3D3D3D]'}`}>
-              <div className={`w-5 h-5 rounded-full bg-[var(--esl-bg-card)] transition-transform ${isVip ? 'translate-x-5' : 'translate-x-0'}`} />
+            <div className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${isVip ? 'bg-[#D4AF37]' : 'bg-[var(--esl-border)]'}`}>
+              <div className={`w-5 h-5 rounded-full bg-[var(--esl-bg-card)] shadow-sm transition-transform ${isVip ? 'translate-x-5' : 'translate-x-0'}`} />
             </div>
           </div>
         </button>
@@ -1917,7 +1983,7 @@ export default function PostAdPage() {
           <Info className="w-5 h-5 text-blue-400 shrink-0 mt-0.5" />
           <div>
             <p id="feed-post-rules-title" className="text-sm font-bold text-blue-400 mb-1">Зар оруулах дүрэм</p>
-            <p id="feed-post-rules-description" className="text-xs text-[#888] leading-relaxed">
+            <p id="feed-post-rules-description" className="text-xs text-[var(--esl-text-muted)] leading-relaxed">
               • Хуурамч зар оруулахыг хориглоно<br />
               • Зураг бодит байх шаардлагатай<br />
               • Ангиллаас хамаарч доод хэмжээний бодит зураг шаардлагатай<br />
@@ -1940,12 +2006,12 @@ export default function PostAdPage() {
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-start gap-3">
               <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${
-                canSubmit ? 'bg-green-500/15 text-green-300' : 'bg-amber-500/15 text-amber-300'
+                canSubmit ? 'bg-green-500/15 text-green-700 dark:text-green-300' : 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
               }`}>
                 {canSubmit ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
               </div>
               <div>
-                <p id="feed-post-submit-readiness-title" className="text-sm font-black text-white">Нийтлэх бэлэн байдал</p>
+                <p id="feed-post-submit-readiness-title" className="text-sm font-black text-[var(--esl-text-primary)]">Нийтлэх бэлэн байдал</p>
                 <p id="feed-post-submit-summary" className="mt-1 text-xs leading-relaxed text-[var(--esl-text-muted)]">
                   {canSubmit
                     ? 'Шаардлагатай мэдээлэл бүрэн байна. Урьдчилж хараад нийтэлж болно.'
@@ -1954,7 +2020,7 @@ export default function PostAdPage() {
               </div>
             </div>
             <div className="shrink-0 text-left sm:text-right">
-              <p className="text-2xl font-black text-white">{readinessScore}%</p>
+              <p className="text-2xl font-black text-[var(--esl-text-primary)]">{readinessScore}%</p>
               <p className="text-[11px] font-bold text-[var(--esl-text-muted)]">{requiredReadyCount}/{requiredReadinessItems.length} шаардлага</p>
             </div>
           </div>
@@ -1965,7 +2031,7 @@ export default function PostAdPage() {
             aria-valuemin={0}
             aria-valuenow={readinessScore}
             aria-valuetext={readinessProgressText}
-            className="mt-3 h-2 overflow-hidden rounded-full bg-black/30"
+            className="mt-3 h-2 overflow-hidden rounded-full bg-black/10 dark:bg-black/30"
             role="progressbar"
           >
             <div
@@ -1985,12 +2051,12 @@ export default function PostAdPage() {
                 className="group flex min-h-[64px] w-full cursor-pointer items-start gap-2 rounded-xl border border-transparent bg-[var(--esl-bg-card)] px-3 py-2 text-left transition hover:border-[#E8242C]/30 hover:bg-[var(--esl-bg-elevated)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               >
                 {item.complete ? (
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
                 ) : (
-                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs font-black text-white">{item.label}</p>
+                  <p className="text-xs font-black text-[var(--esl-text-primary)]">{item.label}</p>
                   <p className="mt-0.5 line-clamp-2 text-[11px] leading-relaxed text-[var(--esl-text-muted)]">{item.detail}</p>
                 </div>
                 <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-[var(--esl-text-muted)] transition-transform group-hover:translate-x-0.5 group-hover:text-[#FF6B72]" />
@@ -2008,7 +2074,7 @@ export default function PostAdPage() {
                 onClick={() => scrollToSection(item.targetId, true)}
                 className={`group flex cursor-pointer items-center gap-1.5 rounded-lg border px-2 py-1 text-left text-[11px] font-bold transition hover:border-[#E8242C]/30 focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 ${
                 item.complete
-                  ? 'border-green-500/20 bg-green-500/10 text-green-100'
+                  ? 'border-green-500/20 bg-green-500/10 text-green-800 dark:text-green-100'
                   : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
               }`}>
                 {item.complete ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Info className="h-3.5 w-3.5" />}
@@ -2026,7 +2092,7 @@ export default function PostAdPage() {
             role="status"
             aria-live="polite"
             aria-atomic="true"
-            className="mb-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-bold text-amber-100"
+            className="mb-3 rounded-xl border border-amber-400/25 bg-amber-400/10 px-4 py-3 text-sm font-bold text-amber-900 dark:text-amber-100"
           >
             {submitGuidance}
           </p>
@@ -2036,7 +2102,7 @@ export default function PostAdPage() {
             type="button"
             onClick={() => router.back()}
             aria-label="Зар оруулахыг болиод өмнөх хуудас руу буцах"
-            className="h-12 px-8 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] text-sm font-bold border-none cursor-pointer hover:bg-[#3D3D3D] transition"
+            className="h-12 px-8 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] text-sm font-bold cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition"
           >
             Болих
           </button>
@@ -2047,8 +2113,10 @@ export default function PostAdPage() {
             aria-busy={submitting || undefined}
             aria-describedby={submitDescriptionId}
             aria-label={submitButtonLabel}
-            className={`flex-1 h-12 rounded-xl text-white text-sm font-bold border-none cursor-pointer flex items-center justify-center gap-2 transition-all ${
-              canSubmit ? 'bg-[#E8242C] hover:bg-[#CC0000]' : 'bg-[#3D3D3D] hover:bg-[#4A4A4A]'
+            className={`flex-1 h-12 rounded-xl text-sm font-bold cursor-pointer flex items-center justify-center gap-2 transition-all ${
+              canSubmit
+                ? 'border-none bg-[#E8242C] text-white hover:bg-[#CC0000]'
+                : 'border border-[var(--esl-border)] bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] hover:bg-[var(--esl-bg-card-hover)]'
             }`}
           >
             <Send className="w-4 h-4" />
@@ -2069,11 +2137,11 @@ export default function PostAdPage() {
           <div className="min-w-0 flex-1">
             <div className="mb-1 flex items-center gap-2">
               <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${canSubmit ? 'bg-green-400' : 'bg-amber-300'}`} />
-              <p id="feed-post-sticky-readiness-title" className="truncate text-xs font-black text-white">
+              <p id="feed-post-sticky-readiness-title" className="truncate text-xs font-black text-[var(--esl-text-primary)]">
                 {canSubmit ? 'Нийтлэхэд бэлэн' : `Дараагийнх: ${firstIncompleteRequiredItem?.label || 'шаардлагатай хэсэг'}`}
               </p>
               <span className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black ${
-                canSubmit ? 'bg-green-500/15 text-green-200' : 'bg-amber-400/15 text-amber-100'
+                canSubmit ? 'bg-green-500/15 text-green-800 dark:text-green-200' : 'bg-amber-400/15 text-amber-900 dark:text-amber-100'
               }`}>
                 {canSubmit ? `${requiredReadyCount}/${requiredReadinessItems.length}` : `${missingRequiredCount} дутуу`}
               </span>
@@ -2093,7 +2161,7 @@ export default function PostAdPage() {
                     aria-current={firstIncompleteRequiredItem?.key === item.key ? 'step' : undefined}
                     aria-label={`${item.label} хэсэг рүү очих`}
                     onClick={() => scrollToSection(item.targetId, true)}
-                    className="shrink-0 rounded-full border border-amber-300/20 bg-amber-300/10 px-2.5 py-1 text-[10px] font-black text-amber-50 transition hover:border-amber-200/40 hover:bg-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35"
+                    className="shrink-0 rounded-full border border-amber-600/30 dark:border-amber-300/20 bg-amber-500/15 dark:bg-amber-300/10 px-2.5 py-1 text-[10px] font-black text-amber-900 dark:text-amber-50 transition hover:border-amber-200/40 hover:bg-amber-300/20 focus:outline-none focus:ring-2 focus:ring-amber-300/35"
                   >
                     {item.label}
                   </button>
@@ -2106,7 +2174,7 @@ export default function PostAdPage() {
               aria-valuemin={0}
               aria-valuenow={readinessScore}
               aria-valuetext={readinessProgressText}
-              className="h-1.5 overflow-hidden rounded-full bg-black/35"
+              className="h-1.5 overflow-hidden rounded-full bg-black/10 dark:bg-black/35"
               data-feed-post-sticky-progress
               role="progressbar"
             >
@@ -2123,8 +2191,10 @@ export default function PostAdPage() {
             aria-busy={submitting || undefined}
             aria-describedby={submitDescriptionId}
             aria-label={submitButtonLabel}
-            className={`flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black text-white transition disabled:cursor-wait disabled:opacity-70 ${
-              canSubmit ? 'bg-[#E8242C] hover:bg-[#CC0000]' : 'bg-[#3D3D3D] hover:bg-[#4A4A4A]'
+            className={`flex h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-xs font-black transition disabled:cursor-wait disabled:opacity-70 ${
+              canSubmit
+                ? 'bg-[#E8242C] text-white hover:bg-[#CC0000]'
+                : 'border border-[var(--esl-border)] bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] hover:bg-[var(--esl-bg-card-hover)]'
             }`}
           >
             <Send className="h-4 w-4" />
