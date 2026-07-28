@@ -2,13 +2,14 @@
 
 export default function ProductCardSkeleton() {
   return (
-    <div className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] overflow-hidden">
-      <div className="h-48 bg-[var(--esl-bg-section)] animate-pulse" />
-      <div className="p-4 space-y-2.5">
-        <div className="h-3 bg-[var(--esl-bg-section)] rounded-full w-1/3 animate-pulse" />
-        <div className="h-4 bg-[var(--esl-bg-section)] rounded-full w-4/5 animate-pulse" />
-        <div className="h-3 bg-[var(--esl-bg-section)] rounded-full w-1/2 animate-pulse" />
-        <div className="h-5 bg-[var(--esl-bg-section)] rounded-full w-2/5 animate-pulse" />
+    <div className="overflow-hidden rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)]">
+      <div className="aspect-square w-full animate-pulse bg-[var(--esl-bg-section)]" />
+      <div className="space-y-2 p-2 sm:space-y-2.5 sm:p-3">
+        <div className="h-2.5 w-1/3 animate-pulse rounded-full bg-[var(--esl-bg-section)]" />
+        <div className="h-3.5 w-4/5 animate-pulse rounded-full bg-[var(--esl-bg-section)]" />
+        <div className="h-3 w-1/2 animate-pulse rounded-full bg-[var(--esl-bg-section)]" />
+        <div className="h-4 w-2/5 animate-pulse rounded-full bg-[var(--esl-bg-section)]" />
+        <div className="mt-1 h-7 w-full animate-pulse rounded-lg bg-[var(--esl-bg-section)]" />
       </div>
     </div>
   );
