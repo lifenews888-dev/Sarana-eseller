@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { Home, ShoppingBag, Megaphone, Store, User } from 'lucide-react';
 import { profileHome, useAuth } from '@/lib/auth';
 
@@ -10,8 +11,24 @@ export default function MobileNav() {
   const { isLoggedIn, user } = useAuth();
   // Always a real destination (buyer → /dashboard, not /)
   const profileHref = isLoggedIn ? profileHome(user?.role) : '/login';
+  // Hide bottom tabs while eseller assistant sheet is open (covers composer)
+  const [assistantOpen, setAssistantOpen] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      setAssistantOpen(document.documentElement.dataset.assistantOpen === '1');
+    };
+    sync();
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-assistant-open'],
+    });
+    return () => obs.disconnect();
+  }, []);
 
   if (pathname.startsWith('/dashboard')) return null;
+  if (assistantOpen) return null;
 
   const tabs = [
     { href: '/', icon: Home, label: 'Нүүр', id: 'home' },
