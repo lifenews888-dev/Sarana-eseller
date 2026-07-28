@@ -47,6 +47,8 @@ function roleHome(role: string): string {
       return '/dashboard/affiliate';
     case 'delivery':
       return '/dashboard/delivery';
+    case 'buyer':
+      return '/dashboard';
     default:
       return '/dashboard';
   }
