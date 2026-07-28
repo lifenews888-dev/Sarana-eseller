@@ -17,7 +17,12 @@ export default function InstallPrompt() {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 80, left: 16, right: 16, zIndex: 200,
+      // Above MobileNav, left side so it does not cover chat FABs on the right
+      position: 'fixed',
+      bottom: 'calc(3.5rem + env(safe-area-inset-bottom, 0px) + 0.75rem)',
+      left: 16,
+      right: 88,
+      zIndex: 200,
       background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)',
       borderRadius: 16, padding: 16, display: 'flex', alignItems: 'center', gap: 12,
       boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
