@@ -75,7 +75,7 @@ export default function GoldPage() {
   const totalSaved = shippingSaved + bonusPoints + discountSaved;
 
   return (
-    {/* Gold is a dark marketing surface — force dark canvas so white/gold type never sits on light page bg */}
+    // Gold is a dark marketing surface — force dark canvas so white/gold type never sits on light page bg.
     <div style={{ background: '#0A0A0A', color: '#E5E5E5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
       {/* ════════ HEADER ════════ */}
