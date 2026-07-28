@@ -4,7 +4,7 @@ import { useCallback, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth, roleHome } from '@/lib/auth';
-import { AuthAPI, type AuthResponse } from '@/lib/api';
+import { AuthAPI } from '@/lib/api';
 import { safeRelativeRedirect } from '@/lib/safe-redirect';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
@@ -16,17 +16,6 @@ const ROLES = [
   { value: 'buyer', icon: ShoppingBag, label: 'Худалдан авагч', desc: 'Бараа худалдаж авах', badge: 'Үнэгүй', color: 'border-blue-500/20' },
   { value: 'delivery', icon: Truck, label: 'Жолооч', desc: 'Захиалга хүргэж орлого ол', badge: 'Хүргэлт бүрт', color: 'border-cyan-500/20' },
 ];
-
-type LoginEnvelope = Partial<AuthResponse> & {
-  success?: boolean;
-  data?: unknown;
-};
-
-function isAuthResponse(value: unknown): value is AuthResponse {
-  if (!value || typeof value !== 'object') return false;
-  const candidate = value as Partial<AuthResponse>;
-  return typeof candidate.token === 'string' && Boolean(candidate.user);
-}
 
 function readRedirectTargetFromLocation(): string {
   if (typeof window === 'undefined') return '';
@@ -123,30 +112,12 @@ export default function LoginPage() {
   const pw = pwStrength(password);
 
   const doLogin = async () => {
-    if (!email || !password) { setError('Бүх талбарыг бөглөнө үү'); return; }
+    if (!email || !password) { setError('Имэйл/утас болон нууц үг оруулна уу'); return; }
     setLoading(true); setError('');
     try {
-      // Try Next.js API first (direct DB), then backend
-      let data: AuthResponse | null = null;
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
-        const json = await res.json() as LoginEnvelope;
-        // New envelope: { success: true, data: { token, user } }
-        // Legacy:       { token, user }
-        // Express backend fallback uses AuthAPI.login below.
-        if (json?.success && isAuthResponse(json.data)) data = json.data;
-        else if (isAuthResponse(json)) data = json;
-      } catch {}
-
-      if (!data) {
-        data = await AuthAPI.login(email, password);
-      }
-
-      if (data?.token) {
+      // Same-origin Next.js API only (legacy onrender backend removed).
+      const data = await AuthAPI.login(email, password);
+      if (data?.token && data.user) {
         login(data.token, data.user);
         setSuccess('Амжилттай нэвтэрлээ!');
         setTimeout(() => router.push(getRedirectTarget(data.user.role)), 700);
@@ -154,23 +125,31 @@ export default function LoginPage() {
         setError('Имэйл эсвэл нууц үг буруу');
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Холболтын алдаа');
+      const apiErr = e as { message?: string };
+      setError(apiErr?.message || (e instanceof Error ? e.message : 'Нэвтрэхэд алдаа гарлаа'));
     } finally { setLoading(false); }
   };
 
   const doRegister = async () => {
-    if (!name || !email || !password) { setError('Бүх талбарыг бөглөнө үү'); return; }
+    if (!name || !email || !password) { setError('Нэр, имэйл/утас, нууц үг бөглөнө үү'); return; }
     if (password.length < 6) { setError('Нууц үг дор хаяж 6 тэмдэгт'); return; }
     setLoading(true); setError('');
     try {
-      const data = await AuthAPI.register(name, email, password, role);
-      if (data.token) {
+      const trimmed = email.trim();
+      const isPhone = /^\+?\d{8,}$/.test(trimmed.replace(/[\s-]/g, ''));
+      const phone = isPhone ? trimmed.replace(/[\s-]/g, '').replace(/^\+976/, '') : undefined;
+      const emailValue = isPhone ? '' : trimmed;
+      const data = await AuthAPI.register(name, emailValue, password, role, phone);
+      if (data.token && data.user) {
         login(data.token, data.user);
         setSuccess('Бүртгэл амжилттай!');
         setTimeout(() => router.push(getRedirectTarget(data.user.role)), 700);
+      } else {
+        setError('Бүртгэл амжилтгүй боллоо');
       }
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : 'Холболтын алдаа');
+      const apiErr = e as { message?: string };
+      setError(apiErr?.message || (e instanceof Error ? e.message : 'Бүртгэхэд алдаа гарлаа'));
     } finally { setLoading(false); }
   };
 
@@ -272,12 +251,14 @@ export default function LoginPage() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--esl-text-muted)' }}>Имэйл хаяг</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--esl-text-muted)' }}>Имэйл эсвэл утас</label>
                   <input
-                    type="email"
+                    type="text"
+                    inputMode="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="you@example.com эсвэл 99112233"
                     className="w-full rounded-xl px-4 py-3 text-sm outline-none focus:border-brand focus:shadow-[0_0_0_3px_rgba(204,0,0,.12)] transition"
                     style={{ border: '1.5px solid var(--esl-border)', background: 'var(--esl-bg-card)', color: 'var(--esl-text-primary)' }}
                   />
@@ -410,12 +391,14 @@ export default function LoginPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--esl-text-muted)' }}>Имэйл хаяг</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--esl-text-muted)' }}>Имэйл эсвэл утас</label>
                   <input
-                    type="email"
+                    type="text"
+                    inputMode="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
+                    placeholder="you@example.com эсвэл 99112233"
                     className="w-full rounded-xl px-4 py-3 text-sm outline-none focus:border-brand focus:shadow-[0_0_0_3px_rgba(204,0,0,.12)] transition"
                     style={{ border: '1.5px solid var(--esl-border)', background: 'var(--esl-bg-card)', color: 'var(--esl-text-primary)' }}
                   />

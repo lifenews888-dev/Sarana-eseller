@@ -17,10 +17,11 @@ export const Ref = {
     localStorage.setItem(SKEY, ref);
     document.cookie = `${CNAME}=${encodeURIComponent(ref)};path=/;max-age=${TTL};SameSite=Lax`;
 
-    // Track click silently
-    fetch('https://sarana-backend.onrender.com/api/affiliate/click', {
+    // Track click silently (same-origin Next API)
+    fetch('/api/affiliate/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         referralCode: ref,
         page: window.location.pathname,

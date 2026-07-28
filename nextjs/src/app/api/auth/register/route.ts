@@ -76,6 +76,7 @@ export async function POST(req: Request) {
     }
 
     // Auto-create Shop for sellers
+    let shops: Array<{ id: string; name: string; slug: string; logo: string | null; phone: string | null; address: string | null }> = [];
     if (role === 'seller') {
       const baseSlug = name
         .toLowerCase()
@@ -93,7 +94,7 @@ export async function POST(req: Request) {
         slug = `${baseSlug}-${suffix}`;
       }
 
-      await prisma.shop.create({
+      const shop = await prisma.shop.create({
         data: {
           userId: user.id,
           name,
@@ -102,7 +103,9 @@ export async function POST(req: Request) {
           industry: 'general',
           locationStatus: 'pending',
         },
+        select: { id: true, name: true, slug: true, logo: true, phone: true, address: true },
       });
+      shops = [shop];
     }
 
     const token = jwt.sign(
@@ -110,6 +113,17 @@ export async function POST(req: Request) {
       JWT_SECRET,
       { expiresIn: '30d' },
     );
+
+    const primaryShop = shops[0]
+      ? {
+          id: shops[0].id,
+          name: shops[0].name,
+          slug: shops[0].slug,
+          logo: shops[0].logo,
+          phone: shops[0].phone,
+          address: shops[0].address,
+        }
+      : null;
 
     const res = ok(
       {
@@ -122,6 +136,8 @@ export async function POST(req: Request) {
           role: user.role,
           phone: user.phone,
           avatar: user.avatar,
+          store: primaryShop,
+          shops,
         },
       },
       201,

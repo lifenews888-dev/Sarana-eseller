@@ -1,14 +1,27 @@
 // ══════════════════════════════════════════════════════════════
 // eseller.mn — API Client (TypeScript)
-// Backend: https://sarana-backend.onrender.com/api
+// Default: same-origin Next.js /api (production eseller.mn)
+// Optional override: NEXT_PUBLIC_API_BASE / EXPO-style env for previews
 // ══════════════════════════════════════════════════════════════
 
-const API_BASE = 'https://sarana-backend.onrender.com/api';
+const API_BASE = (
+  typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE
+    ? process.env.NEXT_PUBLIC_API_BASE
+    : '/api'
+).replace(/\/+$/, '');
 
 export interface ApiError {
   status: number;
   message: string;
   data?: Record<string, unknown>;
+}
+
+/** Unwrap { success, data } envelopes used by Next auth routes. */
+function unwrapEnvelope<T>(payload: unknown): T {
+  if (!payload || typeof payload !== 'object') return payload as T;
+  const obj = payload as Record<string, unknown>;
+  if (obj.success === true && 'data' in obj) return obj.data as T;
+  return payload as T;
 }
 
 async function apiFetch<T = Record<string, unknown>>(
@@ -22,16 +35,25 @@ async function apiFetch<T = Record<string, unknown>>(
   };
   if (token) headers['Authorization'] = 'Bearer ' + token;
 
-  const res = await fetch(API_BASE + path, { ...opts, headers });
-  const data = await res.json().catch(() => ({}));
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  const res = await fetch(`${API_BASE}${normalizedPath}`, {
+    ...opts,
+    headers,
+    credentials: 'include',
+  });
+  const raw = await res.json().catch(() => ({}));
   if (!res.ok) {
+    const message =
+      (typeof raw?.error === 'string' && raw.error) ||
+      (typeof raw?.message === 'string' && raw.message) ||
+      'Алдаа гарлаа';
     throw {
       status: res.status,
-      message: data.message || 'Алдаа гарлаа',
-      data,
+      message,
+      data: raw,
     } as ApiError;
   }
-  return data as T;
+  return unwrapEnvelope<T>(raw);
 }
 
 // ══════ AUTH ══════
@@ -41,17 +63,26 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
-  role: 'buyer' | 'seller' | 'affiliate' | 'delivery' | 'admin';
+  role: 'buyer' | 'seller' | 'affiliate' | 'delivery' | 'admin' | 'superadmin' | string;
   username?: string;
   entityType?: string;
   avatar?: string | null;
   store?: {
+    id?: string | null;
     name?: string | null;
     slug?: string | null;
     logo?: string | null;
     phone?: string | null;
     address?: string | null;
   } | null;
+  shops?: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    logo?: string | null;
+    phone?: string | null;
+    address?: string | null;
+  }>;
 }
 
 export interface AuthResponse {
@@ -59,18 +90,39 @@ export interface AuthResponse {
   user: User;
 }
 
+export type LoginIdentifier = { email?: string; phone?: string };
+
 export const AuthAPI = {
-  register: (name: string, email: string, password: string, role: string) =>
+  register: (name: string, email: string, password: string, role: string, phone?: string) =>
     apiFetch<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role }),
+      body: JSON.stringify({ name, email, password, role, phone }),
     }),
-  login: (email: string, password: string) =>
-    apiFetch<AuthResponse>('/auth/login', {
+  login: (identifier: string | LoginIdentifier, password: string) => {
+    const body: Record<string, string> = { password };
+    if (typeof identifier === 'string') {
+      const trimmed = identifier.trim();
+      if (/^\+?\d{8,}$/.test(trimmed.replace(/[\s-]/g, ''))) {
+        body.phone = trimmed.replace(/[\s-]/g, '').replace(/^\+976/, '');
+      } else {
+        body.email = trimmed.toLowerCase();
+      }
+    } else {
+      if (identifier.email) body.email = identifier.email.trim().toLowerCase();
+      if (identifier.phone) body.phone = identifier.phone.trim();
+    }
+    return apiFetch<AuthResponse>('/auth/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
-    }),
-  me: () => apiFetch<User>('/auth/me'),
+      body: JSON.stringify(body),
+    });
+  },
+  me: async () => {
+    const data = await apiFetch<{ user?: User } | User>('/auth/me');
+    if (data && typeof data === 'object' && 'user' in data && data.user) {
+      return data.user;
+    }
+    return data as User;
+  },
 };
 
 // ══════ PRODUCTS ══════
