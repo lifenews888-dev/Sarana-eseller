@@ -47,14 +47,18 @@ export function getStoredToken(): string | null {
 export function saveAuth(token: string, user: User) {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
-  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `auth-token=${encodeURIComponent(token)}; Path=/; Max-Age=${30 * 24 * 60 * 60}; SameSite=Lax${secure}`;
+  // Do NOT set document.cookie auth-token here.
+  // Login/register APIs set an httpOnly cookie for middleware; writing a
+  // non-httpOnly cookie with the same name breaks session verification on some browsers.
 }
 
 export function clearAuth() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
-  document.cookie = 'auth-token=; Path=/; Max-Age=0; SameSite=Lax';
+  // Best-effort clear of any legacy non-httpOnly cookie leftovers
+  const secure = window.location.protocol === 'https:' ? '; Secure' : '';
+  document.cookie = `auth-token=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+  document.cookie = `token=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
 }
 
 export function roleHome(role?: string): string {

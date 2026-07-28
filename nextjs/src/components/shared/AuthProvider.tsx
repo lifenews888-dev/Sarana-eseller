@@ -58,11 +58,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     clearAuth();
     setToken(null);
     setUser(null);
-    // Fire-and-forget: clears the httpOnly auth-token cookie used by
-    // middleware. Ignore failures — localStorage is already cleared and
-    // the cookie expires with the JWT anyway.
-    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});
-    window.location.href = '/login';
+    // Clears the httpOnly auth-token cookie used by middleware, then hard navigate.
+    fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
+      .catch(() => {})
+      .finally(() => {
+        window.location.href = '/login';
+      });
   }, []);
 
   return (
