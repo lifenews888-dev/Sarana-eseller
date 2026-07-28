@@ -34,10 +34,13 @@ function buildAuthHref(path: string, params: Record<string, string | undefined>,
   return query ? `${path}?${query}` : path;
 }
 
+/**
+ * After login/register, honor explicit redirect targets (esp. /become-seller shop wizard).
+ * Never steal /become-seller for sellers — multi-shop onboarding must complete there.
+ */
 function postAuthTarget(target: string, role?: string): string {
-  const home = roleHome(role);
-  if (target === '/become-seller' && home !== '/') return home;
-  return target || home;
+  if (target) return target;
+  return roleHome(role);
 }
 
 export default function LoginPage() {
@@ -70,7 +73,9 @@ export default function LoginPage() {
 
     if (window.location.hash === '#register') {
       setMode('register');
-      if (nextRedirectTarget === '/become-seller') setRole('seller');
+      // Keep buyer for shop onboarding — /become-seller upgrades role + creates the shop.
+      // Registering as "seller" without the wizard leaves an incomplete owner account.
+      if (nextRedirectTarget === '/become-seller') setRole('buyer');
     }
 
     // Handle Google OAuth callback
@@ -113,37 +118,49 @@ export default function LoginPage() {
 
   const doLogin = async () => {
     if (!email || !password) { setError('Имэйл/утас болон нууц үг оруулна уу'); return; }
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setSuccess('');
     try {
       // Same-origin Next.js API only (legacy onrender backend removed).
-      const data = await AuthAPI.login(email, password);
-      if (data?.token && data.user) {
-        login(data.token, data.user);
+      const data = await AuthAPI.login(email.trim(), password);
+      const token = data?.token;
+      const authUser = data?.user;
+      if (token && authUser) {
+        login(token, authUser);
         setSuccess('Амжилттай нэвтэрлээ!');
-        setTimeout(() => router.push(getRedirectTarget(data.user.role)), 700);
+        const dest = getRedirectTarget(authUser.role);
+        window.setTimeout(() => {
+          router.replace(dest);
+        }, 400);
       } else {
         setError('Имэйл эсвэл нууц үг буруу');
       }
     } catch (e: unknown) {
-      const apiErr = e as { message?: string };
-      setError(apiErr?.message || (e instanceof Error ? e.message : 'Нэвтрэхэд алдаа гарлаа'));
+      const apiErr = e as { message?: string; status?: number };
+      const msg = apiErr?.message || (e instanceof Error ? e.message : 'Нэвтрэхэд алдаа гарлаа');
+      setError(msg);
     } finally { setLoading(false); }
   };
 
   const doRegister = async () => {
     if (!name || !email || !password) { setError('Нэр, имэйл/утас, нууц үг бөглөнө үү'); return; }
     if (password.length < 6) { setError('Нууц үг дор хаяж 6 тэмдэгт'); return; }
-    setLoading(true); setError('');
+    setLoading(true); setError(''); setSuccess('');
     try {
       const trimmed = email.trim();
       const isPhone = /^\+?\d{8,}$/.test(trimmed.replace(/[\s-]/g, ''));
       const phone = isPhone ? trimmed.replace(/[\s-]/g, '').replace(/^\+976/, '') : undefined;
       const emailValue = isPhone ? '' : trimmed;
-      const data = await AuthAPI.register(name, emailValue, password, role, phone);
+      // Shop wizard path: always register as buyer then complete /become-seller
+      const registerRole =
+        (redirectTarget || readRedirectTargetFromLocation()) === '/become-seller' ? 'buyer' : role;
+      const data = await AuthAPI.register(name, emailValue, password, registerRole, phone);
       if (data.token && data.user) {
         login(data.token, data.user);
         setSuccess('Бүртгэл амжилттай!');
-        setTimeout(() => router.push(getRedirectTarget(data.user.role)), 700);
+        const dest = getRedirectTarget(data.user.role);
+        window.setTimeout(() => {
+          router.replace(dest);
+        }, 400);
       } else {
         setError('Бүртгэл амжилтгүй боллоо');
       }

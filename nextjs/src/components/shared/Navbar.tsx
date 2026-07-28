@@ -12,9 +12,12 @@ export default function Navbar() {
   const pathname = usePathname();
   const { isLoggedIn, user } = useAuth();
   const userHome = roleHome(user?.role);
+  // Always land on the shop onboarding wizard (not role dashboard).
   const sellerCtaHref = isLoggedIn
-    ? (userHome === '/' ? '/become-seller' : userHome)
+    ? '/become-seller'
     : '/login?redirect=/become-seller#register';
+  const authHref = isLoggedIn ? userHome || '/dashboard/store' : '/login';
+  const authLabel = isLoggedIn ? 'Профайл' : 'Нэвтрэх';
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 30);
@@ -78,17 +81,17 @@ export default function Navbar() {
         Gold
       </Link>
       <Link
-        href="/login"
+        href={authHref}
         className="hidden sm:inline-flex text-white/60 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
       >
-        Нэвтрэх
+        {authLabel}
       </Link>
       <ThemeToggle />
       <Link
         href={sellerCtaHref}
         className="bg-[#CC0000] text-white text-sm font-extrabold px-5 py-2 rounded-xl no-underline shadow-[0_2px_8px_rgba(204,0,0,.3)] hover:bg-[#A30000] hover:-translate-y-0.5 transition-all whitespace-nowrap"
       >
-        Борлуулагч болох →
+        Дэлгүүр нээх →
       </Link>
     </nav>
   );
