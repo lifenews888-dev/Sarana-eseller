@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-"""Generate marketplace category tree + listing metadata from Excel master file."""
+"""Generate listing-metadata attributes (and optional category dump) from Excel.
+
+NOTE (2026-07): Marketplace UI taxonomy was restored to the brand-first tree
+(Toyota / Tesla / iPhone …) from the pre-Excel marketplaceCategories source.
+Do NOT overwrite `src/lib/marketplaceCategories.ts` with Excel body-type trees
+for vehicles/phones — keep brand → model hierarchy for MN market UX.
+
+This script still regenerates `src/lib/generated/categoryAttributes.ts` and a
+reference `categoryMaster.ts` dump from the Excel file if needed.
+"""
 
 from __future__ import annotations
 
