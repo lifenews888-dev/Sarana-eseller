@@ -281,8 +281,49 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
         children: ['Pajero', 'Outlander', 'Delica', 'L200', 'Eclipse Cross'],
       },
       { name: 'Tesla', aliases: ['tesla'], children: ['Model 3', 'Model Y', 'Model S', 'Model X'] },
-      { name: 'Ачааны машин', aliases: ['truck'], children: ['Howo', 'Isuzu', 'Hino', 'Fuso', 'Volvo'] },
-      { name: 'Мотоцикл', aliases: ['motorcycle'], children: ['Honda', 'Yamaha', 'Kawasaki', 'Suzuki'] },
+      {
+        name: 'Ford',
+        aliases: ['ford'],
+        children: ['Explorer', 'Everest', 'Ranger', 'F-150', 'Бусад Ford'],
+      },
+      {
+        name: 'Volvo',
+        aliases: ['volvo-car'],
+        children: ['XC60', 'XC90', 'XC40', 'S60', 'Бусад Volvo'],
+      },
+      {
+        name: 'Volkswagen',
+        aliases: ['vw', 'volkswagen'],
+        children: ['Tiguan', 'Passat', 'Golf', 'Touareg', 'Бусад VW'],
+      },
+      {
+        name: 'Audi',
+        aliases: ['audi'],
+        children: ['A4', 'A6', 'Q5', 'Q7', 'Бусад Audi'],
+      },
+      {
+        name: 'Suzuki',
+        aliases: ['suzuki'],
+        children: ['Escudo / Vitara', 'Swift', 'Jimny', 'Бусад Suzuki'],
+      },
+      {
+        name: 'Chevrolet',
+        aliases: ['chevrolet', 'chevy'],
+        children: ['Cruze', 'Orlando', 'Captiva', 'Бусад Chevrolet'],
+      },
+      { name: 'Бусад брэнд', aliases: ['other-brand', 'other-car-brand'], children: ['BYD', 'Geely', 'Changan', 'SsangYong', 'Бусад'] },
+      // zary.mn auto section parity: cars (brands above) + heavy + truck + moto
+      {
+        name: 'Хүнд механизм',
+        aliases: ['heavy', 'heavy-machinery', 'heavy-mekhanizm', 'хүнд-механизм'],
+        children: ['Экскаватор', 'Кран', 'Бульдозер', 'Ачигч / Loader', 'Грейдер', 'Комбайн', 'Бусад хүнд техник'],
+      },
+      { name: 'Ачааны машин', aliases: ['truck'], children: ['Howo', 'Isuzu', 'Hino', 'Fuso', 'Volvo ачаа', 'Бусад ачааны'] },
+      {
+        name: 'Мотоцикл, скүүтер',
+        aliases: ['motorcycle', 'moto', 'scooter'],
+        children: ['Honda', 'Yamaha', 'Kawasaki', 'Suzuki', 'Скүүтер', 'ATV / Квадро', 'Бусад'],
+      },
     ],
   },
   {
@@ -444,7 +485,12 @@ export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     aliases: ['auto', 'auto-moto'],
     subcategories: [
       { name: 'Автомашины сэлбэг', children: ['Хөдөлгүүр', 'Кроп', 'Явах эд анги', 'Кузов', 'Гэрэл', 'Тормоз'] },
-      { name: 'Дугуй & Обуд', children: ['Зуны дугуй', 'Өвлийн дугуй', 'Обуд', 'Дугуйн мэдрэгч'] },
+      // zary.mn "Авто дугуй" parity — keep under parts, named clearly
+      {
+        name: 'Авто дугуй & Обуд',
+        aliases: ['wheel-rim', 'wheels', 'дугуй', 'авто-дугуй'],
+        children: ['Зуны дугуй', 'Өвлийн дугуй', 'Обуд (R14–R22)', 'Дугуйн мэдрэгч', 'Замын тусламж'],
+      },
       { name: 'Аккумулятор & Цахилгаан', children: ['Аккумулятор', 'Генератор', 'Стартер', 'Мэдрэгч'] },
       'Хүнд механизм сэлбэг',
       { name: 'Авто аксессуар', children: ['Суудлын бүрээс', 'Шалны дэвсгэр', 'Камер', 'Дуу хөгжим'] },

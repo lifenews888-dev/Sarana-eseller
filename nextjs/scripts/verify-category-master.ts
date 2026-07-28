@@ -28,9 +28,9 @@ if (!vehicle) {
   process.exit(1);
 }
 const vehicleText = JSON.stringify(vehicle.subcategories);
-for (const brand of ['Toyota', 'Tesla', 'Lexus', 'Hyundai', 'BMW']) {
+for (const brand of ['Toyota', 'Tesla', 'Lexus', 'Hyundai', 'BMW', 'Хүнд механизм']) {
   if (!vehicleText.includes(brand)) {
-    console.error('MISSING brand under vehicles:', brand);
+    console.error('MISSING under vehicles:', brand);
     process.exit(1);
   }
 }
