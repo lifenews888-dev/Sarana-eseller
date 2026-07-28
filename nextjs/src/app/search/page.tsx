@@ -164,24 +164,24 @@ function SearchPage() {
               <p className="text-xs mt-1" style={{ color: 'var(--esl-text-muted)' }}>Өөр түлхүүр үгээр хайна уу</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {products.map(p => {
                 const disc = p.salePrice && p.salePrice < p.price ? Math.round((1 - p.salePrice / p.price) * 100) : 0;
                 return (
-                  <Link key={p._id} href={`/product/${p._id}`} className="group block min-w-0 overflow-hidden rounded-xl border no-underline transition-all [@media(hover:hover)]:hover:-translate-y-1 [@media(hover:hover)]:hover:shadow-lg"
+                  <Link key={p._id} href={`/product/${p._id}`} className="group no-underline block rounded-xl overflow-hidden border transition-all hover:-translate-y-1 hover:shadow-lg"
                     style={{ background: 'var(--esl-bg-card)', borderColor: 'var(--esl-border)' }}>
                     <div className="relative aspect-square" style={{ background: 'var(--esl-bg-section)' }}>
-                      {p.images?.[0] ? <SafeImage src={p.images[0]} alt={p.name} className="h-full w-full object-cover transition-transform [@media(hover:hover)]:group-hover:scale-105" loading="lazy" /> :
-                        <div className="flex h-full w-full items-center justify-center"><Package className="h-10 w-10 text-[var(--esl-text-muted)]" /></div>}
-                      {disc > 0 && <span className="absolute left-2 top-2 rounded bg-[#E8242C] px-1.5 py-0.5 text-[10px] font-bold text-white">-{disc}%</span>}
+                      {p.images?.[0] ? <SafeImage src={p.images[0]} alt={p.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" loading="lazy" /> :
+                        <div className="w-full h-full flex items-center justify-center"><Package className="w-10 h-10 text-[var(--esl-text-muted)]" /></div>}
+                      {disc > 0 && <span className="absolute top-2 left-2 bg-[#E8242C] text-white text-[10px] font-bold px-2 py-0.5 rounded">-{disc}%</span>}
                     </div>
-                    <div className="p-2 sm:p-3">
-                      <p className="mb-1 line-clamp-2 min-h-[2.4em] text-[12px] font-semibold leading-snug sm:text-xs" style={{ color: 'var(--esl-text-primary)' }}>{p.name}</p>
-                      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
-                        <span className="text-[13px] font-bold tabular-nums sm:text-sm" style={{ color: '#E8242C' }}>{(p.salePrice || p.price).toLocaleString()}₮</span>
-                        {disc > 0 && <span className="text-[10px] tabular-nums line-through" style={{ color: 'var(--esl-text-muted)' }}>{p.price.toLocaleString()}₮</span>}
+                    <div className="p-3">
+                      <p className="text-xs font-medium line-clamp-2 mb-1" style={{ color: 'var(--esl-text-primary)' }}>{p.name}</p>
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-sm font-bold" style={{ color: '#E8242C' }}>{(p.salePrice || p.price).toLocaleString()}₮</span>
+                        {disc > 0 && <span className="text-[10px] line-through" style={{ color: 'var(--esl-text-muted)' }}>{p.price.toLocaleString()}₮</span>}
                       </div>
-                      {p.rating && <p className="mt-1 flex items-center gap-0.5 text-[10px]" style={{ color: 'var(--esl-text-muted)' }}><Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {p.rating}</p>}
+                      {p.rating && <p className="text-[10px] mt-1 flex items-center gap-0.5" style={{ color: 'var(--esl-text-muted)' }}><Star className="w-3 h-3 text-amber-400 fill-amber-400" /> {p.rating}</p>}
                     </div>
                   </Link>
                 );

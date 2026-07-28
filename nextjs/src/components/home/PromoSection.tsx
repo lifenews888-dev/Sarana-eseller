@@ -25,26 +25,23 @@ export default function PromoSection({ products, title }: { products: PromoProdu
         </Link>
       </div>
 
-      <div
-        className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide sm:gap-4"
-        style={{ WebkitOverflowScrolling: 'touch', scrollSnapType: 'x mandatory' }}
-      >
+      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
         {products.map((p) => (
-          <Link key={p.id} href={`/product/${p.id}`} className="no-underline snap-start">
-            <div className="min-w-[148px] max-w-[148px] overflow-hidden rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] transition-transform sm:min-w-[180px] sm:max-w-[200px] sm:rounded-2xl [@media(hover:hover)]:hover:-translate-y-1">
-              <div className="relative aspect-square overflow-hidden bg-[var(--esl-bg-section)]">
-                <SafeImage src={p.media?.[0]?.url} alt={p.name} className="h-full w-full object-cover" />
-                <div className="absolute right-2 top-2 rounded-md bg-[#E8242C] px-1.5 py-0.5 text-[10px] font-bold text-white sm:text-[11px]">
+          <Link key={p.id} href={`/product/${p.id}`} className="no-underline">
+            <div className="bg-[var(--esl-bg-card)] rounded-2xl overflow-hidden border border-[var(--esl-border)] min-w-[180px] max-w-[200px] hover:-translate-y-1 transition-transform">
+              <div className="aspect-square bg-[var(--esl-bg-section)] overflow-hidden relative">
+                <SafeImage src={p.media?.[0]?.url} alt={p.name} className="w-full h-full object-cover" />
+                <div className="absolute top-2 right-2 bg-[#E8242C] text-white text-[11px] px-2 py-0.5 rounded-md font-bold">
                   SALE
                 </div>
               </div>
-              <div className="p-2 sm:p-3">
-                <p className="mb-1.5 line-clamp-2 min-h-[2.4em] text-[12px] font-semibold leading-snug text-[var(--esl-text-primary)] sm:mb-2 sm:text-[13px]">{p.name}</p>
-                <span className="text-[13px] font-extrabold tabular-nums text-[#E8242C] sm:text-[15px]">
+              <div className="p-3">
+                <p className="text-[var(--esl-text)] text-[13px] font-medium line-clamp-2 mb-2">{p.name}</p>
+                <span className="text-[#E8242C] font-extrabold text-[15px]">
                   {p.price?.toLocaleString()}₮
                 </span>
                 {p.entity && (
-                  <p className="mt-1 truncate text-[10px] text-[var(--esl-text-muted)] sm:text-[11px]">{p.entity.name}</p>
+                  <p className="text-[var(--esl-text-muted)] text-[11px] mt-1">{p.entity.name}</p>
                 )}
               </div>
             </div>
