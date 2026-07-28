@@ -61,9 +61,13 @@ export function clearAuth() {
   document.cookie = `token=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
 }
 
+/**
+ * Post-login / "Профайл" destination per role.
+ * Buyers must NOT land on `/` — same as home tab, so "Профайл" looks unclickable.
+ */
 export function roleHome(role?: string): string {
   const map: Record<string, string> = {
-    buyer: '/',
+    buyer: '/dashboard',
     seller: '/dashboard/store',
     agent: '/dashboard/store',
     company: '/dashboard/store',
@@ -74,5 +78,10 @@ export function roleHome(role?: string): string {
     admin: '/dashboard/admin',
     superadmin: '/dashboard/admin',
   };
-  return map[role || ''] || '/';
+  return map[role || ''] || '/dashboard';
+}
+
+/** Explicit profile entry used by Navbar / MobileNav */
+export function profileHome(role?: string): string {
+  return roleHome(role);
 }

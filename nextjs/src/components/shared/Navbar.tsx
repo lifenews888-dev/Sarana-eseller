@@ -5,18 +5,18 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import EsellerLogo from './EsellerLogo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
-import { roleHome, useAuth } from '@/lib/auth';
+import { profileHome, useAuth } from '@/lib/auth';
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { isLoggedIn, user } = useAuth();
-  const userHome = roleHome(user?.role);
   // Always land on the shop onboarding wizard (not role dashboard).
   const sellerCtaHref = isLoggedIn
     ? '/become-seller'
     : '/login?redirect=/become-seller#register';
-  const authHref = isLoggedIn ? userHome || '/dashboard/store' : '/login';
+  // Buyers → /dashboard (not /); sellers → store dashboard, etc.
+  const authHref = isLoggedIn ? profileHome(user?.role) : '/login';
   const authLabel = isLoggedIn ? 'Профайл' : 'Нэвтрэх';
 
   useEffect(() => {
@@ -82,7 +82,8 @@ export default function Navbar() {
       </Link>
       <Link
         href={authHref}
-        className="hidden sm:inline-flex text-white/60 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
+        prefetch
+        className="relative z-10 hidden sm:inline-flex cursor-pointer items-center text-white/80 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
       >
         {authLabel}
       </Link>
