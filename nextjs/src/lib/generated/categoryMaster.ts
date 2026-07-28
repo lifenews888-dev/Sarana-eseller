@@ -597,14 +597,14 @@ export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     ],
   },
   {
-    key: "kids",
+    key: "kids-toys",
     label: "Хүүхдийн",
     emoji: "🧸",
     icon: "Baby",
     color: "#F59E0B",
     section: "product",
     entityTypes: ["STORE", "PRE_ORDER"],
-    aliases: ["children", "baby", "хүүхэд", "kids-toys"],
+    aliases: ["children", "baby", "хүүхэд", "kids"],
     subcategories: [
       {
         name: "Хүүхдийн хувцас",
@@ -689,14 +689,14 @@ export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     ],
   },
   {
-    key: "health",
+    key: "health-vitamins",
     label: "Эрүүл мэнд",
     emoji: "💊",
     icon: "HeartPulse",
     color: "#16A34A",
     section: "product",
     entityTypes: ["STORE", "PRE_ORDER"],
-    aliases: ["medicine", "pharmacy", "эрүүл", "health-vitamins"],
+    aliases: ["medicine", "pharmacy", "эрүүл", "health"],
     subcategories: [
       {
         name: "Витамин, нэмэлт тэжээл",
@@ -902,14 +902,14 @@ export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     ],
   },
   {
-    key: "gifts",
+    key: "gifts-hobby",
     label: "Бэлэг",
     emoji: "🎁",
     icon: "Gift",
     color: "#E11D48",
     section: "product",
     entityTypes: ["STORE", "PRE_ORDER"],
-    aliases: ["gift", "бэлэг", "gifts-hobby"],
+    aliases: ["gift", "бэлэг", "gifts"],
     subcategories: [
       {
         name: "Бэлэг дурсгал",
@@ -1216,14 +1216,14 @@ export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     ],
   },
   {
-    key: "books",
+    key: "books-stationery",
     label: "Ном",
     emoji: "📚",
     icon: "BookOpen",
     color: "#1D4ED8",
     section: "product",
     entityTypes: ["STORE", "DIGITAL"],
-    aliases: ["book", "ном", "books-stationery"],
+    aliases: ["book", "ном", "books"],
     subcategories: [
       {
         name: "Уран зохиол",
@@ -1286,14 +1286,14 @@ export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     ],
   },
   {
-    key: "construction",
+    key: "construction-tools",
     label: "Барилга",
     emoji: "🧱",
     icon: "Construction",
     color: "#78716C",
     section: "product",
     entityTypes: ["STORE", "COMPANY"],
-    aliases: ["building-materials", "барилга", "construction-tools"],
+    aliases: ["building-materials", "барилга", "construction"],
     subcategories: [
       {
         name: "Барилгын материал",
@@ -1529,14 +1529,14 @@ export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     ],
   },
   {
-    key: "food",
+    key: "food-beverage",
     label: "Хүнс",
     emoji: "🍲",
     icon: "UtensilsCrossed",
     color: "#F97316",
     section: "product",
     entityTypes: ["STORE", "PRE_ORDER"],
-    aliases: ["grocery", "хүнс", "food-beverage"],
+    aliases: ["grocery", "хүнс", "food"],
     subcategories: [
       {
         name: "Мах, махан бүтээгдэхүүн",
@@ -1763,14 +1763,14 @@ export const GENERATED_PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
     ],
   },
   {
-    key: "digital",
+    key: "digital-goods",
     label: "Дижитал",
     emoji: "💾",
     icon: "Monitor",
     color: "#6366F1",
     section: "product",
     entityTypes: ["STORE", "DIGITAL"],
-    aliases: ["digital-goods", "дижитал", "digital-goods"],
+    aliases: ["digital", "дижитал"],
     subcategories: [
       {
         name: "Программ хангамж, лиценз",

@@ -8,9 +8,9 @@ import {
   flattenCategoryTree,
   normalizeMarketplaceCategory,
   findMarketplaceCategory,
-  categoryPathInfo,
 } from '../src/lib/marketplaceCategories';
 import { metadataFieldsForCategory } from '../src/lib/listingMetadata';
+import { generatedFieldsForCategoryKey } from '../src/lib/generated/categoryAttributes';
 
 const roots = MARKETPLACE_CATEGORIES.length;
 const tree = categoryTreeFallback();
@@ -34,15 +34,20 @@ for (const brand of ['Toyota', 'Tesla', 'Lexus', 'Hyundai', 'BMW', 'Хүнд м�
     process.exit(1);
   }
 }
+for (const zaryAutoMarker of ['Мотоцикл', 'Авто дугуй', 'Обуд']) {
+  const autoPartsText = JSON.stringify(findMarketplaceCategory('auto-parts')?.subcategories || []);
+  if (!vehicleText.includes(zaryAutoMarker) && !autoPartsText.includes(zaryAutoMarker)) {
+    console.error('MISSING zary.mn auto marker:', zaryAutoMarker);
+    process.exit(1);
+  }
+}
 const phoneText = JSON.stringify(phone?.subcategories || []);
 if (!phoneText.includes('iPhone') && !phoneText.includes('Apple')) {
   console.error('MISSING Apple/iPhone under phones');
   process.exit(1);
 }
 
-// Path resolution for brand leaves
-const prius = categoryPathInfo('vehicles-1-2'); // may not work if slug differs
-// Check path via alias/name resolution
+// Path resolution for aliases and generated slugs.
 const toyotaNorm = normalizeMarketplaceCategory('toyota');
 console.log('normalize toyota →', toyotaNorm);
 
@@ -53,6 +58,26 @@ for (const cat of MARKETPLACE_CATEGORIES) {
   }
   if (!findMarketplaceCategory(cat.key)) {
     console.error('NOT FOUND', cat.key);
+    process.exit(1);
+  }
+}
+
+// Preserve eseller's previous stable category keys even after Excel generation.
+for (const restoredKey of [
+  'kids-toys',
+  'health-vitamins',
+  'gifts-hobby',
+  'books-stationery',
+  'construction-tools',
+  'food-beverage',
+  'digital-goods',
+]) {
+  if (!findMarketplaceCategory(restoredKey)) {
+    console.error('MISSING restored eseller category key:', restoredKey);
+    process.exit(1);
+  }
+  if (generatedFieldsForCategoryKey(restoredKey).length === 0) {
+    console.error('MISSING generated attributes for restored key:', restoredKey);
     process.exit(1);
   }
 }

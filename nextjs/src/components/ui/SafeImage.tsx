@@ -104,6 +104,13 @@ export default function SafeImage({
     img?.addEventListener('error', checkAlreadyFailed);
     const immediateTimeout = window.setTimeout(checkAlreadyFailed, 0);
     const settledTimeout = window.setTimeout(checkAlreadyFailed, 1200);
+    const fallbackTimeout = window.setTimeout(() => {
+      const img = imgRef.current;
+      if (!settled && img && img.naturalWidth === 0) {
+        settled = true;
+        setFailedSrc(src ?? null);
+      }
+    }, 4000);
     const lateCheck = window.setInterval(() => {
       if (settled) {
         window.clearInterval(lateCheck);
@@ -121,6 +128,7 @@ export default function SafeImage({
       img?.removeEventListener('error', checkAlreadyFailed);
       window.clearTimeout(immediateTimeout);
       window.clearTimeout(settledTimeout);
+      window.clearTimeout(fallbackTimeout);
       window.clearInterval(lateCheck);
       window.clearTimeout(stopLateCheck);
     };

@@ -74,7 +74,7 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "field2", label: "Чулууны төрөл", type: "select", options: ["Алмаз", "Оюу", "Сувд"] },
     { key: "field3", label: "Гэрчилгээтэй эсэх", type: "boolean", hint: "Гэрчилгээний зураг хавсаргах" }
   ],
-  "kids": [
+  "kids-toys": [
     { key: "field", label: "Нас", type: "select", required: true, options: ["0–1", "1–3", "4–7", "8–14"] },
     { key: "field2", label: "Хүйс", type: "select", options: ["Охин", "Хүү"] },
     { key: "size", label: "Хэмжээ", type: "text" },
@@ -85,7 +85,7 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "field", label: "Насны баталгаажуулалт", type: "boolean", required: true, hint: "Худалдан авагч 18+ баталгаажуулсан байх; зураг blur" },
     { key: "brand", label: "Брэнд", type: "text" }
   ],
-  "health": [
+  "health-vitamins": [
     { key: "expiryDate", label: "Хугацаа дуусах огноо", type: "text", required: true, hint: "Өнгөрсөн огноо хориглоно" },
     { key: "originCountry", label: "Гарал улс", type: "text", required: true },
     { key: "field", label: "Бүртгэлийн дугаар", type: "text", options: ["ЭМЯ", "ХХААХҮЯ бүртгэл"], hint: "Витамин, эмнэлгийн хэрэгсэлд шаардана" },
@@ -110,7 +110,7 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "field3", label: "Шинэ/хуучин", type: "select", required: true, options: ["Шинэ", "Хэрэглэсэн", "Засварласан"] },
     { key: "field4", label: "Баталгаат хугацаа", type: "text" }
   ],
-  "gifts": [
+  "gifts-hobby": [
     { key: "field", label: "Хэнд зориулсан", type: "select", options: ["Эмэгтэй", "Эрэгтэй", "Хүүхэд", "Хос"] },
     { key: "field2", label: "Баяр, тохиолдол", type: "select", options: ["Төрсөн өдөр", "Хурим", "Шинэ жил"] }
   ],
@@ -135,13 +135,13 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "oem", label: "OEM/парт код", type: "text", hint: "Кодоор хайх боломж" },
     { key: "field3", label: "Шинэ/хуучин", type: "select", required: true, options: ["Шинэ", "Хуучин (оригинал)", "Хуучин"] }
   ],
-  "books": [
+  "books-stationery": [
     { key: "field", label: "Зохиолч", type: "text" },
     { key: "field2", label: "Хэл", type: "select", required: true, options: ["Монгол", "Англи", "Орос"] },
     { key: "field3", label: "Хэвлэгдсэн он", type: "number" },
     { key: "field4", label: "Шинэ/хуучин", type: "text", required: true }
   ],
-  "construction": [
+  "construction-tools": [
     { key: "field", label: "Нэгж", type: "select", required: true, options: ["ш", "м²", "м", "кг", "литр", "багц"], hint: "Үнэ нэгжтэй уялдана" },
     { key: "field2", label: "Тоо хэмжээ (нөөц)", type: "number" },
     { key: "field3", label: "Стандарт, сертификат", type: "text" },
@@ -158,7 +158,7 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "brand", label: "Брэнд", type: "text" },
     { key: "field2", label: "Шинэ/хуучин", type: "text", required: true }
   ],
-  "food": [
+  "food-beverage": [
     { key: "expiryDate", label: "Хугацаа дуусах огноо", type: "text", required: true, hint: "Өнгөрсөн огноо хориглоно; ≤7 хоног бол анхааруулга" },
     { key: "field", label: "Жин, багтаамж", type: "text", required: true, options: ["кг", "л", "ш"] },
     { key: "field2", label: "Хадгалах нөхцөл", type: "select", options: ["Хөргөлттэй", "Хөлдөөсөн", "Энгийн"] },
@@ -176,7 +176,7 @@ export const GENERATED_CATEGORY_ATTRIBUTES: Record<string, ListingMetadataField[
     { key: "field3", label: "Вакцинтай эсэх", type: "boolean", hint: "Нохой, мууранд санал болгоно" },
     { key: "field4", label: "Хүйс", type: "select", options: ["Эр", "Эм"] }
   ],
-  "digital": [
+  "digital-goods": [
     { key: "field", label: "Хүчинтэй хугацаа", type: "text", required: true, options: ["1 сар", "1 жил", "Насан турш"] },
     { key: "field2", label: "Дамжуулах арга", type: "select", required: true, options: ["И-мэйл", "Данс шилжүүлэх", "Код"] },
     { key: "field3", label: "Албан ёсны эсэх", type: "boolean", hint: "Лицензийн нотолгоо шаардана" }
