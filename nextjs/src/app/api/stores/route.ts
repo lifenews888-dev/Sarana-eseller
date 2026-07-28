@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { filterPublicLaunchProducts, publicProductWhere } from '@/lib/product-visibility';
 import { sanitizeImageUrls } from '@/lib/image-url';
+import { avatarFallbackUrl } from '@/lib/text-quality';
 import {
   STORE_DIRECTORY_TYPES,
   type StoreDirectoryFacet,
@@ -294,18 +295,25 @@ function createFacets(items: StoreDirectoryItem[]): StoreDirectoryFacets {
   };
 }
 
+function withLogoFallback(name: string, logo?: string | null, cover?: string | null) {
+  const resolvedLogo = logo || cover || avatarFallbackUrl(name);
+  const resolvedCover = cover || logo || resolvedLogo;
+  return { logo: resolvedLogo, coverImage: resolvedCover };
+}
+
 function mapShop(shop: ShopWithRelations, assets: ShopDirectoryAssets): StoreDirectoryItem {
   const directoryType = normalizeShopType(shop.shopType?.type);
   const keywords = displayText(shop.industry, shop.shopType?.type, directoryType === 'service' ? 'Үйлчилгээ' : 'Дэлгүүр');
+  const media = withLogoFallback(shop.name, shop.logo, assets.coverImage);
   return {
     id: shop.id,
     ownerId: shop.userId,
     name: shop.name,
     slug: shop.slug,
     href: `/s/${shop.storefrontSlug || shop.slug}`,
-    logo: shop.logo,
-    coverImage: assets.coverImage || shop.logo,
-    previewImages: assets.previewImages,
+    logo: media.logo,
+    coverImage: media.coverImage,
+    previewImages: assets.previewImages.length > 0 ? assets.previewImages : [media.coverImage],
     description: shop.industry || shop.address || null,
     category: shop.industry || (directoryType === 'service' ? 'Үйлчилгээ' : 'Дэлгүүр'),
     address: shop.address,
@@ -327,14 +335,15 @@ function mapShop(shop: ShopWithRelations, assets: ShopDirectoryAssets): StoreDir
 
 function mapAgent(agent: AgentWithCount): StoreDirectoryItem {
   const keywords = displayText(agent.specialties, 'Агент', 'Үл хөдлөх');
+  const media = withLogoFallback(agent.name, agent.profilePhoto, agent.coverImage);
   return {
     id: agent.id,
     ownerId: agent.userId,
     name: agent.name,
     slug: agent.slug,
     href: `/entity/agent/${agent.slug}`,
-    logo: agent.profilePhoto,
-    coverImage: agent.coverImage || agent.profilePhoto,
+    logo: media.logo,
+    coverImage: media.coverImage,
     description: agent.bio || agent.specialties.join(', ') || null,
     category: agent.specialties[0] || 'Үл хөдлөх',
     address: agent.address,
@@ -355,14 +364,15 @@ function mapAgent(agent: AgentWithCount): StoreDirectoryItem {
 
 function mapCompany(company: CompanyWithCount): StoreDirectoryItem {
   const keywords = displayText(company.awards, 'Компани', 'Барилга');
+  const media = withLogoFallback(company.name, company.logo, company.coverImage);
   return {
     id: company.id,
     ownerId: company.userId,
     name: company.name,
     slug: company.slug,
     href: `/entity/company/${company.slug}`,
-    logo: company.logo,
-    coverImage: company.coverImage || company.logo,
+    logo: media.logo,
+    coverImage: media.coverImage,
     description: company.description,
     category: 'Барилга',
     address: company.address,
@@ -383,14 +393,15 @@ function mapCompany(company: CompanyWithCount): StoreDirectoryItem {
 
 function mapAutoDealer(dealer: AutoDealerWithCount): StoreDirectoryItem {
   const keywords = displayText(dealer.brands, 'Авто');
+  const media = withLogoFallback(dealer.name, dealer.logo, dealer.coverImage);
   return {
     id: dealer.id,
     ownerId: dealer.userId,
     name: dealer.name,
     slug: dealer.slug,
     href: `/entity/auto_dealer/${dealer.slug}`,
-    logo: dealer.logo,
-    coverImage: dealer.coverImage || dealer.logo,
+    logo: media.logo,
+    coverImage: media.coverImage,
     description: dealer.description || dealer.brands.join(', ') || null,
     category: dealer.brands[0] || 'Авто',
     address: dealer.address,
@@ -411,14 +422,15 @@ function mapAutoDealer(dealer: AutoDealerWithCount): StoreDirectoryItem {
 
 function mapServiceProvider(provider: ServiceProviderWithCount): StoreDirectoryItem {
   const keywords = displayText(provider.serviceTypes, 'Үйлчилгээ');
+  const media = withLogoFallback(provider.name, provider.logo, provider.coverImage);
   return {
     id: provider.id,
     ownerId: provider.userId,
     name: provider.name,
     slug: provider.slug,
     href: `/entity/service/${provider.slug}`,
-    logo: provider.logo,
-    coverImage: provider.coverImage || provider.logo,
+    logo: media.logo,
+    coverImage: media.coverImage,
     description: provider.description || provider.serviceTypes.join(', ') || null,
     category: provider.serviceTypes[0] || 'Үйлчилгээ',
     address: provider.address,
@@ -484,6 +496,8 @@ async function fetchShopDirectoryAssets(shops: ShopWithRelations[]) {
 async function fetchDirectoryItems(district: string) {
   const shopWhere: Prisma.ShopWhereInput = {
     isBlocked: false,
+    // Prefer non-demo shops; also allow missing isDemo via NOT true isn't reliable
+    // on Mongo, so backfill scripts set isDemo:false. Keep false for clean public list.
     isDemo: false,
     ...(district ? { district } : {}),
     NOT: blockedShopWhere(),
