@@ -1,19 +1,14 @@
 'use client';
 
 /**
- * Unified eseller assistant — one FAB, two modes.
- * Mobile UX focus: shop (AI худалдаа) mode sheet, keyboard-safe input, budget chips.
+ * eseller туслах — single brand assistant.
+ * One red FAB + eseller sheet design. Two task tabs share the same UI shell:
+ *  - help → /api/chat/bot
+ *  - shop → /api/ai/shop
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Bot,
-  Headphones,
-  MessageCircle,
-  SendHorizonal,
-  Sparkles,
-  X,
-} from 'lucide-react';
+import { Bot, Headphones, MessageSquare, SendHorizonal, ShoppingBag, X } from 'lucide-react';
 
 type Mode = 'help' | 'shop';
 
@@ -24,12 +19,14 @@ interface Message {
   time: string;
 }
 
+const BRAND = '#E8242C';
+const BRAND_DARK = '#C41E25';
+
 const ts = () =>
   new Date().toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' });
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-/** Minimal **bold** + plain text for chat bubbles (no full markdown). */
 function renderChatText(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
   return parts.map((part, i) => {
@@ -46,9 +43,9 @@ function renderChatText(text: string) {
 
 const WELCOME: Record<Mode, string> = {
   help:
-    'Сайн байна уу! Би eseller туслах. Захиалга, төлбөр, хүргэлт, дэлгүүр нээх талаар асуугаарай 😊',
+    'Сайн байна уу! Би eseller туслах. Захиалга, төлбөр, хүргэлт, дэлгүүр нээх — асуугаарай 😊',
   shop:
-    'Сайн байна уу! Би AI худалдааны туслах. Юу хайж байгаагаа хэлээрэй — төсөв, бэлэг, бараа санал болгоё 🛍️',
+    'Сайн байна уу! Би eseller туслах. Бараа, бэлэг, төсөвөөр санал болгож чадна 🛍️',
 };
 
 const QUICK: Record<Mode, string[]> = {
@@ -64,33 +61,16 @@ const BUDGETS = [
   { label: 'Бүгд', value: 0 },
 ];
 
-const MODE_META: Record<
-  Mode,
-  { label: string; title: string; short: string; Icon: typeof Bot; accent: string; header: string }
-> = {
-  help: {
-    label: 'Тусламж',
-    title: 'eseller туслах',
-    short: 'Захиалга · хүргэлт · QPay',
-    Icon: Headphones,
-    accent: '#E8242C',
-    header: 'from-[#E8242C] to-[#C41E25]',
-  },
-  shop: {
-    label: 'Бараа хайх',
-    title: 'AI Худалдааны туслах',
-    short: 'Санал · төсөв · бэлэг',
-    Icon: Sparkles,
-    accent: '#7C3AED',
-    header: 'from-violet-600 to-fuchsia-500',
-  },
-};
+const TABS: { key: Mode; label: string; Icon: typeof Bot }[] = [
+  { key: 'help', label: 'Тусламж', Icon: Headphones },
+  { key: 'shop', label: 'Бараа', Icon: ShoppingBag },
+];
 
 export default function EsellerAssistant() {
   const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<Mode>('shop');
+  const [mode, setMode] = useState<Mode>('help');
   const [messages, setMessages] = useState<Message[]>([
-    { id: '0', role: 'assistant', content: WELCOME.shop, time: ts() },
+    { id: '0', role: 'assistant', content: WELCOME.help, time: ts() },
   ]);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
   const [input, setInput] = useState('');
@@ -98,7 +78,6 @@ export default function EsellerAssistant() {
   const [budget, setBudget] = useState(0);
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -109,7 +88,6 @@ export default function EsellerAssistant() {
     return () => window.cancelAnimationFrame(id);
   }, [messages, open, mode]);
 
-  // Avoid iOS focusing input on open (keyboard covers half the sheet) — focus only desktop
   useEffect(() => {
     if (!open) return;
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
@@ -117,7 +95,6 @@ export default function EsellerAssistant() {
     }
   }, [open, mode]);
 
-  // Lock body scroll while sheet open on mobile
   useEffect(() => {
     if (!open) return;
     const prev = document.body.style.overflow;
@@ -141,8 +118,10 @@ export default function EsellerAssistant() {
       const text = (override ?? input).trim();
       if (!text || loading) return;
 
-      const userMsg: Message = { id: uid(), role: 'user', content: text, time: ts() };
-      setMessages((prev) => [...prev, userMsg]);
+      setMessages((prev) => [
+        ...prev,
+        { id: uid(), role: 'user', content: text, time: ts() },
+      ]);
       if (!override) setInput('');
       setLoading(true);
 
@@ -181,7 +160,6 @@ export default function EsellerAssistant() {
               ...(budget > 0 ? { budget } : {}),
             }),
           });
-
           if (!res.ok) throw new Error('shop api');
 
           const contentType = res.headers.get('content-type') ?? '';
@@ -254,7 +232,7 @@ export default function EsellerAssistant() {
                   ...m,
                   content:
                     mode === 'shop'
-                      ? 'Бараа хайлт түр ажиллахгүй байна. Дахин оролдоно уу эсвэл /store-оос хайна уу.'
+                      ? 'Бараа хайлт түр ажиллахгүй байна. Дахин оролдоно уу эсвэл Дэлгүүр хэсгээс хайна уу.'
                       : 'Алдаа гарлаа. Дахин оролдоно уу.',
                 }
               : m,
@@ -267,25 +245,25 @@ export default function EsellerAssistant() {
     [budget, history, input, loading, mode],
   );
 
-  const meta = MODE_META[mode];
-
   return (
     <>
-      {/* FAB — hidden while open so it doesn't cover the input on phones */}
       {!open && (
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="AI худалдааны туслах нээх"
-          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem)] right-4 z-[9000] flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 bg-gradient-to-br from-violet-600 to-[#E8242C] text-white shadow-lg shadow-violet-900/25 transition active:scale-95 md:bottom-6 md:right-6"
+          aria-label="eseller туслах нээх"
+          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem)] right-4 z-[9000] flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 text-white shadow-lg transition active:scale-95 md:bottom-6 md:right-6"
+          style={{
+            background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
+            boxShadow: '0 8px 24px rgba(232,36,44,0.35)',
+          }}
         >
-          <MessageCircle className="h-6 w-6" />
+          <MessageSquare className="h-6 w-6" />
         </button>
       )}
 
       {open && (
         <>
-          {/* Backdrop — tap to close; keeps focus on sheet */}
           <button
             type="button"
             aria-label="Туслах хаах"
@@ -296,22 +274,32 @@ export default function EsellerAssistant() {
           <div
             role="dialog"
             aria-modal="true"
-            aria-label={meta.title}
+            aria-label="eseller туслах"
             className="fixed inset-x-0 bottom-0 z-[8990] flex h-[min(90dvh,100%)] max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(580px,calc(100dvh-3rem))] sm:max-h-[calc(100dvh-3rem)] sm:w-[min(400px,calc(100vw-2rem))] sm:rounded-2xl"
           >
-            {/* Handle */}
             <div className="flex shrink-0 justify-center pt-2 sm:hidden" aria-hidden>
               <div className="h-1 w-10 rounded-full bg-[var(--esl-border)]" />
             </div>
 
-            {/* Header */}
-            <div className={`flex shrink-0 items-center gap-3 bg-gradient-to-r ${meta.header} px-3 py-2.5 sm:px-4 sm:py-3`}>
+            {/* eseller brand header — same shell for both modes */}
+            <div
+              className="flex shrink-0 items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3"
+              style={{
+                background: `linear-gradient(90deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
+              }}
+            >
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
-                <meta.Icon className="h-5 w-5 text-white" />
+                <Bot className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-bold text-white">{meta.title}</div>
-                <div className="truncate text-[11px] text-white/80">{meta.short}</div>
+                <div className="truncate text-sm font-bold text-white">
+                  eseller<span className="font-black">.mn</span> туслах
+                </div>
+                <div className="truncate text-[11px] text-white/80">
+                  {mode === 'help'
+                    ? '● Онлайн · Захиалга · QPay · Хүргэлт'
+                    : '● Бараа санал · Төсөв · Бэлэг'}
+                </div>
               </div>
               <button
                 type="button"
@@ -323,10 +311,9 @@ export default function EsellerAssistant() {
               </button>
             </div>
 
-            {/* Mode tabs — large hit area */}
+            {/* Task switcher — same brand, not a second bot */}
             <div className="flex shrink-0 gap-1 border-b border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-1.5">
-              {(Object.keys(MODE_META) as Mode[]).map((key) => {
-                const m = MODE_META[key];
+              {TABS.map(({ key, label, Icon }) => {
                 const active = mode === key;
                 return (
                   <button
@@ -339,14 +326,16 @@ export default function EsellerAssistant() {
                         : 'bg-transparent text-[var(--esl-text-muted)]'
                     }`}
                   >
-                    <m.Icon className="h-4 w-4" style={active ? { color: m.accent } : undefined} />
-                    {m.label}
+                    <Icon
+                      className="h-4 w-4"
+                      style={active ? { color: BRAND } : undefined}
+                    />
+                    {label}
                   </button>
                 );
               })}
             </div>
 
-            {/* Shop budget chips */}
             {mode === 'shop' && (
               <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-[var(--esl-border)] px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <span className="shrink-0 self-center text-[10px] font-semibold text-[var(--esl-text-muted)]">
@@ -361,7 +350,7 @@ export default function EsellerAssistant() {
                       onClick={() => setBudget(b.value)}
                       className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
                         active
-                          ? 'border-violet-500 bg-violet-500/15 text-violet-600'
+                          ? 'border-[#E8242C] bg-[rgba(232,36,44,0.12)] text-[#E8242C]'
                           : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
                       }`}
                     >
@@ -372,11 +361,7 @@ export default function EsellerAssistant() {
               </div>
             )}
 
-            {/* Messages — flex-1 needs explicit parent height (sheet h-[90dvh]) */}
-            <div
-              ref={listRef}
-              className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]"
-            >
+            <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -388,7 +373,7 @@ export default function EsellerAssistant() {
                         ? 'rounded-[16px_16px_4px_16px] text-white'
                         : 'rounded-[16px_16px_16px_4px] bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)]'
                     }`}
-                    style={msg.role === 'user' ? { background: meta.accent } : undefined}
+                    style={msg.role === 'user' ? { background: BRAND } : undefined}
                   >
                     {msg.content ? (
                       <>
@@ -400,8 +385,11 @@ export default function EsellerAssistant() {
                         {[0, 1, 2].map((i) => (
                           <span
                             key={i}
-                            className="inline-block h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400"
-                            style={{ animationDelay: `${i * 0.15}s` }}
+                            className="inline-block h-1.5 w-1.5 animate-bounce rounded-full"
+                            style={{
+                              background: BRAND,
+                              animationDelay: `${i * 0.15}s`,
+                            }}
                           />
                         ))}
                       </span>
@@ -412,7 +400,6 @@ export default function EsellerAssistant() {
               <div ref={bottomRef} className="h-px shrink-0" />
             </div>
 
-            {/* Quick prompts — larger touch targets */}
             {messages.length <= 2 && (
               <div className="flex shrink-0 flex-wrap gap-2 border-t border-[var(--esl-border)]/60 px-3 py-2">
                 {QUICK[mode].map((q) => (
@@ -421,7 +408,7 @@ export default function EsellerAssistant() {
                     type="button"
                     onClick={() => void send(q)}
                     disabled={loading}
-                    className="min-h-9 cursor-pointer rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-1.5 text-[12px] font-semibold text-[var(--esl-text-muted)] transition active:scale-95 disabled:opacity-50"
+                    className="min-h-9 cursor-pointer rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-1.5 text-[12px] font-semibold text-[var(--esl-text-muted)] transition hover:border-[#E8242C]/50 active:scale-95 disabled:opacity-50"
                   >
                     {q}
                   </button>
@@ -429,7 +416,6 @@ export default function EsellerAssistant() {
               </div>
             )}
 
-            {/* Composer — 16px font prevents iOS zoom; safe-area padding */}
             <div
               className="flex shrink-0 gap-2 border-t border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-2.5"
               style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom, 0px))' }}
@@ -446,10 +432,11 @@ export default function EsellerAssistant() {
                 }}
                 enterKeyHint="send"
                 autoComplete="off"
-                autoCorrect="on"
-                placeholder={mode === 'help' ? 'Асуултаа бичнэ үү…' : 'Юу хайж байна вэ?'}
+                placeholder={
+                  mode === 'help' ? 'Асуултаа бичнэ үү…' : 'Юу хайж байна вэ?'
+                }
                 disabled={loading}
-                className="min-w-0 flex-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3.5 py-3 text-base text-[var(--esl-text-primary)] outline-none focus:border-violet-500 disabled:opacity-50 sm:text-[13px] sm:py-2.5"
+                className="min-w-0 flex-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3.5 py-3 text-base text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] disabled:opacity-50 sm:py-2.5 sm:text-[13px]"
               />
               <button
                 type="button"
@@ -458,8 +445,10 @@ export default function EsellerAssistant() {
                 aria-label="Илгээх"
                 className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
                 style={{
-                  background: input.trim() && !loading ? meta.accent : 'var(--esl-bg-section)',
-                  color: input.trim() && !loading ? '#fff' : 'var(--esl-text-muted)',
+                  background:
+                    input.trim() && !loading ? BRAND : 'var(--esl-bg-section)',
+                  color:
+                    input.trim() && !loading ? '#fff' : 'var(--esl-text-muted)',
                 }}
               >
                 <SendHorizonal className="h-5 w-5" />
