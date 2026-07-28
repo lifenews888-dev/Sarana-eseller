@@ -26,30 +26,20 @@ const BLOCKED_PUBLIC_PRODUCT_EXACT_NAMES = [
 
 export const PUBLIC_PRODUCT_MIN_PRICE = 1000;
 
-const blockedPublicProductNameWhere: Prisma.ProductWhereInput[] = [
-  ...BLOCKED_PUBLIC_PRODUCT_NAME_PATTERNS.map((pattern) => ({
-    OR: [
-      { name: { contains: pattern, mode: 'insensitive' as const } },
-      { description: { contains: pattern, mode: 'insensitive' as const } },
-    ],
-  })),
-  ...BLOCKED_PUBLIC_PRODUCT_EXACT_NAMES.map((name) => ({
-    name: { equals: name, mode: 'insensitive' as const },
-  })),
-];
-
+/**
+ * Mongo quirk: older product docs omitted `isDemo`. Prisma schema default makes
+ * reads look like `false`, but queries only match explicit `false` until docs
+ * are backfilled (`scripts/fix-marketplace-surfaces.ts`). After backfill,
+ * `isDemo: false` is the reliable public filter.
+ *
+ * Name/placeholder junk is filtered in JS via `isPublicLaunchProduct` —
+ * large `NOT: [{ OR: contains...}]` trees under-match on Mongo and hide
+ * almost the entire catalog.
+ */
 const publicProductBaseWhere: Prisma.ProductWhereInput = {
   isActive: true,
+  isDemo: false,
   price: { gte: PUBLIC_PRODUCT_MIN_PRICE },
-  OR: [
-    { salePrice: null },
-    { salePrice: 0 },
-    { salePrice: { gte: PUBLIC_PRODUCT_MIN_PRICE } },
-  ],
-  NOT: [
-    { isDemo: true },
-    ...blockedPublicProductNameWhere,
-  ],
 };
 
 /** True when salePrice is set above list price (broken "SALE" badge). */

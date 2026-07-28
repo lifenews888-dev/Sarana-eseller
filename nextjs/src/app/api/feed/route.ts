@@ -10,6 +10,8 @@ import {
   normalizeMarketplaceCategory,
 } from '@/lib/marketplaceCategories';
 import { sanitizeImageUrls } from '@/lib/image-url';
+import { looksLikeMojibake } from '@/lib/text-quality';
+import { PUBLIC_PRODUCT_MIN_PRICE } from '@/lib/product-visibility';
 
 const mediaInclude = { media: { orderBy: { sortOrder: 'asc' as const } } };
 
@@ -272,27 +274,39 @@ export async function GET(req: NextRequest) {
           : { createdAt: 'desc' as const };
 
     const shouldQueryTier = (candidate: string) => !requestedTier || requestedTier === candidate;
-    const [vip, featured, discounted, normalItems, total] = await Promise.all([
+    // Over-fetch then drop mojibake / junk prices so public feed stays readable.
+    const publicTake = (n: number) => Math.min(80, Math.max(n * 3, n + 10));
+    const isPublicFeedItem = (item: { title?: string | null; description?: string | null; price?: number | null }) => {
+      if (looksLikeMojibake(item.title) || looksLikeMojibake(item.description)) return false;
+      if (typeof item.price === 'number' && item.price > 0 && item.price < PUBLIC_PRODUCT_MIN_PRICE) return false;
+      return true;
+    };
+    const [vipRaw, featuredRaw, discountedRaw, normalRaw, total] = await Promise.all([
       shouldQueryTier('vip')
-        ? prisma.feedItem.findMany({ where: { ...where, tier: 'vip' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 6, include: mediaInclude })
+        ? prisma.feedItem.findMany({ where: { ...where, tier: 'vip' }, orderBy: { createdAt: 'desc' }, take: publicTake(mine ? limit : 6), include: mediaInclude })
         : Promise.resolve([]),
       shouldQueryTier('featured')
-        ? prisma.feedItem.findMany({ where: { ...where, tier: 'featured' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 12, include: mediaInclude })
+        ? prisma.feedItem.findMany({ where: { ...where, tier: 'featured' }, orderBy: { createdAt: 'desc' }, take: publicTake(mine ? limit : 12), include: mediaInclude })
         : Promise.resolve([]),
       shouldQueryTier('discounted')
-        ? prisma.feedItem.findMany({ where: { ...where, tier: 'discounted' }, orderBy: { createdAt: 'desc' }, take: mine ? limit : 10, include: mediaInclude })
+        ? prisma.feedItem.findMany({ where: { ...where, tier: 'discounted' }, orderBy: { createdAt: 'desc' }, take: publicTake(mine ? limit : 10), include: mediaInclude })
         : Promise.resolve([]),
       shouldQueryTier('normal')
         ? prisma.feedItem.findMany({
             where: { ...where, tier: 'normal' },
             orderBy: normalOrder,
             skip: (page - 1) * limit,
-            take: limit,
+            take: publicTake(limit),
             include: mediaInclude,
           })
         : Promise.resolve([]),
       prisma.feedItem.count({ where: { ...where, tier: requestedTier || 'normal' } }),
     ]);
+
+    const vip = vipRaw.filter(isPublicFeedItem).slice(0, mine ? limit : 6);
+    const featured = featuredRaw.filter(isPublicFeedItem).slice(0, mine ? limit : 12);
+    const discounted = discountedRaw.filter(isPublicFeedItem).slice(0, mine ? limit : 10);
+    const normalItems = normalRaw.filter(isPublicFeedItem).slice(0, limit);
 
     return json({
       vip,
