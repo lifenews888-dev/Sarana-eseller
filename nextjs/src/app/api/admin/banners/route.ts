@@ -47,12 +47,35 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, slot, imageUrl, linkUrl, startsAt, endsAt, ...rest } = body;
+    const {
+      title,
+      slot,
+      imageUrl,
+      imageMobile,
+      linkUrl,
+      startsAt,
+      endsAt,
+      altText,
+      bgColor,
+      entityId,
+      entityName,
+      status,
+      sortOrder,
+      isPaid,
+      planId,
+      paymentId,
+      price,
+    } = body;
+
     if (!title || !slot || !imageUrl || !linkUrl || !startsAt || !endsAt) {
       return errorJson('title, slot, imageUrl, linkUrl, startsAt, endsAt шаардлагатай');
     }
+    // Reject local/device paths so bad uploads never land in DB.
     if (!isValidPublicImageUrl(imageUrl)) {
       return errorJson('imageUrl must be a public URL', 400);
+    }
+    if (imageMobile != null && imageMobile !== '' && !isValidPublicImageUrl(imageMobile)) {
+      return errorJson('imageMobile must be a public URL', 400);
     }
 
     // Auto refId: BNR-YYMM-XXXX
@@ -71,11 +94,21 @@ export async function POST(req: NextRequest) {
         title,
         slot,
         imageUrl,
+        imageMobile: imageMobile || null,
         linkUrl,
         startsAt: new Date(startsAt),
         endsAt: new Date(endsAt),
         createdById: auth.id,
-        ...rest,
+        ...(altText !== undefined && { altText }),
+        ...(bgColor !== undefined && { bgColor }),
+        ...(entityId !== undefined && { entityId }),
+        ...(entityName !== undefined && { entityName }),
+        ...(status !== undefined && { status }),
+        ...(sortOrder !== undefined && { sortOrder: Number(sortOrder) || 0 }),
+        ...(isPaid !== undefined && { isPaid: Boolean(isPaid) }),
+        ...(planId !== undefined && { planId }),
+        ...(paymentId !== undefined && { paymentId }),
+        ...(price !== undefined && { price: price == null ? null : Number(price) }),
       },
     });
 
