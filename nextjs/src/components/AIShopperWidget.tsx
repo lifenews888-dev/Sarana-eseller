@@ -2,6 +2,11 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { MessageCircle, X, SendHorizonal, Sparkles, ShoppingBag } from 'lucide-react';
+import {
+  announceChatDockOpen,
+  CHAT_DOCK_OPEN_EVENT,
+  type ChatDockId,
+} from '@/lib/chat-dock';
 
 // ─── Types ───────────────────────────────────────────────────
 interface Message {
@@ -38,6 +43,8 @@ const formatBudget = (v: number) => {
   return `${(v / 1000).toFixed(0)}мян₮`;
 };
 
+const DOCK_ID: ChatDockId = 'shopper';
+
 // ─── Component ───────────────────────────────────────────────
 export default function AIShopperWidget() {
   const [open, setOpen] = useState(false);
@@ -53,7 +60,7 @@ export default function AIShopperWidget() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
-  const [budget, setBudget] = useState(3); // index into BUDGET_STEPS
+  const [budget, setBudget] = useState(3);
   const [occasion, setOccasion] = useState<Occasion | null>(null);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -67,6 +74,23 @@ export default function AIShopperWidget() {
   useEffect(() => {
     if (open) inputRef.current?.focus();
   }, [open]);
+
+  useEffect(() => {
+    const onOther = (e: Event) => {
+      const id = (e as CustomEvent<{ id: ChatDockId }>).detail?.id;
+      if (id && id !== DOCK_ID) setOpen(false);
+    };
+    window.addEventListener(CHAT_DOCK_OPEN_EVENT, onOther);
+    return () => window.removeEventListener(CHAT_DOCK_OPEN_EVENT, onOther);
+  }, []);
+
+  const toggle = () => {
+    setOpen((prev) => {
+      const next = !prev;
+      if (next) announceChatDockOpen(DOCK_ID);
+      return next;
+    });
+  };
 
   const send = useCallback(
     async (overrideText?: string) => {
@@ -105,7 +129,6 @@ export default function AIShopperWidget() {
         const contentType = res.headers.get('content-type') ?? '';
 
         if (contentType.includes('text/event-stream') && res.body) {
-          // Streaming response
           const reader = res.body.getReader();
           const decoder = new TextDecoder();
           let fullText = '';
@@ -143,7 +166,6 @@ export default function AIShopperWidget() {
             { role: 'assistant', content: fullText },
           ]);
         } else {
-          // Non-streaming (mock fallback)
           const data = await res.json();
           const reply: string = data.reply ?? data.error ?? 'Алдаа гарлаа';
           setMessages((prev) =>
@@ -172,47 +194,59 @@ export default function AIShopperWidget() {
     [input, loading, history, budget, occasion],
   );
 
-  // ─── Render ──────────────────────────────────────────────
   return (
     <>
-      {/* Floating button */}
+      {/*
+        Dock slot 2 (upper FAB) — stacked above support FAB.
+        mobile: nav + gap + support FAB + gap
+        desktop: bottom-6 + FAB + gap
+      */}
       <button
-        onClick={() => setOpen(!open)}
-        aria-label="AI Худалдааны туслах"
-        className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[1001] flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500 shadow-lg shadow-violet-500/30 transition-transform hover:scale-110 active:scale-95 cursor-pointer border-none"
+        type="button"
+        onClick={toggle}
+        aria-label={open ? 'AI туслах хаах' : 'AI Худалдааны туслах нээх'}
+        aria-expanded={open}
+        className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem+3.5rem+0.625rem)] right-4 z-[9000] flex h-14 w-14 items-center justify-center rounded-full border-none bg-gradient-to-br from-violet-600 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30 transition-transform hover:scale-110 active:scale-95 cursor-pointer md:bottom-[calc(1.5rem+3.5rem+0.625rem)] md:right-6"
       >
-        {open ? (
-          <X className="h-5 w-5 text-white" />
-        ) : (
-          <MessageCircle className="h-6 w-6 text-white" />
-        )}
+        {open ? <X className="h-5 w-5" /> : <MessageCircle className="h-6 w-6" />}
       </button>
 
-      {/* Chat panel */}
       {open && (
-        <div className="fixed bottom-[160px] right-4 md:bottom-[90px] md:right-6 z-[1000] flex h-[540px] max-h-[calc(100vh-180px)] w-[380px] flex-col overflow-hidden rounded-2xl border border-[var(--esl-border,#222)] bg-[var(--esl-bg-card,#141414)] shadow-2xl max-sm:right-3 max-sm:w-[calc(100vw-24px)]">
+        <div
+          role="dialog"
+          aria-label="AI Худалдааны туслах"
+          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem+8rem)] right-3 z-[8990] flex h-[min(520px,calc(100dvh-3.5rem-env(safe-area-inset-bottom,0px)-10.5rem))] w-[min(380px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-2xl border border-[var(--esl-border,#222)] bg-[var(--esl-bg-card,#141414)] shadow-2xl md:bottom-[calc(1.5rem+8rem)] md:right-6 md:h-[min(540px,calc(100dvh-11rem))]"
+        >
           {/* Header */}
           <div className="flex shrink-0 items-center gap-3 bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <div className="text-sm font-bold text-white">AI Худалдааны Туслах</div>
               <div className="text-[11px] text-white/70">Бараа хайх, зөвлөгөө авах</div>
             </div>
             <button
+              type="button"
               onClick={() => setShowFilters(!showFilters)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 transition-colors hover:bg-white/25 cursor-pointer border-none"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border-none bg-white/15 transition-colors hover:bg-white/25 cursor-pointer"
               aria-label="Шүүлтүүр"
             >
               <ShoppingBag className="h-4 w-4 text-white" />
             </button>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Хаах"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border-none bg-white/15 transition-colors hover:bg-white/25 cursor-pointer"
+            >
+              <X className="h-4 w-4 text-white" />
+            </button>
           </div>
 
-          {/* Filters panel */}
+          {/* Filters */}
           {showFilters && (
             <div className="shrink-0 border-b border-[var(--esl-border,#222)] bg-[var(--esl-bg-section,#1A1A1A)] px-4 py-3">
-              {/* Budget slider */}
               <div className="mb-2">
                 <label className="mb-1 block text-[11px] text-[var(--esl-text-muted,#999)]">
                   Төсөв: {formatBudget(BUDGET_STEPS[budget])}
@@ -230,13 +264,13 @@ export default function AIShopperWidget() {
                   <span>1сая₮</span>
                 </div>
               </div>
-              {/* Occasion */}
               <div className="flex flex-wrap gap-1.5">
                 {OCCASIONS.map((o) => (
                   <button
                     key={o.key}
+                    type="button"
                     onClick={() => setOccasion(occasion === o.key ? null : o.key)}
-                    className={`rounded-lg border px-2.5 py-1 text-[11px] transition-colors cursor-pointer ${
+                    className={`cursor-pointer rounded-lg border px-2.5 py-1 text-[11px] transition-colors ${
                       occasion === o.key
                         ? 'border-violet-500 bg-violet-500/20 text-violet-300'
                         : 'border-[var(--esl-border,#333)] bg-transparent text-[var(--esl-text-muted,#999)] hover:border-violet-400'
@@ -250,7 +284,7 @@ export default function AIShopperWidget() {
           )}
 
           {/* Messages */}
-          <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-3">
+          <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain p-3">
             {messages.map((msg) => (
               <div
                 key={msg.id}
@@ -289,6 +323,7 @@ export default function AIShopperWidget() {
               {QUICK_PROMPTS.map((q) => (
                 <button
                   key={q}
+                  type="button"
                   onClick={() => send(q)}
                   className="cursor-pointer rounded-xl border border-violet-500/30 bg-violet-500/10 px-2.5 py-1 text-[11px] text-violet-300 transition-colors hover:bg-violet-500/20"
                 >
@@ -312,12 +347,14 @@ export default function AIShopperWidget() {
               }}
               placeholder="Юу хайж байна вэ?"
               disabled={loading}
-              className="flex-1 rounded-xl border border-[var(--esl-border,#222)] bg-[var(--esl-bg-section,#1A1A1A)] px-3.5 py-2 text-[13px] text-[var(--esl-text,#eee)] outline-none transition-colors focus:border-violet-500 disabled:opacity-50"
+              className="min-w-0 flex-1 rounded-xl border border-[var(--esl-border,#222)] bg-[var(--esl-bg-section,#1A1A1A)] px-3.5 py-2 text-[13px] text-[var(--esl-text,#eee)] outline-none transition-colors focus:border-violet-500 disabled:opacity-50"
             />
             <button
+              type="button"
               onClick={() => send()}
               disabled={!input.trim() || loading}
-              className={`flex h-10 w-10 items-center justify-center rounded-xl border-none text-lg transition-colors ${
+              aria-label="Илгээх"
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border-none transition-colors ${
                 input.trim() && !loading
                   ? 'cursor-pointer bg-violet-600 text-white hover:bg-violet-500'
                   : 'cursor-not-allowed bg-[var(--esl-bg-section,#1A1A1A)] text-[var(--esl-text-muted,#555)]'

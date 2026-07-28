@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { MapPin, Phone, Star, Shield, ShoppingBag, Users, Share2, Mail, Clock } from 'lucide-react';
 import { ShareModal } from '@/components/shared/ShareModal';
-import ChatWidget from '@/components/chat/ChatWidget';
+
 import SafeImage from '@/components/ui/SafeImage';
 
 interface ShopData {
@@ -340,9 +340,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
       </footer>
 
       <ShareModal isOpen={shareOpen} onClose={() => setShareOpen(false)} url={shareUrl} title={shop.name} description={`${shop.name} — eseller.mn дэлгүүр`} />
-
-      {/* Chat Widget */}
-      <ChatWidget />
+      {/* Chat widgets mount once in root layout — avoid duplicate FABs */}
     </div>
   );
 }
