@@ -287,16 +287,16 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
 
   return (
     <AnimatePresence>
-      {/* Backdrop */}
-      <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998]"
+      {/* Backdrop — above MobileNav (z-9999) so footer is never covered */}
+      <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10020]"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
 
-      {/* Prev/Next product arrows */}
+      {/* Prev/Next product arrows — desktop only */}
       {hasPrev && onPrev && (
         <button
           onClick={onPrev}
           aria-label="Өмнөх бараа"
-          className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
+          className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[10060] hidden w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl md:flex"
         >
           <ChevronLeft className="w-5 h-5 text-[var(--esl-text-primary)]" />
         </button>
@@ -305,27 +305,38 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         <button
           onClick={onNext}
           aria-label="Дараагийн бараа"
-          className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
+          className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[10060] hidden w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl md:flex"
         >
           <ChevronRight className="w-5 h-5 text-[var(--esl-text-primary)]" />
         </button>
       )}
 
-      {/* Modal */}
+      {/*
+        Modal shell:
+        - z above bottom tab bar
+        - mobile: full remaining viewport with min-h-0 flex chain so footer stays pinned
+        - image capped so it cannot push qty/cart off-screen
+      */}
       <motion.div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="product-modal-title"
         tabIndex={-1}
-        className="fixed inset-2 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-5xl bg-[var(--esl-bg-card)] rounded-2xl z-[999] overflow-hidden flex flex-col md:flex-row max-h-[94vh] shadow-2xl"
-        initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 30, stiffness: 350 }}>
+        className="fixed inset-x-0 bottom-0 top-[max(0.5rem,5dvh)] z-[10050] flex min-h-0 w-full flex-col overflow-hidden rounded-t-2xl bg-[var(--esl-bg-card)] shadow-2xl md:inset-auto md:top-1/2 md:left-1/2 md:bottom-auto md:h-auto md:max-h-[94vh] md:w-full md:max-w-5xl md:-translate-x-1/2 md:-translate-y-1/2 md:flex-row md:rounded-2xl"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom, 0px))' }}
+        initial={{ opacity: 0, scale: 0.98, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.98, y: 40 }} transition={{ type: 'spring', damping: 30, stiffness: 350 }}>
+
+        {/* Mobile drag handle */}
+        <div className="flex shrink-0 justify-center pt-2 pb-1 md:hidden" aria-hidden>
+          <div className="h-1 w-10 rounded-full bg-[var(--esl-border)]" />
+        </div>
 
         {/* ═══ LEFT: Image Gallery ═══ */}
-        <div className="md:w-[55%] bg-[var(--esl-bg-section)] relative shrink-0 flex flex-col">
-          {/* Main image/video */}
-          <div className="relative flex-1 min-h-[280px] md:min-h-[400px] flex items-center justify-center overflow-hidden">
+        <div className="relative flex shrink-0 flex-col bg-[var(--esl-bg-section)] max-md:h-[32dvh] max-md:max-h-[260px] max-md:min-h-[180px] md:w-[55%]">
+          {/* Main image/video — no min-h 280 that ate the footer */}
+          <div className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden md:min-h-[400px]">
             {media.length > 0 ? (
               media[activeImg]?.type === 'video' ? (
                 <video
@@ -423,16 +434,16 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         </div>
 
         {/* ═══ RIGHT: Product Details ═══ */}
-        <div className="md:w-[45%] flex flex-col">
+        <div className="relative flex min-h-0 flex-1 flex-col md:w-[45%]">
           {/* Close */}
           <button onClick={onClose}
             aria-label="Барааны цонх хаах"
-            className="absolute top-3 right-3 md:relative md:top-0 md:right-0 md:self-end md:m-3 w-8 h-8 rounded-full bg-[var(--esl-bg-section)] border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card-hover)] transition z-10">
+            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border-none bg-[var(--esl-bg-section)]/95 shadow-sm cursor-pointer transition hover:bg-[var(--esl-bg-card-hover)] md:relative md:right-0 md:top-0 md:m-3 md:h-8 md:w-8 md:self-end md:shadow-none">
             <X className="w-4 h-4 text-[var(--esl-text-secondary)]" />
           </button>
 
-          {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-4">
+          {/* Scrollable content — only this region scrolls; footer stays fixed below */}
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-3 pt-2 sm:px-6 md:pt-0">
             {/* Store */}
             {product.store?.name && (
               <div className="text-xs text-[var(--esl-text-muted)] font-medium mb-1">{product.store.name}</div>
@@ -649,75 +660,77 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                 ))}
               </div>
             )}
-          </div>
-          <div className="px-6 py-4 border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]/50">
-            <h4 className="text-xs font-bold text-[var(--esl-text-secondary)] uppercase tracking-wider mb-3">Барааны товч</h4>
-            <div className="grid grid-cols-2 gap-2">
-              {productFacts.map((fact) => {
-                const Icon = fact.icon;
-                return (
-                  <div key={`${fact.label}-${fact.value}`} className="min-w-0 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-[var(--esl-text-muted)]">
-                      <Icon className="h-3.5 w-3.5 shrink-0 text-[#E24B4A]" />
-                      <span className="truncate">{fact.label}</span>
+
+            {/* Facts in scroll pane so footer (qty/cart) stays pinned */}
+            <div className="mt-4 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)]/50 p-3">
+              <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--esl-text-secondary)]">Барааны товч</h4>
+              <div className="grid grid-cols-2 gap-2">
+                {productFacts.map((fact) => {
+                  const Icon = fact.icon;
+                  return (
+                    <div key={`${fact.label}-${fact.value}`} className="min-w-0 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">
+                      <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-[var(--esl-text-muted)]">
+                        <Icon className="h-3.5 w-3.5 shrink-0 text-[#E24B4A]" />
+                        <span className="truncate">{fact.label}</span>
+                      </div>
+                      <p className="truncate text-xs font-black text-[var(--esl-text-primary)]">{fact.value}</p>
                     </div>
-                    <p className="truncate text-xs font-black text-[var(--esl-text-primary)]">{fact.value}</p>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          {/* ═══ Footer: Qty + Add to Cart ═══ */}
-          <div className="px-6 py-4 border-t border-[var(--esl-border)] shrink-0 space-y-3 bg-[var(--esl-bg-card)]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
+          </div>{/* end scrollable content */}
+
+          {/* ═══ Footer PINNED — always visible on phone (qty + cart) ═══ */}
+          <div className="shrink-0 space-y-2.5 border-t border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-4 py-3 shadow-[0_-8px_24px_rgba(0,0,0,0.08)] sm:px-6 md:space-y-3 md:py-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 sm:gap-3">
                 <span className="text-sm font-semibold text-[var(--esl-text-secondary)]">Тоо:</span>
-                <div className="flex items-center border border-[var(--esl-border)] rounded-xl overflow-hidden">
+                <div className="flex items-center overflow-hidden rounded-xl border border-[var(--esl-border)]">
                   <button onClick={() => setQty(Math.max(1, qty - 1))}
                     aria-label="Тоо ширхэг багасгах"
-                    className="w-9 h-9 bg-[var(--esl-bg-section)] border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center">
-                    <Minus className="w-3.5 h-3.5 text-[var(--esl-text-secondary)]" />
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center border-none bg-[var(--esl-bg-section)] transition hover:bg-[var(--esl-bg-card-hover)] sm:h-9 sm:w-9">
+                    <Minus className="h-3.5 w-3.5 text-[var(--esl-text-secondary)]" />
                   </button>
-                  <span className="w-10 h-9 flex items-center justify-center text-sm font-bold border-x border-[var(--esl-border)]">{qty}</span>
+                  <span className="flex h-10 w-10 items-center justify-center border-x border-[var(--esl-border)] text-sm font-bold sm:h-9">{qty}</span>
                   <button onClick={() => setQty(qty + 1)}
                     aria-label="Тоо ширхэг нэмэх"
-                    className="w-9 h-9 bg-[var(--esl-bg-section)] border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center">
-                    <Plus className="w-3.5 h-3.5 text-[var(--esl-text-secondary)]" />
+                    className="flex h-10 w-10 cursor-pointer items-center justify-center border-none bg-[var(--esl-bg-section)] transition hover:bg-[var(--esl-bg-card-hover)] sm:h-9 sm:w-9">
+                    <Plus className="h-3.5 w-3.5 text-[var(--esl-text-secondary)]" />
                   </button>
                 </div>
               </div>
-              <span className="text-lg font-black text-[var(--esl-text-primary)]">{formatPrice(px * qty)}</span>
+              <span className="text-base font-black tabular-nums text-[var(--esl-text-primary)] sm:text-lg">{formatPrice(px * qty)}</span>
             </div>
 
             <button onClick={handleAdd} disabled={added}
               aria-label={`${product.name} сагсанд нэмэх`}
-              className={cn('w-full py-3.5 rounded-xl font-bold text-sm border-none cursor-pointer transition-all flex items-center justify-center gap-2',
-                added ? 'bg-green-500 text-white' : 'bg-[#E24B4A] text-white shadow-[0_4px_16px_rgba(226,75,74,.3)] hover:bg-[#c73a39] hover:shadow-[0_6px_20px_rgba(226,75,74,.4)]')}>
-              {added ? <><Check className="w-4 h-4" /> Нэмэгдлээ!</> : <><ShoppingCart className="w-4 h-4" /> Сагсанд нэмэх — {formatPrice(px * qty)}</>}
+              className={cn('flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-none py-3.5 text-sm font-bold transition-all',
+                added ? 'bg-green-500 text-white' : 'bg-[#E24B4A] text-white shadow-[0_4px_16px_rgba(226,75,74,.3)] hover:bg-[#c73a39]')}>
+              {added ? <><Check className="h-4 w-4" /> Нэмэгдлээ!</> : <><ShoppingCart className="h-4 w-4" /> Сагсанд нэмэх — {formatPrice(px * qty)}</>}
             </button>
 
-            {isAffiliate && onShare && (
-              <button onClick={onShare}
-                aria-label={`${product.name} хуваалцах линк хуулах`}
-                className="w-full bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)] py-3 rounded-xl font-semibold text-sm border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center gap-2">
-                <Share2 className="w-4 h-4" /> Хуваалцах линк хуулах
-              </button>
-            )}
-
-            {product.allowAffiliate && (
-              <a href={`/dashboard/affiliate?product=${product._id}`}
-                className="w-full py-3 rounded-xl font-semibold text-sm border border-[#E8242C] text-[#E8242C] bg-transparent hover:bg-red-50 transition flex items-center justify-center gap-2 no-underline cursor-pointer">
-                <Share2 className="w-4 h-4" /> Борлуулж эхлэх ({product.affiliateCommission || product.commission || 10}%)
-              </a>
-            )}
-
-            {/* Full detail page link */}
-            <Link
-              href={`/product/${product._id}`}
-              className="w-full py-3 rounded-xl font-semibold text-sm border border-[var(--esl-border)] text-[var(--esl-text-secondary)] bg-transparent hover:bg-[var(--esl-bg-section)] transition flex items-center justify-center gap-2 no-underline"
-            >
-              Дэлгэрэнгүй харах →
-            </Link>
+            <div className="flex gap-2">
+              {isAffiliate && onShare && (
+                <button onClick={onShare}
+                  aria-label={`${product.name} хуваалцах линк хуулах`}
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-none bg-[var(--esl-bg-section)] py-2.5 text-xs font-semibold text-[var(--esl-text-secondary)] transition hover:bg-[var(--esl-bg-card-hover)] sm:text-sm">
+                  <Share2 className="h-4 w-4" /> Хуваалцах
+                </button>
+              )}
+              {product.allowAffiliate && (
+                <a href={`/dashboard/affiliate?product=${product._id}`}
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#E8242C] bg-transparent py-2.5 text-xs font-semibold text-[#E8242C] no-underline transition hover:bg-red-50 sm:text-sm">
+                  <Share2 className="h-4 w-4" /> Борлуулах
+                </a>
+              )}
+              <Link
+                href={`/product/${product._id}`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-[var(--esl-border)] bg-transparent py-2.5 text-xs font-semibold text-[var(--esl-text-secondary)] no-underline transition hover:bg-[var(--esl-bg-section)] sm:text-sm"
+              >
+                Бүтэн хуудас →
+              </Link>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -730,7 +743,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
           aria-modal="true"
           aria-label="Zoomed product image"
           tabIndex={-1}
-          className="fixed inset-0 z-[1000] bg-black/95 flex items-center justify-center cursor-zoom-out"
+          className="fixed inset-0 z-[10070] flex cursor-zoom-out items-center justify-center bg-black/95"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={closeZoom}
         >
