@@ -54,7 +54,7 @@ export default function MobileNav() {
                 href={tab.href}
                 prefetch
                 className={`relative z-10 flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 text-[10px] font-semibold no-underline transition-colors ${
-                  isActive ? 'text-[#E8242C]' : 'text-[#666]'
+                  isActive ? 'text-[#E8242C]' : 'text-[var(--esl-text-secondary)]'
                 }`}
               >
                 <div className="relative">

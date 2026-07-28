@@ -83,7 +83,7 @@ const CATS: { slug: string; icon: LucideIcon; name: string; href: string }[] = [
 export default function CategoryIcons() {
   return (
     <section className="max-w-[1200px] mx-auto px-4 py-8">
-      <h2 className="text-[var(--esl-text)] text-xl font-bold mb-5">
+      <h2 className="text-[var(--esl-text-primary)] text-xl font-bold mb-5">
         Ангилалаар хайх
       </h2>
       <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-12 gap-3">
@@ -91,10 +91,10 @@ export default function CategoryIcons() {
           <Link
             key={cat.slug}
             href={cat.href}
-            className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] hover:border-[#E8242C] hover:bg-[rgba(232,36,44,0.05)] hover:-translate-y-0.5 transition-all cursor-pointer no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--esl-bg)]"
+            className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] hover:border-[#E8242C] hover:bg-[rgba(232,36,44,0.05)] hover:-translate-y-0.5 transition-all cursor-pointer no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E8242C] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--esl-bg-page)]"
           >
-            <cat.icon size={28} className="text-[var(--esl-text-muted)]" />
-            <span className="text-[11px] font-medium text-[var(--esl-text-muted)] text-center">
+            <cat.icon size={28} className="text-[var(--esl-text-secondary)]" />
+            <span className="text-[11px] font-medium text-[var(--esl-text-secondary)] text-center">
               {cat.name}
             </span>
           </Link>

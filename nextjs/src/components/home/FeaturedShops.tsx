@@ -18,7 +18,7 @@ export default function FeaturedShops({ entities }: { entities: FeaturedShop[] }
   return (
     <section className="max-w-[1200px] mx-auto px-4 pb-10">
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-[var(--esl-text)] text-xl font-bold">
+        <h2 className="text-[var(--esl-text-primary)] text-xl font-bold">
           Онцлох дэлгүүрүүд
         </h2>
         <Link href="/shops" className="text-[#E8242C] text-sm font-semibold no-underline">
@@ -40,7 +40,7 @@ export default function FeaturedShops({ entities }: { entities: FeaturedShop[] }
                   <span className="text-white text-2xl font-bold">{e.name?.[0]}</span>
                 )}
               </div>
-              <p className="text-[var(--esl-text)] font-semibold text-[13px] mb-1.5">{e.name}</p>
+              <p className="text-[var(--esl-text-primary)] font-semibold text-[13px] mb-1.5">{e.name}</p>
               <div className="flex items-center justify-center gap-1 mb-1">
                 <span className="text-[#F9A825]">★</span>
                 <span className="text-[var(--esl-text-muted)] text-xs">{e.rating?.toFixed(1) || '5.0'}</span>

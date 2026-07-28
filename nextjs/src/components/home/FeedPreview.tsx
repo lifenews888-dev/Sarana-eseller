@@ -16,7 +16,7 @@ export default function FeedPreview({ posts }: { posts: FeedPost[] }) {
   return (
     <section className="max-w-[1200px] mx-auto px-4 pb-10">
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-[var(--esl-text)] text-xl font-bold">
+        <h2 className="text-[var(--esl-text-primary)] text-xl font-bold">
           Сүүлийн зарууд
         </h2>
         <Link href="/feed" className="text-[#E8242C] text-sm font-semibold no-underline">
@@ -51,7 +51,7 @@ export default function FeedPreview({ posts }: { posts: FeedPost[] }) {
                   )}
                 </div>
                 <div className="p-3.5">
-                  <p className="text-[var(--esl-text)] font-semibold text-sm mb-2 line-clamp-2">{post.title}</p>
+                  <p className="text-[var(--esl-text-primary)] font-semibold text-sm mb-2 line-clamp-2">{post.title}</p>
                   <div className="flex justify-between items-center">
                     <span className="text-[#E8242C] font-extrabold text-base">
                       {post.price ? post.price.toLocaleString() + '₮' : 'Үнэ тохиролцоно'}

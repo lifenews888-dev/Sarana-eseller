@@ -27,7 +27,7 @@ export default function StatsBar({ stats }: StatsBarProps) {
                 {item.icon}
               </div>
               <div>
-                <p className="text-[var(--esl-text)] font-extrabold text-lg leading-tight">{item.value}</p>
+                <p className="text-[var(--esl-text-primary)] font-extrabold text-lg leading-tight">{item.value}</p>
                 <p className="text-[var(--esl-text-muted)] text-xs">{item.label}</p>
               </div>
             </div>
