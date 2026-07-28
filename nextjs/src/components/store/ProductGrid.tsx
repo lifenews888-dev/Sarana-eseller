@@ -93,23 +93,23 @@ export default function ProductGrid({
     <section className="bg-[var(--esl-bg-page)]">
       <div className="max-w-[1320px] mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-1 h-6 rounded-full bg-[#E8242C]" />
-            <h2 className="text-xl font-black text-white">
+        <div className="mb-4 flex items-center justify-between gap-3 sm:mb-6">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+            <div className="h-5 w-1 shrink-0 rounded-full bg-[#E8242C] sm:h-6" />
+            <h2 className="truncate text-base font-black text-[var(--esl-text-primary)] sm:text-xl">
               {sectionTitle}
             </h2>
           </div>
-          <span className="text-sm text-[var(--esl-text-muted)] font-medium bg-[var(--esl-bg-card)] px-3 py-1 rounded-lg">
+          <span className="shrink-0 rounded-lg bg-[var(--esl-bg-card)] px-2.5 py-1 text-xs font-medium text-[var(--esl-text-muted)] sm:px-3 sm:text-sm">
             {products.length} зар
           </span>
         </div>
 
-        {/* Type tabs */}
-        <div className="flex items-center gap-2 mb-4">
+        {/* Type tabs — scrollable on narrow phones */}
+        <div className="mb-3 flex items-center gap-2 overflow-x-auto scrollbar-none pb-1 sm:mb-4">
           {TYPE_TABS.map((t) => (
             <button key={t.key} onClick={() => onTypeChange(t.key)}
-              className={cn('flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold border-none cursor-pointer transition-all',
+              className={cn('flex shrink-0 items-center gap-1.5 rounded-xl border-none px-3 py-2 text-xs font-semibold cursor-pointer transition-all sm:px-4 sm:text-sm',
                 activeType === t.key ? 'bg-[#E8242C] text-white shadow-sm' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-muted)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-elevated)]')}>
               <t.icon className="w-4 h-4" /> {t.label}
             </button>
@@ -269,9 +269,9 @@ export default function ProductGrid({
           </div>
         )}
 
-        {/* Grid */}
+        {/* Grid — tighter gaps on phones so 2-col cards stay readable */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5 xl:gap-5">
             {Array.from({ length: 10 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
@@ -279,9 +279,9 @@ export default function ProductGrid({
         ) : products.length === 0 ? (
           <div className="text-center py-20">
             <div className="w-20 h-20 rounded-2xl bg-[var(--esl-bg-card)] flex items-center justify-center mx-auto mb-4">
-              <Search className="w-8 h-8 text-[#3D3D3D]" />
+              <Search className="w-8 h-8 text-[var(--esl-text-disabled)]" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">
+            <h3 className="mb-1 text-base font-bold text-[var(--esl-text-primary)]">
               {isListingCategory ? 'Энэ ангиллын зарууд Зарын буланд байна' : 'Бараа олдсонгүй'}
             </h3>
             <p className="text-sm text-[var(--esl-text-muted)] mb-4">
@@ -314,12 +314,20 @@ export default function ProductGrid({
             )}
           </div>
         ) : (
-          <motion.div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5"
-            initial="hidden" animate="visible" variants={{ visible: { transition: { staggerChildren: 0.03 } } }}>
+          <motion.div
+            className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4 xl:grid-cols-5 xl:gap-5"
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
+          >
             {products.map((p) => {
               const productId = p._id || p.id || p.name;
               return (
-              <motion.div key={productId} variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
+              <motion.div
+                key={productId}
+                className="min-w-0 h-full"
+                variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
+              >
                 <ProductCard product={p} onQuickAdd={onQuickAdd} onClick={onProductClick}
                   isWished={wishlist.has(productId)} onToggleWish={onToggleWish} />
               </motion.div>

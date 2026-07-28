@@ -291,12 +291,12 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
       <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[998]"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
 
-      {/* Prev/Next product arrows */}
+      {/* Prev/Next product arrows — desktop only (too easy to mis-tap on phones) */}
       {hasPrev && onPrev && (
         <button
           onClick={onPrev}
           aria-label="Өмнөх бараа"
-          className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
+          className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[1000] hidden w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl md:flex"
         >
           <ChevronLeft className="w-5 h-5 text-[var(--esl-text-primary)]" />
         </button>
@@ -305,27 +305,32 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         <button
           onClick={onNext}
           aria-label="Дараагийн бараа"
-          className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[1000] w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl"
+          className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[1000] hidden w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl md:flex"
         >
           <ChevronRight className="w-5 h-5 text-[var(--esl-text-primary)]" />
         </button>
       )}
 
-      {/* Modal */}
+      {/* Modal — mobile bottom-sheet, desktop centered dialog */}
       <motion.div
         ref={modalRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="product-modal-title"
         tabIndex={-1}
-        className="fixed inset-2 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-5xl bg-[var(--esl-bg-card)] rounded-2xl z-[999] overflow-hidden flex flex-col md:flex-row max-h-[94vh] shadow-2xl"
-        initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 20 }} transition={{ type: 'spring', damping: 30, stiffness: 350 }}>
+        className="fixed inset-x-0 bottom-0 top-auto z-[999] flex max-h-[min(92dvh,94vh)] w-full flex-col overflow-hidden rounded-t-2xl bg-[var(--esl-bg-card)] shadow-2xl pb-[env(safe-area-inset-bottom)] md:inset-auto md:top-1/2 md:left-1/2 md:bottom-auto md:max-h-[94vh] md:w-full md:max-w-5xl md:-translate-x-1/2 md:-translate-y-1/2 md:flex-row md:rounded-2xl md:pb-0"
+        initial={{ opacity: 0, scale: 0.98, y: 40 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.98, y: 40 }} transition={{ type: 'spring', damping: 30, stiffness: 350 }}>
+
+        {/* Mobile drag handle */}
+        <div className="flex shrink-0 justify-center pt-2 pb-1 md:hidden" aria-hidden>
+          <div className="h-1 w-10 rounded-full bg-[var(--esl-border)]" />
+        </div>
 
         {/* ═══ LEFT: Image Gallery ═══ */}
-        <div className="md:w-[55%] bg-[var(--esl-bg-section)] relative shrink-0 flex flex-col">
+        <div className="relative flex shrink-0 flex-col bg-[var(--esl-bg-section)] md:w-[55%]">
           {/* Main image/video */}
-          <div className="relative flex-1 min-h-[280px] md:min-h-[400px] flex items-center justify-center overflow-hidden">
+          <div className="relative flex min-h-[220px] max-h-[42vh] flex-1 items-center justify-center overflow-hidden sm:min-h-[260px] md:max-h-none md:min-h-[400px]">
             {media.length > 0 ? (
               media[activeImg]?.type === 'video' ? (
                 <video
@@ -423,16 +428,16 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         </div>
 
         {/* ═══ RIGHT: Product Details ═══ */}
-        <div className="md:w-[45%] flex flex-col">
+        <div className="relative flex min-h-0 flex-1 flex-col md:w-[45%]">
           {/* Close */}
           <button onClick={onClose}
             aria-label="Барааны цонх хаах"
-            className="absolute top-3 right-3 md:relative md:top-0 md:right-0 md:self-end md:m-3 w-8 h-8 rounded-full bg-[var(--esl-bg-section)] border-none cursor-pointer flex items-center justify-center hover:bg-[var(--esl-bg-card-hover)] transition z-10">
+            className="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full border-none bg-[var(--esl-bg-section)]/95 cursor-pointer shadow-sm transition hover:bg-[var(--esl-bg-card-hover)] md:relative md:right-0 md:top-0 md:m-3 md:h-8 md:w-8 md:self-end md:shadow-none">
             <X className="w-4 h-4 text-[var(--esl-text-secondary)]" />
           </button>
 
           {/* Scrollable content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-4">
+          <div className="flex-1 overflow-y-auto overscroll-contain px-4 pb-4 pt-2 sm:px-6">
             {/* Store */}
             {product.store?.name && (
               <div className="text-xs text-[var(--esl-text-muted)] font-medium mb-1">{product.store.name}</div>
