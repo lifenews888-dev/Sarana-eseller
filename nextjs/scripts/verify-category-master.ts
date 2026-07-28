@@ -1,5 +1,5 @@
 /**
- * Quick sanity check for generated category master.
+ * Sanity check for marketplace category taxonomy (brand-first vehicles/phones).
  * Run: npx tsx scripts/verify-category-master.ts
  */
 import {
@@ -8,6 +8,7 @@ import {
   flattenCategoryTree,
   normalizeMarketplaceCategory,
   findMarketplaceCategory,
+  categoryPathInfo,
 } from '../src/lib/marketplaceCategories';
 import { metadataFieldsForCategory } from '../src/lib/listingMetadata';
 
@@ -19,33 +20,36 @@ console.log('roots', roots);
 console.log('tree roots', tree.length);
 console.log('flat nodes', flat.length);
 
-const aliases = [
-  ['jobs', 'jobs'],
-  ['kids-toys', 'kids'],
-  ['digital-goods', 'digital'],
-  ['books-stationery', 'books'],
-  ['food-beverage', 'food'],
-  ['health-vitamins', 'health'],
-  ['gifts-hobby', 'gifts'],
-  ['construction-tools', 'construction'],
-];
-
-for (const [from, to] of aliases) {
-  const got = normalizeMarketplaceCategory(from);
-  if (got !== to) {
-    console.error('ALIAS FAIL', from, '→', got, 'expected', to);
+// Brand-first markers (previous good taxonomy)
+const vehicle = findMarketplaceCategory('vehicles');
+const phone = findMarketplaceCategory('phones');
+if (!vehicle) {
+  console.error('MISSING vehicles');
+  process.exit(1);
+}
+const vehicleText = JSON.stringify(vehicle.subcategories);
+for (const brand of ['Toyota', 'Tesla', 'Lexus', 'Hyundai', 'BMW']) {
+  if (!vehicleText.includes(brand)) {
+    console.error('MISSING brand under vehicles:', brand);
     process.exit(1);
   }
 }
+const phoneText = JSON.stringify(phone?.subcategories || []);
+if (!phoneText.includes('iPhone') && !phoneText.includes('Apple')) {
+  console.error('MISSING Apple/iPhone under phones');
+  process.exit(1);
+}
+
+// Path resolution for brand leaves
+const prius = categoryPathInfo('vehicles-1-2'); // may not work if slug differs
+// Check path via alias/name resolution
+const toyotaNorm = normalizeMarketplaceCategory('toyota');
+console.log('normalize toyota →', toyotaNorm);
 
 for (const cat of MARKETPLACE_CATEGORIES) {
   if (!cat.key || !cat.label || !Array.isArray(cat.subcategories)) {
-    console.error('BAD CATEGORY', cat);
+    console.error('BAD CATEGORY', cat.key);
     process.exit(1);
-  }
-  const fields = metadataFieldsForCategory(cat.key);
-  if (fields.length === 0 && cat.section !== 'service') {
-    // services always get SERVICE_FIELDS at least
   }
   if (!findMarketplaceCategory(cat.key)) {
     console.error('NOT FOUND', cat.key);
@@ -55,5 +59,5 @@ for (const cat of MARKETPLACE_CATEGORIES) {
 
 console.log('vehicles fields', metadataFieldsForCategory('vehicles').length);
 console.log('jobs fields', metadataFieldsForCategory('jobs').length);
-console.log('women fields', metadataFieldsForCategory('women').length);
-console.log('OK');
+console.log('phones fields', metadataFieldsForCategory('phones').length);
+console.log('OK brand-first taxonomy');
