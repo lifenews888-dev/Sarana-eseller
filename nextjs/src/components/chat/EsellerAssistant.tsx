@@ -5,6 +5,9 @@
  * One red FAB + eseller sheet design. Two task tabs share the same UI shell:
  *  - help → /api/chat/bot
  *  - shop → /api/ai/shop
+ *
+ * Mobile: sheet z-index is above MobileNav (z-9999) so the composer is never
+ * covered. Height tracks visualViewport so the iOS keyboard keeps the input visible.
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -21,6 +24,11 @@ interface Message {
 
 const BRAND = '#E8242C';
 const BRAND_DARK = '#C41E25';
+
+/** Above MobileNav z-[9999] so open sheet covers bottom tabs */
+const Z_BACKDROP = 10050;
+const Z_SHEET = 10060;
+const Z_FAB = 10040;
 
 const ts = () =>
   new Date().toLocaleTimeString('mn-MN', { hour: '2-digit', minute: '2-digit' });
@@ -76,9 +84,50 @@ export default function EsellerAssistant() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [budget, setBudget] = useState(0);
+  /** Mobile sheet height in px (visualViewport-aware for keyboard) */
+  const [sheetHeight, setSheetHeight] = useState<number | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const sheetRef = useRef<HTMLDivElement>(null);
+
+  // Keep sheet height inside visual viewport (iOS keyboard safe)
+  useEffect(() => {
+    if (!open) {
+      setSheetHeight(null);
+      return;
+    }
+
+    const update = () => {
+      const vv = window.visualViewport;
+      const isDesktop = window.matchMedia('(min-width: 640px)').matches;
+      if (isDesktop) {
+        setSheetHeight(null);
+        return;
+      }
+      // Leave a small top gap for drag handle / status bar
+      const vh = vv?.height ?? window.innerHeight;
+      const offsetTop = vv?.offsetTop ?? 0;
+      // Cap at ~92% of visible viewport; min 280 so composer always fits
+      const h = Math.max(280, Math.min(vh - 8, vh * 0.94));
+      setSheetHeight(h);
+      // When keyboard opens, offsetTop may shift — pin sheet to visual bottom
+      if (sheetRef.current && vv) {
+        sheetRef.current.style.bottom = `${Math.max(0, window.innerHeight - vv.height - offsetTop)}px`;
+      }
+    };
+
+    update();
+    const vv = window.visualViewport;
+    vv?.addEventListener('resize', update);
+    vv?.addEventListener('scroll', update);
+    window.addEventListener('resize', update);
+    return () => {
+      vv?.removeEventListener('resize', update);
+      vv?.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -90,6 +139,7 @@ export default function EsellerAssistant() {
 
   useEffect(() => {
     if (!open) return;
+    // Don't autofocus on touch — keyboard would steal half the screen immediately
     if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
       inputRef.current?.focus();
     }
@@ -99,8 +149,11 @@ export default function EsellerAssistant() {
     if (!open) return;
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
+    // Hint that assistant is open (other UI can react if needed)
+    document.documentElement.dataset.assistantOpen = '1';
     return () => {
       document.body.style.overflow = prev;
+      delete document.documentElement.dataset.assistantOpen;
     };
   }, [open]);
 
@@ -252,8 +305,9 @@ export default function EsellerAssistant() {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="eseller туслах нээх"
-          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem)] right-4 z-[9000] flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 text-white shadow-lg transition active:scale-95 md:bottom-6 md:right-6"
+          className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom,0px)+0.75rem)] right-4 flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-0 text-white shadow-lg transition active:scale-95 md:bottom-6 md:right-6"
           style={{
+            zIndex: Z_FAB,
             background: `linear-gradient(135deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
             boxShadow: '0 8px 24px rgba(232,36,44,0.35)',
           }}
@@ -267,192 +321,214 @@ export default function EsellerAssistant() {
           <button
             type="button"
             aria-label="Туслах хаах"
-            className="fixed inset-0 z-[8980] cursor-default border-0 bg-black/45 backdrop-blur-[2px] md:bg-black/30"
+            className="fixed inset-0 cursor-default border-0 bg-black/50 backdrop-blur-[2px] md:bg-black/30"
+            style={{ zIndex: Z_BACKDROP }}
             onClick={() => setOpen(false)}
           />
 
           <div
+            ref={sheetRef}
             role="dialog"
             aria-modal="true"
             aria-label="eseller туслах"
-            className="fixed inset-x-0 bottom-0 z-[8990] flex h-[min(90dvh,100%)] max-h-[90dvh] w-full flex-col overflow-hidden rounded-t-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(580px,calc(100dvh-3rem))] sm:max-h-[calc(100dvh-3rem)] sm:w-[min(400px,calc(100vw-2rem))] sm:rounded-2xl"
+            className="fixed inset-x-0 bottom-0 flex w-full flex-col overflow-hidden rounded-t-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] shadow-2xl sm:inset-x-auto sm:bottom-6 sm:right-6 sm:h-[min(580px,calc(100dvh-3rem))] sm:max-h-[calc(100dvh-3rem)] sm:w-[min(400px,calc(100vw-2rem))] sm:rounded-2xl"
+            style={{
+              zIndex: Z_SHEET,
+              // Mobile: explicit height from visualViewport so composer stays on screen
+              height: sheetHeight != null ? `${sheetHeight}px` : undefined,
+              maxHeight: sheetHeight != null ? `${sheetHeight}px` : undefined,
+            }}
           >
-            <div className="flex shrink-0 justify-center pt-2 sm:hidden" aria-hidden>
-              <div className="h-1 w-10 rounded-full bg-[var(--esl-border)]" />
-            </div>
+            {/* Column layout: header/tabs/messages scroll · composer pinned */}
+            <div className="flex min-h-0 flex-1 flex-col">
+              <div className="flex shrink-0 justify-center pt-2 sm:hidden" aria-hidden>
+                <div className="h-1 w-10 rounded-full bg-[var(--esl-border)]" />
+              </div>
 
-            {/* eseller brand header — same shell for both modes */}
-            <div
-              className="flex shrink-0 items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3"
-              style={{
-                background: `linear-gradient(90deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
-              }}
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
-                <Bot className="h-5 w-5 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-bold text-white">
-                  eseller<span className="font-black">.mn</span> туслах
-                </div>
-                <div className="truncate text-[11px] text-white/80">
-                  {mode === 'help'
-                    ? '● Онлайн · Захиалга · QPay · Хүргэлт'
-                    : '● Бараа санал · Төсөв · Бэлэг'}
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                aria-label="Хаах"
-                className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 bg-white/15 text-white hover:bg-white/25"
+              {/* eseller brand header */}
+              <div
+                className="flex shrink-0 items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3"
+                style={{
+                  background: `linear-gradient(90deg, ${BRAND} 0%, ${BRAND_DARK} 100%)`,
+                }}
               >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <Bot className="h-5 w-5 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-bold text-white">
+                    eseller<span className="font-black">.mn</span> туслах
+                  </div>
+                  <div className="truncate text-[11px] text-white/80">
+                    {mode === 'help'
+                      ? '● Онлайн · Захиалга · QPay · Хүргэлт'
+                      : '● Бараа санал · Төсөв · Бэлэг'}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  aria-label="Хаах"
+                  className="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 bg-white/15 text-white hover:bg-white/25"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            {/* Task switcher — same brand, not a second bot */}
-            <div className="flex shrink-0 gap-1 border-b border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-1.5">
-              {TABS.map(({ key, label, Icon }) => {
-                const active = mode === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => switchMode(key)}
-                    className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 px-2 text-xs font-bold transition ${
-                      active
-                        ? 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] shadow-sm'
-                        : 'bg-transparent text-[var(--esl-text-muted)]'
-                    }`}
-                  >
-                    <Icon
-                      className="h-4 w-4"
-                      style={active ? { color: BRAND } : undefined}
-                    />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-
-            {mode === 'shop' && (
-              <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-[var(--esl-border)] px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <span className="shrink-0 self-center text-[10px] font-semibold text-[var(--esl-text-muted)]">
-                  Төсөв:
-                </span>
-                {BUDGETS.map((b) => {
-                  const active = budget === b.value;
+              {/* Task switcher */}
+              <div className="flex shrink-0 gap-1 border-b border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-1.5">
+                {TABS.map(({ key, label, Icon }) => {
+                  const active = mode === key;
                   return (
                     <button
-                      key={b.label}
+                      key={key}
                       type="button"
-                      onClick={() => setBudget(b.value)}
-                      className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                      onClick={() => switchMode(key)}
+                      className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 px-2 text-xs font-bold transition ${
                         active
-                          ? 'border-[#E8242C] bg-[rgba(232,36,44,0.12)] text-[#E8242C]'
-                          : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
+                          ? 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] shadow-sm'
+                          : 'bg-transparent text-[var(--esl-text-muted)]'
                       }`}
                     >
-                      {b.label}
+                      <Icon
+                        className="h-4 w-4"
+                        style={active ? { color: BRAND } : undefined}
+                      />
+                      {label}
                     </button>
                   );
                 })}
               </div>
-            )}
 
-            <div className="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[90%] whitespace-pre-wrap break-words px-3.5 py-2.5 text-[13px] leading-relaxed sm:max-w-[85%] ${
-                      msg.role === 'user'
-                        ? 'rounded-[16px_16px_4px_16px] text-white'
-                        : 'rounded-[16px_16px_16px_4px] bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)]'
-                    }`}
-                    style={msg.role === 'user' ? { background: BRAND } : undefined}
-                  >
-                    {msg.content ? (
-                      <>
-                        {renderChatText(msg.content)}
-                        <div className="mt-1 text-right text-[10px] opacity-50">{msg.time}</div>
-                      </>
-                    ) : (
-                      <span className="flex gap-1.5 py-0.5" aria-label="Бичиж байна">
-                        {[0, 1, 2].map((i) => (
-                          <span
-                            key={i}
-                            className="inline-block h-1.5 w-1.5 animate-bounce rounded-full"
-                            style={{
-                              background: BRAND,
-                              animationDelay: `${i * 0.15}s`,
-                            }}
-                          />
-                        ))}
-                      </span>
-                    )}
-                  </div>
+              {mode === 'shop' && (
+                <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-[var(--esl-border)] px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <span className="shrink-0 self-center text-[10px] font-semibold text-[var(--esl-text-muted)]">
+                    Төсөв:
+                  </span>
+                  {BUDGETS.map((b) => {
+                    const active = budget === b.value;
+                    return (
+                      <button
+                        key={b.label}
+                        type="button"
+                        onClick={() => setBudget(b.value)}
+                        className={`shrink-0 cursor-pointer rounded-full border px-3 py-1.5 text-[11px] font-bold transition ${
+                          active
+                            ? 'border-[#E8242C] bg-[rgba(232,36,44,0.12)] text-[#E8242C]'
+                            : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]'
+                        }`}
+                      >
+                        {b.label}
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
-              <div ref={bottomRef} className="h-px shrink-0" />
-            </div>
+              )}
 
-            {messages.length <= 2 && (
-              <div className="flex shrink-0 flex-wrap gap-2 border-t border-[var(--esl-border)]/60 px-3 py-2">
-                {QUICK[mode].map((q) => (
-                  <button
-                    key={q}
-                    type="button"
-                    onClick={() => void send(q)}
-                    disabled={loading}
-                    className="min-h-9 cursor-pointer rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-1.5 text-[12px] font-semibold text-[var(--esl-text-muted)] transition hover:border-[#E8242C]/50 active:scale-95 disabled:opacity-50"
-                  >
-                    {q}
-                  </button>
-                ))}
+              {/* Messages — only this area scrolls */}
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 py-3 [-webkit-overflow-scrolling:touch]">
+                <div className="flex flex-col gap-2.5">
+                  {messages.map((msg) => (
+                    <div
+                      key={msg.id}
+                      className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[90%] whitespace-pre-wrap break-words px-3.5 py-2.5 text-[13px] leading-relaxed sm:max-w-[85%] ${
+                          msg.role === 'user'
+                            ? 'rounded-[16px_16px_4px_16px] text-white'
+                            : 'rounded-[16px_16px_16px_4px] bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)]'
+                        }`}
+                        style={msg.role === 'user' ? { background: BRAND } : undefined}
+                      >
+                        {msg.content ? (
+                          <>
+                            {renderChatText(msg.content)}
+                            <div className="mt-1 text-right text-[10px] opacity-50">
+                              {msg.time}
+                            </div>
+                          </>
+                        ) : (
+                          <span className="flex gap-1.5 py-0.5" aria-label="Бичиж байна">
+                            {[0, 1, 2].map((i) => (
+                              <span
+                                key={i}
+                                className="inline-block h-1.5 w-1.5 animate-bounce rounded-full"
+                                style={{
+                                  background: BRAND,
+                                  animationDelay: `${i * 0.15}s`,
+                                }}
+                              />
+                            ))}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={bottomRef} className="h-px shrink-0" />
+                </div>
               </div>
-            )}
 
-            <div
-              className="flex shrink-0 gap-2 border-t border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-2.5"
-              style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom, 0px))' }}
-            >
-              <input
-                ref={inputRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    void send();
-                  }
-                }}
-                enterKeyHint="send"
-                autoComplete="off"
-                placeholder={
-                  mode === 'help' ? 'Асуултаа бичнэ үү…' : 'Юу хайж байна вэ?'
-                }
-                disabled={loading}
-                className="min-w-0 flex-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3.5 py-3 text-base text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] disabled:opacity-50 sm:py-2.5 sm:text-[13px]"
-              />
-              <button
-                type="button"
-                onClick={() => void send()}
-                disabled={!input.trim() || loading}
-                aria-label="Илгээх"
-                className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+              {/* Quick replies — shrink-0, above composer */}
+              {messages.length <= 2 && (
+                <div className="flex shrink-0 flex-wrap gap-2 border-t border-[var(--esl-border)]/60 px-3 py-2">
+                  {QUICK[mode].map((q) => (
+                    <button
+                      key={q}
+                      type="button"
+                      onClick={() => void send(q)}
+                      disabled={loading}
+                      className="min-h-9 cursor-pointer rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3 py-1.5 text-[12px] font-semibold text-[var(--esl-text-muted)] transition hover:border-[#E8242C]/50 active:scale-95 disabled:opacity-50"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {/* Composer — always pinned at bottom of sheet, above MobileNav via z-index */}
+              <div
+                className="flex shrink-0 gap-2 border-t border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-2.5 pt-2.5"
                 style={{
-                  background:
-                    input.trim() && !loading ? BRAND : 'var(--esl-bg-section)',
-                  color:
-                    input.trim() && !loading ? '#fff' : 'var(--esl-text-muted)',
+                  paddingBottom:
+                    'max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))',
                 }}
               >
-                <SendHorizonal className="h-5 w-5" />
-              </button>
+                <input
+                  ref={inputRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      void send();
+                    }
+                  }}
+                  enterKeyHint="send"
+                  autoComplete="off"
+                  // 16px prevents iOS zoom on focus
+                  placeholder={
+                    mode === 'help' ? 'Асуултаа бичнэ үү…' : 'Юу хайж байна вэ?'
+                  }
+                  disabled={loading}
+                  className="min-w-0 flex-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-3.5 py-3 text-base text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] disabled:opacity-50 sm:py-2.5 sm:text-[13px]"
+                />
+                <button
+                  type="button"
+                  onClick={() => void send()}
+                  disabled={!input.trim() || loading}
+                  aria-label="Илгээх"
+                  className="flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border-0 text-white transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 sm:h-11 sm:w-11"
+                  style={{
+                    background:
+                      input.trim() && !loading ? BRAND : 'var(--esl-bg-section)',
+                    color:
+                      input.trim() && !loading ? '#fff' : 'var(--esl-text-muted)',
+                  }}
+                >
+                  <SendHorizonal className="h-5 w-5" />
+                </button>
+              </div>
             </div>
           </div>
         </>
