@@ -5,8 +5,7 @@ import AuthProvider from '@/components/shared/AuthProvider';
 import Toast from '@/components/shared/Toast';
 import { ThemeProvider } from '@/providers/ThemeProvider';
 import InstallPrompt from '@/components/pwa/InstallPrompt';
-import ChatWidget from '@/components/chat/ChatWidget';
-import AIShopperWidget from '@/components/AIShopperWidget';
+import EsellerAssistant from '@/components/chat/EsellerAssistant';
 import { FacebookPixel } from '@/components/analytics/FacebookPixel';
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
@@ -79,8 +78,7 @@ export default function RootLayout({
             {children}
             <Toast />
             <InstallPrompt />
-            <ChatWidget />
-            <AIShopperWidget />
+            <EsellerAssistant />
           </AuthProvider>
         </ThemeProvider>
 
