@@ -61,6 +61,44 @@ export type MarketplaceCategoryOption = {
 
 export const PRODUCT_MARKETPLACE_CATEGORIES: MarketplaceCategory[] = [
   {
+    key: 'jobs',
+    label: 'Ажлын зар',
+    shortLabel: 'Ажил',
+    emoji: '💼',
+    icon: 'BriefcaseBusiness',
+    color: '#4F46E5',
+    section: 'listing',
+    entityTypes: ['STORE', 'SERVICE', 'USER', 'COMPANY'],
+    aliases: ['job', 'jobs', 'work', 'career', 'hiring', 'part-time', 'part-time-job', 'hourly-job'],
+    subcategories: [
+      {
+        name: 'Бүтэн цагийн ажил',
+        aliases: ['full-time'],
+        children: ['Оффис', 'Худалдаа үйлчилгээ', 'Ресторан кафе', 'Хүргэлт жолооч', 'IT технологи', 'Борлуулалт маркетинг'],
+      },
+      {
+        name: 'Цагийн ажил',
+        aliases: ['part-time', 'hourly'],
+        children: ['Өдөр / оройн ээлж', 'Амралтын өдөр', 'Оюутны ажил', 'Event ажил', 'Гэрээс хийх ажил'],
+      },
+      {
+        name: 'Түр ажил / гэрээт',
+        aliases: ['contract', 'temporary'],
+        children: ['1-7 хоног', 'Улирлын ажил', 'Төслийн ажил'],
+      },
+      {
+        name: 'Дадлага / entry level',
+        aliases: ['internship', 'entry-level'],
+        children: ['Дадлага', 'Туслах ажилтан', 'Сургалттай ажил'],
+      },
+      {
+        name: 'Зайнаас хийх ажил',
+        aliases: ['remote'],
+        children: ['Онлайн оператор', 'Контент', 'Дизайн', 'Програмчлал', 'Дата оруулах'],
+      },
+    ],
+  },
+  {
     key: 'women',
     label: 'Эмэгтэй',
     emoji: '👗',

@@ -112,6 +112,30 @@ const SERVICE_FIELDS: ListingMetadataField[] = [
   { key: 'highlights', label: 'Давуу тал', type: 'list', placeholder: 'туршлагатай баг, гэрээр очно, түргэн шуурхай' },
 ];
 
+const JOB_FIELDS: ListingMetadataField[] = [
+  { key: 'jobType', label: 'Ажлын хэлбэр', type: 'select', required: true, options: ['Бүтэн цагийн', 'Цагийн', 'Түр / гэрээт', 'Дадлага', 'Зайнаас'] },
+  { key: 'positionTitle', label: 'Албан тушаал', type: 'text', required: true, placeholder: 'Борлуулалтын ажилтан' },
+  { key: 'employerName', label: 'Ажил олгогч', type: 'text', required: true, placeholder: 'eseller.mn / байгууллагын нэр' },
+  { key: 'workplaceType', label: 'Ажиллах орчин', type: 'select', required: true, options: ['Байршил дээр', 'Холимог', 'Зайнаас'] },
+  { key: 'schedule', label: 'Хуваарь', type: 'text', required: true, placeholder: 'Даваа-Баасан 09:00-18:00 / Орой 18:00-22:00' },
+  { key: 'salaryPeriod', label: 'Цалингийн төрөл', type: 'select', required: true, options: ['Сарын', 'Цагийн', 'Өдрийн', 'Гэрээт', 'Тохиролцоно'] },
+  { key: 'salaryMin', label: 'Цалин доод', type: 'number', placeholder: '1500000' },
+  { key: 'salaryMax', label: 'Цалин дээд', type: 'number', placeholder: '2200000' },
+  { key: 'hourlyRate', label: 'Цагийн үнэлгээ', type: 'number', placeholder: '8000' },
+  { key: 'openPositions', label: 'Авах хүний тоо', type: 'number', placeholder: '3' },
+  { key: 'experienceLevel', label: 'Туршлага', type: 'select', options: ['Туршлага шаардахгүй', '1+ жил', '2+ жил', '3+ жил', 'Мэргэжлийн'] },
+  { key: 'requirements', label: 'Шаардлага', type: 'list', placeholder: 'харилцааны чадвартай, цаг баримталдаг, багаар ажиллана' },
+  { key: 'responsibilities', label: 'Гүйцэтгэх ажил', type: 'list', placeholder: 'үйлчлүүлэгч зөвлөх, захиалга авах, тайлан гаргах' },
+  { key: 'benefits', label: 'Давуу тал', type: 'list', placeholder: 'хоол, унаа, бонус, сургалт, даатгал' },
+  { key: 'applicationMethod', label: 'Анкет авах хэлбэр', type: 'select', required: true, options: ['Утсаар', 'Чатаар', 'Имэйлээр', 'Биечлэн', 'Линкээр'] },
+  { key: 'applicationDeadline', label: 'Дуусах огноо', type: 'text', placeholder: '2026-08-15' },
+  { key: 'studentFriendly', label: 'Оюутанд тохиромжтой', type: 'boolean' },
+  { key: 'noExperienceRequired', label: 'Туршлага шаардахгүй', type: 'boolean' },
+  { key: 'remoteAllowed', label: 'Зайнаас хийх боломжтой', type: 'boolean' },
+  { key: 'mealsIncluded', label: 'Хоолтой', type: 'boolean' },
+  { key: 'transportIncluded', label: 'Унаатай', type: 'boolean' },
+];
+
 const GENERIC_PRODUCT_FIELDS: ListingMetadataField[] = [
   { key: 'brand', label: 'Брэнд', type: 'text', placeholder: 'Брэнд нэр' },
   { key: 'model', label: 'Загвар', type: 'text', placeholder: 'Загвар / код' },
@@ -251,6 +275,32 @@ export function inferListingMetadataDraftFromCategory(category?: string | null):
     return draft;
   }
 
+  if (root === 'jobs') {
+    const labelText = labels.join(' ').toLowerCase();
+    const leaf = path.leafLabel;
+    if (/part-time|hourly|цагийн|оюут/i.test(labelText)) {
+      setIfMissing(draft, 'jobType', 'Цагийн');
+      setIfMissing(draft, 'salaryPeriod', 'Цагийн');
+    } else if (/contract|temporary|түр|гэрээт/i.test(labelText)) {
+      setIfMissing(draft, 'jobType', 'Түр / гэрээт');
+      setIfMissing(draft, 'salaryPeriod', 'Гэрээт');
+    } else if (/intern|дадлага|entry/i.test(labelText)) {
+      setIfMissing(draft, 'jobType', 'Дадлага');
+      setIfMissing(draft, 'salaryPeriod', 'Тохиролцоно');
+    } else if (/remote|зайнаас/i.test(labelText)) {
+      setIfMissing(draft, 'jobType', 'Зайнаас');
+      setIfMissing(draft, 'salaryPeriod', 'Сарын');
+      setIfMissing(draft, 'workplaceType', 'Зайнаас');
+      setIfMissing(draft, 'remoteAllowed', 'true');
+    } else {
+      setIfMissing(draft, 'jobType', 'Бүтэн цагийн');
+      setIfMissing(draft, 'salaryPeriod', 'Сарын');
+    }
+    setIfMissing(draft, 'positionTitle', leaf);
+    setIfMissing(draft, 'workplaceType', draft.workplaceType || 'Байршил дээр');
+    return draft;
+  }
+
   if (SERVICE_ROOTS.has(root)) {
     setIfMissing(draft, 'packageName', labels[labels.length - 1]);
     return draft;
@@ -268,6 +318,7 @@ export function metadataFieldsForCategory(category?: string | null): ListingMeta
   if (root === 'vehicles') return VEHICLE_FIELDS;
   if (root === 'real-estate') return REAL_ESTATE_FIELDS;
   if (root === 'new-buildings') return NEW_BUILDING_FIELDS;
+  if (root === 'jobs') return JOB_FIELDS;
   if (root === 'phones') return PHONE_FIELDS;
   if (root === 'technology' || root === 'digital-goods' || root === 'esports') return TECHNOLOGY_FIELDS;
   if (SERVICE_ROOTS.has(root)) return SERVICE_FIELDS;

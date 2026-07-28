@@ -50,9 +50,21 @@ const NUMBER_METADATA_KEYS = new Set([
   'currentBatch',
   'advancePercent',
   'availableSlots',
+  'salaryMin',
+  'salaryMax',
+  'hourlyRate',
+  'openPositions',
 ]);
 
-const BOOLEAN_METADATA_KEYS = new Set(['certificateReady', 'mortgageAvailable']);
+const BOOLEAN_METADATA_KEYS = new Set([
+  'certificateReady',
+  'mortgageAvailable',
+  'studentFriendly',
+  'noExperienceRequired',
+  'remoteAllowed',
+  'mealsIncluded',
+  'transportIncluded',
+]);
 
 const LIST_METADATA_KEYS = new Set([
   'highlights',
@@ -62,6 +74,9 @@ const LIST_METADATA_KEYS = new Set([
   'amenities',
   'paymentTerms',
   'features',
+  'requirements',
+  'responsibilities',
+  'benefits',
 ]);
 
 function cleanString(value: unknown): string {
