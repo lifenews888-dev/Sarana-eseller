@@ -106,7 +106,7 @@ export function requireSeller(req: NextRequest): AuthUser | NextResponse {
   if (result instanceof NextResponse) return result;
   // Accept seller, admin, superadmin, AND 'buyer' (backend tokens often lack role)
   // We trust that dashboard access is already gated by the frontend
-  // The actual shop ownership is verified in each API handler via findUnique({ where: { userId } })
+  // Shop ownership is verified via getShopForUser / active-shop header
   return result;
 }
 
@@ -135,8 +135,46 @@ export async function requireAdminDB(req: NextRequest): Promise<AuthUser | NextR
   return errorJson('Зөвхөн админ хандах боломжтой', 403);
 }
 
-/** Get shopId for authenticated seller */
-export async function getShopForUser(userId: string): Promise<string | null> {
-  const shop = await prisma.shop.findUnique({ where: { userId } });
+/**
+ * Resolve shopId for an authenticated owner.
+ * Multi-store: prefer X-Active-Shop-Id / preferredShopId when owned; else oldest shop.
+ */
+export async function getShopForUser(
+  userId: string,
+  preferredShopId?: string | null,
+): Promise<string | null> {
+  if (preferredShopId) {
+    const owned = await prisma.shop.findFirst({
+      where: { id: preferredShopId, userId },
+      select: { id: true },
+    });
+    if (owned) return owned.id;
+  }
+  const shop = await prisma.shop.findFirst({
+    where: { userId },
+    orderBy: { createdAt: 'asc' },
+    select: { id: true },
+  });
   return shop?.id ?? null;
+}
+
+/** Read preferred active shop id from request headers (dashboard multi-store). */
+export function getPreferredShopId(req: NextRequest): string | null {
+  return (
+    req.headers.get('x-active-shop-id') ||
+    req.headers.get('x-shop-id') ||
+    req.nextUrl.searchParams.get('shopId') ||
+    null
+  );
+}
+
+/** Convenience: auth user + resolved shop id */
+export async function requireShopForRequest(
+  req: NextRequest,
+): Promise<{ user: AuthUser; shopId: string } | NextResponse> {
+  const user = requireAuth(req);
+  if (user instanceof NextResponse) return user;
+  const shopId = await getShopForUser(user.id, getPreferredShopId(req));
+  if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
+  return { user, shopId };
 }

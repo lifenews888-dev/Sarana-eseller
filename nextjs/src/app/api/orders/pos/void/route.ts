@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Shop ownership check
-    const shop = await prisma.shop.findUnique({ where: { userId: authUser.id } });
+    const shop = await prisma.shop.findFirst({ where: { userId: authUser.id } });
     if (!shop || order.shopId !== shop.id) {
       return fail('Энэ захиалга таных биш', 403);
     }

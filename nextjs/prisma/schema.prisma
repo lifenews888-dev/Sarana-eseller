@@ -64,7 +64,8 @@ model User {
   products  Product[]
   orders    Order[]
   wallet    Wallet?
-  shop      Shop?
+  // Multi-store: one user can own many shops (active shop selected client-side).
+  shops     Shop[]
   agent     Agent?
   company   Company?
   autoDealer AutoDealer?
@@ -95,6 +96,7 @@ model User {
 model Product {
   id            String   @id @default(auto()) @map("_id") @db.ObjectId
   userId        String?  @db.ObjectId
+  shopId        String?  @db.ObjectId
   name          String
   price         Int
   salePrice     Int?
@@ -162,6 +164,7 @@ model Product {
   updatedAt     DateTime @updatedAt
 
   user            User?           @relation(fields: [userId], references: [id])
+  shop            Shop?           @relation(fields: [shopId], references: [id])
   categoryRef     Category?       @relation(fields: [categoryId], references: [id])
   modifierGroups  ModifierGroup[]
   addOns          AddOn[]
@@ -333,7 +336,8 @@ model AffiliateClick {
 
 model Shop {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String   @unique @db.ObjectId
+  // Not unique: owners may operate multiple shops / entity types.
+  userId    String   @db.ObjectId
   name      String
   slug      String   @unique
   logo      String?
@@ -368,6 +372,7 @@ model Shop {
   storefrontConfig Json?                  // Theme, hero, sections config
 
   user            User               @relation(fields: [userId], references: [id])
+  products        Product[]
   shopType        ShopType?
   services        Service[]
   bookings        Booking[]
@@ -389,6 +394,7 @@ model Shop {
   liveCount    Int       @default(0)       // Энэ сарын live тоо
   liveResetAt  DateTime?                   // Сар шинэчлэгдэх огноо
 
+  @@index([userId])
   @@map("stores")
 }
 

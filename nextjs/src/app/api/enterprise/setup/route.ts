@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Get user's shop
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id } });
+  const shop = await prisma.shop.findFirst({ where: { userId: user.id } });
   if (!shop) return errorJson('Дэлгүүр олдсонгүй', 404);
 
   // Check existing

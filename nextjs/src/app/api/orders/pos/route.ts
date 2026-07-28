@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Seller/store owner must have a shop
-    const shop = await prisma.shop.findUnique({ where: { userId: authUser.id } });
+    const shop = await prisma.shop.findFirst({ where: { userId: authUser.id } });
     if (!shop) {
       return fail('Дэлгүүр олдсонгүй', 404);
     }

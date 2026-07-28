@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   const { name, parentId, parentName, reason } = await req.json();
   if (!name) return errorJson('Ангилалын нэр шаардлагатай');
 
-  const shop = await prisma.shop.findUnique({ where: { userId: user.id }, select: { name: true } });
+  const shop = await prisma.shop.findFirst({ where: { userId: user.id }, select: { name: true } });
 
   await prisma.categoryRequest.create({
     data: {

@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'URL буруу байна' }, { status: 400 })
   }
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
+  const shop = await prisma.shop.findFirst({ where: { userId: auth.id } })
   if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   // Integration байхгүй бол үүсгэх

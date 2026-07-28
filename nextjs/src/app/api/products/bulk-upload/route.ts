@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
   const file = formData.get('file') as File
   if (!file) return NextResponse.json({ error: 'Файл оруулна уу' }, { status: 400 })
 
-  const shop = await prisma.shop.findUnique({ where: { userId: auth.id } })
+  const shop = await prisma.shop.findFirst({ where: { userId: auth.id } })
   if (!shop) return NextResponse.json({ error: 'Дэлгүүр олдсонгүй' }, { status: 404 })
 
   const text = await file.text()
@@ -55,7 +55,11 @@ export async function POST(req: NextRequest) {
 
     const price = parseInt(String(row.price || '0').replace(/[^\d]/g, '')) || 0
     const rawSalePrice = parseInt(String(row.saleprice || row.sale_price || '0').replace(/[^\d]/g, ''))
-    const salePrice = rawSalePrice > 0 ? rawSalePrice : null
+    let salePrice: number | null = rawSalePrice > 0 ? rawSalePrice : null
+    // Reject inverted sales (sale >= price) so public SALE badges stay honest.
+    if (salePrice !== null && salePrice >= price) {
+      salePrice = null
+    }
 
     const images = sanitizeImageUrls(
       (row.images || row.image || '')
