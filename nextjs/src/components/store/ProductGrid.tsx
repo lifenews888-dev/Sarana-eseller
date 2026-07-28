@@ -96,7 +96,7 @@ export default function ProductGrid({
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <div className="w-1 h-6 rounded-full bg-[#E8242C]" />
-            <h2 className="text-xl font-black text-white">
+            <h2 className="text-xl font-black text-[var(--esl-text-primary)]">
               {sectionTitle}
             </h2>
           </div>
@@ -281,7 +281,7 @@ export default function ProductGrid({
             <div className="w-20 h-20 rounded-2xl bg-[var(--esl-bg-card)] flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-[#3D3D3D]" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">
+            <h3 className="mb-1 text-base font-bold text-[var(--esl-text-primary)]">
               {isListingCategory ? 'Энэ ангиллын зарууд Зарын буланд байна' : 'Бараа олдсонгүй'}
             </h3>
             <p className="text-sm text-[var(--esl-text-muted)] mb-4">
