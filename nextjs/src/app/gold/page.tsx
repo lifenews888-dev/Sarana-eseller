@@ -75,7 +75,8 @@ export default function GoldPage() {
   const totalSaved = shippingSaved + bonusPoints + discountSaved;
 
   return (
-    <div style={{ background: 'var(--esl-bg-page)', color: '#E5E5E5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    // Gold is a dark marketing surface — force dark canvas so white/gold type never sits on light page bg.
+    <div style={{ background: '#0A0A0A', color: '#E5E5E5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
       {/* ════════ HEADER ════════ */}
       <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #1A1A1A', maxWidth: 1200, margin: '0 auto' }}>
@@ -129,7 +130,7 @@ export default function GoldPage() {
           <p style={{ textAlign: 'center', color: '#737373', marginBottom: 40, fontSize: 15 }}>Гишүүн болсноор дараах бүх давуу талыг эдэлнэ</p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
             {benefits.map((b) => (
-              <div key={b.title} style={{ background: 'var(--esl-bg-section)', borderRadius: 14, padding: 24, border: '1px solid #1F1F1F' }}>
+              <div key={b.title} style={{ background: '#141414', borderRadius: 14, padding: 24, border: '1px solid #1F1F1F' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 10, background: `${b.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
                   <b.icon style={{ width: 22, height: 22, color: b.color }} />
                 </div>
@@ -149,7 +150,7 @@ export default function GoldPage() {
               <div
                 key={p.id}
                 style={{
-                  background: 'var(--esl-bg-section)',
+                  background: '#141414',
                   borderRadius: 16,
                   padding: 28,
                   border: p.gold ? '2px solid #FFD700' : '1px solid #1F1F1F',
@@ -210,7 +211,7 @@ export default function GoldPage() {
         <section style={{ padding: '60px 0' }}>
           <h2 style={{ textAlign: 'center', fontSize: 28, fontWeight: 700, color: '#fff', marginBottom: 12 }}>Хэмнэлтийн тооцоолуур</h2>
           <p style={{ textAlign: 'center', color: '#737373', marginBottom: 40, fontSize: 15 }}>Та Gold гишүүн болсноор хэр хэмнэхээ тооцоол</p>
-          <div style={{ maxWidth: 640, margin: '0 auto', background: 'var(--esl-bg-section)', borderRadius: 16, padding: 32, border: '1px solid #1F1F1F' }}>
+          <div style={{ maxWidth: 640, margin: '0 auto', background: '#141414', borderRadius: 16, padding: 32, border: '1px solid #1F1F1F' }}>
             {/* orders slider */}
             <div style={{ marginBottom: 28 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>

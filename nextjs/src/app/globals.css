@@ -43,12 +43,16 @@
 
     /* Backgrounds */
     --esl-bg-page:        #FFFFFF;
+    --esl-bg:             #FFFFFF;
     --esl-bg-section:     #F8F8F8;
     --esl-bg-card:        #FFFFFF;
+    --esl-card:           #FFFFFF;
     --esl-bg-card-hover:  #F5F5F5;
     --esl-bg-input:       #F5F5F5;
     --esl-bg-elevated:    #FFFFFF;
     --esl-bg-surface:     #FFFFFF;
+    --esl-bg-hover:       #F1F5F9;
+    --esl-bg-muted:       #F8FAFC;
     --esl-bg-navbar:      rgba(255, 255, 255, 0.95);
     --esl-bg-overlay:     rgba(0, 0, 0, 0.50);
 
@@ -57,11 +61,13 @@
     --esl-border-strong:  #CCCCCC;
     --esl-border-focus:   #E8242C;
 
-    /* Text */
+    /* Text — muted darkened for WCAG-ish contrast on white (#6B7280 ≈ 4.6:1) */
     --esl-text-primary:   #0A0A0A;
-    --esl-text-secondary: #555555;
-    --esl-text-muted:     #9CA3AF;
-    --esl-text-disabled:  #D1D5DB;
+    --esl-text:           #0A0A0A; /* alias used widely in components */
+    --esl-text-secondary: #404040;
+    --esl-text-muted:     #6B7280;
+    --esl-muted:          #6B7280;
+    --esl-text-disabled:  #9CA3AF;
     --esl-text-inverse:   #FFFFFF;
 
     /* Semantic */
@@ -73,6 +79,8 @@
     --esl-info-bg:        #EFF6FF;
     --esl-danger:         #DC2626;
     --esl-danger-bg:      #FEE2E2;
+    --esl-accent:         #E8242C;
+    --esl-primary:        #E8242C;
 
     /* Special — горим хамааргүй */
     --esl-vip:            #FFD700;
@@ -102,12 +110,16 @@
   [data-theme="dark"],
   .dark {
     --esl-bg-page:        #0A0A0A;
+    --esl-bg:             #0A0A0A;
     --esl-bg-section:     #111111;
     --esl-bg-card:        #1A1A1A;
+    --esl-card:           #1A1A1A;
     --esl-bg-card-hover:  #222222;
     --esl-bg-input:       #2A2A2A;
     --esl-bg-elevated:    #2A2A2A;
     --esl-bg-surface:     #1A1A1A;
+    --esl-bg-hover:       #222222;
+    --esl-bg-muted:       #111111;
     --esl-bg-navbar:      rgba(10, 10, 10, 0.95);
     --esl-bg-overlay:     rgba(0, 0, 0, 0.70);
 
@@ -115,8 +127,10 @@
     --esl-border-strong:  #555555;
 
     --esl-text-primary:   #FFFFFF;
+    --esl-text:           #FFFFFF;
     --esl-text-secondary: #E0E0E0;
     --esl-text-muted:     #A0A0A0;
+    --esl-muted:          #A0A0A0;
     --esl-text-disabled:  #555555;
     --esl-text-inverse:   #0A0A0A;
 
@@ -128,6 +142,8 @@
     --esl-info-bg:        rgba(59,130,246,0.12);
     --esl-danger:         #F87171;
     --esl-danger-bg:      rgba(220,38,38,0.12);
+    --esl-accent:         #E8242C;
+    --esl-primary:        #E8242C;
 
     --esl-vip-bg:         rgba(255,215,0,0.12);
 
@@ -141,16 +157,17 @@
 /* ══════ SYSTEM PREFERENCE (auto) ══════ */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --esl-bg-page: #0A0A0A; --esl-bg-section: #111111; --esl-bg-card: #1A1A1A;
+    --esl-bg-page: #0A0A0A; --esl-bg: #0A0A0A; --esl-bg-section: #111111; --esl-bg-card: #1A1A1A; --esl-card: #1A1A1A;
     --esl-bg-card-hover: #222222; --esl-bg-input: #2A2A2A; --esl-bg-elevated: #2A2A2A;
-    --esl-bg-surface: #1A1A1A; --esl-bg-navbar: rgba(10,10,10,0.95);
+    --esl-bg-surface: #1A1A1A; --esl-bg-hover: #222222; --esl-bg-muted: #111111; --esl-bg-navbar: rgba(10,10,10,0.95);
     --esl-border: #3D3D3D; --esl-border-strong: #555555;
-    --esl-text-primary: #FFFFFF; --esl-text-secondary: #E0E0E0;
-    --esl-text-muted: #A0A0A0; --esl-text-disabled: #555555; --esl-text-inverse: #0A0A0A;
+    --esl-text-primary: #FFFFFF; --esl-text: #FFFFFF; --esl-text-secondary: #E0E0E0;
+    --esl-text-muted: #A0A0A0; --esl-muted: #A0A0A0; --esl-text-disabled: #555555; --esl-text-inverse: #0A0A0A;
     --esl-success: #4ADE80; --esl-success-bg: rgba(34,197,94,0.12);
     --esl-warning: #FBBF24; --esl-warning-bg: rgba(245,158,11,0.12);
     --esl-info: #60A5FA; --esl-info-bg: rgba(59,130,246,0.12);
     --esl-danger: #F87171; --esl-danger-bg: rgba(220,38,38,0.12);
+    --esl-accent: #E8242C; --esl-primary: #E8242C;
     --esl-vip-bg: rgba(255,215,0,0.12);
     --esl-shadow-sm: 0 1px 3px rgba(0,0,0,0.30); --esl-shadow-md: 0 4px 12px rgba(0,0,0,0.40);
     --esl-shadow-lg: 0 8px 24px rgba(0,0,0,0.50); --esl-shadow-card: 0 2px 8px rgba(0,0,0,0.30);

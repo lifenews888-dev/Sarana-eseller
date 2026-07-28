@@ -17,7 +17,7 @@ export default function PromoSection({ products, title }: { products: PromoProdu
   return (
     <section className="max-w-[1200px] mx-auto px-4 pb-10">
       <div className="flex justify-between items-center mb-5">
-        <h2 className="text-[var(--esl-text)] text-xl font-bold">
+        <h2 className="text-[var(--esl-text-primary)] text-xl font-bold">
           {title || 'Хямдралтай бараа'}
         </h2>
         <Link href="/store?sale=true" className="text-[#E8242C] text-sm font-semibold no-underline">
@@ -36,7 +36,7 @@ export default function PromoSection({ products, title }: { products: PromoProdu
                 </div>
               </div>
               <div className="p-3">
-                <p className="text-[var(--esl-text)] text-[13px] font-medium line-clamp-2 mb-2">{p.name}</p>
+                <p className="text-[var(--esl-text-primary)] text-[13px] font-medium line-clamp-2 mb-2">{p.name}</p>
                 <span className="text-[#E8242C] font-extrabold text-[15px]">
                   {p.price?.toLocaleString()}₮
                 </span>

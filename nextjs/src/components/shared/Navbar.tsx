@@ -7,6 +7,14 @@ import EsellerLogo from './EsellerLogo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { profileHome, useAuth } from '@/lib/auth';
 
+const NAV_LINKS = [
+  { href: '/store', label: 'Дэлгүүр', sm: true },
+  { href: '/feed', label: 'Зарын булан', sm: true },
+  { href: '/compare', label: 'Яагаад бид?', sm: false },
+  { href: '/open-shop', label: 'Дэлгүүр нээх', sm: false },
+  { href: '/gold', label: 'Gold', sm: true },
+] as const;
+
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
@@ -18,6 +26,11 @@ export default function Navbar() {
   // Buyers → /dashboard (not /); sellers → store dashboard, etc.
   const authHref = isLoggedIn ? profileHome(user?.role) : '/login';
   const authLabel = isLoggedIn ? 'Профайл' : 'Нэвтрэх';
+
+  // Home hero is dark: white text only while overlaying it (top, un-scrolled).
+  // Everywhere else: themed solid bar + primary/secondary text (no white-on-white).
+  const isHome = pathname === '/';
+  const overlay = isHome && !scrolled;
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 30);
@@ -33,58 +46,45 @@ export default function Navbar() {
     }
   }
 
+  const linkBase = overlay
+    ? 'text-white/70 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all'
+    : 'text-[var(--esl-text-secondary)] no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-[var(--esl-text-primary)] hover:bg-[var(--esl-bg-hover)] transition-all';
+
+  const authLink = overlay
+    ? 'relative z-10 hidden sm:inline-flex cursor-pointer items-center text-white/85 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all'
+    : 'relative z-10 hidden sm:inline-flex cursor-pointer items-center text-[var(--esl-text-primary)] no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:bg-[var(--esl-bg-hover)] transition-all';
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 h-16 flex items-center px-[6%] gap-4 transition-all duration-300 ${
-        scrolled
-          ? 'bg-[rgba(7,8,13,0.97)] backdrop-blur-2xl shadow-[0_1px_0_rgba(255,255,255,0.05)]'
-          : ''
+        overlay
+          ? 'bg-transparent'
+          : 'bg-[var(--esl-bg-navbar)] backdrop-blur-2xl border-b border-[var(--esl-border)] shadow-[0_1px_0_rgba(0,0,0,0.04)]'
       }`}
     >
       <Link href="/" onClick={handleLogoClick} className="flex items-center gap-2 no-underline shrink-0">
         <EsellerLogo />
-        <span className="text-xl font-black text-white tracking-tight">
+        <span
+          className={`text-xl font-black tracking-tight ${
+            overlay ? 'text-white' : 'text-[var(--esl-text-primary)]'
+          }`}
+        >
           eseller<em className="text-[#CC0000] not-italic">.mn</em>
         </span>
       </Link>
 
       <div className="flex-1" />
 
-      <Link
-        href="/store"
-        className="hidden sm:inline-flex text-white/60 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
-      >
-        Дэлгүүр
-      </Link>
-      <Link
-        href="/feed"
-        className="hidden sm:inline-flex text-white/60 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
-      >
-        Зарын булан
-      </Link>
-      <Link
-        href="/compare"
-        className="hidden md:inline-flex text-white/60 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
-      >
-        Яагаад бид?
-      </Link>
-      <Link
-        href="/open-shop"
-        className="hidden md:inline-flex text-white/60 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
-      >
-        Дэлгүүр нээх
-      </Link>
-      <Link
-        href="/gold"
-        className="hidden sm:inline-flex text-white/60 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
-      >
-        Gold
-      </Link>
-      <Link
-        href={authHref}
-        prefetch
-        className="relative z-10 hidden sm:inline-flex cursor-pointer items-center text-white/80 no-underline text-sm font-semibold px-4 py-2 rounded-lg hover:text-white hover:bg-white/[.07] transition-all"
-      >
+      {NAV_LINKS.map((item) => (
+        <Link
+          key={item.href}
+          href={item.href}
+          className={`${item.sm ? 'hidden sm:inline-flex' : 'hidden md:inline-flex'} ${linkBase}`}
+        >
+          {item.label}
+        </Link>
+      ))}
+      <Link href={authHref} prefetch className={authLink}>
         {authLabel}
       </Link>
       <ThemeToggle />

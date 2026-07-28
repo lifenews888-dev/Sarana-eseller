@@ -38,7 +38,7 @@ export default function LiveSection() {
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
         </span>
-        <h2 className="text-lg font-bold text-gray-900">LIVE Одоо явагдаж байна</h2>
+        <h2 className="text-lg font-bold text-[var(--esl-text-primary)]">LIVE Одоо явагдаж байна</h2>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -46,9 +46,9 @@ export default function LiveSection() {
           <Link
             key={s.id}
             href={`/live/${s.id}`}
-            className="group block bg-white rounded-xl overflow-hidden border hover:shadow-md transition"
+            className="group block bg-[var(--esl-bg-card)] rounded-xl overflow-hidden border border-[var(--esl-border)] hover:shadow-md transition"
           >
-            <div className="relative aspect-video bg-gray-100">
+            <div className="relative aspect-video bg-[var(--esl-bg-section)]">
               {s.thumbnailUrl ? (
                 <SafeImage
                   src={s.thumbnailUrl}
@@ -75,10 +75,10 @@ export default function LiveSection() {
               </span>
             </div>
             <div className="p-2.5">
-              <h3 className="text-sm font-medium text-gray-900 truncate group-hover:text-red-600 transition">
+              <h3 className="text-sm font-medium text-[var(--esl-text-primary)] truncate group-hover:text-[#E8242C] transition">
                 {s.title}
               </h3>
-              <p className="text-xs text-gray-500 mt-0.5 truncate">{s.shop.name}</p>
+              <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5 truncate">{s.shop.name}</p>
             </div>
           </Link>
         ))}

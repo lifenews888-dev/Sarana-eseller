@@ -286,10 +286,10 @@ export default async function HomePage() {
 
 function TrustBadges() {
   const badges = [
-    { icon: <Truck className="w-5 h-5 text-[var(--esl-accent)]" />, text: '50,000₮+ үнэгүй хүргэлт' },
-    { icon: <RefreshCw className="w-5 h-5 text-[var(--esl-accent)]" />, text: '48 цагийн буцаалт' },
-    { icon: <Lock className="w-5 h-5 text-[var(--esl-accent)]" />, text: 'QPay аюулгүй төлбөр' },
-    { icon: <Star className="w-5 h-5 text-[var(--esl-accent)]" />, text: 'Баталгаат бараа' },
+    { icon: <Truck className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: '50,000₮+ үнэгүй хүргэлт' },
+    { icon: <RefreshCw className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: '48 цагийн буцаалт' },
+    { icon: <Lock className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: 'QPay аюулгүй төлбөр' },
+    { icon: <Star className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: 'Баталгаат бараа' },
   ];
   return (
     <div className="bg-[var(--esl-bg-card)] border-y border-[var(--esl-border)]">
@@ -297,7 +297,7 @@ function TrustBadges() {
         {badges.map((b, i) => (
           <div key={i} className="flex items-center gap-2 px-3 py-1.5">
             {b.icon}
-            <span className="text-[var(--esl-text-muted)] text-[13px] font-medium">{b.text}</span>
+            <span className="text-[var(--esl-text-secondary)] text-[13px] font-medium">{b.text}</span>
           </div>
         ))}
       </div>
