@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireSeller, getShopForUser, errorJson } from '@/lib/api-auth';
+import {
+  requireSeller,
+  getShopForUser,
+  getPreferredShopId,
+  errorJson,
+} from '@/lib/api-auth';
 
 // GET /api/seller/conversations — list all conversations for seller's shop
 export async function GET(req: NextRequest) {
@@ -8,7 +13,7 @@ export async function GET(req: NextRequest) {
   if (user instanceof NextResponse) return user;
 
   try {
-    const shopId = await getShopForUser(user.id);
+    const shopId = await getShopForUser(user.id, getPreferredShopId(req));
     if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
 
     const { searchParams } = new URL(req.url);
@@ -20,7 +25,12 @@ export async function GET(req: NextRequest) {
     if (filter === 'order') where.tag = 'order';
     if (filter === 'question') where.tag = 'question';
     if (search) {
-      where.customerName = { contains: search, mode: 'insensitive' };
+      where.OR = [
+        { customerName: { contains: search, mode: 'insensitive' } },
+        { productName: { contains: search, mode: 'insensitive' } },
+        { orderNumber: { contains: search, mode: 'insensitive' } },
+        { lastMessage: { contains: search, mode: 'insensitive' } },
+      ];
     }
 
     const conversations = await prisma.conversation.findMany({

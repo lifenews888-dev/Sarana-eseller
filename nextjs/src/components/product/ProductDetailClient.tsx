@@ -25,7 +25,16 @@ import { useToast } from '@/components/shared/Toast';
 export type DetailProduct = Product & {
   media?: MediaItem[];
   categoryRef?: { name: string } | null;
-  user?: { name: string; _id: string; username?: string; phone?: string | null } | null;
+  shopId?: string | null;
+  shop?: { id?: string; _id?: string; name?: string } | null;
+  user?: {
+    name: string;
+    _id: string;
+    id?: string;
+    username?: string;
+    phone?: string | null;
+    shops?: { id: string; name?: string }[];
+  } | null;
 };
 
 interface ProductDetailClientProps {
@@ -69,7 +78,16 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
       return;
     }
 
-    if (!product.user?._id) {
+    // Prefer real Shop.id — seller inbox filters by shopId, not seller userId
+    const shopId =
+      product.shopId ||
+      product.shop?.id ||
+      product.shop?._id ||
+      product.user?.shops?.[0]?.id ||
+      product.user?._id ||
+      product.user?.id;
+
+    if (!shopId) {
       toast.show('Борлуулагчийн чатны мэдээлэл олдсонгүй', 'warn');
       return;
     }
@@ -81,16 +99,20 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
-          shopId: product.user._id,
-          customerId: user.userId || user.id,
+          shopId,
           customerName: user.name || 'Хэрэглэгч',
           productName: product.name,
-          productPrice: product.price,
+          productPrice: product.salePrice ?? product.price,
         }),
       });
-      const data = await res.json().catch(() => ({})) as { error?: string; message?: string };
+      const data = await res.json().catch(() => ({})) as {
+        error?: string;
+        message?: string;
+        id?: string;
+      };
       if (!res.ok) throw new Error(data.error || data.message || 'Чат үүсгэж чадсангүй');
-      router.push('/dashboard/chat');
+      // Buyer inbox — seller replies from /dashboard/store/chat
+      router.push(data.id ? `/dashboard/chat?c=${data.id}` : '/dashboard/chat');
     } catch (error) {
       toast.show(error instanceof Error ? error.message : 'Чат үүсгэж чадсангүй', 'error');
     } finally {

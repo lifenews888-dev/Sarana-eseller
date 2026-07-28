@@ -42,14 +42,34 @@ export default function ChatSettingsPage() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch(`/api/chat/widget/${(user as any)?._id || user?.username || 'me'}`, {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const shopKey =
+        (user as { store?: { id?: string; _id?: string }; shopId?: string })?.store?.id ||
+        (user as { store?: { _id?: string } })?.store?._id ||
+        (user as { shopId?: string })?.shopId ||
+        'me';
+      const res = await fetch(`/api/chat/widget/${shopKey}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ primaryColor: color, welcomeText, botName, aiEnabled, quickReplies }),
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          primaryColor: color,
+          welcomeText,
+          botName,
+          aiEnabled,
+          quickReplies,
+        }),
       });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Хадгалж чадсангүй');
       toast.show('Хадгалагдлаа!', 'ok');
-    } catch { toast.show('Алдаа', 'error'); }
-    finally { setSaving(false); }
+    } catch (e) {
+      toast.show(e instanceof Error ? e.message : 'Алдаа', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
