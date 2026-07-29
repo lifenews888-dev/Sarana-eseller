@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Package, Clock, Truck, Check, X, ChevronDown, MapPin, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import {
+  Package, Clock, Truck, Check, X, ChevronDown, MapPin, ShoppingBag,
+} from 'lucide-react';
+import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardFilterTabs,
+  DashboardEmpty,
+  DashboardPrimaryButton,
+  DashboardSecondaryButton,
+} from '@/components/dashboard/DashboardShell';
+import { cn } from '@/lib/utils';
 
 interface OrderItem {
   name: string;
@@ -23,12 +34,13 @@ interface Order {
 type FilterTab = 'all' | 'pending' | 'delivered' | 'cancelled';
 
 const STATUS_MAP: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  pending:    { label: 'Хүлээгдэж буй', color: '#F59E0B', icon: <Clock size={14} /> },
-  confirmed:  { label: 'Баталгаажсан', color: '#3B82F6', icon: <Check size={14} /> },
-  preparing:  { label: 'Бэлтгэж байна', color: '#8B5CF6', icon: <Package size={14} /> },
+  pending: { label: 'Хүлээгдэж буй', color: '#F59E0B', icon: <Clock size={14} /> },
+  confirmed: { label: 'Баталгаажсан', color: '#3B82F6', icon: <Check size={14} /> },
+  preparing: { label: 'Бэлтгэж байна', color: '#8B5CF6', icon: <Package size={14} /> },
   delivering: { label: 'Хүргэж байна', color: '#F97316', icon: <Truck size={14} /> },
-  delivered:  { label: 'Хүргэгдсэн', color: '#22C55E', icon: <Check size={14} /> },
-  cancelled:  { label: 'Цуцлагдсан', color: '#EF4444', icon: <X size={14} /> },
+  shipped: { label: 'Явсан', color: '#3B82F6', icon: <Truck size={14} /> },
+  delivered: { label: 'Хүргэгдсэн', color: '#22C55E', icon: <Check size={14} /> },
+  cancelled: { label: 'Цуцлагдсан', color: '#EF4444', icon: <X size={14} /> },
 };
 
 const TABS: { key: FilterTab; label: string }[] = [
@@ -47,221 +59,179 @@ export default function BuyerOrdersPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) { setLoading(false); setError('Нэвтэрнэ үү'); return; }
+    if (!token) {
+      setLoading(false);
+      setError('Нэвтэрнэ үү');
+      return;
+    }
 
     fetch('/api/buyer/orders', {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then(r => r.json())
-      .then(res => {
-        if (res.success) setOrders(res.data);
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.success) setOrders(res.data || []);
         else setError('Захиалга ачаалахад алдаа гарлаа');
       })
       .catch(() => setError('Сервертэй холбогдоход алдаа гарлаа'))
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = tab === 'all'
-    ? orders
-    : orders.filter(o => o.status === tab);
+  const filtered = tab === 'all' ? orders : orders.filter((o) => o.status === tab);
 
   return (
-    <div style={{ padding: 24, minHeight: '100vh', background: 'var(--esl-bg-page)' }}>
-      <h1 style={{ fontSize: 20, fontWeight: 900, color: 'var(--esl-text-primary)', marginBottom: 4 }}>
-        Миний захиалгууд
-      </h1>
-      <p style={{ fontSize: 12, color: 'var(--esl-text-muted)', marginBottom: 20 }}>
-        {orders.length} захиалга
-      </p>
+    <DashboardPage>
+      <DashboardHeader
+        badge="Худалдан авагч"
+        title="Миний захиалгууд"
+        subtitle={`${orders.length} захиалга · төлөв, хүргэлт, еБаримт`}
+        actions={
+          <>
+            <DashboardPrimaryButton href="/store">
+              <ShoppingBag size={16} /> Дэлгүүр
+            </DashboardPrimaryButton>
+            <DashboardSecondaryButton href="/dashboard">Самбар</DashboardSecondaryButton>
+          </>
+        }
+      />
 
-      {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, overflowX: 'auto' }}>
-        {TABS.map(t => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{
-              padding: '6px 14px',
-              borderRadius: 10,
-              border: 'none',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              whiteSpace: 'nowrap',
-              background: tab === t.key ? '#E8242C' : 'var(--esl-bg-card)',
-              color: tab === t.key ? '#fff' : 'var(--esl-text-muted)',
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+      <DashboardFilterTabs tabs={TABS} value={tab} onChange={setTab} />
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', color: 'var(--esl-text-muted)' }}>
-          <div style={{
-            width: 32, height: 32, border: '3px solid var(--esl-border)',
-            borderTopColor: '#E8242C', borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite', margin: '0 auto 12px',
-          }} />
-          <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-          Ачааллаж байна...
+        <div className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="h-20 animate-pulse rounded-2xl bg-[var(--esl-bg-section)]" />
+          ))}
         </div>
       ) : error ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', color: '#EF4444', fontSize: 14 }}>
-          {error}
-        </div>
+        <DashboardEmpty icon={Package} title={error} description="Дахин нэвтэрч үзнэ үү" />
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px 0' }}>
-          <ShoppingBag size={48} style={{ color: 'var(--esl-text-muted)', opacity: 0.3, margin: '0 auto 12px' }} />
-          <p style={{ color: 'var(--esl-text-muted)', fontSize: 14, marginBottom: 12 }}>
-            Захиалга байхгүй байна
-          </p>
-          <Link
-            href="/store"
-            style={{
-              display: 'inline-block', padding: '8px 20px', borderRadius: 10,
-              background: '#E8242C', color: '#fff', fontSize: 13, fontWeight: 600,
-              textDecoration: 'none',
-            }}
-          >
-            Дэлгүүр үзэх
-          </Link>
-        </div>
+        <DashboardEmpty
+          icon={ShoppingBag}
+          title="Захиалга байхгүй байна"
+          description="Дэлгүүрээс бараа сонгоод QPay-р аюулгүй захиалга үүсгээрэй."
+          action={
+            <DashboardPrimaryButton href="/store">Дэлгүүр үзэх</DashboardPrimaryButton>
+          }
+        />
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {filtered.map(o => {
+        <div className="flex flex-col gap-3">
+          {filtered.map((o) => {
             const st = STATUS_MAP[o.status] || STATUS_MAP.pending;
             const isOpen = expanded === o._id;
-
             return (
               <div
                 key={o._id}
-                style={{
-                  background: 'var(--esl-bg-card)',
-                  border: '1px solid var(--esl-border)',
-                  borderRadius: 16,
-                  overflow: 'hidden',
-                }}
+                className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)]"
               >
-                {/* Header — clickable */}
                 <button
+                  type="button"
                   onClick={() => setExpanded(isOpen ? null : o._id)}
-                  style={{
-                    width: '100%', border: 'none', background: 'none', cursor: 'pointer',
-                    padding: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  }}
+                  className="flex w-full cursor-pointer items-center justify-between border-0 bg-transparent p-4 text-left"
                 >
-                  <div style={{ textAlign: 'left' }}>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--esl-text-primary)' }}>
-                      #{o.orderNumber}
-                    </span>
-                    <span style={{ fontSize: 11, color: 'var(--esl-text-muted)', marginLeft: 10 }}>
-                      {new Date(o.createdAt).toLocaleDateString('mn-MN')}
-                    </span>
-                    <div style={{ fontSize: 12, color: 'var(--esl-text-muted)', marginTop: 4 }}>
-                      {o.items.length} бараа · <span style={{ fontWeight: 700, color: 'var(--esl-text-primary)' }}>{o.total.toLocaleString()}₮</span>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-sm font-bold text-[var(--esl-text-primary)]">
+                        #{o.orderNumber || o._id.slice(-6)}
+                      </span>
+                      <span className="text-[11px] text-[var(--esl-text-muted)]">
+                        {o.createdAt ? new Date(o.createdAt).toLocaleDateString('mn-MN') : '—'}
+                      </span>
                     </div>
+                    <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
+                      {(o.items || []).length} бараа ·{' '}
+                      <span className="font-bold text-[var(--esl-text-primary)]">
+                        {(o.total || 0).toLocaleString()}₮
+                      </span>
+                    </p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 4,
-                      fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 8,
-                      background: st.color + '18', color: st.color,
-                    }}>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <span
+                      className="inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11px] font-semibold"
+                      style={{ background: `${st.color}18`, color: st.color }}
+                    >
                       {st.icon} {st.label}
                     </span>
                     <ChevronDown
                       size={16}
-                      style={{
-                        color: 'var(--esl-text-muted)',
-                        transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
-                        transition: 'transform 0.2s',
-                      }}
+                      className={cn(
+                        'text-[var(--esl-text-muted)] transition-transform',
+                        isOpen && 'rotate-180',
+                      )}
                     />
                   </div>
                 </button>
 
-                {/* Expanded detail */}
                 {isOpen && (
-                  <div style={{ padding: '0 16px 16px', borderTop: '1px solid var(--esl-border)' }}>
-                    {o.items.map((item, i) => (
+                  <div className="border-t border-[var(--esl-border)] px-4 pb-4 pt-2">
+                    {(o.items || []).map((item, i) => (
                       <div
                         key={i}
-                        style={{
-                          display: 'flex', justifyContent: 'space-between', padding: '8px 0',
-                          borderBottom: i < o.items.length - 1 ? '1px solid var(--esl-border)' : 'none',
-                        }}
+                        className={cn(
+                          'flex justify-between py-2 text-sm',
+                          i < (o.items?.length || 0) - 1 && 'border-b border-[var(--esl-border)]',
+                        )}
                       >
-                        <span style={{ fontSize: 13, color: 'var(--esl-text-primary)' }}>
+                        <span className="text-[var(--esl-text-primary)]">
                           {item.name} × {item.quantity}
                         </span>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--esl-text-primary)' }}>
+                        <span className="font-bold text-[var(--esl-text-primary)]">
                           {(item.price * item.quantity).toLocaleString()}₮
                         </span>
                       </div>
                     ))}
 
                     {o.delivery && (
-                      <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: 'var(--esl-bg-page)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                          <MapPin size={14} style={{ color: '#E8242C' }} />
-                          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--esl-text-primary)' }}>Хүргэлтийн мэдээлэл</span>
+                      <div className="mt-3 rounded-xl bg-[var(--esl-bg-section)] p-3">
+                        <div className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-[var(--esl-text-primary)]">
+                          <MapPin size={14} className="text-[#E8242C]" /> Хүргэлтийн мэдээлэл
                         </div>
                         {o.delivery.address && (
-                          <p style={{ fontSize: 12, color: 'var(--esl-text-muted)', margin: '4px 0' }}>
-                            {o.delivery.address}
+                          <p className="text-xs text-[var(--esl-text-muted)]">
+                            {typeof o.delivery.address === 'string'
+                              ? o.delivery.address
+                              : JSON.stringify(o.delivery.address)}
                           </p>
                         )}
                         {o.delivery.phone && (
-                          <p style={{ fontSize: 12, color: 'var(--esl-text-muted)', margin: '4px 0' }}>
-                            Утас: {o.delivery.phone}
-                          </p>
+                          <p className="mt-1 text-xs text-[var(--esl-text-muted)]">Утас: {o.delivery.phone}</p>
                         )}
                         {o.delivery.note && (
-                          <p style={{ fontSize: 12, color: 'var(--esl-text-muted)', margin: '4px 0', fontStyle: 'italic' }}>
-                            {o.delivery.note}
-                          </p>
+                          <p className="mt-1 text-xs italic text-[var(--esl-text-muted)]">{o.delivery.note}</p>
                         )}
                       </div>
                     )}
 
-                    <div style={{
-                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                      marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--esl-border)',
-                    }}>
-                      <span style={{ fontSize: 12, color: 'var(--esl-text-muted)' }}>Нийт дүн</span>
-                      <span style={{ fontSize: 18, fontWeight: 900, color: '#E8242C' }}>
-                        {o.total.toLocaleString()}₮
+                    <div className="mt-3 flex items-center justify-between border-t border-[var(--esl-border)] pt-3">
+                      <span className="text-xs text-[var(--esl-text-muted)]">Нийт дүн</span>
+                      <span className="text-lg font-black text-[#E8242C]">
+                        {(o.total || 0).toLocaleString()}₮
                       </span>
                     </div>
 
-                    {/* еБаримт */}
                     {o.status === 'delivered' && (
-                      <div style={{ marginTop: 12 }}>
-                        <button
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            try {
-                              const token = localStorage.getItem('token');
-                              const res = await fetch(`/api/orders/${o._id}/receipt`, { headers: { Authorization: `Bearer ${token}` } });
-                              if (res.ok) {
-                                const d = await res.json();
-                                if (d.data?.qrData) window.open(d.data.qrData, '_blank');
-                                else alert('еБаримт олдсонгүй');
-                              } else { alert('еБаримт олдсонгүй'); }
-                            } catch { alert('Алдаа гарлаа'); }
-                          }}
-                          style={{
-                            width: '100%', padding: '10px', borderRadius: 10, border: '1px solid #16a34a',
-                            background: 'rgba(22,163,74,0.08)', color: '#16a34a', fontSize: 13,
-                            fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center',
-                            justifyContent: 'center', gap: 6,
-                          }}
-                        >
-                          🧾 еБаримт татах
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch(`/api/orders/${o._id}/receipt`, {
+                              headers: { Authorization: `Bearer ${token}` },
+                            });
+                            if (res.ok) {
+                              const d = await res.json();
+                              if (d.data?.qrData) window.open(d.data.qrData, '_blank');
+                              else alert('еБаримт олдсонгүй');
+                            } else alert('еБаримт олдсонгүй');
+                          } catch {
+                            alert('Алдаа гарлаа');
+                          }
+                        }}
+                        className="mt-3 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-emerald-600/40 bg-emerald-500/10 py-2.5 text-sm font-semibold text-emerald-600"
+                      >
+                        🧾 еБаримт татах
+                      </button>
                     )}
                   </div>
                 )}
@@ -270,6 +240,6 @@ export default function BuyerOrdersPage() {
           })}
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 }

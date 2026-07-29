@@ -4,7 +4,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { ProductsAPI, Product } from '@/lib/api';
 import { formatPrice, CATEGORIES, cn } from '@/lib/utils';
 import { useToast } from '@/components/shared/Toast';
-import StatCard from '@/components/dashboard/StatCard';
+import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardStatGrid,
+  DashboardEmpty,
+  DashboardSecondaryButton,
+} from '@/components/dashboard/DashboardShell';
 import {
   Plus, Search, Edit3, Trash2, X, Package, Image as ImageIcon,
   FileText, DollarSign, Settings, Upload, GripVertical, Star,
@@ -129,37 +135,66 @@ export default function ProductsPage() {
   const removeSpec = (idx: number) => setForm((prev) => ({ ...prev, specs: prev.specs.filter((_, i) => i !== idx) }));
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)]">Бүтээгдэхүүн</h1>
-          <p className="text-sm text-[var(--esl-text-secondary)]">{products.length} бүтээгдэхүүн</p>
-        </div>
-        <button onClick={openAdd} className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-indigo-700 transition border-none cursor-pointer">
-          <Plus className="w-4 h-4" /> Бараа нэмэх
-        </button>
-      </div>
+    <DashboardPage className="space-y-5 sm:space-y-6">
+      <DashboardHeader
+        badge="Дэлгүүр"
+        title="Бүтээгдэхүүн"
+        subtitle={`${products.length} бараа · нөөц, үнэ, ангилал`}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={openAdd}
+              className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border-none bg-[#E8242C] px-4 text-sm font-bold text-white hover:bg-[#C41E25]"
+            >
+              <Plus className="h-4 w-4" /> Бараа нэмэх
+            </button>
+            <DashboardSecondaryButton href="/dashboard/store">Самбар</DashboardSecondaryButton>
+          </>
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <StatCard icon={<Package className="w-6 h-6" />} label="Нийт бараа" value={stats.total} gradient="indigo" />
-        <StatCard icon={<AlertTriangle className="w-6 h-6" />} label="Үлдэгдэл бага" value={stats.lowStock} gradient="amber" />
-        <StatCard icon={<Wallet className="w-6 h-6" />} label="Нийт үнэ" value={formatPrice(stats.totalValue)} gradient="green" />
-      </div>
+      <DashboardStatGrid
+        cols={3}
+        items={[
+          { icon: Package, label: 'Нийт бараа', value: stats.total, tone: 'info' },
+          { icon: AlertTriangle, label: 'Үлдэгдэл бага', value: stats.lowStock, tone: 'warning' },
+          { icon: Wallet, label: 'Нийт үнэ (нөөц)', value: formatPrice(stats.totalValue), tone: 'success' },
+        ]}
+      />
 
-      {/* Search */}
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--esl-text-muted)]" />
-        <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Бараа хайх..."
-          className="w-full pl-10 pr-4 py-2.5 border border-[var(--esl-border)] rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[var(--esl-bg-card)]" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--esl-text-muted)]" />
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Бараа хайх..."
+          className="w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] py-2.5 pl-10 pr-4 text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] focus:ring-2 focus:ring-[#E8242C]/20"
+        />
       </div>
 
-      {/* Product grid */}
       {loading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">{[1, 2, 3, 4].map((i) => <div key={i} className="h-56 bg-gray-200 rounded-xl animate-pulse" />)}</div>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-56 animate-pulse rounded-xl bg-[var(--esl-bg-section)]" />
+          ))}
+        </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16"><div className="mb-3 opacity-30"><Package className="w-10 h-10 mx-auto" /></div><p className="text-sm text-[var(--esl-text-muted)]">Бараа байхгүй</p></div>
+        <DashboardEmpty
+          icon={Package}
+          title="Бараа байхгүй"
+          description="Эхний бараагаа нэмж каталогоо бүрдүүлээрэй."
+          action={
+            <button
+              type="button"
+              onClick={openAdd}
+              className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border-none bg-[#E8242C] px-4 text-sm font-bold text-white"
+            >
+              <Plus className="h-4 w-4" /> Бараа нэмэх
+            </button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filtered.map((p) => (
@@ -362,7 +397,7 @@ export default function ProductsPage() {
                 <button onClick={() => setShowModal(false)} className="px-4 py-2.5 text-sm font-semibold text-[var(--esl-text-primary)] bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-lg hover:bg-[var(--esl-bg-section)] cursor-pointer transition">Болих</button>
                 <button onClick={handleSave} disabled={saving || !form.name || !form.price}
                   className={cn('px-5 py-2.5 text-sm font-semibold text-white rounded-lg border-none cursor-pointer transition',
-                    !form.name || !form.price ? 'bg-gray-300 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700')}>
+                    !form.name || !form.price ? 'bg-gray-300 cursor-not-allowed' : 'bg-[#E8242C] hover:bg-[#C41E25]')}>
                   {saving ? 'Хадгалж байна...' : editingId ? 'Хадгалах' : 'Нэмэх'}
                 </button>
               </div>
@@ -370,6 +405,6 @@ export default function ProductsPage() {
           </div>
         </>
       )}
-    </div>
+    </DashboardPage>
   );
 }

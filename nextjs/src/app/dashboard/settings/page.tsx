@@ -2,6 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { User, Phone, Save, Lock, Loader2 } from 'lucide-react';
+import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardPanel,
+  DashboardSecondaryButton,
+} from '@/components/dashboard/DashboardShell';
 
 const API = process.env.NEXT_PUBLIC_API_URL || '';
 
@@ -25,8 +31,8 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetch(`${API}/api/user/settings`, { headers: headers() })
-      .then(r => r.json())
-      .then(res => {
+      .then((r) => r.json())
+      .then((res) => {
         if (res.success && res.data) {
           setName(res.data.name || '');
           setEmail(res.data.email || '');
@@ -46,11 +52,8 @@ export default function SettingsPage() {
         body: JSON.stringify({ name, phone }),
       });
       const data = await res.json();
-      if (data.success || res.ok) {
-        showToast('Амжилттай хадгаллаа ✓');
-      } else {
-        showToast(data.message || 'Алдаа гарлаа');
-      }
+      if (data.success || res.ok) showToast('Амжилттай хадгаллаа ✓');
+      else showToast(data.message || 'Алдаа гарлаа');
     } catch {
       showToast('Алдаа гарлаа');
     } finally {
@@ -60,77 +63,99 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-6 flex items-center justify-center min-h-[50vh]">
-        <Loader2 className="w-6 h-6 text-[var(--brand,#E8242C)] animate-spin" />
-      </div>
+      <DashboardPage>
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-[#E8242C]" />
+        </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="p-6 max-w-xl space-y-6">
-      <h1 className="text-xl font-black text-white">⚙️ Тохиргоо</h1>
+    <DashboardPage className="max-w-2xl">
+      <DashboardHeader
+        badge="Миний данс"
+        title="Тохиргоо"
+        subtitle="Профайл, холбоо барих мэдээлэл"
+        actions={<DashboardSecondaryButton href="/dashboard">Самбар</DashboardSecondaryButton>}
+      />
 
-      {/* Profile */}
-      <div className="bg-dash-card border border-dash-border rounded-2xl p-6">
-        <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-          <User className="w-4 h-4 text-[var(--brand,#E8242C)]" /> Профайл мэдээлэл
-        </h3>
+      <DashboardPanel
+        title="Профайл мэдээлэл"
+        action={<User className="h-4 w-4 text-[#E8242C]" />}
+      >
         <div className="space-y-4">
           <div>
-            <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Нэр</label>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--esl-text-muted)]">
+              Нэр
+            </label>
             <input
               value={name}
-              onChange={e => setName(e.target.value)}
-              className="w-full bg-dash-elevated text-white border border-dash-border rounded-xl px-4 py-3 text-sm outline-none focus:border-[var(--brand,#E8242C)]"
+              onChange={(e) => setName(e.target.value)}
+              className="w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-4 py-3 text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C]"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2">Имэйл</label>
+            <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-[var(--esl-text-muted)]">
+              Имэйл
+            </label>
             <input
               value={email}
               readOnly
-              className="w-full bg-dash-elevated text-white/50 border border-dash-border rounded-xl px-4 py-3 text-sm outline-none cursor-not-allowed"
+              className="w-full cursor-not-allowed rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-4 py-3 text-sm text-[var(--esl-text-muted)] outline-none"
             />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-white/40 uppercase tracking-widest mb-2 flex items-center gap-1">
-              <Phone className="w-3 h-3" /> Утас
+            <label className="mb-1.5 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[var(--esl-text-muted)]">
+              <Phone className="h-3 w-3" /> Утас
             </label>
             <input
               value={phone}
-              onChange={e => setPhone(e.target.value)}
+              onChange={(e) => setPhone(e.target.value)}
               placeholder="+976 9900 0000"
-              className="w-full bg-dash-elevated text-white border border-dash-border rounded-xl px-4 py-3 text-sm outline-none focus:border-[var(--brand,#E8242C)]"
+              className="w-full rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-4 py-3 text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C]"
             />
           </div>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm border-none cursor-pointer transition bg-[var(--brand,#E8242C)] text-white hover:opacity-90 disabled:opacity-60"
+            className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border-none bg-[#E8242C] py-3 text-sm font-bold text-white transition hover:bg-[#C41E25] disabled:opacity-60"
           >
-            {saving
-              ? <><Loader2 className="w-4 h-4 animate-spin" /> Хадгалж байна...</>
-              : <><Save className="w-4 h-4" /> Хадгалах</>}
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Хадгалж байна...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4" /> Хадгалах
+              </>
+            )}
           </button>
         </div>
+      </DashboardPanel>
+
+      <div className="mt-4 sm:mt-5">
+        <DashboardPanel title="Аюулгүй байдал">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)]">
+              <Lock className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-[var(--esl-text-primary)]">Нууц үг / нэвтрэлт</p>
+              <p className="mt-0.5 text-xs text-[var(--esl-text-muted)]">
+                Нууц үг солих, 2FA зэрэг нэмэлт тохиргоо удахгүй нэмэгдэнэ.
+              </p>
+            </div>
+          </div>
+        </DashboardPanel>
       </div>
 
-      {/* Security */}
-      <div className="bg-dash-card border border-dash-border rounded-2xl p-6">
-        <h3 className="text-white font-bold mb-4 flex items-center gap-2">
-          <Lock className="w-4 h-4 text-amber-400" /> Нууцлал
-        </h3>
-        <button className="w-full py-3 rounded-xl font-bold text-sm border border-dash-border bg-transparent text-white/50 cursor-pointer hover:bg-white/[.03]">
-          Нууц үг солих
-        </button>
-      </div>
-
-      {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-dash-card border border-dash-border px-5 py-3 rounded-xl text-white text-sm font-medium shadow-lg z-50 animate-[fadeIn_0.2s]">
+        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-5 py-3 text-sm font-medium text-[var(--esl-text-primary)] shadow-lg">
           {toast}
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 }

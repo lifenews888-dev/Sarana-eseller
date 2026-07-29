@@ -241,3 +241,59 @@ export function timeGreeting(): string {
   if (h < 18) return 'Өдрийн мэнд';
   return 'Оройн мэнд';
 }
+
+/** Pill filter tabs used on list pages */
+export function DashboardFilterTabs<T extends string>({
+  tabs,
+  value,
+  onChange,
+}: {
+  tabs: { key: T; label: string }[];
+  value: T;
+  onChange: (key: T) => void;
+}) {
+  return (
+    <div className="mb-5 flex max-w-full gap-1 overflow-x-auto rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-1 w-fit">
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => onChange(t.key)}
+          className={cn(
+            'cursor-pointer whitespace-nowrap rounded-lg border-none px-4 py-2 text-xs font-bold transition-all',
+            value === t.key
+              ? 'bg-[#E8242C] text-white'
+              : 'bg-transparent text-[var(--esl-text-muted)] hover:text-[var(--esl-text-primary)]',
+          )}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function DashboardEmpty({
+  icon: Icon,
+  title,
+  description,
+  action,
+}: {
+  icon: LucideIcon | React.ComponentType<{ size?: number; className?: string }>;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-4 py-14 text-center">
+      <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--esl-bg-section)]">
+        <Icon size={28} className="text-[var(--esl-text-muted)]" />
+      </div>
+      <p className="text-sm font-bold text-[var(--esl-text-primary)]">{title}</p>
+      {description && (
+        <p className="mx-auto mt-1 max-w-sm text-xs text-[var(--esl-text-muted)]">{description}</p>
+      )}
+      {action && <div className="mt-4">{action}</div>}
+    </div>
+  );
+}
