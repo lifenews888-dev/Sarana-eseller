@@ -12,7 +12,7 @@ import {
   ShieldCheck, Check,
 } from 'lucide-react';
 import type { Product } from '@/lib/api';
-import { formatPrice, discountPercent, cn } from '@/lib/utils';
+import { formatPrice, discountPercent, cn, getEffectiveUnitPrice } from '@/lib/utils';
 import { isValidPublicImageUrl } from '@/lib/image-url';
 import { ENTITY_CARD_CONFIG, type EntityType } from '@/lib/cards/entityCardConfig';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
@@ -73,8 +73,8 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
         .filter(isValidPublicImageUrl)
         .map((url, i) => ({ type: 'IMAGE' as const, url, sortOrder: i }));
 
-  const price = product.salePrice || product.price;
-  const hasDiscount = !!(product.salePrice && product.salePrice < product.price);
+  const price = getEffectiveUnitPrice(product.price, product.salePrice);
+  const hasDiscount = !!(product.salePrice && product.salePrice > 0 && product.salePrice < product.price);
   const discount = discountPercent(product.price, product.salePrice);
   const outOfStock = product.stock !== undefined && product.stock <= 0;
 

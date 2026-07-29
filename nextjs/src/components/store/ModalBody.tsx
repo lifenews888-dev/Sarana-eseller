@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { formatPrice, cn, discountPercent } from '@/lib/utils';
+import { formatPrice, cn, discountPercent, getEffectiveUnitPrice } from '@/lib/utils';
 import type { Product } from '@/lib/api';
 import type { SelectedModifier, SelectedAddOn } from '@/lib/cart';
 import type { ModifierGroupData, AddOnData } from '@/lib/marketplace';
@@ -72,9 +72,9 @@ export default function ModalBody({ product, qty, setQty, onAddToCart, isAffilia
     return () => window.clearTimeout(timer);
   }, [product._id]);
 
-  // Price calcs
-  const basePrice = product.salePrice || product.price;
-  const modifierTotal = selectedModifiers.reduce((s, m) => s + m.price, 0);
+  // Price calcs — salePrice 0/empty = no discount; modifiers add option.price only
+  const basePrice = getEffectiveUnitPrice(product.price, product.salePrice);
+  const modifierTotal = selectedModifiers.reduce((s, m) => s + (Number(m.price) || 0), 0);
   const addOnTotal = selectedAddOns.reduce((s, a) => s + a.price * a.qty, 0);
   const unitPrice = basePrice + modifierTotal;
   const lineTotal = unitPrice * qty + addOnTotal;

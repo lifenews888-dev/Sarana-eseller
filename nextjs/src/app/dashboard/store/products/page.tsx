@@ -92,9 +92,16 @@ export default function ProductsPage() {
   async function handleSave() {
     if (!form.name || !form.price) { toast.show('Нэр, үнэ заавал', 'warn'); return; }
     setSaving(true);
+    const listPrice = Number(form.price) || 0;
+    const rawSale = form.salePrice === '' || form.salePrice == null ? null : Number(form.salePrice);
+    // salePrice 0 or >= list = no discount (store as null so cart never treats 0 as “free”)
+    const salePrice =
+      rawSale != null && Number.isFinite(rawSale) && rawSale > 0 && rawSale < listPrice
+        ? rawSale
+        : null;
     const data: Partial<Product> = {
-      name: form.name, description: form.description, price: Number(form.price),
-      salePrice: form.salePrice ? Number(form.salePrice) : undefined,
+      name: form.name, description: form.description, price: listPrice,
+      salePrice: salePrice ?? undefined,
       category: form.category, stock: Number(form.stock), commission: Number(form.commission),
       emoji: form.emoji, images: form.images.length ? form.images : undefined,
     };

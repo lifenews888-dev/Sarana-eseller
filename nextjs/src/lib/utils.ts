@@ -35,6 +35,34 @@ export function discountPercent(price: number, salePrice?: number): number {
   return Math.round((1 - salePrice / price) * 100);
 }
 
+/**
+ * Paying price for a product.
+ * - salePrice only counts when it is a real discount (0 < sale < list price)
+ * - salePrice = 0 / null / >= price → use list price (no discount)
+ * Modifiers (1 тал / 2 тал) add option.price on top of this base.
+ */
+export function getEffectiveUnitPrice(
+  price: number | null | undefined,
+  salePrice?: number | null | undefined,
+): number {
+  const list = Number(price);
+  const sale = Number(salePrice);
+  const listOk = Number.isFinite(list) && list >= 0 ? list : 0;
+  if (Number.isFinite(sale) && sale > 0 && sale < listOk) return Math.round(sale);
+  return Math.round(listOk);
+}
+
+/** unit = base (effective) + sum of selected modifier option prices */
+export function getUnitPriceWithModifiers(
+  price: number | null | undefined,
+  salePrice: number | null | undefined,
+  modifiers: { price?: number }[] = [],
+): number {
+  const base = getEffectiveUnitPrice(price, salePrice);
+  const extra = modifiers.reduce((s, m) => s + (Math.max(0, Math.round(Number(m.price) || 0))), 0);
+  return base + extra;
+}
+
 // Demo products for fallback when API is empty
 export const DEMO_PRODUCTS = [
   { _id: 'd1', name: 'Premium цагаан цамц', price: 35000, emoji: '👕', category: 'fashion', description: '100% цэвэр хөвөн. S, M, L, XL хэмжээтэй.', store: { name: 'FashionMN' }, rating: 4.5, reviewCount: 24, allowAffiliate: true, commission: 10 },

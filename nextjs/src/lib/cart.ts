@@ -4,6 +4,7 @@
 
 import { create } from 'zustand';
 import type { Product } from './api';
+import { getEffectiveUnitPrice, getUnitPriceWithModifiers } from './utils';
 
 // ═══ Modifier/Add-on Selection Types ═══
 
@@ -54,9 +55,8 @@ function persist(items: CartItem[]) {
 }
 
 function calcUnitPrice(product: Product, modifiers: SelectedModifier[]): number {
-  const base = product.salePrice || product.price;
-  const modTotal = modifiers.reduce((s, m) => s + m.price, 0);
-  return base + modTotal;
+  // salePrice=0 must NOT zero out the line — only real discounts apply
+  return getUnitPriceWithModifiers(product.price, product.salePrice, modifiers);
 }
 
 function calcLineTotal(unitPrice: number, qty: number, addOns: SelectedAddOn[]): number {
@@ -81,7 +81,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
       const parsed = (raw ? JSON.parse(raw) : []) as Partial<CartItem>[];
       // Migrate old cart items that don't have modifier fields
       const items = parsed.map((item): CartItem => {
-        const itemPrice = item.salePrice || item.price || 0;
+        const itemPrice = getEffectiveUnitPrice(item.price, item.salePrice);
 
         return {
           ...item,
@@ -148,5 +148,11 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   count: () => get().items.reduce((s, i) => s + (i.qty || 1), 0),
 
-  total: () => get().items.reduce((s, i) => s + (i.lineTotal || (i.salePrice || i.price) * (i.qty || 1)), 0),
+  total: () => get().items.reduce((s, i) => {
+    if (i.lineTotal != null && Number.isFinite(i.lineTotal)) return s + i.lineTotal;
+    const unit = i.unitPrice != null
+      ? i.unitPrice
+      : getEffectiveUnitPrice(i.price, i.salePrice);
+    return s + unit * (i.qty || 1);
+  }, 0),
 }));
