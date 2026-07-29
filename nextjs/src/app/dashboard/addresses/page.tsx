@@ -3,7 +3,12 @@
 import { useState, useEffect } from 'react';
 import { MapPin, Plus, Trash2, Star, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/shared/Toast';
-import EmptyState from '@/components/shared/EmptyState';
+import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardEmpty,
+  DashboardSecondaryButton,
+} from '@/components/dashboard/DashboardShell';
 
 interface Address {
   id?: string;
@@ -67,24 +72,35 @@ export default function AddressesPage() {
     saveAddresses(addresses.map((a, i) => ({ ...a, isDefault: i === idx })));
   }
 
-  if (loading) return (
-    <div className="flex items-center justify-center py-20">
-      <Loader2 className="w-6 h-6 animate-spin" style={{ color: '#E8242C' }} />
-    </div>
-  );
+  if (loading) {
+    return (
+      <DashboardPage>
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-[#E8242C]" />
+        </div>
+      </DashboardPage>
+    );
+  }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-lg font-bold" style={{ color: 'var(--esl-text-primary)' }}>📍 Хаягийн жагсаалт</h1>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white border-none cursor-pointer"
-          style={{ background: '#E8242C' }}
-        >
-          <Plus size={16} /> Хаяг нэмэх
-        </button>
-      </div>
+    <DashboardPage>
+      <DashboardHeader
+        badge="Худалдан авагч"
+        title="Хаягийн жагсаалт"
+        subtitle={`${addresses.length} хаяг · хүргэлтэнд ашиглана`}
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => setShowForm(!showForm)}
+              className="inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-xl border-none bg-[#E8242C] px-4 text-sm font-bold text-white"
+            >
+              <Plus size={16} /> Хаяг нэмэх
+            </button>
+            <DashboardSecondaryButton href="/dashboard">Самбар</DashboardSecondaryButton>
+          </>
+        }
+      />
 
       {/* Add form */}
       {showForm && (
@@ -135,9 +151,21 @@ export default function AddressesPage() {
         </div>
       )}
 
-      {/* Addresses list */}
       {addresses.length === 0 ? (
-        <EmptyState icon={MapPin} title="Хаяг байхгүй байна" desc="Хүргэлтийн хаяг нэмнэ үү" action="Хаяг нэмэх" actionHref="#" />
+        <DashboardEmpty
+          icon={MapPin}
+          title="Хаяг байхгүй байна"
+          description="Хүргэлтийн хаяг нэмж захиалгаа хурдан хүргүүлээрэй."
+          action={
+            <button
+              type="button"
+              onClick={() => setShowForm(true)}
+              className="inline-flex h-11 cursor-pointer items-center gap-1.5 rounded-xl border-none bg-[#E8242C] px-4 text-sm font-bold text-white"
+            >
+              <Plus size={16} /> Хаяг нэмэх
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {addresses.map((a, i) => (
@@ -165,6 +193,6 @@ export default function AddressesPage() {
           ))}
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 }

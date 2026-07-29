@@ -4,10 +4,17 @@ import { useState, useEffect, useMemo } from 'react';
 import { OrdersAPI, Order } from '@/lib/api';
 import { formatPrice, STATUS_MAP, timeAgo } from '@/lib/utils';
 import { useToast } from '@/components/shared/Toast';
-import StatCard from '@/components/dashboard/StatCard';
+import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardStatGrid,
+  DashboardEmpty,
+  DashboardPrimaryButton,
+  DashboardSecondaryButton,
+} from '@/components/dashboard/DashboardShell';
 import {
   ClipboardList, Clock, Package, Wallet, MailX, Phone, Link as LinkIcon,
-  CheckCircle, ChefHat, Truck,
+  CheckCircle, ChefHat, Truck, MessageCircle,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -91,51 +98,53 @@ export default function OrdersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
-        <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-8 mb-6">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
-          <div className="h-4 w-72 bg-[var(--esl-bg-section)] rounded animate-pulse" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <DashboardPage>
+        <div className="mb-5 h-28 animate-pulse rounded-2xl bg-[var(--esl-bg-section)]" />
+        <div className="mb-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-28 bg-gray-200 rounded-2xl animate-pulse" />
+            <div key={i} className="h-28 animate-pulse rounded-2xl bg-[var(--esl-bg-section)]" />
           ))}
         </div>
-        <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-12 bg-[var(--esl-bg-section)] rounded animate-pulse mb-3" />
-          ))}
-        </div>
-      </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
-      {/* Header */}
-      <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-6 mb-6">
-        <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Захиалгын удирдлага</h1>
-        <p className="text-[var(--esl-text-secondary)] mt-1">Бүх захиалгуудыг хянах, төлөв өөрчлөх</p>
-      </div>
+    <DashboardPage>
+      <DashboardHeader
+        badge="Дэлгүүр"
+        title="Захиалгын удирдлага"
+        subtitle="Бүх захиалгыг хянах, төлөв өөрчлөх"
+        actions={
+          <>
+            <DashboardPrimaryButton href="/dashboard/store/chat">
+              <MessageCircle size={16} /> Чат
+            </DashboardPrimaryButton>
+            <DashboardSecondaryButton href="/dashboard/store">Самбар</DashboardSecondaryButton>
+          </>
+        }
+      />
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <StatCard icon={<ClipboardList className="w-6 h-6" />} label="Нийт захиалга" value={stats.total} gradient="indigo" />
-        <StatCard icon={<Clock className="w-6 h-6" />} label="Хүлээгдэж буй" value={stats.pending} gradient="amber" />
-        <StatCard icon={<Package className="w-6 h-6" />} label="Өнөөдрийн" value={stats.today} gradient="pink" />
-        <StatCard icon={<Wallet className="w-6 h-6" />} label="Хүргэгдсэн орлого" value={formatPrice(stats.revenue)} gradient="green" />
-      </div>
+      <DashboardStatGrid
+        items={[
+          { icon: ClipboardList, label: 'Нийт захиалга', value: stats.total, tone: 'info' },
+          { icon: Clock, label: 'Хүлээгдэж буй', value: stats.pending, tone: 'warning' },
+          { icon: Package, label: 'Өнөөдрийн', value: stats.today, tone: 'primary' },
+          { icon: Wallet, label: 'Хүргэгдсэн орлого', value: formatPrice(stats.revenue), tone: 'success' },
+        ]}
+      />
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+      <div className="mb-4 flex max-w-full gap-1 overflow-x-auto rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-1">
         {FILTER_TABS.map((tab) => (
           <button
             key={tab.key}
+            type="button"
             onClick={() => setFilter(tab.key)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+            className={`cursor-pointer whitespace-nowrap rounded-lg border-none px-3 py-2 text-xs font-bold transition-colors ${
               filter === tab.key
-                ? 'bg-indigo-600 text-white'
-                : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
+                ? 'bg-[#E8242C] text-white'
+                : 'bg-transparent text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]'
             }`}
           >
             {tab.icon && <tab.icon className="w-3.5 h-3.5 inline-block mr-1" />}
@@ -149,13 +158,14 @@ export default function OrdersPage() {
         ))}
       </div>
 
-      {/* Orders Table */}
-      <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] overflow-hidden">
+      <div className="overflow-hidden rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)]">
         {filtered.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="text-4xl mb-3"><MailX className="w-10 h-10 mx-auto" /></div>
-            <h3 className="text-lg font-semibold text-[var(--esl-text-primary)]">Захиалга олдсонгүй</h3>
-            <p className="text-[var(--esl-text-muted)] mt-1">Энэ төлөвт захиалга байхгүй байна</p>
+          <div className="p-4">
+            <DashboardEmpty
+              icon={MailX}
+              title="Захиалга олдсонгүй"
+              description="Энэ төлөвт захиалга байхгүй байна"
+            />
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -302,6 +312,6 @@ export default function OrdersPage() {
           </div>
         </div>
       )}
-    </div>
+    </DashboardPage>
   );
 }
