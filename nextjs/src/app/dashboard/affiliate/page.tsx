@@ -10,6 +10,12 @@ import StatCard from '@/components/dashboard/StatCard';
 import EmptyState from '@/components/dashboard/EmptyState';
 import { useToast } from '@/components/shared/Toast';
 import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardQuickLinks,
+  timeGreeting,
+} from '@/components/dashboard/DashboardShell';
+import {
   Copy, Check, Share2, DollarSign,
   Search, Wallet, ArrowUpRight,
   Zap, Users, BarChart3, Megaphone, Gift, Star, ChevronRight, TrendingUp, QrCode,
@@ -252,32 +258,77 @@ export default function AffiliateDashboard() {
   const maxVal = Math.max(...weekData, 1);
 
   return (
-    <div className="space-y-6">
-      {/* ════════════════════════════════════════
-          HEADER
-          ════════════════════════════════════════ */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-black text-[var(--esl-text-primary)] tracking-tight">
-            Борлуулагчийн самбар
-          </h1>
-          <p className="text-sm text-[var(--esl-text-muted)] mt-0.5">
-            Сайн байна уу, <span className="text-[var(--esl-text-primary)] font-semibold">{username}</span>
-          </p>
-        </div>
-        <button
-          onClick={loadData}
-          className="inline-flex items-center gap-2 text-sm bg-[var(--esl-bg-card)] border border-[var(--esl-border)] hover:border-[#E8242C] text-[var(--esl-text-secondary)] hover:text-[#E8242C] rounded-xl px-4 py-2.5 transition-all font-medium cursor-pointer"
-        >
-          <Zap className="w-4 h-4" />
-          Шинэчлэх
-        </button>
-      </div>
+    <DashboardPage className="space-y-5 sm:space-y-6">
+      <DashboardHeader
+        badge="Борлуулагчийн самбар"
+        title={`${timeGreeting()}, ${username}!`}
+        subtitle="Реферал, комисс, маркетинг хэрэгсэл — нэг дороос"
+        actions={
+          <button
+            type="button"
+            onClick={loadData}
+            className="inline-flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)] px-4 text-sm font-bold text-[var(--esl-text-primary)] transition hover:border-[#E8242C]/40"
+          >
+            <Zap className="h-4 w-4" />
+            Шинэчлэх
+          </button>
+        }
+      />
 
-      {/* ════════════════════════════════════════
-          TABS
-          ════════════════════════════════════════ */}
-      <nav className="flex gap-1 bg-[var(--esl-bg-card)] rounded-xl p-1 border border-[var(--esl-border)] overflow-x-auto shadow-sm">
+      <DashboardQuickLinks
+        items={[
+          {
+            href: '#',
+            icon: Share2,
+            label: 'Линк хуулах',
+            desc: 'Реферал',
+            color: '#E8242C',
+            onClick: () => copyToClipboard(refLink, 'quick'),
+          },
+          {
+            href: '#',
+            icon: Gift,
+            label: 'Бараа',
+            desc: 'Сонгох',
+            color: '#2563EB',
+            onClick: () => setTab('products'),
+          },
+          {
+            href: '#',
+            icon: DollarSign,
+            label: 'Комисс',
+            desc: 'Тайлан',
+            color: '#16A34A',
+            onClick: () => setTab('commissions'),
+          },
+          {
+            href: '#',
+            icon: Megaphone,
+            label: 'Маркетинг',
+            desc: 'Toolkit',
+            color: '#DB2777',
+            onClick: () => setTab('toolkit'),
+          },
+          {
+            href: '#',
+            icon: Wallet,
+            label: 'Хэтэвч',
+            desc: 'Татан авалт',
+            color: '#D97706',
+            onClick: () => setTab('wallet'),
+          },
+          {
+            href: '#',
+            icon: TrendingUp,
+            label: 'Орлого',
+            desc: 'Аналитик',
+            color: '#7C3AED',
+            onClick: () => setTab('earnings'),
+          },
+        ]}
+      />
+
+      <nav className="flex gap-1 overflow-x-auto rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-1 shadow-sm">
         {TABS.map((t) => (
           <button
             key={t.key}
@@ -678,6 +729,6 @@ export default function AffiliateDashboard() {
         isOpen={!!sellingItem}
         onClose={() => setSellingItem(null)}
       />
-    </div>
+    </DashboardPage>
   );
 }

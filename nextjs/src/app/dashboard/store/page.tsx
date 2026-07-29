@@ -10,13 +10,21 @@ import {
   getRemainingDays,
   getUsagePercent,
 } from '@/lib/subscription';
-import StatCard from '@/components/dashboard/StatCard';
 import { LocationCoordReminder } from '@/components/seller/LocationCoordReminder';
 import VatStatusWidget from '@/components/store/VatStatusWidget';
 import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardStatGrid,
+  DashboardQuickLinks,
+  DashboardPrimaryButton,
+  DashboardSecondaryButton,
+  timeGreeting,
+} from '@/components/dashboard/DashboardShell';
+import {
   Wallet, ClipboardList, Package, TrendingUp, BarChart3,
   CheckCircle, Trophy, Link as LinkIcon, FolderOpen, Palette,
-  LineChart, Globe, Settings, Zap, Building2, Car, Home,
+  LineChart, Settings, Building2, Car, Home, MessageCircle, Zap,
 } from 'lucide-react';
 
 type AnalyticsData = {
@@ -29,8 +37,8 @@ function getEntityActions(entityType?: string) {
       primaryLabel: 'Зар нэмэх',
       primaryHref: '/dashboard/store/listings/new?entityType=agent',
       links: [
-        { icon: <Home className="w-6 h-6" />, label: 'Зар нэмэх', href: '/dashboard/store/listings/new?entityType=agent' },
-        { icon: <FolderOpen className="w-6 h-6" />, label: 'Миний зарууд', href: '/dashboard/store/listings' },
+        { icon: Home, label: 'Зар нэмэх', desc: 'Шинэ зар', href: '/dashboard/store/listings/new?entityType=agent', color: '#2563EB' },
+        { icon: FolderOpen, label: 'Миний зарууд', desc: 'Жагсаалт', href: '/dashboard/store/listings', color: '#0891B2' },
       ],
     };
   }
@@ -39,8 +47,8 @@ function getEntityActions(entityType?: string) {
       primaryLabel: 'Төсөл нэмэх',
       primaryHref: '/dashboard/store/listings/new?entityType=company',
       links: [
-        { icon: <Building2 className="w-6 h-6" />, label: 'Төсөл нэмэх', href: '/dashboard/store/listings/new?entityType=company' },
-        { icon: <FolderOpen className="w-6 h-6" />, label: 'Төслүүд', href: '/dashboard/store/projects' },
+        { icon: Building2, label: 'Төсөл нэмэх', desc: 'Шинэ төсөл', href: '/dashboard/store/listings/new?entityType=company', color: '#0891B2' },
+        { icon: FolderOpen, label: 'Төслүүд', desc: 'Жагсаалт', href: '/dashboard/store/projects', color: '#2563EB' },
       ],
     };
   }
@@ -49,17 +57,17 @@ function getEntityActions(entityType?: string) {
       primaryLabel: 'Машин нэмэх',
       primaryHref: '/dashboard/store/listings/new?entityType=auto_dealer',
       links: [
-        { icon: <Car className="w-6 h-6" />, label: 'Машин нэмэх', href: '/dashboard/store/listings/new?entityType=auto_dealer' },
-        { icon: <FolderOpen className="w-6 h-6" />, label: 'Машины жагсаалт', href: '/dashboard/store/vehicles' },
+        { icon: Car, label: 'Машин нэмэх', desc: 'Каталог', href: '/dashboard/store/listings/new?entityType=auto_dealer', color: '#16A34A' },
+        { icon: FolderOpen, label: 'Машины жагсаалт', desc: 'Бүгд', href: '/dashboard/store/vehicles', color: '#0891B2' },
       ],
     };
   }
   return {
     primaryLabel: 'Бараа нэмэх',
-    primaryHref: '/dashboard/store/products',
+    primaryHref: '/dashboard/store/products/new',
     links: [
-      { icon: <Package className="w-6 h-6" />, label: 'Бараа нэмэх', href: '/dashboard/store/products' },
-      { icon: <FolderOpen className="w-6 h-6" />, label: 'Ангилал', href: '/dashboard/store/categories' },
+      { icon: Package, label: 'Бараа нэмэх', desc: 'Каталог', href: '/dashboard/store/products/new', color: '#E8242C' },
+      { icon: FolderOpen, label: 'Ангилал', desc: 'Зохион байгуулалт', href: '/dashboard/store/categories', color: '#2563EB' },
     ],
   };
 }
@@ -169,115 +177,69 @@ export default function SellerDashboardPage() {
   const weeklyTotal = weeklySales.reduce((a: number, b: number) => a + b, 0);
   const maxWeekly = Math.max(...weeklySales, 1);
 
-  // Quick links
   const quickLinks = [
     ...entityActions.links,
-    { icon: <Palette className="w-6 h-6" />, label: 'AI Постер', href: '/dashboard/store/ai-poster' },
-    { icon: <LineChart className="w-6 h-6" />, label: 'Аналитик', href: '/dashboard/store/analytics' },
-    { icon: <Globe className="w-6 h-6" />, label: 'Домайн', href: '/dashboard/store/domain' },
-    { icon: <Settings className="w-6 h-6" />, label: 'Тохиргоо', href: '/dashboard/store/store-settings' },
+    { icon: MessageCircle, label: 'Чат', desc: 'Хэрэглэгч', href: '/dashboard/store/chat', color: '#7C3AED' },
+    { icon: ClipboardList, label: 'Захиалга', desc: 'Удирдлага', href: '/dashboard/store/orders', color: '#D97706' },
+    { icon: Palette, label: 'AI Постер', desc: 'Маркетинг', href: '/dashboard/store/ai-poster', color: '#DB2777' },
+    { icon: LineChart, label: 'Аналитик', desc: 'Тайлан', href: '/dashboard/store/analytics', color: '#2563EB' },
+    { icon: Settings, label: 'Тохиргоо', desc: 'Дэлгүүр', href: '/dashboard/store/store-settings', color: '#64748B' },
   ];
+
+  const firstName = user?.name?.split(' ')[0] || user?.name || 'Худалдагч';
 
   // ── Loading skeleton ──
   if (loading) {
     return (
-      <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header skeleton */}
-          <div className="animate-pulse space-y-3">
-            <div className="h-8 w-72 bg-gray-200 rounded-lg" />
-            <div className="h-4 w-48 bg-gray-200 rounded" />
-          </div>
-          {/* Stat cards skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <DashboardPage>
+        <div className="space-y-4">
+          <div className="h-28 animate-pulse rounded-2xl bg-[var(--esl-bg-section)]" />
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-36 bg-gray-200 rounded-2xl animate-pulse" />
+              <div key={i} className="h-28 animate-pulse rounded-2xl bg-[var(--esl-bg-section)]" />
             ))}
           </div>
-          {/* Content skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-72 bg-gray-200 rounded-2xl animate-pulse" />
-            <div className="h-72 bg-gray-200 rounded-2xl animate-pulse" />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <div className="h-64 animate-pulse rounded-2xl bg-[var(--esl-bg-section)]" />
+            <div className="h-64 animate-pulse rounded-2xl bg-[var(--esl-bg-section)]" />
           </div>
         </div>
-      </div>
+      </DashboardPage>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[var(--esl-bg-section)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-
-        {/* ═══ Координат reminder ═══ */}
+    <DashboardPage>
+      <div className="space-y-5 sm:space-y-6">
         <LocationCoordReminder />
         <VatStatusWidget />
 
-        {/* ═══ Header ═══ */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">
-              Өрлийн мэнд, {user?.name || 'Худалдагч'}!
-            </h1>
-            <p className="text-sm text-[var(--esl-text-secondary)] mt-1">{dateStr}</p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm font-medium text-[var(--esl-text-primary)]">{storeName}</span>
-              <a
-                href={`/${storeSlug}`}
-                target="_blank"
-                rel="noopener"
-                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-[rgba(232,36,44,0.08)] text-[#E8242C] no-underline hover:bg-[rgba(232,36,44,0.15)] transition"
-              >
-                <LinkIcon className="w-3.5 h-3.5" /> Дэлгүүр харах →
-              </a>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href={entityActions.primaryHref}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#E8242C] text-white text-sm font-medium rounded-xl hover:bg-[#C41E25] transition-colors shadow-sm"
-            >
-              <span>+</span> {entityActions.primaryLabel}
-            </Link>
-            <Link
-              href="/dashboard/store/analytics"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] text-sm font-medium rounded-xl border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)] transition-colors"
-            >
-              Тайлан харах
-            </Link>
-          </div>
-        </div>
+        <DashboardHeader
+          badge="Дэлгүүрийн самбар"
+          title={`${timeGreeting()}, ${firstName}!`}
+          subtitle={`${storeName} · ${dateStr}`}
+          actions={
+            <>
+              <DashboardPrimaryButton href={entityActions.primaryHref}>
+                + {entityActions.primaryLabel}
+              </DashboardPrimaryButton>
+              <DashboardSecondaryButton href={`/${storeSlug}`}>
+                <LinkIcon className="h-4 w-4" /> Дэлгүүр харах
+              </DashboardSecondaryButton>
+            </>
+          }
+        />
 
-        {/* ═══ Row 1 — Stat Cards ═══ */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            icon={<Wallet className="w-6 h-6" />}
-            label="Энэ сарын борлуулалт"
-            value={formatPrice(monthRevenue)}
-            variant="primary"
-            sparkData={[12, 18, 14, 22, 28, 19, 25, 30]}
-          />
-          <StatCard
-            icon={<ClipboardList className="w-6 h-6" />}
-            label="Нийт захиалга"
-            value={totalOrders}
-            variant="success"
-            sub={`${activeOrders.length} идэвхтэй`}
-          />
-          <StatCard
-            icon={<Package className="w-6 h-6" />}
-            label="Идэвхтэй бараа"
-            value={activeProducts}
-            variant="info"
-            sub={`${products.length} нийт`}
-          />
-          <StatCard
-            icon={<TrendingUp className="w-6 h-6" />}
-            label="Хөрвүүлэлт"
-            value={`${conversionRate}%`}
-            variant="warning"
-            sub="Зочин → Захиалга"
-          />
-        </div>
+        <DashboardStatGrid
+          items={[
+            { icon: Wallet, label: 'Энэ сарын борлуулалт', value: formatPrice(monthRevenue), tone: 'primary' },
+            { icon: ClipboardList, label: 'Нийт захиалга', value: totalOrders, sub: `${activeOrders.length} идэвхтэй`, tone: 'success' },
+            { icon: Package, label: 'Идэвхтэй бараа', value: activeProducts, sub: `${products.length} нийт`, tone: 'info' },
+            { icon: TrendingUp, label: 'Хөрвүүлэлт', value: `${conversionRate}%`, sub: 'Зочин → Захиалга', tone: 'warning' },
+          ]}
+        />
+
+        <DashboardQuickLinks items={quickLinks} />
 
         {/* ═══ Row 2 — Sales Chart + Active Orders ═══ */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -504,25 +466,7 @@ export default function SellerDashboardPage() {
           </div>
         </div>
 
-        {/* ═══ Row 5 — Quick Links ═══ */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {quickLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="flex flex-col items-center gap-2 p-5 bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] hover:border-[#E8242C]/30 hover:shadow-md transition-all group"
-            >
-              <span className="text-2xl group-hover:scale-110 transition-transform">
-                {link.icon}
-              </span>
-              <span className="text-sm font-medium text-[var(--esl-text-primary)] group-hover:text-[#E8242C] transition-colors">
-                {link.label}
-              </span>
-            </Link>
-          ))}
-        </div>
-
       </div>
-    </div>
+    </DashboardPage>
   );
 }

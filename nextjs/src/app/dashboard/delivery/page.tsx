@@ -1,11 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import {
+  Truck, Package, CheckCircle, Clock, DollarSign, BarChart3,
+  MapPin, Phone, Navigation, History, Wallet,
+} from 'lucide-react';
 import { OrdersAPI, type Order } from '@/lib/api';
-import { formatPrice, STATUS_MAP } from '@/lib/utils';
+import { formatPrice, STATUS_MAP, cn } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import { useToast } from '@/components/shared/Toast';
-import { Truck, Package, CheckCircle, Clock, DollarSign, BarChart3, MapPin, Phone, Map, Navigation } from 'lucide-react';
+import {
+  DashboardPage,
+  DashboardHeader,
+  DashboardStatGrid,
+  DashboardQuickLinks,
+  DashboardPrimaryButton,
+  DashboardSecondaryButton,
+  DashboardPanel,
+  timeGreeting,
+} from '@/components/dashboard/DashboardShell';
 
 interface RevenueStats {
   todayRevenue: number;
@@ -13,15 +27,6 @@ interface RevenueStats {
   totalRevenue: number;
   totalDeliveries: number;
 }
-
-const STATS_CONFIG = [
-  { key: 'todayRevenue', label: 'Өнөөдрийн орлого', icon: DollarSign, color: '#E8242C', format: 'price' },
-  { key: 'monthRevenue', label: 'Сарын орлого', icon: BarChart3, color: '#2563EB', format: 'price' },
-  { key: 'pending', label: 'Хүлээгдэж буй', icon: Clock, color: '#D97706', format: 'count' },
-  { key: 'shipping', label: 'Хүргэлтэнд', icon: Truck, color: '#16A34A', format: 'count' },
-  { key: 'delivered', label: 'Хүргэгдсэн', icon: CheckCircle, color: '#16A34A', format: 'count' },
-  { key: 'total', label: 'Нийт захиалга', icon: Package, color: '#7C3AED', format: 'count' },
-] as const;
 
 export default function DeliveryDashboard() {
   const { user } = useAuth();
@@ -40,8 +45,11 @@ export default function DeliveryDashboard() {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('/api/driver/revenue', { headers: { Authorization: `Bearer ${token}` } });
-      if (res.ok) { const d = await res.json(); setRevenue(d.data); }
-    } catch {}
+      if (res.ok) {
+        const d = await res.json();
+        setRevenue(d.data);
+      }
+    } catch { /* ignore */ }
   }
 
   async function loadOrders() {
@@ -56,7 +64,7 @@ export default function DeliveryDashboard() {
   }
 
   async function updateStatus(id: string, status: string) {
-    setOrders(prev => prev.map(o => o._id === id ? { ...o, status } as Order : o));
+    setOrders((prev) => prev.map((o) => (o._id === id ? { ...o, status } as Order : o)));
     try {
       await OrdersAPI.updateStatus(id, status);
       toast.show('Төлөв шинэчлэгдлээ', 'ok');
@@ -66,150 +74,179 @@ export default function DeliveryDashboard() {
     }
   }
 
-  const shipped = orders.filter(o => o.status === 'shipped');
-  const delivered = orders.filter(o => o.status === 'delivered');
-  const confirmed = orders.filter(o => o.status === 'confirmed');
-  const filtered = filter === 'all' ? orders : orders.filter(o => o.status === filter);
+  const shipped = orders.filter((o) => o.status === 'shipped');
+  const delivered = orders.filter((o) => o.status === 'delivered');
+  const confirmed = orders.filter((o) => o.status === 'confirmed');
+  const filtered = filter === 'all' ? orders : orders.filter((o) => o.status === filter);
 
-  const activeOrder = [...shipped, ...confirmed][0];
-  const addr = activeOrder?.delivery?.address;
-  const mapsAddress = addr ? [addr.district, addr.street, addr.building].filter(Boolean).join(', ') + ', Улаанбаатар' : null;
-
-  // Stat values
-  const statValues: Record<string, string | number> = {
-    todayRevenue: revenue ? `${revenue.todayRevenue.toLocaleString()}₮` : '—',
-    monthRevenue: revenue ? `${revenue.monthRevenue.toLocaleString()}₮` : '—',
-    pending: confirmed.length,
-    shipping: shipped.length,
-    delivered: delivered.length,
-    total: orders.length,
-  };
+  const firstName = user?.name?.split(' ')[0] || user?.name || 'жолооч';
 
   return (
-    <div>
-      {/* Topbar */}
-      <div className="px-8 py-5 border-b" style={{ background: 'var(--esl-bg-card)', borderColor: 'var(--esl-border)' }}>
-        <h1 className="text-lg font-black flex items-center gap-2" style={{ color: 'var(--esl-text-primary)' }}>
-          <Truck className="w-5 h-5" style={{ color: '#E8242C' }} /> Жолоочийн самбар
-        </h1>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--esl-text-muted)' }}>Хүргэлтийн удирдлага</p>
+    <DashboardPage>
+      <DashboardHeader
+        badge="Жолоочийн самбар"
+        title={`${timeGreeting()}, ${firstName}!`}
+        subtitle="Хүргэлт, орлого, GPS — нэг дороос"
+        actions={
+          <>
+            <DashboardPrimaryButton href="/dashboard/delivery/active">
+              <Truck size={16} /> Идэвхтэй
+            </DashboardPrimaryButton>
+            <DashboardSecondaryButton href="/dashboard/delivery/earnings">
+              <Wallet size={16} /> Орлого
+            </DashboardSecondaryButton>
+          </>
+        }
+      />
+
+      <DashboardStatGrid
+        cols={6}
+        items={[
+          {
+            icon: DollarSign,
+            label: 'Өнөөдрийн орлого',
+            value: revenue ? formatPrice(revenue.todayRevenue) : '—',
+            tone: 'primary',
+          },
+          {
+            icon: BarChart3,
+            label: 'Сарын орлого',
+            value: revenue ? formatPrice(revenue.monthRevenue) : '—',
+            tone: 'info',
+          },
+          { icon: Clock, label: 'Хүлээгдэж буй', value: confirmed.length, tone: 'warning' },
+          { icon: Truck, label: 'Хүргэлтэнд', value: shipped.length, tone: 'success' },
+          { icon: CheckCircle, label: 'Хүргэгдсэн', value: delivered.length, tone: 'success' },
+          { icon: Package, label: 'Нийт захиалга', value: orders.length, tone: 'neutral' },
+        ]}
+      />
+
+      <DashboardQuickLinks
+        items={[
+          { href: '/dashboard/delivery/active', icon: Truck, label: 'Идэвхтэй', desc: 'Одоогийн', color: '#E8242C' },
+          { href: '/dashboard/delivery/history', icon: History, label: 'Түүх', desc: 'Өнгөрсөн', color: '#2563EB' },
+          { href: '/dashboard/delivery/earnings', icon: Wallet, label: 'Орлого', desc: 'Тайлан', color: '#16A34A' },
+          { href: '/dashboard/settings', icon: Navigation, label: 'Тохиргоо', desc: 'Профайл', color: '#64748B' },
+        ]}
+      />
+
+      <div className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-1 w-fit max-w-full">
+        {[
+          { id: 'all', label: 'Бүгд' },
+          { id: 'confirmed', label: 'Баталгаажсан' },
+          { id: 'shipped', label: 'Явж байгаа' },
+          { id: 'delivered', label: 'Хүргэгдсэн' },
+        ].map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            onClick={() => setFilter(t.id)}
+            className={cn(
+              'cursor-pointer rounded-lg border-none px-4 py-2 text-xs font-bold transition-all',
+              filter === t.id
+                ? 'bg-[#E8242C] text-white'
+                : 'bg-transparent text-[var(--esl-text-muted)] hover:text-[var(--esl-text-primary)]',
+            )}
+          >
+            {t.label}
+          </button>
+        ))}
       </div>
 
-      <div className="p-6">
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 mb-6">
-          {STATS_CONFIG.map(s => (
-            <div key={s.key} className="p-4 rounded-xl" style={{ background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)' }}>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: s.color + '15' }}>
-                  <s.icon className="w-4 h-4" style={{ color: s.color }} />
-                </div>
-              </div>
-              <p className="text-xl font-black" style={{ color: 'var(--esl-text-primary)' }}>{statValues[s.key]}</p>
-              <p className="text-[10px] font-semibold mt-0.5" style={{ color: 'var(--esl-text-muted)' }}>{s.label}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Filter tabs */}
-        <div className="flex gap-1 p-1 rounded-xl w-fit mb-6" style={{ background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)' }}>
-          {[
-            { id: 'all', label: 'Бүгд' },
-            { id: 'confirmed', label: 'Баталгаажсан' },
-            { id: 'shipped', label: 'Явж байгаа' },
-            { id: 'delivered', label: 'Хүргэгдсэн' },
-          ].map(t => (
-            <button key={t.id} onClick={() => setFilter(t.id)}
-              className="px-4 py-2 rounded-lg text-xs font-bold border-none cursor-pointer transition-all"
-              style={{
-                background: filter === t.id ? '#E8242C' : 'transparent',
-                color: filter === t.id ? '#fff' : 'var(--esl-text-muted)',
-              }}>
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Orders list */}
-        <div className="rounded-xl overflow-hidden" style={{ background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)' }}>
-          {loading ? (
-            <div className="p-12 text-center text-sm" style={{ color: 'var(--esl-text-muted)' }}>Ачааллаж байна...</div>
-          ) : filtered.length === 0 ? (
-            <div className="p-12 text-center">
-              <Package className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--esl-text-muted)' }} />
-              <p className="text-sm font-semibold" style={{ color: 'var(--esl-text-muted)' }}>Захиалга байхгүй</p>
-            </div>
-          ) : (
-            <div>
-              {filtered.map(o => {
-                const [cls, label] = STATUS_MAP[o.status] || ['', o.status];
-                const address = o.delivery?.address;
-                const addrStr = address ? [address.district, address.street, address.building].filter(Boolean).join(', ') : null;
-                return (
-                  <div key={o._id} className="p-4 hover:opacity-90 transition" style={{ borderBottom: '1px solid var(--esl-border)' }}>
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <span className="font-mono text-xs font-bold" style={{ color: '#E8242C' }}>#{o.orderNumber || o._id?.slice(-5)}</span>
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${cls}`}>{label}</span>
-                        </div>
-                        <p className="text-sm font-bold" style={{ color: 'var(--esl-text-primary)' }}>{o.user?.name || '—'}</p>
-                        {o.delivery?.phone && (
-                          <p className="text-xs flex items-center gap-1 mt-1" style={{ color: 'var(--esl-text-muted)' }}>
-                            <Phone className="w-3 h-3" /> {o.delivery.phone}
-                          </p>
-                        )}
-                        {addrStr && (
-                          <a href={`https://maps.google.com?q=${encodeURIComponent(addrStr + ', Улаанбаатар')}`}
-                            target="_blank" rel="noopener"
-                            className="text-xs flex items-center gap-1 mt-1 no-underline hover:underline"
-                            style={{ color: '#2563EB' }}>
-                            <MapPin className="w-3 h-3" /> {addrStr}
-                          </a>
-                        )}
-                        <p className="text-[11px] mt-1" style={{ color: 'var(--esl-text-muted)' }}>
-                          {(o.items || []).map(i => i.product?.name || i.name || '').filter(Boolean).join(', ')}
+      <DashboardPanel title="Хүргэлтийн захиалгууд">
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 animate-pulse rounded-xl bg-[var(--esl-bg-section)]" />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="py-10 text-center">
+            <Package className="mx-auto mb-3 h-10 w-10 text-[var(--esl-text-muted)]" />
+            <p className="text-sm font-semibold text-[var(--esl-text-primary)]">Захиалга байхгүй</p>
+            <p className="mt-1 text-xs text-[var(--esl-text-muted)]">Шинэ хүргэлт ирэхэд энд харагдана</p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-[var(--esl-border)] -mx-4 sm:-mx-5">
+            {filtered.map((o) => {
+              const [cls, label] = STATUS_MAP[o.status] || ['', o.status];
+              const address = o.delivery?.address;
+              const addrStr = address
+                ? [address.district, address.street, address.building].filter(Boolean).join(', ')
+                : null;
+              return (
+                <li key={o._id} className="px-4 py-4 sm:px-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                        <span className="font-mono text-xs font-bold text-[#E8242C]">
+                          #{o.orderNumber || o._id?.slice(-5)}
+                        </span>
+                        <span className={cn('rounded-md px-2 py-0.5 text-[10px] font-bold', cls)}>{label}</span>
+                      </div>
+                      <p className="text-sm font-bold text-[var(--esl-text-primary)]">
+                        {o.user?.name || '—'}
+                      </p>
+                      {o.delivery?.phone && (
+                        <p className="mt-1 flex items-center gap-1 text-xs text-[var(--esl-text-muted)]">
+                          <Phone className="h-3 w-3" /> {o.delivery.phone}
                         </p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-black mb-2" style={{ color: 'var(--esl-text-primary)' }}>{formatPrice(o.total || 0)}</p>
-                        {o.status === 'confirmed' && (
-                          <button onClick={() => updateStatus(o._id, 'shipped')}
-                            className="text-white text-xs font-bold px-4 py-2 rounded-xl border-none cursor-pointer transition"
-                            style={{ background: '#2563EB' }}>
-                            <Truck className="w-3.5 h-3.5 inline mr-1" /> Хүргэлтэнд
-                          </button>
-                        )}
-                        {o.status === 'shipped' && (
-                          <button onClick={() => updateStatus(o._id, 'delivered')}
-                            className="text-white text-xs font-bold px-4 py-2 rounded-xl border-none cursor-pointer transition"
-                            style={{ background: '#16A34A' }}>
-                            <CheckCircle className="w-3.5 h-3.5 inline mr-1" /> Хүргэгдсэн
-                          </button>
-                        )}
-                      </div>
+                      )}
+                      {addrStr && (
+                        <a
+                          href={`https://maps.google.com?q=${encodeURIComponent(`${addrStr}, Улаанбаатар`)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 flex items-center gap-1 text-xs text-blue-600 no-underline hover:underline"
+                        >
+                          <MapPin className="h-3 w-3" /> {addrStr}
+                        </a>
+                      )}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="mb-2 text-sm font-black text-[var(--esl-text-primary)]">
+                        {formatPrice(o.total || 0)}
+                      </p>
+                      {o.status === 'confirmed' && (
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(o._id, 'shipped')}
+                          className="cursor-pointer rounded-xl border-none bg-blue-600 px-4 py-2 text-xs font-bold text-white"
+                        >
+                          <Truck className="mr-1 inline h-3.5 w-3.5" /> Хүргэлтэнд
+                        </button>
+                      )}
+                      {o.status === 'shipped' && (
+                        <button
+                          type="button"
+                          onClick={() => updateStatus(o._id, 'delivered')}
+                          className="cursor-pointer rounded-xl border-none bg-emerald-600 px-4 py-2 text-xs font-bold text-white"
+                        >
+                          <CheckCircle className="mr-1 inline h-3.5 w-3.5" /> Хүргэгдсэн
+                        </button>
+                      )}
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </DashboardPanel>
 
-        {/* GPS */}
-        <div className="mt-6 rounded-xl p-6 text-center" style={{ background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)' }}>
-          <Map className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--esl-text-primary)' }} />
-          <p className="text-sm font-semibold" style={{ color: 'var(--esl-text-primary)' }}>GPS чиглэл</p>
-          <p className="text-xs mt-1 mb-3" style={{ color: 'var(--esl-text-muted)' }}>Mobile app-д бүрэн газрын зураг харагдана</p>
-          {mapsAddress && (
-            <a href={`https://maps.google.com?q=${encodeURIComponent(mapsAddress)}`} target="_blank" rel="noopener"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold text-white no-underline"
-              style={{ background: '#E8242C' }}>
-              <Navigation className="w-4 h-4 inline mr-1" /> Google Maps-д харах →
-            </a>
-          )}
-        </div>
+      <div className="mt-5 rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-6 text-center sm:mt-6">
+        <Navigation className="mx-auto mb-2 h-8 w-8 text-[#E8242C]" />
+        <p className="text-sm font-bold text-[var(--esl-text-primary)]">GPS / газрын зураг</p>
+        <p className="mt-1 text-xs text-[var(--esl-text-muted)]">
+          Идэвхтэй хүргэлтийн хаягийг Google Maps-ээр нээнэ.
+        </p>
+        <Link
+          href="/dashboard/delivery/active"
+          className="mt-3 inline-flex text-xs font-bold text-[#E8242C] no-underline hover:underline"
+        >
+          Идэвхтэй хүргэлт →
+        </Link>
       </div>
-    </div>
+    </DashboardPage>
   );
 }
