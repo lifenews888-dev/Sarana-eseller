@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const Product = require('../models/Product');
 const { protect, authorize } = require('../middleware/auth');
-const { upload } = require('../config/cloudinary');
+const { upload, uploadImageBuffer } = require('../config/cloudinary');
 
 // GET /products — Бараа жагсаалт (нийтэд нээлттэй)
 router.get('/', async (req, res) => {
@@ -83,9 +83,15 @@ router.delete('/:id', protect, authorize('seller', 'admin'), async (req, res) =>
 });
 
 // POST /products/upload — Зураг upload (Cloudinary)
-router.post('/upload', protect, authorize('seller', 'admin'), upload.single('image'), (req, res) => {
+router.post('/upload', protect, authorize('seller', 'admin'), upload.single('image'), async (req, res) => {
   if (!req.file) return res.status(400).json({ message: 'Зураг оруулна уу' });
-  res.json({ url: req.file.path, public_id: req.file.filename });
+
+  try {
+    const result = await uploadImageBuffer(req.file.buffer);
+    res.json({ url: result.secure_url, public_id: result.public_id });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 });
 
 module.exports = router;
