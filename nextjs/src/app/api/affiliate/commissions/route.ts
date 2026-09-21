@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/api-auth';
 
 // GET /api/affiliate/commissions — list commissions for a seller
 export async function GET(req: NextRequest) {
-  try {
-    const userId = req.nextUrl.searchParams.get('userId');
-    if (!userId) return NextResponse.json({ commissions: [] });
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
 
-    const seller = await prisma.sellerProfile.findUnique({ where: { userId } });
+  try {
+    const seller = await prisma.sellerProfile.findUnique({ where: { userId: auth.id } });
     if (!seller) return NextResponse.json({ commissions: [] });
 
     const commissions = await prisma.sellerCommission.findMany({
@@ -26,8 +27,13 @@ export async function GET(req: NextRequest) {
 
 // POST /api/affiliate/commissions — payout request
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
-    const { userId, phone, amount } = await req.json();
+    const { phone, amount } = await req.json();
+    const seller = await prisma.sellerProfile.findUnique({ where: { userId: auth.id } });
+    if (!seller) return NextResponse.json({ error: 'Seller profile not found' }, { status: 404 });
     // In production: create a payout request record, verify balance, etc.
     return NextResponse.json({ success: true, message: 'Хүсэлт илгээгдлээ. 24 цагийн дотор шилжүүлнэ.' });
   } catch {

@@ -3,6 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { createReceipt, calculateTax } from '@/lib/ebarimt';
 import { ok, fail } from '@/lib/api-envelope';
+import { getAuthUser } from '@/lib/api-auth';
 
 type ReceiptLine = {
   name: string;
@@ -62,6 +63,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = getAuthUser(request);
+    if (!auth) return fail('Нэвтрэх шаардлагатай', 401);
+
     const { id: orderId } = await params;
 
     // Check for existing receipt
@@ -74,8 +78,13 @@ export async function GET(
     }
 
     // Fetch order
-    const order = await prisma.order.findUnique({
-      where: { id: orderId },
+    const order = await prisma.order.findFirst({
+      where: {
+        id: orderId,
+        ...(auth.role === 'admin' || auth.role === 'superadmin' || auth.role === 'super_admin'
+          ? {}
+          : { userId: auth.id }),
+      },
     });
 
     if (!order) {

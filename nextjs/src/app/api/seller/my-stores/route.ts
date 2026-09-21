@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
+  const auth = requireAuth(req)
+  if (auth instanceof NextResponse) return auth
+
   try {
-    // In production, decode JWT to get userId
-    // For now, fetch all seller profiles that have a matching user with a shop
     const shops = await prisma.shop.findMany({
-      where: { isBlocked: false },
+      where: { userId: auth.id, isBlocked: false },
       select: {
         id: true,
         name: true,
         slug: true,
-        userId: true,
       },
       take: 20,
       orderBy: { createdAt: 'desc' },

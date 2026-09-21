@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
+  const auth = requireAuth(req)
+  if (auth instanceof NextResponse) return auth
+
   // Return current seller profile + pending application
   try {
-    const sellers = await prisma.sellerProfile.findMany({
-      take: 1,
-      orderBy: { createdAt: 'desc' },
+    const seller = await prisma.sellerProfile.findUnique({
+      where: { userId: auth.id },
       include: {
         influencerApps: {
           where: { status: 'PENDING' },
@@ -16,11 +19,10 @@ export async function GET(req: NextRequest) {
       },
     })
 
-    if (sellers.length === 0) {
+    if (!seller) {
       return NextResponse.json({ sellerType: 'REGULAR' })
     }
 
-    const seller = sellers[0]
     return NextResponse.json({
       sellerType: seller.sellerType,
       followers: seller.followers,
@@ -33,20 +35,19 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req)
+  if (auth instanceof NextResponse) return auth
+
   const body = await req.json()
 
   try {
-    // Find seller profile (simplified — in production, use auth token)
-    const sellers = await prisma.sellerProfile.findMany({
-      take: 1,
-      orderBy: { createdAt: 'desc' },
+    const seller = await prisma.sellerProfile.findUnique({
+      where: { userId: auth.id },
     })
 
-    if (sellers.length === 0) {
+    if (!seller) {
       return NextResponse.json({ error: 'Seller profile not found' }, { status: 404 })
     }
-
-    const seller = sellers[0]
 
     // Check for existing pending application
     const existing = await prisma.influencerApplication.findFirst({

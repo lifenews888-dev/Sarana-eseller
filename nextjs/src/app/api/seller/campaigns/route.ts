@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireShopForRequest } from '@/lib/api-auth';
 import { sendBulkSMS } from '@/lib/marketing/SMSService';
 import { sendBulkEmail, buildEmailTemplate } from '@/lib/marketing/EmailService';
 
 // GET — list campaigns
 export async function GET(req: NextRequest) {
+  const session = await requireShopForRequest(req);
+  if (session instanceof NextResponse) return session;
+
   try {
-    const entityId = req.nextUrl.searchParams.get('entityId');
     const campaigns = await prisma.campaign.findMany({
-      ...(entityId ? { where: { entityId } } : {}),
+      where: { entityId: session.shopId },
       orderBy: { createdAt: 'desc' },
       take: 50,
     });
@@ -20,12 +23,15 @@ export async function GET(req: NextRequest) {
 
 // POST — create and optionally send a campaign
 export async function POST(req: NextRequest) {
+  const session = await requireShopForRequest(req);
+  if (session instanceof NextResponse) return session;
+
   try {
     const body = await req.json();
-    const { entityId, createdById, name, type, subject, content, sendNow } = body;
+    const { name, type, subject, content, sendNow } = body;
 
-    if (!name || !type || !createdById) {
-      return NextResponse.json({ error: 'name, type, createdById required' }, { status: 400 });
+    if (!name || !type) {
+      return NextResponse.json({ error: 'name, type required' }, { status: 400 });
     }
 
     // Generate refId
@@ -40,8 +46,8 @@ export async function POST(req: NextRequest) {
         subject: subject || name,
         smsText: type === 'SMS' || type === 'MULTI_CHANNEL' ? content : undefined,
         emailHtml: type === 'EMAIL' || type === 'MULTI_CHANNEL' ? buildEmailTemplate(subject || name, content || '') : undefined,
-        entityId: entityId || undefined,
-        createdById,
+        entityId: session.shopId,
+        createdById: session.user.id,
         status: sendNow ? 'SENDING' : 'DRAFT',
       },
     });

@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAuth } from '@/lib/api-auth';
 import dns from 'dns/promises';
 
 export async function POST(req: NextRequest) {
+  const auth = requireAuth(req);
+  if (auth instanceof NextResponse) return auth;
+
   try {
     const { domain, shopId } = await req.json();
 
     if (!domain || !shopId) {
       return NextResponse.json({ error: 'Domain and shopId required' }, { status: 400 });
+    }
+
+    const ownedShop = await prisma.shop.findFirst({
+      where: { id: shopId, userId: auth.id },
+      select: { id: true, storefrontConfig: true },
+    });
+
+    if (!ownedShop) {
+      return NextResponse.json({ error: 'Shop not found or not owned by user' }, { status: 403 });
     }
 
     // Check DNS CNAME
@@ -32,8 +45,7 @@ export async function POST(req: NextRequest) {
 
     if (cnameValid || txtValid) {
       // Save domain in storefrontConfig
-      const shop = await prisma.shop.findUnique({ where: { id: shopId } });
-      const existing = (shop?.storefrontConfig || {}) as Record<string, unknown>;
+      const existing = (ownedShop.storefrontConfig || {}) as Record<string, unknown>;
       await prisma.shop.update({
         where: { id: shopId },
         data: {
