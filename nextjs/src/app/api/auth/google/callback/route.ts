@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { safeRelativeRedirect } from '@/lib/safe-redirect';
-import jwt from 'jsonwebtoken';
+import { signToken } from '@/lib/api-auth';
 import crypto from 'crypto';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
 
 export async function GET(req: NextRequest) {
   try {
@@ -133,11 +132,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Issue JWT (same as login route)
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, name: user.name },
-      JWT_SECRET,
-      { expiresIn: '30d' },
-    );
+    const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
 
     const userData = {
       _id: user.id,

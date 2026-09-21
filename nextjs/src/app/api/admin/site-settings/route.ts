@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdminDB } from '@/lib/api-auth';
 
 const CONFIG_KEY = 'site_settings';
 
@@ -56,7 +57,10 @@ const DEFAULT_SETTINGS: SiteSettings = {
 };
 
 // GET
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const admin = await requireAdminDB(req);
+  if (admin instanceof NextResponse) return admin;
+
   try {
     const record = await prisma.platformConfig.findUnique({ where: { key: CONFIG_KEY } });
     if (record) {
@@ -70,6 +74,9 @@ export async function GET() {
 
 // PUT
 export async function PUT(req: NextRequest) {
+  const admin = await requireAdminDB(req);
+  if (admin instanceof NextResponse) return admin;
+
   try {
     const body = await req.json();
     await prisma.platformConfig.upsert({

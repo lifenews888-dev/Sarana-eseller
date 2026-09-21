@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireAdminDB } from '@/lib/api-auth';
 
 // POST /api/admin/commission/calculate — preview commission breakdown
 export async function POST(req: NextRequest) {
+  const admin = await requireAdminDB(req);
+  if (admin instanceof NextResponse) return admin;
+
   const body = await req.json();
   const { orderTotal = 50000, planKey = 'free', hasAffiliate = false } = body;
 

@@ -1,10 +1,8 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { ok, fail } from '@/lib/api-envelope';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
+import { signToken } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -54,11 +52,7 @@ export async function POST(req: NextRequest) {
       return fail('Имэйл эсвэл нууц үг буруу', 401);
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, name: user.name, entityType: user.entityType },
-      JWT_SECRET,
-      { expiresIn: '30d' }
-    );
+    const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name, entityType: user.entityType });
 
     const primaryShop = user.shops[0]
       ? {

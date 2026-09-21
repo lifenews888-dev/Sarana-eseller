@@ -6,10 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify } from 'jose';
 
-const JWT_SECRET_BYTES = new TextEncoder().encode(
-  process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026',
-);
-const LEGACY_JWT_SECRET_BYTES = new TextEncoder().encode('eseller-secret-key-change-in-production');
+const DEV_JWT_SECRET = 'eseller-local-dev-jwt-secret';
+
+function jwtSecrets(): Uint8Array[] {
+  const current = process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? '' : DEV_JWT_SECRET);
+  const secrets = [current, process.env.LEGACY_JWT_SECRET].filter((secret): secret is string => Boolean(secret));
+  return Array.from(new Set(secrets)).map((secret) => new TextEncoder().encode(secret));
+}
 
 const AUTH_SESSION_COOKIES = [
   'auth-token',
@@ -25,7 +28,7 @@ const AUTH_SESSION_COOKIES = [
 // `/dashboard` and `/dashboard/orders|wishlist|addresses|settings|chat` are
 // shared space for any authenticated user and don't appear here.
 const ROLE_GUARDED_PREFIXES: Array<{ prefix: string; roles: readonly string[] }> = [
-  { prefix: '/dashboard/admin', roles: ['admin', 'superadmin'] },
+  { prefix: '/dashboard/admin', roles: ['admin', 'superadmin', 'super_admin'] },
   { prefix: '/dashboard/store', roles: ['seller', 'agent', 'company', 'auto_dealer', 'service'] },
   { prefix: '/dashboard/seller', roles: ['seller', 'agent', 'company', 'auto_dealer', 'service'] },
   { prefix: '/dashboard/affiliate', roles: ['affiliate', 'seller', 'agent', 'company', 'auto_dealer', 'service', 'admin', 'superadmin'] },
@@ -134,14 +137,18 @@ export async function proxy(req: NextRequest) {
 
     let role = '';
     try {
-      let payload: Record<string, unknown>;
-      try {
-        const verified = await jwtVerify(token, JWT_SECRET_BYTES);
-        payload = verified.payload;
-      } catch {
-        const verified = await jwtVerify(token, LEGACY_JWT_SECRET_BYTES);
-        payload = verified.payload;
+      const secrets = jwtSecrets();
+      if (secrets.length === 0) throw new Error('JWT_SECRET is required in production');
+
+      let payload: Record<string, unknown> | null = null;
+      for (const secret of secrets) {
+        try {
+          const verified = await jwtVerify(token, secret);
+          payload = verified.payload;
+          break;
+        } catch {}
       }
+      if (!payload) throw new Error('Invalid session');
       role = String(payload.role || '').toLowerCase();
     } catch {
       const res = NextResponse.redirect(loginUrl);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { geocodeAddress } from '@/lib/maps/googleMaps';
+import { requireAdminDB } from '@/lib/api-auth';
 
 function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -8,6 +9,9 @@ function sleep(ms: number) {
 
 // POST /api/admin/locations/bulk-geocode — координатгүй бүх байршлыг автомат geocode хийх
 export async function POST(req: NextRequest) {
+  const admin = await requireAdminDB(req);
+  if (admin instanceof NextResponse) return admin;
+
   try {
     const locations = await prisma.storeLocation.findMany({
       where: { isActive: true, coordNeedsUpdate: true },

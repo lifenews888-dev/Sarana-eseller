@@ -1,9 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { ok, fail } from '@/lib/api-envelope';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
+import { signToken } from '@/lib/api-auth';
 
 export async function POST(req: Request) {
   try {
@@ -108,11 +106,7 @@ export async function POST(req: Request) {
       shops = [shop];
     }
 
-    const token = jwt.sign(
-      { id: user.id, userId: user.id, email: user.email, role: user.role, name: user.name },
-      JWT_SECRET,
-      { expiresIn: '30d' },
-    );
+    const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name });
 
     const primaryShop = shops[0]
       ? {

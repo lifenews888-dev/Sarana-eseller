@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAdminDB } from '@/lib/api-auth'
 
 export async function GET(req: NextRequest) {
+  const admin = await requireAdminDB(req)
+  if (admin instanceof NextResponse) return admin
+
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
 
@@ -23,6 +27,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const admin = await requireAdminDB(req)
+  if (admin instanceof NextResponse) return admin
+
   const body = await req.json()
 
   const count = await prisma.dispute.count()

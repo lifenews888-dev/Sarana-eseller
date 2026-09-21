@@ -1,44 +1,17 @@
 import { NextRequest } from 'next/server';
-import jwt from 'jsonwebtoken';
 import { prisma } from '@/lib/prisma';
 import { ok, fail } from '@/lib/api-envelope';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
+import { getAuthUser } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const header = req.headers.get('authorization');
-  if (!header?.startsWith('Bearer ')) {
-    return fail('Нэвтрэх шаардлагатай', 401);
-  }
-  const token = header.slice(7).trim();
-  if (!token) return fail('Нэвтрэх шаардлагатай', 401);
-
-  let payload: jwt.JwtPayload;
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (typeof decoded !== 'object' || decoded === null) {
-      return fail('Хүчингүй сесс', 401);
-    }
-    payload = decoded;
-  } catch {
-    return fail('Хүчингүй сесс', 401);
-  }
-
-  const userId =
-    (payload as Record<string, unknown>).id ??
-    (payload as Record<string, unknown>).userId ??
-    (payload as Record<string, unknown>)._id ??
-    payload.sub;
-
-  if (typeof userId !== 'string' || !userId) {
-    return fail('Хүчингүй сесс', 401);
-  }
+  const authUser = getAuthUser(req);
+  if (!authUser) return fail('Хүчингүй сесс', 401);
 
   try {
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: authUser.id },
       select: {
         id: true,
         email: true,

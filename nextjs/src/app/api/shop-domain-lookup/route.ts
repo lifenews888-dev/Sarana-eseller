@@ -5,7 +5,11 @@ import { prisma } from '@/lib/prisma';
 // Protected by x-middleware-secret header
 export async function GET(req: NextRequest) {
   const secret = req.headers.get('x-middleware-secret');
-  if (secret !== (process.env.MIDDLEWARE_SECRET || 'eseller-internal')) {
+  const expectedSecret = process.env.MIDDLEWARE_SECRET;
+  if (!expectedSecret) {
+    return NextResponse.json({ data: null, error: 'Internal secret is not configured' }, { status: 503 });
+  }
+  if (secret !== expectedSecret) {
     return NextResponse.json({ data: null }, { status: 403 });
   }
 

@@ -7,11 +7,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 import { prisma } from './prisma';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
+const DEV_JWT_SECRET = 'eseller-local-dev-jwt-secret';
+
+export function getJwtSecret(): string {
+  const secret = process.env.JWT_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET is required in production');
+  }
+  return DEV_JWT_SECRET;
+}
+
+function getJwtVerificationSecrets(): string[] {
+  const secrets = [getJwtSecret()];
+  if (process.env.LEGACY_JWT_SECRET) secrets.push(process.env.LEGACY_JWT_SECRET);
+  return Array.from(new Set(secrets));
+}
 
 /** Sign a JWT token */
 export function signToken(payload: { id: string; role: string; email?: string; name?: string; entityType?: string | null }): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+  return jwt.sign(payload, getJwtSecret(), { expiresIn: '30d' });
 }
 
 export interface AuthUser {
@@ -37,23 +52,6 @@ function extractToken(req: NextRequest): string | null {
   return req.cookies.get('auth-token')?.value || req.cookies.get('token')?.value || null;
 }
 
-/** Decode JWT payload without verification */
-function decodePayload(token: string): AuthUser | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(Buffer.from(parts[1], 'base64url').toString()) as Record<string, unknown>;
-    const id = payload.id || payload.userId || payload._id || payload.sub;
-    if (typeof id !== 'string') return null;
-    const email = typeof payload.email === 'string' ? payload.email : '';
-    const role = typeof payload.role === 'string' ? payload.role : 'buyer';
-    const name = typeof payload.name === 'string' ? payload.name : '';
-    return { id, email, role, name };
-  } catch {
-    return null;
-  }
-}
-
 /** Extract and verify JWT from Authorization header or cookie */
 export function getAuthUser(req: NextRequest): AuthUser | null {
   const token = extractToken(req);
@@ -72,25 +70,15 @@ export function getAuthUser(req: NextRequest): AuthUser | null {
     };
   };
 
-  // Try verified decode first
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = typeof decoded === 'object' && decoded !== null ? extractUser(decoded as Record<string, unknown>) : null;
-    if (user) return user;
-  } catch {}
-
-  // Try all known secrets
-  const secrets = ['eseller-jwt-secret-key-change-in-production-2026', 'eseller-secret-key-change-in-production'];
-  for (const s of secrets) {
+  for (const secret of getJwtVerificationSecrets()) {
     try {
-      const decoded = jwt.verify(token, s);
+      const decoded = jwt.verify(token, secret);
       const user = typeof decoded === 'object' && decoded !== null ? extractUser(decoded as Record<string, unknown>) : null;
       if (user) return user;
     } catch {}
   }
 
-  // Last resort: decode without verification (token exists, user is in dashboard)
-  return decodePayload(token);
+  return null;
 }
 
 /** Require auth — returns user or error response */

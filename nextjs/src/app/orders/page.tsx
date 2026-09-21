@@ -4,8 +4,7 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import jwt from 'jsonwebtoken';
 import SafeImage from '@/components/ui/SafeImage';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
+import { getJwtSecret } from '@/lib/api-auth';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: 'Хүлээгдэж байна', color: '#854F0B', bg: '#FAEEDA' },
@@ -23,7 +22,7 @@ async function getUserId(): Promise<string | null> {
   const token = c.get('token')?.value || c.get('auth-token')?.value;
   if (!token) return null;
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as { id?: string; userId?: string };
+    const decoded = jwt.verify(token, getJwtSecret()) as { id?: string; userId?: string };
     return decoded.id || decoded.userId || null;
   } catch {
     return null;

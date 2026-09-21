@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { exchangeCode, getUserInfo } from '@/lib/dan';
 import { safeRelativeRedirect } from '@/lib/safe-redirect';
+import { signToken } from '@/lib/api-auth';
 import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'eseller-jwt-secret-key-change-in-production-2026';
 
 function getDanFallbackEmail(registerNumber: string, phone: string): string {
   const stableId = (registerNumber || phone).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -72,11 +70,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, name: user.name, entityType: user.entityType },
-      JWT_SECRET,
-      { expiresIn: '30d' },
-    );
+    const token = signToken({ id: user.id, email: user.email, role: user.role, name: user.name, entityType: user.entityType });
 
     const userData = {
       _id: user.id,
