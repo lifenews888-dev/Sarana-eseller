@@ -825,7 +825,7 @@ export default async function FeedDetailPage({ params }: Props) {
     district: post.district || undefined,
     province: post.province || undefined,
     allowAffiliate: post.allowAffiliate,
-    affiliateCommission: post.affiliateCommission || undefined,
+    affiliateCommission: undefined,
     media: post.media.map((m) => ({
       id: m.id,
       type: m.type as 'IMAGE' | 'VIDEO' | 'VIRTUAL_TOUR' | 'FLOOR_PLAN',

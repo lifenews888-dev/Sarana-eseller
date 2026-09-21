@@ -204,6 +204,7 @@ export default async function ProductPage({ params }: Props) {
   const clientProduct = {
     ...product,
     _id: product.id,
+    affiliateCommission: undefined,
     shopId: resolvedShopId,
     shop: product.shop
       ? { ...product.shop, _id: product.shop.id }
@@ -225,6 +226,7 @@ export default async function ProductPage({ params }: Props) {
   const relatedProducts = filterPublicLaunchProducts(related).map(r => ({
     ...r,
     _id: r.id,
+    affiliateCommission: undefined,
     images: getSafeImageList(r.images),
   }));
 

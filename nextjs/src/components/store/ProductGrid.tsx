@@ -320,10 +320,10 @@ export default function ProductGrid({
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.03 } } }}
           >
-            {products.map((p) => {
+            {products.map((p, index) => {
               const productId = p._id || p.id || p.name;
               return (
-              <motion.div key={productId} className="min-w-0 h-full" variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
+              <motion.div key={`${productId}-${index}`} className="min-w-0 h-full" variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}>
                 <ProductCard product={p} onQuickAdd={onQuickAdd} onClick={onProductClick}
                   isWished={wishlist.has(productId)} onToggleWish={onToggleWish} />
               </motion.div>

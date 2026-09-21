@@ -161,7 +161,7 @@ export default function ProductCard({
               }}
             >
               {images.map((src, i) => (
-                <div key={i} className="h-full flex-shrink-0" style={{ width: `${100 / images.length}%` }}>
+                <div key={`${src}-${i}`} className="h-full flex-shrink-0" style={{ width: `${100 / images.length}%` }}>
                   <SafeImage
                     src={src}
                     alt={p.name}
@@ -180,10 +180,10 @@ export default function ProductCard({
 
         {hasMultipleImages && (
           <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 gap-1">
-            {images.map((_, i) => (
+            {images.map((src, i) => (
               <button
                 type="button"
-                key={i}
+                key={`${src}-${i}`}
                 aria-label={`${p.name} зураг ${i + 1}`}
                 className="pointer-events-auto h-1.5 w-1.5 cursor-pointer rounded-full border-none"
                 style={{ background: i === activeImg ? '#fff' : 'rgba(255,255,255,0.5)' }}

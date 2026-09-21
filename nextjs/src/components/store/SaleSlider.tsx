@@ -61,11 +61,11 @@ export default function SaleSlider({ products, quickAdd, findProduct, setSelProd
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {products.map(p => {
+          {products.map((p, index) => {
             const productId = p._id || p.id || p.name;
             return (
             // Keep ~224 brand card width; slightly narrower only on very small phones
-            <div key={productId} style={{ flex: '0 0 min(224px, 72vw)', minWidth: 'min(224px, 72vw)' }}>
+            <div key={`${productId}-${index}`} style={{ flex: '0 0 min(224px, 72vw)', minWidth: 'min(224px, 72vw)' }}>
               <ProductCard
                 product={p}
                 onQuickAdd={quickAdd}

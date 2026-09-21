@@ -3,8 +3,8 @@
 import { useState } from 'react';
 import { Megaphone } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
 import { useToast } from '@/components/shared/Toast';
+import { canSeeAffiliateSalesTools } from '@/lib/affiliate-permissions';
 import { cn } from '@/lib/utils';
 
 interface StartSellingButtonProps {
@@ -16,19 +16,13 @@ interface StartSellingButtonProps {
 
 export default function StartSellingButton({ productId, productName, commission, className }: StartSellingButtonProps) {
   const [loading, setLoading] = useState(false);
-  const { isLoggedIn } = useAuth();
-  const router = useRouter();
+  const { isLoggedIn, user } = useAuth();
   const toast = useToast();
+  const canStartSelling = isLoggedIn && canSeeAffiliateSalesTools(user?.role);
+
+  if (!canStartSelling) return null;
 
   const handleClick = async () => {
-    if (!isLoggedIn) {
-      const returnTo = `/product/${productId}`;
-      sessionStorage.setItem('sarana_redirect', returnTo);
-      toast.show('Борлуулагч болохын тулд нэвтэрнэ үү', 'warn');
-      router.push(`/login?redirect=${encodeURIComponent(returnTo)}`);
-      return;
-    }
-
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
@@ -37,11 +31,12 @@ export default function StartSellingButton({ productId, productName, commission,
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ productId }),
       });
+
       if (res.ok) {
         toast.show(`"${productName}" борлуулж эхэллээ!`, 'ok');
       } else {
-        const data = await res.json();
-        toast.show(data.error || 'Алдаа гарлаа', 'error');
+        const data = await res.json().catch(() => null);
+        toast.show(data?.error || 'Борлуулагч эрх шаардлагатай', 'error');
       }
     } catch {
       toast.show('Сервертэй холбогдож чадсангүй', 'error');

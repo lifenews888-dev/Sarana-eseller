@@ -6,6 +6,7 @@ import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
 import { DEMO_PRODUCTS, cn } from '@/lib/utils';
 import { useAuth, roleHome } from '@/lib/auth';
+import { canSeeAffiliateSalesTools } from '@/lib/affiliate-permissions';
 import { DEMO_SERVICES, type Service } from '@/lib/types/service';
 import type { ItemType } from '@/lib/marketplace';
 import CartDrawer from '@/components/store/CartDrawer';
@@ -682,7 +683,7 @@ export default function StorePage() {
           <ProductModal
             product={selProduct}
             onClose={() => setSelProduct(null)}
-            isAffiliate={isLoggedIn && user?.role === 'affiliate'}
+            isAffiliate={isLoggedIn && canSeeAffiliateSalesTools(user?.role)}
             onShare={() => {
               copyStoreText(productShareUrl(selProduct, user?.username))
                 .then(() => toast.show('Линк хуулагдлаа!', 'ok'))

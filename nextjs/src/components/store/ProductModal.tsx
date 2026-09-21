@@ -288,12 +288,13 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
   return (
     <AnimatePresence>
       {/* Backdrop — above MobileNav (z-9999) so footer is never covered */}
-      <motion.div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10020]"
+      <motion.div key="product-modal-backdrop" className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[10020]"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} />
 
       {/* Prev/Next product arrows — desktop only */}
       {hasPrev && onPrev && (
         <button
+          key="product-modal-prev"
           onClick={onPrev}
           aria-label="Өмнөх бараа"
           className="fixed left-2 md:left-4 top-1/2 -translate-y-1/2 z-[10060] hidden w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl md:flex"
@@ -303,6 +304,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
       )}
       {hasNext && onNext && (
         <button
+          key="product-modal-next"
           onClick={onNext}
           aria-label="Дараагийн бараа"
           className="fixed right-2 md:right-4 top-1/2 -translate-y-1/2 z-[10060] hidden w-11 h-11 rounded-full bg-[var(--esl-bg-card)]/90 border-none cursor-pointer items-center justify-center hover:bg-[var(--esl-bg-card)] transition shadow-xl md:flex"
@@ -318,6 +320,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
         - image capped so it cannot push qty/cart off-screen
       */}
       <motion.div
+        key="product-modal-shell"
         ref={modalRef}
         role="dialog"
         aria-modal="true"
@@ -415,7 +418,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
           {media.length > 1 && (
             <div className="flex gap-2 p-3 bg-[var(--esl-bg-card)]/80 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
               {media.map((m, i) => (
-                <button key={i} onClick={() => setActiveImg(i)}
+                <button key={`${m.type}-${m.url}-${i}`} onClick={() => setActiveImg(i)}
                   aria-label={`${i + 1}-р медиа сонгох`}
                   aria-pressed={i === activeImg}
                   className={cn('w-16 h-16 rounded-lg overflow-hidden border-2 cursor-pointer transition-all shrink-0 relative',
@@ -665,10 +668,10 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
             <div className="mt-4 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-section)]/50 p-3">
               <h4 className="mb-2 text-xs font-bold uppercase tracking-wider text-[var(--esl-text-secondary)]">Барааны товч</h4>
               <div className="grid grid-cols-2 gap-2">
-                {productFacts.map((fact) => {
+                {productFacts.map((fact, index) => {
                   const Icon = fact.icon;
                   return (
-                    <div key={`${fact.label}-${fact.value}`} className="min-w-0 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">
+                    <div key={`${fact.label}-${fact.value}-${index}`} className="min-w-0 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-3 py-2.5">
                       <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide text-[var(--esl-text-muted)]">
                         <Icon className="h-3.5 w-3.5 shrink-0 text-[#E24B4A]" />
                         <span className="truncate">{fact.label}</span>
@@ -718,7 +721,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   <Share2 className="h-4 w-4" /> Хуваалцах
                 </button>
               )}
-              {product.allowAffiliate && (
+              {isAffiliate && product.allowAffiliate && (
                 <a href={`/dashboard/affiliate?product=${product._id}`}
                   className="flex flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border border-[#E8242C] bg-transparent py-2.5 text-xs font-semibold text-[#E8242C] no-underline transition hover:bg-red-50 sm:text-sm">
                   <Share2 className="h-4 w-4" /> Борлуулах
@@ -738,6 +741,7 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
       {/* ═══ Fullscreen Zoom ═══ */}
       {zoomedImg && (
         <motion.div
+          key="product-modal-zoom"
           ref={zoomDialogRef}
           role="dialog"
           aria-modal="true"

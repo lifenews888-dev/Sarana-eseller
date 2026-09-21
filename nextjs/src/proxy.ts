@@ -28,7 +28,7 @@ const ROLE_GUARDED_PREFIXES: Array<{ prefix: string; roles: readonly string[] }>
   { prefix: '/dashboard/admin', roles: ['admin', 'superadmin'] },
   { prefix: '/dashboard/store', roles: ['seller', 'agent', 'company', 'auto_dealer', 'service'] },
   { prefix: '/dashboard/seller', roles: ['seller', 'agent', 'company', 'auto_dealer', 'service'] },
-  { prefix: '/dashboard/affiliate', roles: ['affiliate'] },
+  { prefix: '/dashboard/affiliate', roles: ['affiliate', 'seller', 'agent', 'company', 'auto_dealer', 'service', 'admin', 'superadmin'] },
   { prefix: '/dashboard/delivery', roles: ['delivery'] },
 ];
 

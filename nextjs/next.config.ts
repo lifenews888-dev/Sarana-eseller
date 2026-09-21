@@ -1,11 +1,9 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 
 const isDev = process.env.NODE_ENV !== 'production';
-const buildRoot = process.cwd();
-const turbopackRoot = process.env.VERCEL && path.basename(buildRoot) === 'nextjs'
-  ? path.dirname(buildRoot)
-  : buildRoot;
+const appRoot = path.dirname(fileURLToPath(import.meta.url));
 
 const connectSrc = [
   "'self'",
@@ -54,8 +52,9 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['127.0.0.1', 'localhost'],
+  staticPageGenerationTimeout: 180,
   turbopack: {
-    root: turbopackRoot,
+    root: appRoot,
   },
   images: {
     remotePatterns: [

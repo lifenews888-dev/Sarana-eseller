@@ -342,7 +342,7 @@ const OTHER_ROLE_SECTIONS: Record<string, SidebarSection[]> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const router = useRouter();
-  const [ready] = useState(() => (typeof window !== 'undefined' ? !!localStorage.getItem('token') : false));
+  const [ready, setReady] = useState(false);
 
   const shopType = useShopTypeStore((s) => s.shopType);
   const loadShopType = useShopTypeStore((s) => s.load);
@@ -353,6 +353,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!token) {
         router.replace('/login');
       } else {
+        setReady(true);
         loadShopType();
       }
     }

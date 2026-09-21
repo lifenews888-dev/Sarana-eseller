@@ -246,7 +246,7 @@ export const AffiliateAPI = {
   getLinks: () => apiFetch('/affiliate/links'),
   getEarnings: () => apiFetch('/affiliate/earnings'),
   createLink: (productId: string) =>
-    apiFetch('/affiliate/link', { method: 'POST', body: JSON.stringify({ productId }) }),
+    apiFetch('/affiliate/links', { method: 'POST', body: JSON.stringify({ productId }) }),
   trackClick: (linkId: string) =>
     apiFetch('/affiliate/click', { method: 'POST', body: JSON.stringify({ linkId }) }),
   getProfile: (username: string) => apiFetch('/affiliate/profile/' + username),
