@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { requireSeller, getShopForUser, getPreferredShopId, errorJson } from '@/lib/api-auth';
 import { parseTryOn, readTryOn } from '@/lib/tryon';
@@ -55,8 +56,8 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     const tryon = parseTryOn(body?.tryon);
     if (!tryon) return errorJson('Өмсөж үзэх зургийн мэдээлэл буруу байна', 400);
 
-    const metadata = { ...baseMetadata(res.product.metadata), tryon };
-    await prisma.product.update({ where: { id }, data: { metadata } });
+    const metadata: Record<string, unknown> = { ...baseMetadata(res.product.metadata), tryon };
+    await prisma.product.update({ where: { id }, data: { metadata: metadata as unknown as Prisma.InputJsonValue } });
     return NextResponse.json({ success: true, data: { tryon } });
   } catch (e) {
     console.error('[tryon PUT]', (e as Error).message);
@@ -72,7 +73,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     if (res.error) return res.error;
     const metadata = baseMetadata(res.product.metadata);
     delete metadata.tryon;
-    await prisma.product.update({ where: { id }, data: { metadata } });
+    await prisma.product.update({ where: { id }, data: { metadata: metadata as unknown as Prisma.InputJsonValue } });
     return NextResponse.json({ success: true, data: null });
   } catch (e) {
     console.error('[tryon DELETE]', (e as Error).message);
