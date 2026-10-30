@@ -24,7 +24,9 @@
     "clean:images": "npx tsx scripts/clean-bad-image-urls.ts",
     "clean:images:dry": "npx tsx scripts/clean-bad-image-urls.ts --dry-run",
     "clean:audit-products": "npx tsx scripts/clean-audit-products.ts",
-    "clean:audit-products:dry": "npx tsx scripts/clean-audit-products.ts --dry-run"
+    "clean:audit-products:dry": "npx tsx scripts/clean-audit-products.ts --dry-run",
+    "test:ilgeemj": "npx tsx scripts/ilgeemj-contract-test.ts",
+    "ilgeemj:export": "npx tsx scripts/ilgeemj-export.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",

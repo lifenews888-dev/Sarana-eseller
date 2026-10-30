@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth } from '@/lib/api-auth';
+import { createDelivery, ilgeemjEnabled, trackingUrlFor } from '@/lib/ilgeemj';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -44,6 +45,23 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         ...(estimatedMinutes !== undefined && { estimatedMinutes }),
       },
     });
+
+    // Бэлэн болмогц Илгээмж рүү хүргэлт үүсгэнэ. Алдаа гарвал статус хэвээр, шалтгааныг trackingEvents-д бичнэ.
+    if (status === 'ready' && ilgeemjEnabled()) {
+      const full = await prisma.order.findUnique({ where: { id }, include: { user: { select: { name: true, phone: true } } } });
+      try {
+        const d = await createDelivery(full as any);
+        const ev = { status: 'ilgeemj.created', description: `Хүргэлт #${d.code}${d.addressIssues?.length ? ` · хаяг: ${d.addressIssues.join(', ')}` : ''}`, trackingUrl: trackingUrlFor(d.publicToken), createdAt: new Date().toISOString(), source: 'ilgeemj' };
+        const after = await prisma.order.update({
+          where: { id },
+          data: { trackingCode: d.code, trackingEvents: [...((full?.trackingEvents as unknown[]) ?? []), ev] },
+        });
+        return json(after);
+      } catch (e) {
+        const ev = { status: 'ilgeemj.error', description: (e as Error).message, createdAt: new Date().toISOString(), source: 'ilgeemj' };
+        await prisma.order.update({ where: { id }, data: { trackingEvents: [...((full?.trackingEvents as unknown[]) ?? []), ev] } }).catch(() => undefined);
+      }
+    }
 
     return json(updated);
   } catch {
