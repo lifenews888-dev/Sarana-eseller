@@ -211,13 +211,13 @@ export default function ProductsPage() {
               <div className="h-32 bg-[var(--esl-bg-section)] flex items-center justify-center relative">
                 {p.images?.[0] ? <img loading="lazy" src={p.images[0]} alt="" className="w-full h-full object-cover" /> : <span className="text-4xl">{p.emoji || '📦'}</span>}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                  <button onClick={() => setTryonFor(p)} title="3D шоурум / өмсөж үзэх" aria-label="3D шоурум" className="h-7 px-2 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[10px] font-bold text-[var(--esl-text-muted)] hover:text-indigo-600">3D</button>
                   <button onClick={() => openEdit(p)} className="w-7 h-7 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[var(--esl-text-muted)] hover:text-indigo-600"><Edit3 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => handleDelete(p._id)} className="w-7 h-7 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[var(--esl-text-muted)] hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
                 {p.salePrice && p.salePrice < p.price && <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">SALE</span>}
               </div>
               <div className="p-3">
+                <button type="button" onClick={() => setTryonFor(p)} className="mb-2 w-full h-8 rounded-lg border border-[var(--esl-border)] bg-transparent text-xs font-bold text-[var(--esl-text-primary)] cursor-pointer hover:border-[#E8242C] hover:text-[#E8242C]">3D шоурум · өмсөж үзэх</button>
                 <h3 className="text-sm font-bold text-[var(--esl-text-primary)] truncate">{p.name}</h3>
                 <div className="flex items-baseline gap-2 mt-1">
                   <span className="text-base font-extrabold text-indigo-600">{formatPrice(p.salePrice || p.price)}</span>

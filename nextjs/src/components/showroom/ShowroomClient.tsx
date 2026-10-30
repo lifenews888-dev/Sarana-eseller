@@ -68,6 +68,7 @@ export default function ShowroomClient({ shop, products }: Props) {
   useEffect(() => {
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let raf = 0;
+    let lastIndex = -1;
     const frame = (t: number) => {
       const a = anim.current;
       const stage = stageRef.current;
@@ -90,7 +91,7 @@ export default function ShowroomClient({ shop, products }: Props) {
         });
       }
       const n = Math.round(Math.max(0, Math.min(itemRefs.current.length - 1, a.target)));
-      setIndex((prev) => (prev === n ? prev : n));
+      if (n !== lastIndex) { lastIndex = n; setIndex(n); }
       raf = requestAnimationFrame(frame);
     };
     raf = requestAnimationFrame(frame);
