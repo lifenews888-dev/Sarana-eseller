@@ -6,6 +6,7 @@ import { MapPin, Phone, Star, Shield, ShoppingBag, Users, Share2, Mail, Clock } 
 import { ShareModal } from '@/components/shared/ShareModal';
 
 import SafeImage from '@/components/ui/SafeImage';
+import { readTryOn } from '@/lib/tryon';
 
 interface ShopData {
   id: string; name: string; slug: string; logo?: string | null; phone?: string | null;
@@ -16,6 +17,7 @@ interface ShopData {
 }
 
 interface ProductData {
+  metadata?: unknown;
   _id: string; id?: string; name: string; price: number; salePrice?: number | null;
   images?: string[]; emoji?: string | null; category?: string | null;
   rating?: number | null; reviewCount?: number | null; stock?: number | null;
@@ -53,6 +55,7 @@ function discountPct(price: number, sale?: number | null) {
 }
 
 export default function StorefrontClient({ shop, products }: { shop: ShopData; products: ProductData[] }) {
+  const hasShowroom = products.some((p) => readTryOn(p.metadata) !== null);
   const badge = ENTITY_BADGES[shop.industry || 'store'] || ENTITY_BADGES.store;
   const [shareOpen, setShareOpen] = useState(false);
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/${shop.slug}` : `https://eseller.mn/${shop.slug}`;
@@ -122,6 +125,11 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
               <a href={`tel:${shop.phone}`} className="bg-white/10 border border-white/30 text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-white/20 transition backdrop-blur-sm">
                 Холбоо барих
               </a>
+            )}
+            {hasShowroom && (
+              <Link href={`/s/${shop.slug}/showroom`} className="flex items-center gap-2 bg-black/40 border border-white/30 text-white px-6 py-3.5 rounded-xl font-semibold text-sm no-underline hover:bg-black/60 transition backdrop-blur-sm">
+                3D шоурум · өмсөж үзэх
+              </Link>
             )}
             <button onClick={() => setShareOpen(true)} className="flex items-center gap-2 bg-white/10 border border-white/30 text-white px-5 py-3.5 rounded-xl font-semibold text-sm cursor-pointer hover:bg-white/20 transition backdrop-blur-sm">
               <Share2 className="w-4 h-4" /> Хуваалцах
