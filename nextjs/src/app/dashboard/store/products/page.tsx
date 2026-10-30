@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import CategorySelector from '@/components/shared/CategorySelector';
 import { MediaUploader } from '@/components/shared/MediaUploader';
+import TryOnEditor from '@/components/seller/TryOnEditor';
 
 /* ═══ Types ═══ */
 interface ProductForm {
@@ -55,6 +56,7 @@ export default function ProductsPage() {
   const [form, setForm] = useState<ProductForm>(EMPTY_FORM);
   const [modalTab, setModalTab] = useState<ModalTab>('info');
   const [saving, setSaving] = useState(false);
+  const [tryonFor, setTryonFor] = useState<Product | null>(null);
   const toast = useToast();
 
   useEffect(() => { loadProducts(); }, []);
@@ -209,6 +211,7 @@ export default function ProductsPage() {
               <div className="h-32 bg-[var(--esl-bg-section)] flex items-center justify-center relative">
                 {p.images?.[0] ? <img loading="lazy" src={p.images[0]} alt="" className="w-full h-full object-cover" /> : <span className="text-4xl">{p.emoji || '📦'}</span>}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
+                  <button onClick={() => setTryonFor(p)} title="3D шоурум / өмсөж үзэх" aria-label="3D шоурум" className="h-7 px-2 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[10px] font-bold text-[var(--esl-text-muted)] hover:text-indigo-600">3D</button>
                   <button onClick={() => openEdit(p)} className="w-7 h-7 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[var(--esl-text-muted)] hover:text-indigo-600"><Edit3 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => handleDelete(p._id)} className="w-7 h-7 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[var(--esl-text-muted)] hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
@@ -411,6 +414,13 @@ export default function ProductsPage() {
             </div>
           </div>
         </>
+      )}
+      {tryonFor && (
+        <TryOnEditor
+          product={tryonFor}
+          onClose={() => setTryonFor(null)}
+          onSaved={(msg) => toast.show(msg, 'ok')}
+        />
       )}
     </DashboardPage>
   );
