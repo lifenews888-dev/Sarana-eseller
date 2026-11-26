@@ -1,11 +1,16 @@
+import { requireAuth } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
-    const { code, userId } = await req.json();
-    if (!code || !userId) {
-      return NextResponse.json({ error: "code and userId required" }, { status: 400 });
+    // Аюулгүй байдал: userId-г body-оос биш, нэвтэрсэн хэрэглэгчийн токеноос авна
+    const authUser = requireAuth(req);
+    if (authUser instanceof NextResponse) return authUser;
+    const { code } = await req.json();
+    const userId = authUser.id;
+    if (!code) {
+      return NextResponse.json({ error: "code required" }, { status: 400 });
     }
 
     const referral = await prisma.referral.findFirst({ where: { code, status: "pending" } });

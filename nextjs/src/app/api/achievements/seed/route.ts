@@ -1,12 +1,16 @@
+import { NextResponse, NextRequest } from 'next/server';
 // ══════════════════════════════════════════════════════════════
 // POST /api/achievements/seed — upsert achievement definitions
 // ══════════════════════════════════════════════════════════════
 
-import { json } from '@/lib/api-auth';
+import { json, requireAdmin } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { ACHIEVEMENTS } from '@/lib/achievements';
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   const results = await Promise.all(
     ACHIEVEMENTS.map((a) =>
       prisma.achievement.upsert({

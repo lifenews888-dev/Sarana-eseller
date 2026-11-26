@@ -298,7 +298,9 @@ export default function LoginPage() {
               <div className="text-sm mb-6" style={{ color: 'var(--esl-text-muted)' }}>
                 {redirectTarget.startsWith('/checkout')
                   ? 'Захиалгаа дуусгахын тулд нэвтэрнэ үү. Сагс тань хадгалагдсан.'
-                  : 'Данс руугаа нэвтрэх'}
+                  : redirectTarget.startsWith('/become-seller')
+                    ? 'Дэлгүүр нээхийн тулд нэвтэрнэ үү. Данс байхгүй бол дээрх "Бүртгүүлэх"-ийг сонгоно уу.'
+                    : 'Данс руугаа нэвтрэх'}
               </div>
 
               <div className="space-y-4">

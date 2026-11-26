@@ -37,7 +37,7 @@ export default function FeaturedShops({ entities }: { entities: FeaturedShop[] }
                 {e.logoUrl ? (
                   <SafeImage src={e.logoUrl} alt={e.name || 'Дэлгүүр'} className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  <span className="text-white text-2xl font-bold">{e.name?.[0]}</span>
+                  <span className="text-white text-2xl font-bold">{Array.from(e.name || '').find((ch) => /[\p{L}\p{N}]/u.test(ch))?.toUpperCase()}</span>
                 )}
               </div>
               <p className="text-[var(--esl-text-primary)] font-semibold text-[13px] mb-1.5">{e.name}</p>

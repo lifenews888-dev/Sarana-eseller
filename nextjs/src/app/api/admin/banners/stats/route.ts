@@ -6,7 +6,7 @@ import { json, errorJson, requireAuth } from '@/lib/api-auth';
 export async function GET(req: NextRequest) {
   const auth = requireAuth(req);
   if (auth instanceof Response) return auth;
-  if (auth.role !== 'admin' && auth.role !== 'superadmin') return errorJson('Админ эрх шаардлагатай', 403);
+  if (!['admin', 'superadmin', 'super_admin'].includes(auth.role)) return errorJson('Админ эрх шаардлагатай', 403);
 
   try {
     const now = new Date();

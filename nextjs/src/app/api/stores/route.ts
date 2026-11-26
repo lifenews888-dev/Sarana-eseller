@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { isPublicShopName } from '@/lib/product-visibility';
+import { categoryLabel } from '@/lib/marketplaceCategories';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { filterPublicLaunchProducts, publicProductWhere } from '@/lib/product-visibility';
@@ -184,11 +186,15 @@ function hasLowDiversityName(value?: string | null) {
   return uniqueChars.size <= 3 || uniqueChars.size / chars.length <= 0.28;
 }
 
+const INTERNAL_FACET_KEYS = new Set(['general', 'product', 'service', 'store', 'default']);
+
 function hasPublicDirectoryQuality(item: StoreDirectoryItem) {
   const compactName = compactPublicText(item.name);
   if (compactName.length < MIN_PUBLIC_DIRECTORY_NAME_LENGTH) return false;
   if (hasBlockedPublicEntityText(item.name) || hasBlockedPublicEntityText(item.slug)) return false;
   if (hasLowDiversityName(item.name)) return false;
+  // "Test Shop 1785222791" гэх мэт автомат тестийн нэрс
+  if (!isPublicShopName(item.name)) return false;
   return true;
 }
 
@@ -271,9 +277,10 @@ function createFacets(items: StoreDirectoryItem[]): StoreDirectoryFacets {
 
     for (const keyword of item.keywords.slice(0, 4)) {
       const value = normalizeFacetValue(keyword);
-      if (!value) continue;
+      // "general", "product" гэх мэт дотоод төрлийн түлхүүрийг шүүлтүүрт гаргахгүй
+      if (!value || INTERNAL_FACET_KEYS.has(value)) continue;
       const current = categoryCounts.get(value);
-      categoryCounts.set(value, { label: current?.label || keyword, count: (current?.count || 0) + 1 });
+      categoryCounts.set(value, { label: current?.label || categoryLabel(keyword), count: (current?.count || 0) + 1 });
     }
   }
 
@@ -314,8 +321,10 @@ function mapShop(shop: ShopWithRelations, assets: ShopDirectoryAssets): StoreDir
     logo: media.logo,
     coverImage: media.coverImage,
     previewImages: assets.previewImages.length > 0 ? assets.previewImages : [media.coverImage],
-    description: shop.industry || shop.address || null,
-    category: shop.industry || (directoryType === 'service' ? 'Үйлчилгээ' : 'Дэлгүүр'),
+    // industry нь "general" гэх мэт дотоод түлхүүр байж болох тул монгол шошго руу хөрвүүлнэ;
+    // тайлбарт ангиллыг давтахгүй.
+    description: shop.address || null,
+    category: shop.industry ? categoryLabel(shop.industry) : (directoryType === 'service' ? 'Үйлчилгээ' : 'Дэлгүүр'),
     address: shop.address,
     district: shop.district,
     phone: shop.phone,

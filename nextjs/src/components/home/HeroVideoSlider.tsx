@@ -18,11 +18,13 @@ interface BannerData {
   gradient?: string | null;
 }
 
-// Fallback slides when no DB banners exist
+// Админ "Нүүр хуудас CMS"-д Hero banner оруулаагүй үед харагдах слайдууд.
+// Худалдан авагчид чиглэсэн слайд эхэнд; тодорхой хувь/хугацаатай урамшуулал
+// (жишээ нь "70% хямдрал") энд хатуу бичихгүй — бодит кампанийг CMS-ээс оруулна.
 const FALLBACK_SLIDES: BannerData[] = [
   {
-    id: 'f1', badge: 'Шинэ сезон', title: 'Зуны мега хямдрал эхэллээ',
-    subtitle: '70% хүртэл хөнгөлөлт · Шинэ бараа нэмэгдсээр',
+    id: 'f1', badge: 'eseller.mn', title: 'Монголын дэлгүүрүүд нэг дор',
+    subtitle: 'Бараа хайж, харьцуулж, QPay-ээр аюулгүй төлөөрэй',
     buttonText: 'Бараа үзэх', buttonLink: '/store',
     color: '#E8242C', gradient: 'from-[#0d1b2e] to-[#1a3a5c]',
   },
@@ -33,22 +35,16 @@ const FALLBACK_SLIDES: BannerData[] = [
     color: '#C0953C', gradient: 'from-[#1a1200] to-[#3d2e00]',
   },
   {
-    id: 'f3', badge: 'Борлуулагч', title: 'Share хийж орлого ол',
-    subtitle: '10-20% комисс · QR код + богино линк',
-    buttonText: 'Эхлэх', buttonLink: '/become-seller',
-    color: '#534AB7', gradient: 'from-[#1a0d2e] to-[#2d1a5c]',
-  },
-  {
-    id: 'f4', badge: 'Жолооч', title: 'Жолоочоор ажиллаж орлоготой бол',
-    subtitle: 'GPS навигаци · Хүргэлт бүрт орлого',
-    buttonText: 'Бүртгүүлэх', buttonLink: '/become-driver',
-    color: '#D85A30', gradient: 'from-[#1a0a00] to-[#3d1a00]',
-  },
-  {
-    id: 'f5', badge: 'Дэлгүүрийн эзэн', title: 'Дэлгүүрээ нээж онлайн борлуул',
+    id: 'f3', badge: 'Дэлгүүрийн эзэн', title: 'Дэлгүүрээ нээж онлайн борлуул',
     subtitle: 'Эхний 3 сар 0% комисс · Бүрэн dashboard',
     buttonText: 'Дэлгүүр нээх', buttonLink: '/open-shop',
     color: '#1D9E75', gradient: 'from-[#0a1a10] to-[#0d3a20]',
+  },
+  {
+    id: 'f4', badge: 'Борлуулагч', title: 'Share хийж орлого ол',
+    subtitle: '10-20% комисс · QR код + богино линк',
+    buttonText: 'Эхлэх', buttonLink: '/become-seller',
+    color: '#534AB7', gradient: 'from-[#1a0d2e] to-[#2d1a5c]',
   },
 ];
 

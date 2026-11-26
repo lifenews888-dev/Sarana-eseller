@@ -1,11 +1,12 @@
-import { NextRequest } from 'next/server';
-import { json, errorJson } from '@/lib/api-auth';
+import { NextRequest, NextResponse } from 'next/server';
+import { json, errorJson, requireAdmin } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 
-export async function POST(
-  _req: NextRequest,
-  ctx: { params: Promise<{ id: string }> },
-) {
+export async function POST(req: NextRequest,
+  ctx: { params: Promise<{ id: string }> },) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   const { id } = await ctx.params;
 
   const application = await prisma.bNPLApplication.findUnique({

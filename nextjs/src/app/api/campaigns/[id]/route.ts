@@ -1,11 +1,14 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { json, errorJson } from '@/lib/api-auth';
+import { json, errorJson, requireAdmin } from '@/lib/api-auth';
 
 type Ctx = { params: Promise<{ id: string }> };
 
 // GET /api/campaigns/[id]
-export async function GET(_req: NextRequest, ctx: Ctx) {
+export async function GET(req: NextRequest, ctx: Ctx) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const { id } = await ctx.params;
     const campaign = await prisma.campaign.findUnique({ where: { id } });
@@ -18,6 +21,9 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 
 // PATCH /api/campaigns/[id]
 export async function PATCH(req: NextRequest, ctx: Ctx) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const { id } = await ctx.params;
     const existing = await prisma.campaign.findUnique({ where: { id } });
@@ -48,7 +54,10 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
 }
 
 // DELETE /api/campaigns/[id]
-export async function DELETE(_req: NextRequest, ctx: Ctx) {
+export async function DELETE(req: NextRequest, ctx: Ctx) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const { id } = await ctx.params;
     const existing = await prisma.campaign.findUnique({ where: { id } });

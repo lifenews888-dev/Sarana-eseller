@@ -202,14 +202,6 @@ export default function HeroBanner({ onSearch }: { onSearch: () => void }) {
         </div>
       </section>
 
-      {/* Promo strip */}
-      <div style={{ background: 'var(--esl-announce-bg, #1A1A1A)' }}>
-        <div className="max-w-[1320px] mx-auto px-4 py-2.5 flex items-center justify-center gap-6 flex-wrap text-xs" style={{ color: 'var(--esl-announce-text, #E0E0E0)', opacity: 0.7 }}>
-          <span className="flex items-center gap-1.5">🚚 50,000₮+ захиалгад үнэгүй хүргэлт</span>
-          <span className="hidden sm:inline" style={{ opacity: 0.3 }}>|</span>
-          <span className="hidden sm:flex items-center gap-1.5">🔒 QPay аюулгүй төлбөр</span>
-        </div>
-      </div>
     </>
   );
 }

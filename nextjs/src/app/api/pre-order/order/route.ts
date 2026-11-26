@@ -1,13 +1,19 @@
+import { requireAuth } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // POST /api/pre-order/order — place a pre-order (advance payment)
 export async function POST(req: NextRequest) {
   try {
+    // Аюулгүй байдал: userId-г body-оос биш, нэвтэрсэн хэрэглэгчийн токеноос авна
+    const authUser = requireAuth(req);
+    if (authUser instanceof NextResponse) return authUser;
     const body = await req.json();
-    const { productId, buyerId, quantity, notes } = body;
+    const { productId, notes } = body;
+    const buyerId = authUser.id;
+    const quantity = Math.floor(Number(body.quantity));
 
-    if (!productId || !buyerId || !quantity) {
+    if (!productId || !Number.isFinite(quantity) || quantity <= 0) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 

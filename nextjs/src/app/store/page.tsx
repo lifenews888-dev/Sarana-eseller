@@ -666,12 +666,9 @@ export default function StorePage() {
             />
           </div>
 
-          {/* ━━━ Sidebar banner (slot: SIDEBAR_RIGHT, desktop only) ━━━ */}
-          <div className="hidden lg:block w-[300px] shrink-0">
-            <div className="sticky top-[140px]">
-              <BannerSlot slot="SIDEBAR_RIGHT" />
-            </div>
-          </div>
+          {/* ━━━ Sidebar banner (slot: SIDEBAR_RIGHT, desktop only) ━━━
+              Бодит баннер байхгүй үед 300px хоосон багана үлдээхгүй. */}
+          <BannerSlot slot="SIDEBAR_RIGHT" className="hidden lg:block w-[300px] shrink-0 self-start sticky top-[140px]" />
         </div>
 
         {/* ━━━ Section separator banner ━━━ */}
