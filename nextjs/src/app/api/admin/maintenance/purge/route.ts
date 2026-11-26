@@ -142,22 +142,69 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // 3) Бодит устгал
-  const deleted: Record<string, number> = {};
-  for (const [model, ids] of toDelete) {
-    const d = delegate(model);
-    if (!d || !ids.size) continue;
-    let total = 0;
-    for (const part of chunks([...ids], CHUNK)) {
-      try {
-        const r = await d.deleteMany({ where: { id: { in: part } } });
-        total += r.count;
-      } catch (err) {
-        errors.push(`delete ${model}: ${(err as Error).message.slice(0, 120)}`);
-      }
-    }
-    deleted[model] = total;
+  // 3) Бодит устгал — хүүхэд бичлэгээс эхэлж, эцэг рүү. Prisma (MongoDB) required
+  // relation-ийг өөрөө шалгадаг тул саад болсон багцыг дараагийн давталтад дахин оролдоно.
+  const depth = new Map<string, number>();
+  const parentsOf = new Map<string, Set<string>>();
+  for (const e of edges) {
+    if (e.model === e.target) continue;
+    const s = parentsOf.get(e.model) ?? new Set<string>();
+    s.add(e.target);
+    parentsOf.set(e.model, s);
   }
+  const depthOf = (m: string, seen = new Set<string>()): number => {
+    if (depth.has(m)) return depth.get(m)!;
+    if (seen.has(m)) return 0;
+    seen.add(m);
+    let d = 0;
+    for (const p of parentsOf.get(m) ?? []) if (toDelete.has(p)) d = Math.max(d, depthOf(p, seen) + 1);
+    depth.set(m, d);
+    return d;
+  };
+  const order = [...toDelete.keys()].sort((a, b) => depthOf(b) - depthOf(a));
+
+  const remaining = new Map<string, string[]>(order.map((m) => [m, [...toDelete.get(m)!]]));
+  const deleted: Record<string, number> = {};
+  const relationOf = (msg: string) => {
+    const m = msg.replace(/\s+/g, ' ').match(/relation '?`?([\w]+)`?'? between the `?(\w+)`? and `?(\w+)`? models/);
+    return m ? `${m[1]} (${m[2]} ↔ ${m[3]})` : msg.replace(/\s+/g, ' ').slice(-160);
+  };
+  const lastErr = new Map<string, string>();
+
+  for (let pass = 0; pass < 8; pass++) {
+    let progress = 0;
+    for (const model of order) {
+      const ids = remaining.get(model);
+      const d = delegate(model);
+      if (!d || !ids?.length) continue;
+      const left: string[] = [];
+      for (const part of chunks(ids, CHUNK)) {
+        try {
+          const r = await d.deleteMany({ where: { id: { in: part } } });
+          deleted[model] = (deleted[model] ?? 0) + r.count;
+          progress += r.count;
+        } catch {
+          // Багц бүхэлдээ унасан — нэг нэгээр нь оролдож, саадтайг нь ялгана
+          for (const id of part) {
+            try {
+              const r = await d.deleteMany({ where: { id } });
+              deleted[model] = (deleted[model] ?? 0) + r.count;
+              progress += r.count;
+            } catch (err) {
+              left.push(id);
+              lastErr.set(model, relationOf((err as Error).message));
+            }
+          }
+        }
+      }
+      remaining.set(model, left);
+    }
+    if (!progress) break;
+  }
+  const blocked = Object.fromEntries(
+    [...remaining.entries()].filter(([, ids]) => ids.length).map(([m, ids]) => [m, { count: ids.length, reason: lastErr.get(m) }]),
+  );
+  if (Object.keys(blocked).length) errors.push(`Устгагдаагүй үлдсэн: ${JSON.stringify(blocked)}`);
 
   await prisma.adminLog.create({
     data: {
@@ -168,5 +215,5 @@ export async function POST(req: NextRequest) {
     },
   }).catch(() => null);
 
-  return NextResponse.json({ success: true, dryRun: false, deleted, errors });
+  return NextResponse.json({ success: true, dryRun: false, deleted, blocked, errors });
 }

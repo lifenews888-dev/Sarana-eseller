@@ -30,13 +30,13 @@ const DEFAULT_SETTINGS: SiteSettings = {
   },
   statsBar: [
     { icon: '🚚', number: '0+', label: 'Хүргэлт хийгдсэн' },
-    { icon: '🏪', number: '11+', label: 'Дэлгүүр' },
+    { icon: '🏪', number: '0', label: 'Дэлгүүр' },
     { icon: '⭐', number: '4.8', label: 'Үнэлгээ' },
   ],
   footerColumns: [
     { title: 'Дэлгүүр', links: [{ label: 'Бүх бараа', href: '/store' }, { label: 'Зарын булан', href: '/feed' }, { label: 'Дэлгүүрүүд', href: '/shops' }] },
     { title: 'Компани', links: [{ label: 'Бидний тухай', href: '/about' }, { label: 'Холбоо барих', href: '/contact' }] },
-    { title: 'Тусламж', links: [{ label: 'Буцаалт', href: '/returns' }, { label: 'Хүргэлт', href: '/delivery' }] },
+    { title: 'Тусламж', links: [{ label: 'Түгээмэл асуулт', href: '/help' }, { label: 'Захиалга хянах', href: '/orders' }] },
     { title: 'Хууль', links: [{ label: 'Үйлчилгээний нөхцөл', href: '/terms' }, { label: 'Нууцлал', href: '/privacy' }] },
   ],
   paymentIcons: { qpay: true, visa: false, mastercard: false, socialpay: false },
