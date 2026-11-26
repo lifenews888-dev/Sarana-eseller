@@ -23,8 +23,6 @@ import {
 } from 'lucide-react';
 import TierProgress from '@/components/affiliate/TierProgress';
 import ConversionFunnel from '@/components/affiliate/ConversionFunnel';
-import ChannelPerformance from '@/components/affiliate/ChannelPerformance';
-import AISuggestions from '@/components/affiliate/AISuggestions';
 import SalesToolkit from '@/components/affiliate/SalesToolkit';
 import AIProductMentor from '@/components/affiliate/AIProductMentor';
 import AIMarketingStudio from '@/components/affiliate/AIMarketingStudio';
@@ -54,7 +52,10 @@ interface EarningsData {
   monthlyEarnings?: number;
   totalClicks?: number;
   conversionRate?: number;
+  totalConversions?: number;
   sparkData?: number[];
+  sparkDays?: number[];
+  username?: string | null;
 }
 
 const TABS: { key: Tab; label: string; icon: React.ElementType }[] = [
@@ -193,7 +194,8 @@ export default function AffiliateDashboard() {
   const [sellingItem, setSellingItem] = useState<Product | null>(null);
   const [studioProduct, setStudioProduct] = useState<Product | null>(null);
 
-  const username = user?.username || user?.name || 'affiliate';
+  const [profileUsername, setProfileUsername] = useState<string | null>(null);
+  const username = profileUsername || user?.username || 'affiliate';
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://eseller.mn';
   const refLink = `${baseUrl}/r/${username}`;
 
@@ -203,22 +205,12 @@ export default function AffiliateDashboard() {
       const [prodRes, earningsRes, walletRes] = await Promise.allSettled([
         ProductsAPI.list(), AffiliateAPI.getEarnings(), WalletAPI.get(),
       ]);
-      if (prodRes.status === 'fulfilled' && prodRes.value.products?.length) setProducts(prodRes.value.products);
+      if (prodRes.status === 'fulfilled' && prodRes.value.products?.length) setProducts(prodRes.value.products.filter((p: Product & { allowAffiliate?: boolean }) => p.allowAffiliate !== false));
       else setProducts([] as Product[]);
-      if (earningsRes.status === 'fulfilled') setEarnings(earningsRes.value as EarningsData);
-      else setEarnings({
-        totalEarnings: 284000, monthlyEarnings: 67500, totalClicks: 1243, conversionRate: 4.8,
-        sparkData: [12, 24, 18, 32, 28, 45, 38],
-        earnings: [
-          { _id: 'e1', productName: 'Premium цагаан цамц', amount: 3500, status: 'paid', createdAt: '2026-03-28T10:00:00Z' },
-          { _id: 'e2', productName: 'Sporty гутал Air', amount: 6900, status: 'paid', createdAt: '2026-03-25T14:30:00Z' },
-          { _id: 'e3', productName: 'Bluetooth чихэвч', amount: 9900, status: 'pending', createdAt: '2026-04-01T09:15:00Z' },
-          { _id: 'e4', productName: 'Leather цүнх', amount: 7500, status: 'paid', createdAt: '2026-03-20T16:45:00Z' },
-          { _id: 'e5', productName: 'Гоо сайхны багц', amount: 5200, status: 'pending', createdAt: '2026-04-02T11:00:00Z' },
-        ],
-      });
+      if (earningsRes.status === 'fulfilled') { setEarnings(earningsRes.value as EarningsData); const un = (earningsRes.value as EarningsData).username; if (un) setProfileUsername(un); }
+      else setEarnings({ totalEarnings: 0, monthlyEarnings: 0, totalClicks: 0, conversionRate: 0, sparkData: [0, 0, 0, 0, 0, 0, 0], earnings: [] });
       if (walletRes.status === 'fulfilled') setWallet(walletRes.value as WalletData);
-      else setWallet({ balance: 216500, pending: 67500 });
+      else setWallet({ balance: 0, pending: 0 });
     } catch { setProducts([] as Product[]); }
     finally { setLoading(false); }
   }, []);
@@ -234,9 +226,13 @@ export default function AffiliateDashboard() {
   };
 
   const createAffiliateLink = async (product: Product) => {
-    const link = `${baseUrl}/store?ref=${username}&product=${product._id}`;
-    try { await AffiliateAPI.createLink(product._id); } catch {}
-    copyToClipboard(link, product._id);
+    try {
+      const res = await AffiliateAPI.createLink(product._id) as { code?: string };
+      if (!res?.code) throw new Error();
+      copyToClipboard(`${baseUrl}/r/${res.code}`, product._id);
+    } catch {
+      toast.show('Энэ барааны холбоос үүсгэж чадсангүй', 'error');
+    }
   };
 
   const handleWithdraw = async () => {
@@ -253,8 +249,9 @@ export default function AffiliateDashboard() {
   const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('mn-MN', { month: 'short', day: 'numeric' }) : '—';
 
   // Weekly performance data for chart
-  const weekDays = ['Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя', 'Ня'];
-  const weekData = earnings.sparkData || [12, 24, 18, 32, 28, 45, 38];
+  const DAY_LABELS = ['Ня', 'Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя'];
+  const weekDays = (earnings.sparkDays?.length === 7 ? earnings.sparkDays : [1, 2, 3, 4, 5, 6, 0]).map((d) => DAY_LABELS[d]);
+  const weekData = earnings.sparkData?.length === 7 ? earnings.sparkData : [0, 0, 0, 0, 0, 0, 0];
   const maxVal = Math.max(...weekData, 1);
 
   return (
@@ -424,7 +421,7 @@ export default function AffiliateDashboard() {
                       <BarChart3 className="w-4 h-4 text-[#E8242C]" />
                       Долоо хоногийн гүйцэтгэл
                     </h3>
-                    <span className="text-xs text-[var(--esl-text-muted)] bg-[var(--esl-bg-section)] px-2.5 py-1 rounded-lg font-medium">Энэ долоо хоног</span>
+                    <span className="text-xs text-[var(--esl-text-muted)] bg-[var(--esl-bg-section)] px-2.5 py-1 rounded-lg font-medium">Сүүлийн 7 хоног · комисс</span>
                   </div>
                   <div className="flex items-end justify-between gap-2 h-40">
                     {weekData.map((val, i) => (
@@ -436,7 +433,7 @@ export default function AffiliateDashboard() {
                               i === weekData.length - 1 ? 'bg-[#E8242C]' : 'bg-[#E8242C]/20 hover:bg-[#E8242C]/40'
                             )}
                             initial={{ height: 0 }}
-                            animate={{ height: `${(val / maxVal) * 120}px` }}
+                            animate={{ height: `${val > 0 ? Math.max(6, (val / maxVal) * 120) : 3}px` }}
                             transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
                           />
                         </div>
@@ -479,22 +476,17 @@ export default function AffiliateDashboard() {
               </div>
 
               {/* Tier + Funnel + AI */}
-              <div className="grid lg:grid-cols-3 gap-6">
+              <div className="grid lg:grid-cols-2 gap-6">
                 <motion.div variants={fadeUp} custom={5}>
                   <TierProgress totalEarnings={earnings.totalEarnings || 0} monthlySales={earnings.monthlyEarnings || 0} />
                 </motion.div>
                 <motion.div variants={fadeUp} custom={6}>
-                  <ConversionFunnel clicks={earnings.totalClicks} purchases={Math.round((earnings.totalClicks || 0) * (earnings.conversionRate || 0) / 100)} />
+                  <ConversionFunnel clicks={earnings.totalClicks || 0} purchases={earnings.totalConversions || 0} />
                 </motion.div>
-                <motion.div variants={fadeUp} custom={7}>
-                  <AISuggestions />
-                </motion.div>
+
               </div>
 
-              {/* Channel Performance */}
-              <motion.div variants={fadeUp} custom={8}>
-                <ChannelPerformance />
-              </motion.div>
+
             </motion.div>
           )}
 

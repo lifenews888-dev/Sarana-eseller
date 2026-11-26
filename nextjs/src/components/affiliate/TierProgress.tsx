@@ -42,7 +42,7 @@ export default function TierProgress({ totalEarnings, monthlyTarget = 200000, mo
         {nextTier && (
           <div className="text-right">
             <div className="text-[10px] text-[var(--esl-text-muted)] uppercase tracking-wider font-semibold">Дараагийн</div>
-            <div className="text-sm font-bold text-[#0F172A] flex items-center gap-1">
+            <div className="text-sm font-bold text-[var(--esl-text-primary)] flex items-center gap-1">
               {nextTier.name} <ChevronRight className="w-3 h-3" />
             </div>
           </div>
@@ -53,7 +53,7 @@ export default function TierProgress({ totalEarnings, monthlyTarget = 200000, mo
       <div>
         <div className="flex justify-between text-xs mb-1.5">
           <span className="text-[var(--esl-text-muted)] font-medium">Зэрэглэл шилжих</span>
-          <span className="font-bold text-[#0F172A]">{Math.round(progressInTier)}%</span>
+          <span className="font-bold text-[var(--esl-text-primary)]">{Math.round(progressInTier)}%</span>
         </div>
         <div className="h-3 bg-[var(--esl-bg-section)] rounded-full overflow-hidden">
           <motion.div
@@ -65,7 +65,7 @@ export default function TierProgress({ totalEarnings, monthlyTarget = 200000, mo
         </div>
         {nextTier && (
           <div className="text-[11px] text-[var(--esl-text-muted)] mt-1.5">
-            {nextTier.name} зэрэглэлд хүрэхэд <span className="font-bold text-[#0F172A]">{((tier.max - totalEarnings) / 1000).toFixed(0)}K₮</span> дутуу
+            {nextTier.name} зэрэглэлд хүрэхэд <span className="font-bold text-[var(--esl-text-primary)]">{((tier.max - totalEarnings) / 1000).toFixed(0)}K₮</span> дутуу
           </div>
         )}
       </div>

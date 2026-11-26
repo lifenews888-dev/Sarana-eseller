@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Eye, MousePointerClick, ShoppingCart, CreditCard } from 'lucide-react';
+import { MousePointerClick, ShoppingCart, CreditCard } from 'lucide-react';
 
 interface FunnelStep {
   label: string;
@@ -17,24 +17,22 @@ interface ConversionFunnelProps {
   purchases?: number;
 }
 
+// Зөвхөн бодитоор хэмжигддэг 2 алхам: холбоосын товшилт → төлөгдсөн захиалга.
 export default function ConversionFunnel({
-  views = 3240,
-  clicks = 1243,
-  addToCart = 186,
-  purchases = 62,
+  clicks = 0,
+  purchases = 0,
 }: ConversionFunnelProps) {
   const steps: FunnelStep[] = [
-    { label: 'Линк нээсэн', value: views, icon: Eye, color: '#6366F1' },
-    { label: 'Клик хийсэн', value: clicks, icon: MousePointerClick, color: '#EC4899' },
-    { label: 'Сагсанд нэмсэн', value: addToCart, icon: ShoppingCart, color: '#F59E0B' },
+    { label: 'Холбоос дарсан', value: clicks, icon: MousePointerClick, color: '#EC4899' },
     { label: 'Худалдан авсан', value: purchases, icon: CreditCard, color: '#10B981' },
   ];
+  const views = clicks;
 
   const maxVal = steps[0].value || 1;
 
   return (
     <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-2xl p-6">
-      <h3 className="font-bold text-[#0F172A] mb-5 flex items-center gap-2 text-sm">
+      <h3 className="font-bold text-[var(--esl-text-primary)] mb-5 flex items-center gap-2 text-sm">
         <ShoppingCart className="w-4 h-4 text-[#6366F1]" />
         Борлуулалтын шүүлтүүр (Funnel)
       </h3>
@@ -42,7 +40,8 @@ export default function ConversionFunnel({
       <div className="space-y-3">
         {steps.map((step, i) => {
           const pct = (step.value / maxVal) * 100;
-          const convRate = i > 0 ? ((step.value / steps[i - 1].value) * 100).toFixed(1) : '100';
+          const prev = i > 0 ? steps[i - 1].value : 0;
+          const convRate = i === 0 ? '100' : prev > 0 ? Math.min(100, (step.value / prev) * 100).toFixed(1) : '0';
           const StepIcon = step.icon;
 
           return (
@@ -53,7 +52,7 @@ export default function ConversionFunnel({
                   <span className="text-xs font-semibold text-[var(--esl-text-secondary)]">{step.label}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-black text-[#0F172A]">{step.value.toLocaleString()}</span>
+                  <span className="text-sm font-black text-[var(--esl-text-primary)]">{step.value.toLocaleString()}</span>
                   {i > 0 && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded" style={{ background: step.color + '15', color: step.color }}>
                       {convRate}%
@@ -75,7 +74,7 @@ export default function ConversionFunnel({
         })}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-[#F1F5F9] flex items-center justify-between">
+      <div className="mt-4 pt-4 border-t border-[var(--esl-border)] flex items-center justify-between">
         <span className="text-xs text-[var(--esl-text-muted)]">Нийт хөрвүүлэлт</span>
         <span className="text-sm font-black text-[#10B981]">
           {((purchases / (views || 1)) * 100).toFixed(1)}%

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatPrice, cn } from '@/lib/utils';
-import { DEMO_SERVICES, DEMO_SERVICE_CATEGORIES, type Service } from '@/lib/types/service';
+import { DEMO_SERVICE_CATEGORIES, type Service } from '@/lib/types/service';
 import StatCard from '@/components/dashboard/StatCard';
 import {
   Plus, Search, Clock, Star, Edit3, Trash2, X,
@@ -20,7 +20,7 @@ const EMPTY_FORM = { name: '', description: '', price: '', duration: 60, categor
 const EMOJIS = ['✂️', '💇', '💅', '💆', '🧖', '✨', '🎨', '💄', '🧴', '🪒', '🔧', '🖨️', '📷', '💪', '📚', '🧹'];
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>(DEMO_SERVICES);
+  const [services, setServices] = useState<Service[]>([]);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -64,6 +64,9 @@ export default function ServicesPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--esl-text-primary)]">
+        <strong>Тун удахгүй.</strong> Энэ хэсэг одоогоор серверт хадгалагдахгүй байгаа тул энд оруулсан өөрчлөлт хуудсыг хаахад алга болно.
+      </div>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

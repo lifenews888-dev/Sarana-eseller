@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { formatPrice, cn } from '@/lib/utils';
-import { DEMO_APPOINTMENTS, type Appointment, type AppointmentStatus } from '@/lib/types/service';
+import { type Appointment, type AppointmentStatus } from '@/lib/types/service';
 import StatCard from '@/components/dashboard/StatCard';
 import {
   Search, Calendar, Clock, Phone, Check, X, Filter,
@@ -27,7 +27,7 @@ const FILTER_TABS = [
 ];
 
 export default function BookingsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>(DEMO_APPOINTMENTS);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filterStatus, setFilterStatus] = useState('all');
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
@@ -61,6 +61,9 @@ export default function BookingsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--esl-text-primary)]">
+        <strong>Тун удахгүй.</strong> Энэ хэсэг одоогоор серверт хадгалагдахгүй байгаа тул энд оруулсан өөрчлөлт хуудсыг хаахад алга болно.
+      </div>
       {/* Header */}
       <div>
         <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)] tracking-tight">Цаг захиалга</h1>
