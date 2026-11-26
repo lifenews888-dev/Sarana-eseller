@@ -9,23 +9,7 @@ import {
   ShoppingCart, Minus, Plus, Share2, Clock, Truck, Star,
 } from 'lucide-react';
 
-// Demo modifiers for testing (when product has no real modifiers)
-const DEMO_MODIFIERS: ModifierGroupData[] = [
-  {
-    id: 'g1', name: 'Хэмжээ сонгоно уу?', required: true, multiple: false,
-    options: [
-      { id: 'o1', name: 'S', price: 0, available: true },
-      { id: 'o2', name: 'M', price: 0, available: true },
-      { id: 'o3', name: 'L', price: 2000, available: true },
-      { id: 'o4', name: 'XL', price: 4000, available: true },
-    ],
-  },
-];
 
-const DEMO_ADDONS: AddOnData[] = [
-  { id: 'a1', name: 'Чихэвч', price: 15000, image: undefined },
-  { id: 'a2', name: 'Case', price: 8000, image: undefined },
-];
 
 interface ModalBodyProps {
   product: Product;
@@ -47,14 +31,13 @@ export default function ModalBody({ product, qty, setQty, onAddToCart, isAffilia
   const productIdRef = useRef(product._id);
   const productWithOptions = product as ProductWithOptions;
 
-  // Use demo data if product has no modifiers (for demonstration)
   const modifierGroups: ModifierGroupData[] = productWithOptions.modifierGroups?.length
     ? productWithOptions.modifierGroups
-    : (product.category === 'fashion' ? DEMO_MODIFIERS : []);
+    : [];
 
   const addOns: AddOnData[] = productWithOptions.addOns?.length
     ? productWithOptions.addOns
-    : (product.category === 'electronics' ? DEMO_ADDONS : []);
+    : [];
 
   const deliveryFee = product.deliveryFee ?? 0;
   const estimatedMins = product.estimatedMins;

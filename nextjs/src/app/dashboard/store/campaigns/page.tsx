@@ -103,32 +103,6 @@ const AUTOMATION_TEMPLATES = [
   { id: 'winback', name: 'Идэвхгүй буцаах', icon: '💌', trigger: '60 өдөр идэвхгүй үед', steps: 5, active: true },
 ];
 
-const MOCK_CAMPAIGNS: Campaign[] = [
-  {
-    id: '1', refId: 'CMP-001', name: 'Зуны хямдрал 50%', channel: 'SMS',
-    status: 'SENT', stats: { sent: 8420, opened: 6120, clicked: 2340, converted: 456 },
-    dateSent: '2026-03-28',
-  },
-  {
-    id: '2', refId: 'CMP-002', name: 'Шинэ бараа мэдэгдэл', channel: 'EMAIL',
-    status: 'SENT', stats: { sent: 12000, opened: 4800, clicked: 1920, converted: 312 },
-    dateSent: '2026-03-25',
-  },
-  {
-    id: '3', refId: 'CMP-003', name: 'Сагс сануулга', channel: 'PUSH',
-    status: 'SCHEDULED', stats: { sent: 0, opened: 0, clicked: 0, converted: 0 },
-    dateScheduled: '2026-04-10',
-  },
-  {
-    id: '4', refId: 'CMP-004', name: 'VIP хэрэглэгч урамшуулал', channel: 'MULTI',
-    status: 'DRAFT', stats: { sent: 0, opened: 0, clicked: 0, converted: 0 },
-  },
-  {
-    id: '5', refId: 'CMP-005', name: 'Баярын мэндчилгээ', channel: 'EMAIL',
-    status: 'SENDING', stats: { sent: 3200, opened: 1100, clicked: 430, converted: 87 },
-    dateSent: '2026-04-04',
-  },
-];
 
 /* ───────────────────────── helpers ───────────────────────── */
 
@@ -174,10 +148,10 @@ export default function CampaignsPage() {
           const data = await res.json();
           setCampaigns(Array.isArray(data) ? data : data.campaigns ?? []);
         } else if (mounted) {
-          setCampaigns(MOCK_CAMPAIGNS);
+          setCampaigns([]);
         }
       } catch {
-        if (mounted) setCampaigns(MOCK_CAMPAIGNS);
+        if (mounted) setCampaigns([]);
       } finally {
         if (mounted) setLoading(false);
       }

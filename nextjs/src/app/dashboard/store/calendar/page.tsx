@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { cn, formatPrice } from '@/lib/utils';
-import { DEMO_APPOINTMENTS, DEMO_SERVICES, type Appointment } from '@/lib/types/service';
+import { type Appointment } from '@/lib/types/service';
 import {
   ChevronLeft, ChevronRight, Plus, Filter, Clock, User,
 } from 'lucide-react';
@@ -36,7 +36,7 @@ function fmtDate(d: Date): string {
 export default function CalendarPage() {
   const [weekOffset, setWeekOffset] = useState(0);
   const [filterStaff, setFilterStaff] = useState<string | null>(null);
-  const [appointments] = useState<Appointment[]>(DEMO_APPOINTMENTS);
+  const [appointments] = useState<Appointment[]>([]);
 
   const baseDate = useMemo(() => {
     const d = new Date();
@@ -55,6 +55,9 @@ export default function CalendarPage() {
 
   return (
     <div className="space-y-5">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--esl-text-primary)]">
+        <strong>Тун удахгүй.</strong> Энэ хэсэг одоогоор серверт хадгалагдахгүй байгаа тул энд оруулсан өөрчлөлт хуудсыг хаахад алга болно.
+      </div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

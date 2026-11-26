@@ -89,23 +89,17 @@ const STATUS_COLORS: Record<BannerStatus, { bg: string; text: string }> = {
 const EMPTY_STATS: BannerStats = { activeBanners: 0, expiringToday: 0, pending: 0, revenueThisMonth: 0, totalImpressions: 0 };
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const DEMO_STATS: BannerStats = {
-  activeBanners: 24,
-  expiringToday: 3,
-  pending: 7,
-  revenueThisMonth: 4_850_000,
-  totalImpressions: 1_320_000,
-};
 
-const DEMO_SLOTS: SlotInfo[] = [
-  { slot: 'HERO', label: 'Hero баннер', maxConcurrent: 5, currentCount: 4, priceRange: '500,000₮ – 1,200,000₮' },
-  { slot: 'ANNOUNCEMENT', label: 'Мэдэгдэл', maxConcurrent: 3, currentCount: 2, priceRange: '100,000₮ – 300,000₮' },
-  { slot: 'MID_PAGE', label: 'Хуудас дунд', maxConcurrent: 4, currentCount: 3, priceRange: '300,000₮ – 800,000₮' },
-  { slot: 'IN_FEED', label: 'Фийд дотор', maxConcurrent: 6, currentCount: 5, priceRange: '200,000₮ – 500,000₮' },
-  { slot: 'SIDEBAR_RIGHT', label: 'Хажуу баруун', maxConcurrent: 4, currentCount: 1, priceRange: '150,000₮ – 400,000₮' },
-  { slot: 'SECTION_SEPARATOR', label: 'Хэсэг салгагч', maxConcurrent: 3, currentCount: 3, priceRange: '250,000₮ – 600,000₮' },
-  { slot: 'CATEGORY_TOP', label: 'Ангилал дээд', maxConcurrent: 4, currentCount: 2, priceRange: '200,000₮ – 450,000₮' },
-  { slot: 'PRODUCT_BELOW', label: 'Бүтээгдэхүүн доод', maxConcurrent: 6, currentCount: 4, priceRange: '100,000₮ – 350,000₮' },
+// Байршлын багтаамж (тохиргоо). currentCount-ийг идэвхтэй баннераас серверт тоолно.
+const SLOT_CONFIG: SlotInfo[] = [
+  { slot: 'HERO', label: 'Hero баннер', maxConcurrent: 5, currentCount: 0, priceRange: '500,000₮ – 1,200,000₮' },
+  { slot: 'ANNOUNCEMENT', label: 'Мэдэгдэл', maxConcurrent: 3, currentCount: 0, priceRange: '100,000₮ – 300,000₮' },
+  { slot: 'MID_PAGE', label: 'Хуудас дунд', maxConcurrent: 4, currentCount: 0, priceRange: '300,000₮ – 800,000₮' },
+  { slot: 'IN_FEED', label: 'Фийд дотор', maxConcurrent: 6, currentCount: 0, priceRange: '200,000₮ – 500,000₮' },
+  { slot: 'SIDEBAR_RIGHT', label: 'Хажуу баруун', maxConcurrent: 4, currentCount: 0, priceRange: '150,000₮ – 400,000₮' },
+  { slot: 'SECTION_SEPARATOR', label: 'Хэсэг салгагч', maxConcurrent: 3, currentCount: 0, priceRange: '250,000₮ – 600,000₮' },
+  { slot: 'CATEGORY_TOP', label: 'Ангилал дээд', maxConcurrent: 4, currentCount: 0, priceRange: '200,000₮ – 450,000₮' },
+  { slot: 'PRODUCT_BELOW', label: 'Бүтээгдэхүүн доод', maxConcurrent: 6, currentCount: 0, priceRange: '100,000₮ – 350,000₮' },
 ];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -159,7 +153,7 @@ function occupancyBg(ratio: number): string {
 export default function AdminBannersPage() {
   // --- State ---
   const [stats, setStats] = useState<BannerStats>(EMPTY_STATS);
-  const [slots] = useState<SlotInfo[]>(DEMO_SLOTS);
+  const [slots, setSlots] = useState<SlotInfo[]>(SLOT_CONFIG);
   // Админд хуурамч (demo) баннер харуулахгүй — бодит өгөгдөл л харагдана
   const [banners, setBanners] = useState<Banner[]>([]);
   const [total, setTotal] = useState(0);
@@ -186,9 +180,11 @@ export default function AdminBannersPage() {
             revenueThisMonth: Number(d.revenueThisMonth) || 0,
             totalImpressions: Number(d.totalImpressions) || 0,
           });
+          const bySlot = (d.activeBySlot && typeof d.activeBySlot === 'object' ? d.activeBySlot : {}) as Record<string, number>;
+          setSlots(SLOT_CONFIG.map((slot) => ({ ...slot, currentCount: Number(bySlot[slot.slot]) || 0 })));
         }
       })
-      .catch(() => {/* use demo */});
+      .catch(() => {/* статистик ачаалагдаагүй — 0-ээр харуулна */});
   }, []);
 
   // --- Fetch banners ---

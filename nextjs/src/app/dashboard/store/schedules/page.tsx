@@ -25,6 +25,9 @@ export default function SchedulesPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--esl-text-primary)]">
+        <strong>Тун удахгүй.</strong> Энэ хэсэг одоогоор серверт хадгалагдахгүй байгаа тул энд оруулсан өөрчлөлт хуудсыг хаахад алга болно.
+      </div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-[#0F172A]">Ажлын цаг</h1>

@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
 import { SellerProductsAPI as ProductsAPI, Product } from '@/lib/api';
-import { DEMO_PRODUCTS } from '@/lib/utils';
 
 interface InventoryItem {
   product: Product;
@@ -69,12 +68,12 @@ export default function InventoryPage() {
 
     ProductsAPI.list()
       .then((res) => {
-        const prods = res.products?.length ? res.products : (DEMO_PRODUCTS as Product[]);
+        const prods = res.products ?? [];
         setProducts(prods);
         setLoading(false);
       })
       .catch(() => {
-        setProducts(DEMO_PRODUCTS as Product[]);
+        setProducts([]);
         setLoading(false);
       });
   }, []);

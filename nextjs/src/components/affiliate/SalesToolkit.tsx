@@ -21,12 +21,6 @@ interface SalesToolkitProps {
 
 /* ═══ Constants ═══ */
 
-const LIVE_STATS = [
-  { icon: Eye, label: 'Өнөөдөр орсон', value: 24, color: '#6366F1', trend: '+8' },
-  { icon: MousePointerClick, label: 'Клик хийсэн', value: 12, color: '#EC4899', trend: '+3' },
-  { icon: ShoppingCart, label: 'Сагсанд нэмсэн', value: 3, color: '#F59E0B', trend: '+1' },
-  { icon: Check, label: 'Худалдан авсан', value: 1, color: '#10B981', trend: 'Шинэ!' },
-];
 
 const SHARE_CHANNELS: { name: string; icon: LucideIcon; color: string; url: string }[] = [
   { name: 'Messenger', icon: MessageSquare, color: '#0084FF', url: 'https://m.me/?ref=' },
@@ -100,32 +94,6 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
 
   return (
     <div className="space-y-6">
-
-      {/* ════════════════════════════════════════
-          LIVE ANALYTICS BAR
-          ════════════════════════════════════════ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {LIVE_STATS.map((s) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-4 flex items-center gap-3 hover:shadow-sm transition-shadow"
-          >
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: s.color + '12', color: s.color }}>
-              <s.icon className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-[11px] text-[var(--esl-text-muted)] font-medium">{s.label}</div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-lg font-black text-[var(--esl-text-primary)]">{s.value}</span>
-                <span className="text-[10px] font-bold text-emerald-500">{s.trend}</span>
-              </div>
-            </div>
-            <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: s.color }} />
-          </motion.div>
-        ))}
-      </div>
 
       {/* ════════════════════════════════════════
           ONE-CLICK SHARE + SHORT URL

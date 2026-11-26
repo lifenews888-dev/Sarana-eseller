@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { formatPrice, cn } from '@/lib/utils';
-import { DEMO_APPOINTMENTS, type Appointment, type AppointmentStatus } from '@/lib/types/service';
+import { type Appointment, type AppointmentStatus } from '@/lib/types/service';
 import {
   Calendar, Clock, User, Filter, Search, Check, X, Play,
   Phone, MoreVertical, ChevronRight,
@@ -20,7 +20,7 @@ const STATUS_CONFIG: Record<AppointmentStatus, { label: string; bg: string; text
 const FILTER_STATUSES = ['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled'] as const;
 
 export default function AppointmentsPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>(DEMO_APPOINTMENTS);
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [search, setSearch] = useState('');
 
@@ -43,6 +43,9 @@ export default function AppointmentsPage() {
 
   return (
     <div className="space-y-6">
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--esl-text-primary)]">
+        <strong>Тун удахгүй.</strong> Энэ хэсэг одоогоор серверт хадгалагдахгүй байгаа тул энд оруулсан өөрчлөлт хуудсыг хаахад алга болно.
+      </div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

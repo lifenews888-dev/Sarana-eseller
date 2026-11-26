@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const todayEnd = new Date(todayStart.getTime() + 86400000);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    const [active, pending, expiringToday, paidThisMonth, impressionsAgg] = await Promise.all([
+    const [active, pending, expiringToday, paidThisMonth, impressionsAgg, activeBySlot] = await Promise.all([
       prisma.banner.count({ where: { status: 'ACTIVE' } }),
       prisma.banner.count({ where: { status: 'PENDING' } }),
       prisma.banner.count({
@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
         where: { isPaid: true, createdAt: { gte: monthStart } },
       }),
       prisma.banner.aggregate({ _sum: { impressions: true } }),
+      prisma.banner.groupBy({ by: ['slot'], where: { status: 'ACTIVE' }, _count: { _all: true } }),
     ]);
 
     return json({
@@ -33,6 +34,7 @@ export async function GET(req: NextRequest) {
       expiringToday,
       revenueThisMonth: paidThisMonth._sum.price || 0,
       totalImpressions: impressionsAgg._sum.impressions || 0,
+      activeBySlot: Object.fromEntries(activeBySlot.map((r) => [r.slot, r._count._all])),
     });
   } catch (e: unknown) {
     return errorJson((e as Error).message, 500);
