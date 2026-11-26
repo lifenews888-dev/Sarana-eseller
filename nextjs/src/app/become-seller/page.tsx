@@ -231,7 +231,7 @@ export default function BecomeSellerPage() {
           <div className="w-16 h-16 rounded-full bg-[rgba(16,185,129,0.15)] flex items-center justify-center mx-auto mb-4">
             <Check className="w-8 h-8 text-[#10B981]" />
           </div>
-          <h2 className="text-xl font-black text-white mb-2">Дэлгүүр амжилттай нээгдлээ!</h2>
+          <h2 className="text-xl font-black text-[var(--esl-text-primary)] mb-2">Дэлгүүр амжилттай нээгдлээ!</h2>
           <p className="text-sm text-[var(--esl-text-muted)] mb-6">
             Та одоо Dashboard-аас бараа нэмж, дэлгүүрээ тохируулж эхлэх боломжтой.
           </p>
@@ -253,9 +253,9 @@ export default function BecomeSellerPage() {
         <div className="max-w-3xl mx-auto w-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 no-underline">
             <EsellerLogo size={22} />
-            <span className="text-base font-black text-white">eseller<span className="text-[#E31E24]">.mn</span></span>
+            <span className="text-base font-black text-[var(--esl-text-primary)]">eseller<span className="text-[#E31E24]">.mn</span></span>
           </Link>
-          <span className="text-xs text-[var(--esl-text-muted)]">Борлуулагч бүртгэл</span>
+          <span className="text-xs text-[var(--esl-text-muted)]">Дэлгүүр нээх</span>
         </div>
       </nav>
 
@@ -268,7 +268,7 @@ export default function BecomeSellerPage() {
         </div>
         <div className="text-center mb-6">
           <span className="text-xs text-[var(--esl-text-muted)]">Алхам {step + 1}/{STEPS.length}</span>
-          <h2 className="text-xl font-black text-white mt-1">{STEPS[step]}</h2>
+          <h2 className="text-xl font-black text-[var(--esl-text-primary)] mt-1">{STEPS[step]}</h2>
         </div>
 
         <AnimatePresence mode="wait">
@@ -288,7 +288,7 @@ export default function BecomeSellerPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-bold text-white">{d.label}</span>
+                          <span className="text-sm font-bold text-[var(--esl-text-primary)]">{d.label}</span>
                           {d.badge && <span className="text-[10px] font-bold bg-[#E8242C] text-white px-2 py-0.5 rounded-full">{d.badge}</span>}
                         </div>
                         <p className="text-xs text-[var(--esl-text-muted)] mb-2">{d.subtitle}</p>
@@ -317,26 +317,26 @@ export default function BecomeSellerPage() {
                   <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Нэр *</label>
                   <input type="text" value={form.name} onChange={(e) => handleNameChange(e.target.value)}
                     placeholder={entityType === 'agent' ? 'Овог нэр' : 'Бизнесийн нэр'}
-                    className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555] transition" />
+                    className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)] transition" />
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Slug (URL)</label>
                   <div className="flex">
                     <span className="px-4 py-3 bg-[var(--esl-bg-elevated)] border border-r-0 border-[var(--esl-border)] rounded-l-xl text-xs text-[var(--esl-text-muted)]">eseller.mn/</span>
                     <input type="text" value={form.slug} onChange={(e) => updateForm('slug', toSellerSlug(e.target.value))}
-                      className="flex-1 px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-r-xl text-sm font-mono text-white outline-none focus:border-[#E8242C]" />
+                      className="flex-1 px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-r-xl text-sm font-mono text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C]" />
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block"><Phone className="w-3 h-3 inline mr-1" />Утас *</label>
                     <input type="tel" value={form.phone} onChange={(e) => updateForm('phone', e.target.value)} placeholder="9911-2233"
-                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block"><Mail className="w-3 h-3 inline mr-1" />Имэйл</label>
                     <input type="email" value={form.email} onChange={(e) => updateForm('email', e.target.value)}
-                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                   </div>
                 </div>
 
@@ -347,7 +347,7 @@ export default function BecomeSellerPage() {
                       <div>
                         <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Эх улс</label>
                         <select value={form.sourceCountry} onChange={(e) => updateForm('sourceCountry', e.target.value)}
-                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none cursor-pointer">
+                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none cursor-pointer">
                           <option value="">Сонгох...</option>
                           {['🇨🇳 Хятад', '🇰🇷 Солонгос', '🇯🇵 Япон', '🇺🇸 АНУ', '🇹🇷 Турк', '🇩🇪 Герман', '🇬🇧 Их Британи'].map(c => <option key={c} value={c}>{c}</option>)}
                         </select>
@@ -355,19 +355,19 @@ export default function BecomeSellerPage() {
                       <div>
                         <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Хүргэлтийн хоног</label>
                         <input type="number" min={1} max={365} value={form.deliveryDays} onChange={(e) => updateForm('deliveryDays', e.target.value)} placeholder="14"
-                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Мин. захиалга (ш)</label>
                         <input type="number" min={1} value={form.minimumOrderQty} onChange={(e) => updateForm('minimumOrderQty', e.target.value)} placeholder="1"
-                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Урьдчилгаа %</label>
                         <input type="number" min={0} max={100} value={form.advancePaymentPct} onChange={(e) => updateForm('advancePaymentPct', String(Math.min(100, Math.max(0, Number(e.target.value) || 0))))} placeholder="30"
-                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                          className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                       </div>
                     </div>
                   </>
@@ -376,7 +376,7 @@ export default function BecomeSellerPage() {
                 <div>
                   <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Товч тайлбар</label>
                   <textarea value={form.description} onChange={(e) => updateForm('description', e.target.value)} rows={3} placeholder="Бизнесийн тухай товчхон..."
-                    maxLength={200} className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555] resize-none" />
+                    maxLength={200} className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)] resize-none" />
                   <div className="text-[10px] text-[#555] text-right">{form.description.length}/200</div>
                 </div>
               </div>
@@ -395,7 +395,7 @@ export default function BecomeSellerPage() {
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">ААН бүртгэлийн дугаар</label>
                       <input type="text" value={form.regNumber} onChange={(e) => updateForm('regNumber', e.target.value)} placeholder="1234567"
-                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                     </div>
                     <div className="border-2 border-dashed border-[var(--esl-border)] rounded-xl p-6 text-center cursor-pointer hover:border-[#555] transition">
                       <Upload className="w-8 h-8 text-[#3D3D3D] mx-auto mb-2" />
@@ -410,7 +410,7 @@ export default function BecomeSellerPage() {
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Зуучийн лицензийн дугаар</label>
                       <input type="text" value={form.licenseNumber} onChange={(e) => updateForm('licenseNumber', e.target.value)} placeholder="RE-2024-XXXX"
-                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                     </div>
                     <div className="border-2 border-dashed border-[var(--esl-border)] rounded-xl p-6 text-center cursor-pointer hover:border-[#555] transition">
                       <FileText className="w-8 h-8 text-[#3D3D3D] mx-auto mb-2" />
@@ -460,12 +460,12 @@ export default function BecomeSellerPage() {
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block"><MapPin className="w-3 h-3 inline mr-1" />Хаяг</label>
                       <input type="text" value={form.address} onChange={(e) => updateForm('address', e.target.value)} placeholder="Дэлгэрэнгүй хаяг"
-                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Дүүрэг</label>
                       <select value={form.district} onChange={(e) => updateForm('district', e.target.value)}
-                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none cursor-pointer">
+                        className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none cursor-pointer">
                         <option value="">Сонгох...</option>
                         {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                       </select>
@@ -476,12 +476,12 @@ export default function BecomeSellerPage() {
                   <div>
                     <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block"><Globe className="w-3 h-3 inline mr-1" />Вэбсайт</label>
                     <input type="url" value={form.website} onChange={(e) => updateForm('website', e.target.value)} placeholder="https://..."
-                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                   </div>
                   <div>
                     <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Facebook</label>
                     <input type="text" value={form.socialFb} onChange={(e) => updateForm('socialFb', e.target.value)} placeholder="fb.com/..."
-                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
+                      className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-[var(--esl-text-primary)] outline-none focus:border-[#E8242C] placeholder:text-[var(--esl-text-disabled)]" />
                   </div>
                 </div>
               </div>
@@ -504,7 +504,7 @@ export default function BecomeSellerPage() {
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: plan.color + '15', color: plan.color }}>
                           <plan.Icon className="w-5 h-5" />
                         </div>
-                        <h3 className="text-base font-extrabold text-white">{plan.name}</h3>
+                        <h3 className="text-base font-extrabold text-[var(--esl-text-primary)]">{plan.name}</h3>
                         <p className="text-lg font-black mt-1" style={{ color: plan.color }}>{plan.price}</p>
                         <ul className="mt-3 space-y-1.5">
                           {plan.features.map(f => (
@@ -531,7 +531,7 @@ export default function BecomeSellerPage() {
 
                 {/* Review summary */}
                 <div className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] p-5 space-y-2 text-sm">
-                  <h3 className="text-sm font-bold text-white mb-3">Шалгаж баталгаажуулна уу</h3>
+                  <h3 className="text-sm font-bold text-[var(--esl-text-primary)] mb-3">Шалгаж баталгаажуулна уу</h3>
                   {[
                     ['Төрөл', `${def.label}`],
                     ['Нэр', form.name],
@@ -543,7 +543,7 @@ export default function BecomeSellerPage() {
                   ].map(([label, value]) => (
                     <div key={label} className="flex justify-between py-2 border-b border-[var(--esl-border)]">
                       <span className="text-[var(--esl-text-muted)]">{label}</span>
-                      <span className="font-semibold text-white">{value}</span>
+                      <span className="font-semibold text-[var(--esl-text-primary)]">{value}</span>
                     </div>
                   ))}
                 </div>
@@ -578,7 +578,7 @@ export default function BecomeSellerPage() {
         <div className="flex items-center justify-between mt-8">
           {step > 0 ? (
             <button onClick={() => setStep(s => s - 1)}
-              className="text-sm text-[var(--esl-text-muted)] hover:text-white transition-colors bg-transparent border-none cursor-pointer">
+              className="text-sm text-[var(--esl-text-muted)] hover:text-[var(--esl-text-primary)] transition-colors bg-transparent border-none cursor-pointer">
               ← Өмнөх
             </button>
           ) : <span />}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { priceOrder, OrderPricingError } from '@/lib/order-pricing';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { resolveReferral } from '@/lib/affiliate-attribution';
 import { getAuthUser, getPreferredShopId, getShopForUser } from '@/lib/api-auth';
 
 function normalizeItems(items: unknown): Record<string, unknown>[] {
@@ -91,6 +92,7 @@ export async function POST(req: NextRequest) {
   const total = priced.total;
 
   const preferredShopId = typeof body.shopId === 'string' ? body.shopId : getPreferredShopId(req);
+  const referral = await resolveReferral(req, user.id, body.referralCode).catch(() => null);
   const count = await prisma.order.count();
   const order = await prisma.order.create({
     data: {
@@ -100,7 +102,8 @@ export async function POST(req: NextRequest) {
       items: items as unknown as Prisma.InputJsonValue[],
       total,
       status: 'pending',
-      referralCode: typeof body.referralCode === 'string' ? body.referralCode : null,
+      referralCode: referral?.referralCode ?? null,
+      sellerProfileId: referral?.sellerProfileId ?? null,
       delivery: body.delivery || undefined,
       paymentMethod: typeof body.paymentMethod === 'string' ? body.paymentMethod : null,
       deliveryAddress: typeof body.deliveryAddress === 'string' ? body.deliveryAddress : null,

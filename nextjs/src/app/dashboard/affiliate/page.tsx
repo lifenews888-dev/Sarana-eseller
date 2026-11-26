@@ -195,7 +195,7 @@ export default function AffiliateDashboard() {
 
   const username = user?.username || user?.name || 'affiliate';
   const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://eseller.mn';
-  const refLink = `${baseUrl}/store?ref=${username}`;
+  const refLink = `${baseUrl}/r/${username}`;
 
   const loadData = useCallback(async () => {
     setLoading(true);

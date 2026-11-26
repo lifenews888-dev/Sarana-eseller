@@ -4,6 +4,7 @@ import { priceOrder, OrderPricingError } from '@/lib/order-pricing';
 import { createInvoice, isDemoMode, createDemoInvoice } from '@/lib/payment/qpay';
 import { generateQRCode } from '@/lib/share/generateShareContent';
 import { getAuthUser } from '@/lib/api-auth';
+import { resolveReferral } from '@/lib/affiliate-attribution';
 import { sendExpoPush } from '@/lib/push';
 
 export async function POST(req: NextRequest) {
@@ -15,7 +16,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { items, deliveryAddress, phone, sellerProfileId } = body;
+    const { items, deliveryAddress, phone } = body;
+    // Борлуулагчийг клиентийн өгсөн ID-гаар биш, ref cookie/кодоор серверт тодорхойлно.
+    const referral = await resolveReferral(req, authUser.id, body.referralCode).catch(() => null);
 
     // Нийт дүнг клиентийн totalAmount/price-аас биш, DB-ээс тооцоолно.
     let priced;
@@ -58,7 +61,8 @@ export async function POST(req: NextRequest) {
         status: 'pending',
         deliveryAddress: deliveryAddress || undefined,
         paymentMethod: 'qpay',
-        sellerProfileId: sellerProfileId || undefined,
+        sellerProfileId: referral?.sellerProfileId ?? undefined,
+        referralCode: referral?.referralCode ?? undefined,
         delivery: phone ? { phone } : undefined,
       },
     });

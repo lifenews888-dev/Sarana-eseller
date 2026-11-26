@@ -1018,8 +1018,8 @@ export default function EntityProfilePage() {
             <span className="text-base font-black text-white hidden sm:block">eseller<span className="text-[#E31E24]">.mn</span></span>
           </Link>
           <div className="flex-1" />
-          <Link href="/feed" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-white transition">Зарын булан</Link>
-          <Link href="/shops" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-white transition">Дэлгүүрүүд</Link>
+          <Link href="/feed" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-[var(--esl-text-primary)] transition">Зарын булан</Link>
+          <Link href="/shops" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-[var(--esl-text-primary)] transition">Дэлгүүрүүд</Link>
         </div>
       </nav>
 
@@ -1124,7 +1124,7 @@ export default function EntityProfilePage() {
           )}
           <div className="flex-1" />
           {entity.website && (
-            <a href={`https://${entity.website}`} target="_blank" rel="noopener" className="text-xs text-[var(--esl-text-muted)] hover:text-white transition no-underline flex items-center gap-1">
+            <a href={`https://${entity.website}`} target="_blank" rel="noopener" className="text-xs text-[var(--esl-text-muted)] hover:text-[var(--esl-text-primary)] transition no-underline flex items-center gap-1">
               <Globe className="w-3 h-3" /> {entity.website}
             </a>
           )}

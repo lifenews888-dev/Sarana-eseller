@@ -753,7 +753,7 @@ export default function StorePage() {
                   {[
                     { t: 'Бүх дэлгүүрүүд', h: '/shops' },
                     { t: 'Gold гишүүнчлэл', h: '/gold' },
-                    { t: 'Борлуулагч болох', h: '/become-seller' },
+                    { t: 'Борлуулагч болох', h: '/become-affiliate' },
                     { t: 'Нэвтрэх', h: '/login' },
                   ].map(l => (
                     <li key={l.t}><Link href={l.h} className="text-xs text-white/35 hover:text-white no-underline transition">{l.t}</Link></li>

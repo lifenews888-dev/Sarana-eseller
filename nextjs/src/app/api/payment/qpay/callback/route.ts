@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendExpoPush } from '@/lib/push';
+import { recordAffiliateCommission } from '@/lib/affiliate-attribution';
 
 /**
  * QPay webhook callback
@@ -118,6 +119,11 @@ async function handleCallback(req: NextRequest): Promise<NextResponse> {
       });
     } catch (e) {
       console.error('[QPay callback] Order update failed:', e);
+    }
+
+    // Борлуулагчийн комисс (idempotent)
+    if (confirmedOrder?.id) {
+      await recordAffiliateCommission(confirmedOrder.id).catch((e) => console.error('[QPay callback] Commission failed:', e));
     }
 
     // Push buyer — payment confirmed

@@ -302,7 +302,7 @@ export default function ProductGrid({
                   Зар нэмэх
                 </Link>
                 <button onClick={onClearFilters}
-                  className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-5 py-2.5 text-sm font-bold text-[var(--esl-text-muted)] transition hover:text-white">
+                  className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-5 py-2.5 text-sm font-bold text-[var(--esl-text-muted)] transition hover:text-[var(--esl-text-primary)]">
                   Шүүлтүүр цэвэрлэх
                 </button>
               </div>
