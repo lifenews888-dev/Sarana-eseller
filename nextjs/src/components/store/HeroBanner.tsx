@@ -11,12 +11,14 @@ const FEATURES = [
   { icon: Sparkles, title: 'Шинэ ирэлтүүд', sub: 'Долоо хоног бүр', color: '#7C3AED' },
 ];
 
-// Demo banners (will be replaced by API data)
+// Админаас баннер ороогүй үед харагдах үндсэн баннерууд.
+// Анхаар: тодорхой хувь, барааны тоо, хугацаатай урамшуулал энд бичихгүй —
+// бодит кампанит ажлыг /dashboard/admin-аас HERO slot-д оруулна.
 const DEMO_BANNERS = [
   {
     id: 'b1',
-    title: 'Зуны Мега Хямдрал',
-    subtitle: '70% хүртэл хөнгөлөлт · 500+ бараанд',
+    title: 'Монголын дэлгүүрүүд нэг дор',
+    subtitle: 'Бараа хайж, харьцуулж, QPay-ээр аюулгүй төлөөрэй',
     bgColor: '#E8242C',
     gradient: 'from-[#E31E24] via-[#C41A1F] to-[#8B0000]',
     linkUrl: '/store?deal=1',
@@ -33,21 +35,12 @@ const DEMO_BANNERS = [
   },
   {
     id: 'b3',
-    title: 'Шинэ дэлгүүрүүд нэмэгдлээ',
-    subtitle: 'Өдөр бүр шинэ брэнд · 5,000+ бараа',
+    title: 'Шинэ дэлгүүрүүд нэгдэж байна',
+    subtitle: 'Дотоодын брэнд, жижиг бизнесүүдийг дэмжээрэй',
     bgColor: '#6366F1',
     gradient: 'from-[#6366F1] via-[#4F46E5] to-[#3730A3]',
     linkUrl: '/shops',
     cta: 'Дэлгүүрүүд',
-  },
-  {
-    id: 'b4',
-    title: 'Захиалгын дэлгүүр нээгдлээ',
-    subtitle: 'Гадаадаас захиалга · Pre-order систем',
-    bgColor: '#059669',
-    gradient: 'from-[#059669] via-[#047857] to-[#064E3B]',
-    linkUrl: '/become-seller',
-    cta: 'Дэлгэрэнгүй',
   },
 ];
 
@@ -212,11 +205,9 @@ export default function HeroBanner({ onSearch }: { onSearch: () => void }) {
       {/* Promo strip */}
       <div style={{ background: 'var(--esl-announce-bg, #1A1A1A)' }}>
         <div className="max-w-[1320px] mx-auto px-4 py-2.5 flex items-center justify-center gap-6 flex-wrap text-xs" style={{ color: 'var(--esl-announce-text, #E0E0E0)', opacity: 0.7 }}>
-          <span className="flex items-center gap-1.5">🔥 50% хямдрал электроник бараанд</span>
+          <span className="flex items-center gap-1.5">🚚 50,000₮+ захиалгад үнэгүй хүргэлт</span>
           <span className="hidden sm:inline" style={{ opacity: 0.3 }}>|</span>
-          <span className="hidden sm:flex items-center gap-1.5">🎁 Шинэ хэрэглэгчдэд 10,000₮ купон</span>
-          <span className="hidden md:inline" style={{ opacity: 0.3 }}>|</span>
-          <span className="hidden md:flex items-center gap-1.5">🚚 50,000₮+ үнэгүй хүргэлт</span>
+          <span className="hidden sm:flex items-center gap-1.5">🔒 QPay аюулгүй төлбөр</span>
         </div>
       </div>
     </>

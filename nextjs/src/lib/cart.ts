@@ -38,6 +38,8 @@ export interface CartItem extends Product {
 interface CartStore {
   items: CartItem[];
   load: () => void;
+  /** Сагсан дахь барааны үнийг серверээс шинэчилж, худалдаанаас гарсныг хасна. */
+  refresh: () => Promise<{ priceChanged: number; removed: number }>;
   add: (product: Product, qty?: number, modifiers?: SelectedModifier[], addOns?: SelectedAddOn[]) => void;
   updateQty: (lineIndex: number, qty: number) => void;
   remove: (lineIndex: number) => void;
@@ -97,6 +99,52 @@ export const useCartStore = create<CartStore>((set, get) => ({
     }
   },
 
+  refresh: async () => {
+    const current = get().items;
+    if (typeof window === 'undefined' || current.length === 0) return { priceChanged: 0, removed: 0 };
+    const ids = Array.from(new Set(current.map((i) => i._id)));
+    const validIds = ids.filter((id) => /^[a-f\d]{24}$/i.test(id));
+    // undefined = мэдээлэл авч чадаагүй (хуучнаар үлдээнэ), null = худалдаанаас гарсан
+    const fresh = new Map<string, Product | null>();
+    ids.filter((id) => !validIds.includes(id)).forEach((id) => fresh.set(id, null));
+    if (validIds.length > 0) {
+      try {
+        const res = await fetch(`/api/products/prices?ids=${validIds.join(',')}`, { cache: 'no-store' });
+        if (res.ok) {
+          const json = await res.json();
+          const list = ((json && json.data && json.data.products) || []) as Product[];
+          validIds.forEach((id) => fresh.set(id, null));
+          list.forEach((p) => fresh.set(p._id, p));
+        }
+      } catch { /* offline — хуучнаар нь үлдээнэ */ }
+    }
+
+    let priceChanged = 0;
+    let removed = 0;
+    // Сагсанд хийснээс хойш өөрчлөгдсөн байж болох тул get()-ээр дахин уншина
+    const next: CartItem[] = [];
+    for (const item of get().items) {
+      const p = fresh.get(item._id);
+      if (p === null) { removed++; continue; }
+      if (!p) { next.push(item); continue; }
+      const unitPrice = calcUnitPrice(p, item.selectedModifiers || []);
+      if (unitPrice !== item.unitPrice) priceChanged++;
+      next.push({
+        ...item,
+        name: p.name ?? item.name,
+        images: p.images ?? item.images,
+        price: p.price,
+        salePrice: p.salePrice ?? undefined,
+        stock: p.stock ?? item.stock,
+        unitPrice,
+        lineTotal: calcLineTotal(unitPrice, item.qty, item.selectedAddOns || []),
+      });
+    }
+    persist(next);
+    set({ items: next });
+    return { priceChanged, removed };
+  },
+
   add: (product, qty = 1, modifiers = [], addOns = []) => {
     const items = [...get().items];
     const unitPrice = calcUnitPrice(product, modifiers);
@@ -105,6 +153,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
     const existingIdx = items.findIndex((item) => isSameLine(item, { product, modifiers }));
 
     if (existingIdx >= 0) {
+      items[existingIdx] = { ...items[existingIdx], ...product, unitPrice };
       items[existingIdx].qty += qty;
       items[existingIdx].lineTotal = calcLineTotal(unitPrice, items[existingIdx].qty, items[existingIdx].selectedAddOns);
     } else {

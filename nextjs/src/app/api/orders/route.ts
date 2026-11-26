@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { priceOrder, OrderPricingError } from '@/lib/order-pricing';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser, getPreferredShopId, getShopForUser } from '@/lib/api-auth';
@@ -71,16 +72,23 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const items = normalizeItems(body.items);
-  if (items.length === 0) {
-    return NextResponse.json({ success: false, error: 'Захиалгын бараа шаардлагатай' }, { status: 400 });
-  }
 
-  const total = Number(body.total) || items.reduce((sum, item) => {
-    const price = Number(item.price) || Number((item.product as Record<string, unknown> | undefined)?.price) || 0;
-    const quantity = Number(item.quantity) || 1;
-    return sum + price * quantity;
-  }, 0);
+  // Үнэ, нийт дүнг клиентээс биш, өгөгдлийн сангаас дахин тооцоолно.
+  let priced;
+  try {
+    priced = await priceOrder({
+      items: body.items,
+      couponCode: body.couponCode,
+      loyaltyPoints: body.loyaltyPoints,
+    });
+  } catch (error) {
+    if (error instanceof OrderPricingError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    }
+    throw error;
+  }
+  const items = priced.items;
+  const total = priced.total;
 
   const preferredShopId = typeof body.shopId === 'string' ? body.shopId : getPreferredShopId(req);
   const count = await prisma.order.count();
@@ -89,7 +97,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       shopId: preferredShopId || null,
       orderNumber: `ORD-${String(count + 1).padStart(6, '0')}`,
-      items: items as Prisma.InputJsonValue[],
+      items: items as unknown as Prisma.InputJsonValue[],
       total,
       status: 'pending',
       referralCode: typeof body.referralCode === 'string' ? body.referralCode : null,

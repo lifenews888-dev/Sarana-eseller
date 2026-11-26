@@ -88,7 +88,11 @@ type DetailQualityProfile = {
   evidenceKeys: string[];
 };
 
-export default function FeedDetailClient({ post }: { post: FeedPost }) {
+export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) {
+  // seed/demo дотоод ID-г хэрэглэгчид харуулахгүй
+  const post: FeedPost = rawPost.refId && /^(seed|demo)[-_]/i.test(rawPost.refId)
+    ? { ...rawPost, refId: undefined }
+    : rawPost;
   const router = useRouter();
   const et = resolveFeedDetailType(post.entityType, post.subcategory || post.category);
   const config = ENTITY_CARD_CONFIG[et];
@@ -100,6 +104,7 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
   const media: MediaItem[] = post.media.length > 0
     ? post.media
     : post.images.map((url, i) => ({ type: 'IMAGE' as const, url, sortOrder: i }));
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const imageCount = media.filter((item) => item.type === 'IMAGE').length || post.images.length;
 
   function handleBack() {
@@ -146,7 +151,8 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
 
         <EntityFields et={et} meta={meta} post={post} />
 
-        <ListingQualitySummary post={post} et={et} imageCount={imageCount} />
+        {/* Мэдээллийн бүрэн байдлын шалгалт нь зар нэмэгчид зориулсан тул
+            худалдан авагчийн харагдацаас хасав (зар оруулах/засах самбарт харагдана). */}
 
         {post.description ? (
           <section className="rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] p-4">
@@ -202,9 +208,9 @@ export default function FeedDetailClient({ post }: { post: FeedPost }) {
             <Phone size={18} /> {config.primaryCta}
           </a>
         ) : (
-          <button disabled className="w-full h-12 rounded-xl font-semibold text-white/60 text-sm flex items-center justify-center gap-2 cursor-not-allowed" style={{ background: config.color, opacity: 0.55 }}>
-            <Phone size={18} /> Холбогдох утас алга
-          </button>
+          <p className="rounded-xl border border-dashed border-[var(--esl-border)] px-4 py-3 text-center text-xs text-[var(--esl-text-muted)]">
+            Зар нэмэгч холбоо барих утсаа оруулаагүй байна. Доорх линкээр хуваалцах эсвэл хадгалаад дараа нь шалгаарай.
+          </p>
         )}
 
         <ShareWishlistBar url={`/feed/${post._id}`} title={post.title} productId={post._id} />
@@ -550,6 +556,8 @@ function DetailedSpecs({ et, meta, post }: { et: DetailEntityType; meta: FeedMet
   return <GenericDetails meta={meta} post={post} category={post.category} subcategory={post.subcategory} />;
 }
 
+// Зар нэмэгчийн самбарт ашиглахаар үлдээв.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function ListingQualitySummary({
   post,
   et,
@@ -978,20 +986,12 @@ function ProductInquiryPanel({
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
-              <Phone size={16} /> Утас алга
-            </button>
-          )}
+          ) : null}
           {sms ? (
             <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
               <MessageCircle size={16} /> Мессеж
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
-              <MessageCircle size={16} /> Мессеж алга
-            </button>
-          )}
+          ) : null}
           <button
             type="button"
             onClick={copyListingLink}
@@ -1138,20 +1138,12 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
-              <Phone size={16} /> Утас алга
-            </button>
-          )}
+          ) : null}
           {sms ? (
             <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
               <MessageCircle size={16} /> Мессеж
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
-              <MessageCircle size={16} /> Мессеж алга
-            </button>
-          )}
+          ) : null}
           <button
             type="button"
             onClick={copyListingLink}
@@ -1280,20 +1272,12 @@ function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
-              <Phone size={16} /> Утас алга
-            </button>
-          )}
+          ) : null}
           {sms ? (
             <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
               <MessageCircle size={16} /> Мессеж
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
-              <MessageCircle size={16} /> Мессеж алга
-            </button>
-          )}
+          ) : null}
           <button
             type="button"
             onClick={copyListingLink}
@@ -2343,20 +2327,12 @@ function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPos
             <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
               <Phone size={16} /> Залгаж лавлах
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
-              <Phone size={16} /> Утас алга
-            </button>
-          )}
+          ) : null}
           {sms ? (
             <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
               <MessageCircle size={16} /> Мессеж
             </a>
-          ) : (
-            <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
-              <MessageCircle size={16} /> Мессеж алга
-            </button>
-          )}
+          ) : null}
           <button
             type="button"
             onClick={copyListingLink}

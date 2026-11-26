@@ -107,6 +107,11 @@ export default function CheckoutPage() {
   useEffect(() => {
     cart.load();
     setMounted(true);
+    // Сагсанд хийснээс хойш үнэ өөрчлөгдсөн бол шинэ үнийг харуулна
+    void useCartStore.getState().refresh().then(({ priceChanged, removed }) => {
+      if (removed > 0) toast.show(`${removed} бараа худалдаанаас гарсан тул сагснаас хасагдлаа`, 'warn');
+      else if (priceChanged > 0) toast.show('Зарим барааны үнэ шинэчлэгдлээ', 'warn');
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auth guard
@@ -214,10 +219,11 @@ export default function CheckoutPage() {
         items: items.map((item) => ({
           product: item._id,
           name: item.name,
-          price: item.salePrice || item.price,
+          price: item.unitPrice,
           quantity: item.qty,
         })),
         total,
+        ...(couponCode ? { couponCode } : {}),
         delivery: {
           phone: form.phone.trim(),
           address: {

@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { Search, SlidersHorizontal, Grid3X3, List, Loader2, X, Store, Home, Car, BellRing, Star, Package } from 'lucide-react';
 import SearchBar from '@/components/search/SearchBar';
 import SafeImage from '@/components/ui/SafeImage';
+import Navbar from '@/components/shared/Navbar';
+import MobileNav from '@/components/shared/MobileNav';
 
 const DISTRICTS = ['СБД', 'БЗД', 'ЧД', 'ХУД', 'СХД', 'БГД', 'НД', 'БНД', 'ХНД'];
 const ENTITY_TYPES = [
@@ -71,7 +73,8 @@ function SearchPage() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'var(--esl-bg-page)' }}>
+    <div className="min-h-screen pb-20 pt-16 md:pb-0" style={{ background: 'var(--esl-bg-page)' }}>
+      <Navbar />
       {/* Search header */}
       <div className="border-b py-4 px-4" style={{ borderColor: 'var(--esl-border)', background: 'var(--esl-bg-card)' }}>
         <div className="max-w-6xl mx-auto">
@@ -190,6 +193,7 @@ function SearchPage() {
           )}
         </div>
       </div>
+      <MobileNav />
     </div>
   );
 }

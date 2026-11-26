@@ -1,4 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import { isPublicShopName, isSellableProduct, normalizePublicPricing, publicProductWhere } from '@/lib/product-visibility';
+import { getEffectiveUnitPrice } from '@/lib/utils';
 import { Truck, RefreshCw, Lock, Star } from 'lucide-react';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
@@ -52,14 +54,14 @@ async function getHomeData() {
         include: { media: true },
       }),
       prisma.shop.findMany({
-        where: { isBlocked: false },
+        where: { isBlocked: false, isDemo: false },
         orderBy: { createdAt: 'desc' },
-        take: 6,
+        take: 40,
       }),
       prisma.product.findMany({
-        where: { isActive: true, salePrice: { not: null } },
+        where: publicProductWhere({ salePrice: { not: null } }),
         orderBy: { createdAt: 'desc' },
-        take: 8,
+        take: 40,
       }),
       prisma.heroBanner.findMany({
         where: { isActive: true },
@@ -89,23 +91,45 @@ async function getHomeData() {
       category: p.category ? { name: p.category } : null,
     }));
 
-    // Map shops
-    const mappedShops = shops.map((s) => ({
-      id: s.id,
-      name: s.name,
-      logoUrl: publicImageUrl(s.logo),
-      storefrontSlug: s.storefrontSlug || s.slug,
-      rating: null,
-      _count: { products: 0 },
-    }));
+    // Дэлгүүр бүрийн бодит барааны тоо — 0 бараатай, тест нэртэй дэлгүүрийг
+    // "Онцлох" хэсэгт гаргахгүй.
+    const candidateShopIds = Array.from(new Set([
+      ...shops.map((s) => s.id),
+      ...featuredShopRows.map((f) => f.shopId),
+    ]));
+    const productCounts = candidateShopIds.length
+      ? await prisma.product.groupBy({
+          by: ['shopId'],
+          where: { shopId: { in: candidateShopIds }, isActive: true, isDemo: false },
+          _count: { _all: true },
+        })
+      : [];
+    const countByShop = new Map(productCounts.map((c) => [c.shopId, c._count._all]));
 
-    // Map products
-    const mappedProducts = products.map((p) => {
+    const mappedShops = shops
+      .filter((s) => isPublicShopName(s.name) && (countByShop.get(s.id) || 0) > 0)
+      .slice(0, 6)
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        logoUrl: publicImageUrl(s.logo),
+        storefrontSlug: s.storefrontSlug || s.slug,
+        rating: null,
+        _count: { products: countByShop.get(s.id) || 0 },
+      }));
+
+    // Map products — зөвхөн бодит хямдралтай, тест биш бараа
+    const saleProducts = products
+      .filter(isSellableProduct)
+      .map(normalizePublicPricing)
+      .filter((p) => p.salePrice != null && p.salePrice > 0 && p.salePrice < p.price)
+      .slice(0, 8);
+    const mappedProducts = saleProducts.map((p) => {
       const imageUrl = publicImageUrl(p.images?.[0]);
       return {
         id: p.id,
         name: p.name,
-        price: p.salePrice || p.price,
+        price: getEffectiveUnitPrice(p.price, p.salePrice),
         media: imageUrl ? [{ url: imageUrl }] : [],
         entity: null,
       };
@@ -115,20 +139,21 @@ async function getHomeData() {
     const fpIds = featuredProductRows.map((f) => f.productId);
     const fpProducts = fpIds.length
       ? await prisma.product.findMany({
-          where: { id: { in: fpIds }, isActive: true },
-          select: { id: true, name: true, price: true, salePrice: true, images: true },
+          where: { id: { in: fpIds }, isActive: true, isDemo: false },
+          select: { id: true, name: true, description: true, price: true, salePrice: true, images: true, isActive: true, isDemo: true },
         })
       : [];
     const fpMap = new Map(fpProducts.map((p) => [p.id, p]));
     const featuredProducts = featuredProductRows
       .map((f) => {
-        const p = fpMap.get(f.productId);
-        if (!p) return null;
+        const raw = fpMap.get(f.productId);
+        if (!raw || !isSellableProduct(raw)) return null;
+        const p = normalizePublicPricing(raw);
         const imageUrl = publicImageUrl(p.images?.[0]);
         return {
           id: p.id,
           name: p.name,
-          price: p.salePrice || p.price,
+          price: getEffectiveUnitPrice(p.price, p.salePrice),
           media: imageUrl ? [{ url: imageUrl }] : [],
           entity: null,
         };
@@ -147,38 +172,33 @@ async function getHomeData() {
     const featuredShopsMapped = featuredShopRows
       .map((f) => {
         const s = fsMap.get(f.shopId);
-        if (!s) return null;
+        if (!s || !isPublicShopName(s.name)) return null;
         return {
           id: s.id,
           name: s.name,
           logoUrl: publicImageUrl(s.logo),
           storefrontSlug: s.storefrontSlug || s.slug,
           rating: null,
-          _count: { products: 0 },
+          _count: { products: countByShop.get(s.id) || 0 },
         };
       })
       .filter((s): s is NonNullable<typeof s> => s !== null);
 
-    // Stats config
-    const configMap = new Map(configs.map((c) => [c.key, c.value]));
-    const stats = {
-      useRealData: configMap.get('stats_use_real') === 'true',
-      products: configMap.get('stats_products') || '8+',
-      shops: configMap.get('stats_shops') || '11+',
-      users: configMap.get('stats_users') || '99+',
-    };
-
-    // If real data requested, count from DB
-    if (stats.useRealData) {
-      const [productCount, shopCount, userCount] = await Promise.all([
-        prisma.product.count({ where: { isActive: true } }),
-        prisma.shop.count({ where: { isBlocked: false } }),
-        prisma.user.count(),
-      ]);
-      stats.products = productCount.toLocaleString() + '+';
-      stats.shops = shopCount.toLocaleString() + '+';
-      stats.users = userCount.toLocaleString() + '+';
-    }
+    // Статистик — үргэлж бодит тоо. Бага үед (итгэл унагаахгүйн тулд) харуулахгүй.
+    const [productCount, shopCount, userCount] = await Promise.all([
+      prisma.product.count({ where: { isActive: true, isDemo: false } }),
+      prisma.shop.count({ where: { isBlocked: false, isDemo: false } }),
+      prisma.user.count(),
+    ]);
+    const minProducts = Number(configs.find((c) => c.key === 'stats_min_products')?.value) || 100;
+    const stats = productCount >= minProducts
+      ? {
+          useRealData: true,
+          products: productCount.toLocaleString() + '+',
+          shops: shopCount.toLocaleString() + '+',
+          users: userCount.toLocaleString() + '+',
+        }
+      : null;
 
     // Build section map for active checks
     const sectionMap = new Map(sections.map((s) => [s.key, s]));
@@ -253,10 +273,11 @@ export default async function HomePage() {
         {/* If sections exist in DB, render in DB order */}
         {sections.length > 0 ? (
           <>
-            {sections.map((s) => renderSection(s.key))}
-            {/* Always show search + trust after hero */}
+            {/* Hero → хайлт → итгэлийн тэмдэг → бусад хэсэг (хайлт хамгийн дээр байх ёстой) */}
+            {sections.filter((s) => s.key === 'hero').map((s) => renderSection(s.key))}
             <HeroSearch />
             <TrustBadges />
+            {sections.filter((s) => s.key !== 'hero').map((s) => renderSection(s.key))}
             {/* Feed is always shown */}
             <FeedPreview posts={feedPosts} />
           </>
@@ -264,9 +285,9 @@ export default async function HomePage() {
           <>
             {/* Fallback: original static order */}
             <HeroVideoSlider banners={heroBanners} />
-            {hasDatabaseConfig ? <LiveSection /> : null}
             <HeroSearch />
             <TrustBadges />
+            {hasDatabaseConfig ? <LiveSection /> : null}
             <CategoryIcons />
             <SocialFeedSection />
             <FeedPreview posts={feedPosts} />
