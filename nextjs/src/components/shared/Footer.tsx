@@ -32,15 +32,15 @@ export default function Footer() {
             <Link href="/" className="text-xl font-black text-white mb-2 inline-block no-underline cursor-pointer">
               eseller<em className="text-[#E8242C] not-italic">.mn</em>
             </Link>
-            <p className="text-sm text-white/30 mb-4">Монголын нэгдсэн цахим зах</p>
-            <div className="flex flex-col gap-2 text-sm text-white/40">
+            <p className="text-sm text-white/60 mb-4">Монголын нэгдсэн цахим зах</p>
+            <div className="flex flex-col gap-2 text-sm text-white/65">
               <span className="flex items-center gap-1.5"><Mail size={13} /> info@eseller.mn</span>
             </div>
             <div className="flex gap-3 mt-4">
               <a href="https://facebook.com/eseller.mn" target="_blank" rel="noopener noreferrer"
-                className="text-white/30 hover:text-white/60 transition text-sm no-underline">Facebook</a>
+                className="text-white/60 hover:text-white/60 transition text-sm no-underline">Facebook</a>
               <a href="https://instagram.com/eseller.mn" target="_blank" rel="noopener noreferrer"
-                className="text-white/30 hover:text-white/60 transition text-sm no-underline">Instagram</a>
+                className="text-white/60 hover:text-white/60 transition text-sm no-underline">Instagram</a>
             </div>
           </div>
 
@@ -51,7 +51,7 @@ export default function Footer() {
               <div className="flex flex-col gap-2">
                 {links.map((link) => (
                   <Link key={link.href} href={link.href}
-                    className="text-white/30 text-sm no-underline hover:text-white/60 transition">
+                    className="text-white/60 text-sm no-underline hover:text-white/60 transition">
                     {link.name}
                   </Link>
                 ))}

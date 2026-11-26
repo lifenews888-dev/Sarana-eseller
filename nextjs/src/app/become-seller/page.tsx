@@ -586,13 +586,13 @@ export default function BecomeSellerPage() {
           {step < 4 ? (
             <button onClick={() => canNext() && setStep(s => s + 1)} disabled={!canNext()}
               className={cn('flex items-center gap-1.5 px-8 py-3 rounded-xl text-sm font-bold transition border-none cursor-pointer',
-                canNext() ? 'bg-[#E8242C] text-white hover:bg-[#CC0000]' : 'bg-[var(--esl-bg-elevated)] text-[#555] cursor-not-allowed')}>
+                canNext() ? 'bg-[#E8242C] text-white hover:bg-[#CC0000]' : 'bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] cursor-not-allowed')}>
               Дараах <ChevronRight className="w-4 h-4" />
             </button>
           ) : (
             <button onClick={handleSubmit} disabled={!canSubmit()}
               className={cn('flex items-center gap-1.5 px-8 py-3 rounded-xl text-sm font-bold transition border-none',
-                canSubmit() ? 'bg-[#E8242C] text-white hover:bg-[#CC0000] cursor-pointer' : 'bg-[var(--esl-bg-elevated)] text-[#555] cursor-not-allowed')}>
+                canSubmit() ? 'bg-[#E8242C] text-white hover:bg-[#CC0000] cursor-pointer' : 'bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] cursor-not-allowed')}>
               {submitting ? 'Илгээж байна...' : <><Sparkles className="w-4 h-4" /> Бүртгэл дуусгах</>}
             </button>
           )}
