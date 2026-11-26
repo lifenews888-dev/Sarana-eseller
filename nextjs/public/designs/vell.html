@@ -1,0 +1,725 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>eseller.mn — Create a Character</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --glass:rgba(38,36,40,.30);--glass-2:rgba(255,255,255,.10);
+  --line:rgba(255,255,255,.30);--line-strong:rgba(255,255,255,.75);
+  --ink:#fff;--ink-2:rgba(255,255,255,.72);--ink-3:rgba(255,255,255,.5);
+  --glow:0 0 0 1px rgba(255,255,255,.85),0 0 18px rgba(255,255,255,.35);
+  --bx:0px;--by:0px;--mx:0px;--s:1;--height:1;--build:1;--real:none;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#cfd2d4;overflow:hidden;color:#fff;height:100%}
+body{font-family:Figtree,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+button{background:none;border:0;font:inherit;color:inherit;cursor:pointer}
+svg{display:block}
+.glass{position:absolute;background:var(--glass);border:1px solid var(--line);border-radius:22px;
+  -webkit-backdrop-filter:blur(22px) saturate(140%);backdrop-filter:blur(22px) saturate(140%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 18px 40px -18px rgba(0,0,0,.35)}
+.pill-on{box-shadow:var(--glow);background:rgba(255,255,255,.14)}
+
+/* 4. scene */
+#scene{position:fixed;inset:0;overflow:hidden}
+#grade{position:absolute;inset:-3%;transition:filter .9s ease}
+#bg{position:absolute;inset:0;background:center/cover no-repeat;transform:translate3d(var(--bx),var(--by),0) scale(1.04);
+  transition:transform .6s cubic-bezier(.2,.7,.2,1),filter .6s}
+#tint{position:absolute;inset:0;mix-blend-mode:soft-light;transition:background .9s}
+#vignette{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(120% 90% at 50% 45%,transparent 55%,rgba(20,18,22,.38) 100%),
+  linear-gradient(180deg,rgba(20,20,24,.22),transparent 18%,transparent 70%,rgba(20,20,24,.35))}
+
+/* 5. stage */
+#stage{position:fixed;left:50%;top:50%;width:1600px;height:900px;transform:translate(-50%,-50%) scale(var(--s));transform-origin:center}
+
+/* 6. model */
+#modelWrap{position:absolute;left:800px;top:72px;width:440px;height:663px;margin-left:-220px;transform-origin:50% 100%;transition:transform 1s cubic-bezier(.65,0,.2,1)}
+#modelWrap.mid{transform:translateY(345px) scale(1.5)}
+#modelWrap.portrait{transform:translateY(940px) scale(2.4)}
+#modelInner{position:absolute;inset:0;transform:translate3d(var(--mx),0,0) scaleX(var(--build)) scaleY(var(--height));transform-origin:50% 100%;transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+#breath{position:absolute;inset:0;transform-origin:50% 100%;animation:breath 5.5s ease-in-out infinite}
+@keyframes breath{0%,100%{transform:scaleY(1)}50%{transform:scaleY(1.006)}}
+#figs{position:absolute;inset:0}
+.fig{position:absolute;inset:0;background:center bottom/contain no-repeat;filter:var(--real)}
+.fig.in{clip-path:inset(0 0 100% 0);animation:wipe 1.05s cubic-bezier(.7,0,.25,1) forwards}
+@keyframes wipe{to{clip-path:inset(0 0 0 0)}}
+#shadow{position:absolute;left:50%;bottom:-6px;width:300px;height:34px;margin-left:-150px;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(30,28,26,.55),rgba(30,28,26,0));filter:blur(4px)}
+#scan{position:absolute;left:-10%;right:-10%;top:0;height:2px;opacity:0;pointer-events:none;
+  background:linear-gradient(90deg,transparent,#fff 25%,#fff 75%,transparent);
+  box-shadow:0 0 22px 6px rgba(255,255,255,.55),0 0 60px 18px rgba(214,226,255,.35)}
+#scan.go{animation:scan 1.05s cubic-bezier(.7,0,.25,1) forwards}
+@keyframes scan{0%{top:0;opacity:1}92%{opacity:1}100%{top:100%;opacity:0}}
+#hotspots{position:absolute;inset:0;transition:opacity .4s}
+#modelWrap:not(.full) #hotspots{opacity:0;pointer-events:none}
+.hs{position:absolute;width:26px;height:26px;margin:-13px 0 0 -13px;border-radius:50%;background:rgba(255,255,255,.25);border:1px solid #fff;
+  -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);display:grid;place-items:center;transition:transform .3s}
+.hs::after{content:"";width:6px;height:6px;border-radius:50%;background:#fff}
+.hs::before{content:"";position:absolute;inset:-1px;border-radius:50%;border:1px solid #fff;animation:ping 2.4s ease-out infinite}
+@keyframes ping{from{transform:scale(.6);opacity:1}to{transform:scale(1.6);opacity:0}}
+.hs:hover{transform:scale(1.18)}
+.hs .tip{position:absolute;left:34px;top:50%;white-space:nowrap;font-size:13px;padding:7px 12px;border-radius:12px;
+  background:rgba(30,30,34,.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);
+  opacity:0;transform:translate(-6px,-50%);transition:opacity .25s,transform .3s;pointer-events:none}
+.hs:hover .tip{opacity:1;transform:translate(0,-50%)}
+
+/* 7. top bar */
+#logo{position:absolute;left:30px;top:22px;display:flex;align-items:baseline;gap:18px}
+#logo b{font-family:Syne,sans-serif;font-weight:800;font-size:46px;line-height:1;letter-spacing:-.02em}
+#logo span{font-size:15px;letter-spacing:.06em}
+#tabs{left:410px;top:22px;width:720px;height:54px;border-radius:30px;padding:4px;display:flex}
+#tabs button{flex:1;height:44px;border-radius:24px;font-size:16px;letter-spacing:.05em;color:var(--ink-2);position:relative;z-index:1;transition:color .3s}
+#tabs button.on{color:#fff}
+#tabInd{position:absolute;top:5px;height:44px;border-radius:24px;transition:left .55s cubic-bezier(.7,0,.2,1),width .55s cubic-bezier(.7,0,.2,1)}
+#icons{position:absolute;right:28px;top:24px;display:flex;gap:12px}
+.ib{position:relative;width:50px;height:50px;border-radius:50%;display:grid;place-items:center}
+.ib.glass{position:relative}
+.ib svg{width:22px;height:22px}
+.badge{position:absolute;right:-4px;top:-4px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#fff;color:#1c1b1e;
+  font-size:12px;font-weight:600;display:grid;place-items:center;transform:scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
+.badge.n{transform:scale(1)}
+.badge.bump{animation:bump .45s}
+@keyframes bump{40%{transform:scale(1.45)}100%{transform:scale(1)}}
+#more{right:28px;top:84px;width:210px;padding:8px;transform-origin:top right;transform:scale(.9);opacity:0;pointer-events:none;transition:transform .3s cubic-bezier(.3,1.4,.5,1),opacity .25s}
+#more.open{transform:none;opacity:1;pointer-events:auto}
+#more button{display:block;width:100%;text-align:left;padding:11px 14px;border-radius:12px;font-size:15px}
+#more button:hover{background:var(--glass-2)}
+
+/* 8. profile */
+#profile{left:24px;top:96px;width:476px;height:124px;display:flex;align-items:center;gap:20px;padding:0 16px}
+#avatar{width:98px;height:98px;border-radius:18px;border:1.5px solid rgba(255,255,255,.85);box-shadow:0 0 18px rgba(255,255,255,.35);flex:none;background-repeat:no-repeat}
+.pname{display:flex;align-items:center;gap:8px}
+#pname{font-size:28px;font-weight:400;padding:0 4px;border-radius:8px;outline:none}
+#pname.edit{box-shadow:0 0 0 1px #fff;background:rgba(255,255,255,.14)}
+.rb{width:38px;height:38px;border-radius:50%;display:grid;place-items:center}
+.rb svg{width:18px;height:18px}
+#shuffle{position:relative;transition:transform .5s}
+.meta{display:flex;align-items:center;gap:12px;font-size:16px;color:var(--ink-2);margin-top:8px}
+.meta i{width:1px;height:16px;background:var(--line)}
+.wx{display:flex;align-items:center;gap:6px;position:relative}
+.wx svg{width:18px;height:18px}
+.wx .tip{position:absolute;left:0;top:calc(100% + 8px);white-space:nowrap;font-size:13px;padding:6px 10px;border-radius:10px;background:rgba(30,30,34,.55);
+  -webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);opacity:0;transition:opacity .25s;pointer-events:none}
+.wx:hover .tip{opacity:1}
+
+/* 9. side + randomize */
+#side{left:24px;top:236px;width:172px;height:470px;padding:10px;display:flex;flex-direction:column;gap:2px;transition:transform .6s cubic-bezier(.7,0,.2,1)}
+#side button{height:54px;border-radius:16px;display:flex;align-items:center;gap:14px;padding:0 14px;font-size:16px;color:var(--ink-2);position:relative;z-index:1;transition:color .3s}
+#side button:hover,#side button.on{color:#fff}
+#side button svg{width:22px;height:22px;flex:none}
+#sideInd{position:absolute;left:10px;width:152px;height:54px;border-radius:16px;transition:top .45s cubic-bezier(.7,0,.2,1)}
+#rand{left:24px;top:722px;width:220px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;transition:transform .6s cubic-bezier(.7,0,.2,1)}
+#rand svg{width:20px;height:20px;transition:transform .8s}
+body.notstyle #side{transform:translateX(-240px)}
+body.notstyle #rand{transform:translateX(-280px)}
+
+/* 10. panel */
+#panel{left:1112px;top:96px;width:464px;height:680px;padding:22px 18px 18px;overflow:hidden}
+.view{position:absolute;inset:22px 18px 18px;display:flex;flex-direction:column;transition:transform .55s cubic-bezier(.7,0,.2,1),opacity .4s}
+.view.hide{opacity:0;transform:translateX(30px);pointer-events:none}
+.vh{display:flex;align-items:baseline;justify-content:space-between}
+.vh h3{font-size:17px;font-weight:400;text-transform:uppercase;letter-spacing:.06em}
+.vh small{font-size:12px;color:var(--ink-3)}
+.chips{display:flex;justify-content:space-between;margin-top:16px}
+.chip{width:58px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--ink-2)}
+.chip span{width:48px;height:48px;border-radius:14px;background:var(--glass-2);border:1px solid var(--line);display:grid;place-items:center;transition:box-shadow .3s}
+.chip svg{width:24px;height:24px}
+.chip.on span{box-shadow:var(--glow)}
+.chip.on{color:#fff}
+#grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;height:296px;margin-top:16px;align-content:start}
+.gc{position:relative;height:142px;border-radius:14px;border:1px solid var(--line);overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,255,255,.22),rgba(255,255,255,.06));transition:transform .4s,box-shadow .3s,opacity .3s}
+.gc .im{position:absolute;inset:0 -20%;background:center top/auto 104% no-repeat;transition:transform .5s}
+.gc:hover{transform:translateY(-3px)}
+.gc:hover .im{transform:scale(1.06)}
+.gc .nm{position:absolute;left:6px;right:6px;bottom:6px;font-size:11px;text-align:center;padding:4px 6px;border-radius:9px;
+  background:rgba(30,30,34,.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transform:translateY(140%);transition:transform .35s}
+.gc:hover .nm{transform:none}
+.gc.on{box-shadow:var(--glow),0 0 0 3px rgba(255,255,255,.25)}
+.gc.out{opacity:0;transform:scale(.85)}
+.gc.enter{animation:enter .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes enter{from{opacity:0;transform:translateY(14px) scale(.96)}}
+.gc.roul{box-shadow:var(--glow)}
+.fav{position:absolute;right:6px;top:6px;width:24px;height:24px;border-radius:50%;background:#fff;display:grid;place-items:center;transform:scale(0);transition:transform .35s cubic-bezier(.3,1.8,.5,1)}
+.fav svg{width:13px;height:13px}
+.gc.isfav .fav{transform:scale(1)}
+#acc{margin-top:auto;display:flex;flex-direction:column;gap:7px}
+.ar{border-radius:12px;background:var(--glass-2);border:1px solid var(--line)}
+.ar>button{width:100%;height:42px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;font-size:15px;text-transform:uppercase;letter-spacing:.03em}
+.ar>button small{text-transform:none;color:var(--ink-3);font-size:13px;margin-left:6px}
+.ar>button svg{width:16px;height:16px;transition:transform .4s}
+.ar.open>button svg{transform:rotate(180deg)}
+.ab{display:grid;grid-template-rows:0fr;transition:grid-template-rows .4s cubic-bezier(.7,0,.2,1)}
+.ar.open .ab{grid-template-rows:1fr}
+.ab>div{overflow:hidden}
+.it{display:flex;align-items:center;gap:8px;padding:6px 14px;font-size:14px}
+.it em{font-style:normal;color:var(--ink-3);font-size:12px}
+.it b{margin-left:auto;font-weight:500}
+.it button{width:28px;height:28px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-size:16px}
+.it button.in{background:#fff;color:#1c1b1e}
+.it.none{color:var(--ink-3);padding:8px 14px 10px}
+.ab>div>.it:last-child{padding-bottom:10px}
+/* tune */
+.sw{display:flex;gap:10px;margin-top:16px}
+.sw button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);transition:box-shadow .3s}
+.sw button.on{box-shadow:0 0 0 3px #fff}
+.opts{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.opt{border-radius:12px;padding:9px 14px;font-size:14px;background:var(--glass-2);border:1px solid var(--line);transition:box-shadow .3s}
+.opt.on{box-shadow:var(--glow)}
+.sl{margin-top:18px}
+.sl .lr{display:flex;justify-content:space-between;font-size:14px;color:var(--ink-2);margin-bottom:10px}
+.sl .lr b{color:#fff}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:4px;outline:none;cursor:pointer;
+  background:linear-gradient(90deg,#fff var(--p,50%),rgba(255,255,255,.28) var(--p,50%))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;
+  border:5px solid rgba(255,255,255,.45);background-clip:padding-box;box-shadow:0 0 12px rgba(255,255,255,.6)}
+input[type=range]::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:#fff;border:5px solid rgba(255,255,255,.45);box-shadow:0 0 12px rgba(255,255,255,.6)}
+.lbl{font-size:13px;color:var(--ink-3);margin-top:16px}
+/* dna */
+#helix{margin:14px auto 0}
+.rows{margin-top:12px}
+.rows div{display:flex;justify-content:space-between;font-size:15px;padding:11px 0;border-bottom:1px solid var(--line)}
+.rows div span{color:var(--ink-2)}
+.obtn{margin-top:auto;height:46px;border-radius:14px;border:1.5px solid #fff;font-size:15px;transition:background .3s,color .3s}
+.obtn:hover{background:#fff;color:#1c1b1e}
+#radar{margin:8px auto 0}
+.story{margin-top:16px;border-radius:16px;background:var(--glass-2);border:1px solid var(--line);padding:18px;font-size:16px;line-height:1.6;min-height:300px}
+.caret{display:inline-block;width:2px;height:1.1em;background:#fff;vertical-align:-3px;margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* 11. bottom */
+#ctrl{left:504px;top:742px;width:592px;height:54px;border-radius:18px;display:flex;padding:5px;gap:4px}
+#ctrl button{flex:1;height:44px;border-radius:14px;font-size:17px;display:flex;align-items:center;justify-content:center;gap:12px;transition:opacity .3s}
+#ctrl button svg{width:20px;height:20px}
+#ctrl button:disabled{opacity:.4;cursor:default}
+#real{left:24px;top:796px;width:452px;height:88px;padding:16px 20px}
+#real .top{display:flex;justify-content:space-between;font-size:16px;margin-bottom:10px}
+#real .ends{display:flex;justify-content:space-between;font-size:13px;color:var(--ink-3);margin-top:8px}
+#filt{left:494px;top:796px;width:640px;height:88px;display:flex;align-items:center;gap:16px;padding:0 16px}
+.fsel{position:relative}
+.fsel small{display:block;font-size:14px;margin-bottom:6px}
+#fbtn{width:156px;height:38px;border-radius:12px;background:var(--glass-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:14px}
+#fbtn svg{width:14px;height:14px;transition:transform .3s}
+#fbtn.open svg{transform:rotate(180deg)}
+#flist{bottom:46px;left:0;width:180px;padding:6px;opacity:0;pointer-events:none;transform:translateY(6px);transition:opacity .25s,transform .3s}
+#flist.open{opacity:1;pointer-events:auto;transform:none}
+#flist button{display:block;width:100%;text-align:left;padding:9px 12px;border-radius:10px;font-size:14px}
+#flist button:hover{background:var(--glass-2)}
+#fthumbs{display:flex;gap:10px;transition:transform .35s}
+.ft{position:relative;width:64px;height:64px;border-radius:12px;overflow:hidden;background-repeat:no-repeat;transition:transform .3s,box-shadow .3s;border:1px solid var(--line)}
+.ft i{position:absolute;inset:0;mix-blend-mode:soft-light}
+.ft:hover{transform:translateY(-3px)}
+.ft.on{box-shadow:var(--glow)}
+#fnext{width:36px;height:36px;border-radius:50%;background:var(--glass-2);border:1px solid var(--line);font-size:20px;display:grid;place-items:center;margin-left:auto}
+#save{left:1302px;top:796px;width:274px;height:88px;padding:14px}
+#saveBtn{position:relative;overflow:hidden;width:100%;height:100%;border-radius:16px;border:1.5px solid #fff;font-size:17px;letter-spacing:.06em;
+  box-shadow:0 0 18px rgba(255,255,255,.35),inset 0 0 14px rgba(255,255,255,.15);transition:background .3s,color .3s}
+#saveBtn:hover{background:#fff;color:#1c1b1e}
+#saveBtn::after{content:"";position:absolute;top:-20%;bottom:-20%;width:40%;left:-60%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.8),transparent);transform:skewX(-20deg)}
+#saveBtn.shine::after{animation:shine .9s}
+@keyframes shine{to{left:130%}}
+#lib{left:504px;top:560px;width:592px;height:170px;padding:16px 18px;transform:translateY(20px) scale(.97);opacity:0;pointer-events:none;transition:transform .4s,opacity .4s}
+#lib.open{transform:none;opacity:1;pointer-events:auto}
+#libRow{display:flex;gap:10px;margin-top:12px;overflow-x:auto}
+.lc{width:72px;height:104px;flex:none;border-radius:12px;border:1px solid var(--line);background:center top/auto 104% no-repeat,rgba(255,255,255,.1);animation:lpop .45s cubic-bezier(.3,1.6,.5,1)}
+@keyframes lpop{from{transform:scale(.4)}}
+#libEmpty{font-size:14px;color:var(--ink-3);margin-top:20px}
+.flyer{position:absolute;z-index:50;background:center bottom/contain no-repeat;transition:all .8s cubic-bezier(.7,0,.2,1);pointer-events:none}
+#toast{left:50%;top:96px;transform:translate(-50%,-20px);opacity:0;padding:12px 20px;border-radius:30px;display:flex;align-items:center;gap:10px;font-size:15px;
+  transition:transform .35s cubic-bezier(.3,1.4,.5,1),opacity .3s;pointer-events:none;z-index:60;white-space:nowrap}
+#toast.on{transform:translate(-50%,0);opacity:1}
+#toast svg{width:18px;height:18px}
+</style>
+</head>
+<body>
+<div id="scene"><div id="grade"><div id="bg"></div><div id="tint"></div></div><div id="vignette"></div></div>
+
+<div id="stage">
+  <div id="modelWrap" class="full">
+    <div id="shadow"></div>
+    <div id="modelInner"><div id="breath"><div id="figs"></div><div id="scan"></div><div id="hotspots"></div></div></div>
+  </div>
+
+  <div id="logo"><b>eseller</b><span>CREATE A LOOK</span></div>
+  <div id="tabs" class="glass"><span id="tabInd" class="pill-on"></span>
+    <button data-t="dna">DNA</button><button data-t="body">BODY</button><button data-t="style" class="on">STYLE</button><button data-t="personality">PERSONALITY</button><button data-t="story">STORY</button>
+  </div>
+  <div id="icons">
+    <button class="ib glass" id="cartB" aria-label="Cart"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2.5l2.2 11h10.6L20.5 7H6.4"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/></svg><span class="badge" id="cartN">0</span></button>
+    <button class="ib glass" id="favB" aria-label="Favourites"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path id="favPath" d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg><span class="badge" id="favN">0</span></button>
+    <button class="ib glass" id="bagB" aria-label="Library"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"><path d="M5 8h14l-1.2 12.5H6.2L5 8z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/></svg><span class="badge" id="libN">0</span></button>
+    <button class="ib glass" id="moreB" aria-label="More"><svg viewBox="0 0 24 24" fill="#fff"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg></button>
+  </div>
+  <div id="more" class="glass"><button data-m="Share link copied">Share look</button><button data-m="Exported 4K render">Export render</button><button data-m="Duplicated as new eseller">Duplicate</button><button data-m="Settings saved">Settings</button></div>
+
+  <div id="profile" class="glass">
+    <div id="avatar"></div>
+    <div>
+      <div class="pname"><span id="pname">Han Seo-yeon</span>
+        <button class="rb" id="pencil" aria-label="Edit name"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16v4z"/><path d="M13.5 6.5l4 4"/></svg></button>
+        <button class="rb glass" id="shuffle" aria-label="Shuffle identity"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h3.5c4.5 0 6.5 10 11 10H21M18 14l3 3-3 3M3 17h3.5c1.6 0 2.8-1.2 3.9-2.8M13.6 9.8C14.7 8.2 15.9 7 17.5 7H21M18 4l3 3-3 3"/></svg></button>
+      </div>
+      <div class="meta"><span id="page">23</span><i></i><span id="pcity">Seoul, KR</span><i></i>
+        <span class="wx"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5"><path d="M7 18h10a4 4 0 0 0 .6-7.95A6 6 0 0 0 6.1 11.3 3.4 3.4 0 0 0 7 18z"/></svg><span id="ptemp">14°C</span><span class="tip">Overcast · soft daylight</span></span></div>
+    </div>
+  </div>
+
+  <div id="side" class="glass"><span id="sideInd" class="pill-on"></span></div>
+  <button id="rand" class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9L4 8M4 4v4h4M4 13a8 8 0 0 0 14.3 4.9L20 16M20 20v-4h-4"/></svg>Randomize eseller</button>
+
+  <div id="panel" class="glass">
+    <section class="view" id="v-outfits">
+      <div class="vh"><h3>Outfits</h3><small id="lookCount">8 looks</small></div>
+      <div class="chips" id="chips"></div>
+      <div id="grid"></div>
+      <div id="acc"></div>
+    </section>
+    <section class="view hide" id="v-tune"><div class="vh"><h3 id="tuneH">Face</h3><small>changes re-render the model</small></div><div id="tuneBody"></div></section>
+    <section class="view hide" id="v-dna">
+      <div class="vh"><h3>DNA</h3><small>identity seed</small></div>
+      <svg id="helix" width="300" height="120" viewBox="0 0 300 120"></svg>
+      <div class="rows"><div><span>Seed</span><b id="dseed">VL-0423-KR</b></div><div><span>Heritage</span><b>Korean</b></div><div><span>Age</span><b id="dage">23</b></div><div><span>Eye colour</span><b>Dark brown</b></div><div><span>Hair</span><b>Black · high bun</b></div></div>
+      <button class="obtn" id="reseed">Re-seed identity</button>
+    </section>
+    <section class="view hide" id="v-body">
+      <div class="vh"><h3>Body</h3><small>proportions</small></div>
+      <div class="sl"><div class="lr"><span>Height (cm)</span><b id="hV">168</b></div><input type="range" id="hR" min="150" max="185" value="168"></div>
+      <div class="sl"><div class="lr"><span>Build</span><b id="bV">50</b></div><input type="range" id="bR" min="0" max="100" value="50"></div>
+      <div class="lbl">Posture</div><div class="opts" id="posture"><button class="opt on">Relaxed</button><button class="opt">Confident</button><button class="opt">Editorial</button></div>
+      <div class="lbl">Framing</div><div class="opts" id="framing"><button class="opt on" data-f="full">Full body</button><button class="opt" data-f="mid">Mid shot</button><button class="opt" data-f="portrait">Portrait</button></div>
+    </section>
+    <section class="view hide" id="v-personality">
+      <div class="vh"><h3>Personality</h3><small>pick up to 3</small></div>
+      <div class="opts" id="traits"></div>
+      <svg id="radar" width="250" height="210" viewBox="0 0 250 210"></svg>
+      <div class="sl"><div class="lr"><span>Openness</span><b id="oV">0</b></div><input type="range" id="oR" min="0" max="100"></div>
+      <div class="sl"><div class="lr"><span>Energy</span><b id="eV">0</b></div><input type="range" id="eR" min="0" max="100"></div>
+    </section>
+    <section class="view hide" id="v-story">
+      <div class="vh"><h3>Story</h3><small>auto-written from your choices</small></div>
+      <div class="story" id="story"></div>
+      <button class="obtn" id="rewrite" style="margin-top:16px">Rewrite story</button>
+    </section>
+  </div>
+
+  <div id="lib" class="glass"><div class="vh"><h3>Library</h3><small id="libNote">0 saved</small></div><div id="libRow"></div><div id="libEmpty">Save a look to start your library.</div></div>
+
+  <div id="ctrl" class="glass">
+    <button id="undo" disabled><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>Undo</button>
+    <button id="redo" disabled><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>Redo</button>
+    <button id="pose" class="pill-on"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="5" r="2"/><path d="M12 7v7M8 22l4-8 4 8M6 11l6-2 6 2"/></svg><span id="poseL">Full</span></button>
+    <button id="reset"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/></svg>Reset</button>
+  </div>
+  <div id="real" class="glass"><div class="top"><span>Realism</span><b id="realV">75%</b></div><input type="range" id="realR" min="0" max="100" value="75"><div class="ends"><span>Stylized</span><span>Hyper Realistic</span></div></div>
+  <div id="filt" class="glass">
+    <div class="fsel"><small>Filter</small><button id="fbtn"><span id="fname">Daylight</span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button><div id="flist" class="glass"></div></div>
+    <div id="fthumbs"></div>
+    <button id="fnext" aria-label="More filters">›</button>
+  </div>
+  <div id="save" class="glass"><button id="saveBtn">SAVE TO LIBRARY</button></div>
+  <div id="toast" class="glass"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg><span id="toastT"></span></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var CDN='https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/';
+function H(file,w){return 'https://images.higgs.ai/?default=1&output=webp&url='+encodeURIComponent(CDN+file)+'&w='+w+'&q=85';}
+var BG='hf_20261112_034551_6394b127-5366-40a8-9c82-3c416f1161f1.png';
+function P(n,c,p){return {n:n,c:c,p:p};}
+var LOOKS=[
+ {name:'Denim Maxi',cat:'everyday',f:'hf_20261112_034542_a6430ecf-9862-412c-8ef6-5745115bd78c.png',
+  tops:[P('Ribbed crop tank','Charcoal',38)],bottoms:[P('Washed denim maxi skirt','Light wash',96)],full:[],shoes:[P('Knee-high leather boots','Black',210)],acc:[P('Leather belt','Black',42),P('Gold hoops','14k',64)]},
+ {name:'Cloud Set',cat:'everyday',f:'hf_20261112_034738_73282737-acc8-41e9-a822-96c663e27b6c.png',
+  tops:[P('Half-zip sweatshirt','Oat',74)],bottoms:[P('Wide sweatpants','Oat',68)],full:[],shoes:[P('Chunky sneakers','White',120)],acc:[P('Gold hoops','14k',64)]},
+ {name:'Library Knit',cat:'everyday',f:'hf_20261112_034742_9a8a92fd-79ae-4163-9ffa-14ae2a68717f.png',
+  tops:[P('Cable-knit cardigan','Cream',112),P('Cotton tee','White',24)],bottoms:[P('Pleated wide trousers','Heather grey',98)],full:[],shoes:[P('Penny loafers','Brown',150)],acc:[]},
+ {name:'Lilac Run',cat:'athletic',f:'hf_20261112_034735_4e352e03-ad2b-44d1-9fcf-4b5b9454dc55.png',
+  tops:[P('Zip training jacket','Lilac',88),P('Sports crop top','Lilac',44)],bottoms:[P('High-rise leggings','Lilac',72)],full:[],shoes:[P('Running sneakers','White',140)],acc:[]},
+ {name:'Satin Night',cat:'sleep',f:'hf_20261112_034738_aeb8ea57-6399-4f3c-b54a-4a57d0bd971e.png',
+  tops:[P('Satin pyjama shirt','Powder blue',66)],bottoms:[P('Satin pyjama trousers','Powder blue',58)],full:[],shoes:[P('Fluffy slippers','Ivory',34)],acc:[]},
+ {name:'Night Suit',cat:'formal',f:'hf_20261112_034736_aace5c5f-8c14-4b00-83ba-744dbad2e337.png',
+  tops:[P('Oversized blazer','Black',240),P('Silk camisole','Ivory',82)],bottoms:[P('Straight suit trousers','Black',160)],full:[],shoes:[P('Pointed heels','Black',190)],acc:[]},
+ {name:'Sage Slip',cat:'party',f:'hf_20261112_034735_3d9fb69e-b4e0-49f7-a2d4-e592bd616c27.png',
+  tops:[],bottoms:[],full:[P('Satin slip midi dress','Sage',180)],shoes:[P('Strappy sandals','Silver',130)],acc:[P('Fine chain necklace','Silver',56)]},
+ {name:'Bomber Cargo',cat:'street',f:'hf_20261112_034740_3e3c5ad7-689b-46a2-8e09-c7d36a569b9c.png',
+  tops:[P('Leather bomber','Black',260),P('Crop tee','White',22)],bottoms:[P('Parachute cargo pants','Khaki',94)],full:[],shoes:[P('Platform sneakers','Black',150)],acc:[]}
+];
+var IMGS=LOOKS.map(function(l){var im=new Image();im.src=H(l.f,1000);return im;});
+var GROUPS=[['tops','Tops'],['bottoms','Bottoms'],['full','Full body'],['shoes','Shoes'],['acc','Accessories']];
+var HS={tops:[60,24],full:[60,38],bottoms:[38,47],shoes:[40,95],acc:[56,14]};
+var FILTERS=[
+ ['Daylight','none','transparent'],
+ ['Soft Film','contrast(.92) saturate(.85) brightness(1.06)','linear-gradient(180deg,rgba(255,226,214,.35),rgba(180,200,220,.35))'],
+ ['Cool Studio','saturate(.9) brightness(1.06) contrast(1.04)','linear-gradient(180deg,rgba(150,190,255,.55),rgba(200,220,255,.3))'],
+ ['Blue Hour','brightness(.82) contrast(1.1) saturate(1.1)','linear-gradient(180deg,rgba(70,60,170,.75),rgba(150,90,170,.55))'],
+ ['Mono','grayscale(1) contrast(1.12) brightness(1.03)','transparent'],
+ ['Golden Hour','saturate(1.1) brightness(1.02)','linear-gradient(180deg,rgba(255,180,90,.6),rgba(255,140,80,.4))']
+];
+var IDS=[['Han Seo-yeon',23,'Seoul, KR','14°C'],['Kim Ha-eun',22,'Busan, KR','17°C'],['Yoon Ji-woo',25,'Seoul, KR','12°C'],['Park Min-ji',24,'Incheon, KR','13°C'],['Lee Soo-ah',21,'Daegu, KR','15°C']];
+var TRAITS=['Curious','Bold','Calm','Witty','Romantic','Driven','Playful','Gentle','Creative','Loyal'];
+var ICON={
+ grid:'<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+ tee:'<path d="M8 4 3.5 7l2 4L8 10v10h8V10l2.5 1 2-4L16 4a4 4 0 0 1-8 0z"/>',
+ run:'<circle cx="14" cy="4.5" r="1.8"/><path d="m7 21 3-6 3 2v4M6 11l3-3h4l2 4 3 1M10 15l-2-3"/>',
+ moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>',
+ formal:'<path d="M9 3 12 7l3-4M6 4l3-1 3 4 3-4 3 1 2 17H4z"/><path d="M12 7v13"/>',
+ dress:'<path d="M9 3h6l-1 5 4 13H6l4-13z"/>',
+ hoodie:'<path d="M8 4a4 4 0 0 0 8 0l4 3-1.5 4L17 10v10H7V10l-1.5 1L4 7z"/><path d="M10 4v4M14 4v4"/>',
+ face:'<circle cx="12" cy="12" r="8.5"/><path d="M9 10h.01M15 10h.01M9 15c1.6 1.3 4.4 1.3 6 0"/>',
+ hair:'<path d="M5 20c0-9 2.5-15 7-15s7 6 7 15M8 9c2 1 6 1 8-1"/>',
+ makeup:'<path d="M9 21V11h6v10zM10 11V6l4-3v8"/>',
+ body:'<circle cx="12" cy="4.5" r="2"/><path d="M12 7v7M9 22l3-8 3 8M6 10h12"/>',
+ outfit:'<path d="M8 4 3.5 7l2 4L8 10v10h8V10l2.5 1 2-4L16 4a4 4 0 0 1-8 0z"/>',
+ acc:'<circle cx="12" cy="14" r="6"/><path d="M9 3h6l-3 5z"/>',
+ tattoo:'<path d="M12 3c3 4 6 6 6 10a6 6 0 0 1-12 0c0-4 3-6 6-10z"/>',
+ details:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>'
+};
+function svg(k,w){return '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="'+(w||1.5)+'" stroke-linecap="round" stroke-linejoin="round">'+ICON[k]+'</svg>';}
+var $=function(s){return document.querySelector(s);},$$=function(s){return document.querySelectorAll(s);};
+document.documentElement.style.setProperty('--x',0);
+$('#bg').style.backgroundImage="url('"+H(BG,2400)+"')";
+
+/* stage scale */
+var stage=$('#stage');
+function fit(){stage.style.setProperty('--s',Math.min(innerWidth/1600,innerHeight/900));}
+fit();addEventListener('resize',fit);
+/* parallax */
+addEventListener('pointermove',function(e){
+  var x=e.clientX/innerWidth-.5,y=e.clientY/innerHeight-.5,r=document.documentElement.style;
+  $('#bg').style.setProperty('--bx',(-x*22)+'px');$('#bg').style.setProperty('--by',(-y*12)+'px');
+  $('#modelInner').style.setProperty('--mx',(x*10)+'px');
+});
+
+/* state */
+var S={look:0,grade:0,real:75,height:168,build:50},hist=[],hi=-1;
+var cart={},favs={},saved=[],framing='full',curLook=-1,swapTok=0;
+function snap(){return {look:S.look,grade:S.grade,real:S.real,height:S.height,build:S.build};}
+function commit(){hist=hist.slice(0,hi+1);hist.push(snap());hi=hist.length-1;histBtns();}
+function histBtns(){$('#undo').disabled=hi<=0;$('#redo').disabled=hi>=hist.length-1;}
+function applySnap(s){
+  if(s.look!==S.look)showLook(s.look);
+  S.grade=s.grade;applyGrade();S.real=s.real;applyReal();S.height=s.height;S.build=s.build;applyBody();
+}
+
+/* toast */
+var tT;function toast(m){$('#toastT').textContent=m;$('#toast').classList.add('on');clearTimeout(tT);tT=setTimeout(function(){$('#toast').classList.remove('on');},1800);}
+function badge(el,n){el.textContent=n;el.classList.toggle('n',n>0);el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+
+/* face crop */
+function crop(el,size,i){
+  var k=size/360;el.style.backgroundImage="url('"+H(LOOKS[i].f,1000)+"')";
+  el.style.backgroundSize=(1360*k)+'px '+(2048*k)+'px';el.style.backgroundPosition=(-500*k)+'px '+(-46*k)+'px';
+}
+
+/* 6.1 outfit swap */
+var figs=$('#figs'),scanEl=$('#scan');
+function rescan(){scanEl.classList.remove('go');void scanEl.offsetWidth;scanEl.classList.add('go');}
+function showLook(i,instant){
+  S.look=i;markGrid();
+  var tok=++swapTok;
+  if(instant){figs.innerHTML='';var f=document.createElement('div');f.className='fig';f.style.backgroundImage="url('"+IMGS[i].src+"')";figs.appendChild(f);curLook=i;after(i);return;}
+  (IMGS[i].decode?IMGS[i].decode():Promise.resolve()).catch(function(){}).then(function(){
+    if(tok!==swapTok)return;
+    var f=document.createElement('div');f.className='fig in';f.style.backgroundImage="url('"+IMGS[i].src+"')";
+    figs.appendChild(f);rescan();
+    f.addEventListener('animationend',function(){
+      [].slice.call(figs.children).forEach(function(c){if(c!==f)c.remove();});f.classList.remove('in');
+    },{once:true});
+    curLook=i;after(i);
+  });
+}
+function after(i){renderAcc();renderHot();crop($('#avatar'),98,i);renderThumbs();markFav();}
+
+/* 6.2 hotspots */
+function renderHot(){
+  var L=LOOKS[S.look],h='';
+  GROUPS.forEach(function(g){var arr=L[g[0]];if(!arr.length)return;var p=arr[0],xy=HS[g[0]];
+    h+='<button class="hs" data-g="'+g[0]+'" style="left:'+xy[0]+'%;top:'+xy[1]+'%"><span class="tip"><b>'+p.n+'</b> · '+p.c+' · $'+p.p+'</span></button>';});
+  $('#hotspots').innerHTML=h;
+}
+$('#hotspots').addEventListener('click',function(e){var b=e.target.closest('.hs');if(b){showView('outfits');openRow(b.dataset.g);}});
+
+/* 10.1 outfits */
+var CHIPS=[['all','All','grid'],['everyday','Everyday','tee'],['athletic','Athletic','run'],['sleep','Sleep','moon'],['formal','Formal','formal'],['party','Party','dress'],['street','Street','hoodie']];
+$('#chips').innerHTML=CHIPS.map(function(c,k){return '<button class="chip'+(k?'':' on')+'" data-c="'+c[0]+'"><span>'+svg(c[2])+'</span>'+c[1]+'</button>';}).join('');
+var HEARTI='<svg viewBox="0 0 24 24" fill="#1c1b1e"><path d="M12 20.5s-8-4.7-8-10.6A4.4 4.4 0 0 1 12 7a4.4 4.4 0 0 1 8 2.9c0 5.9-8 10.6-8 10.6z"/></svg>';
+$('#grid').innerHTML=LOOKS.map(function(l,i){return '<button class="gc" data-i="'+i+'"><span class="im" style="background-image:url(\''+H(l.f,360)+'\')"></span><span class="nm">'+l.name+'</span><span class="fav">'+HEARTI+'</span></button>';}).join('');
+var cards=$$('.gc');
+function markGrid(){cards.forEach(function(c){c.classList.toggle('on',+c.dataset.i===S.look);});}
+$('#chips').addEventListener('click',function(e){
+  var b=e.target.closest('.chip');if(!b)return;$$('.chip').forEach(function(c){c.classList.toggle('on',c===b);});
+  var cat=b.dataset.c,n=0,k=0;
+  cards.forEach(function(c){var m=cat==='all'||LOOKS[+c.dataset.i].cat===cat;
+    if(m){n++;c.style.display='';c.classList.remove('out','enter');void c.offsetWidth;c.style.animationDelay=(k++*45)+'ms';c.classList.add('enter');}
+    else{c.classList.add('out');setTimeout(function(){if(c.classList.contains('out'))c.style.display='none';},300);}
+  });
+  $('#lookCount').textContent=n+(n===1?' look':' looks');
+});
+$('#grid').addEventListener('click',function(e){var c=e.target.closest('.gc');if(c)pickLook(+c.dataset.i);});
+$('#grid').addEventListener('dblclick',function(e){var c=e.target.closest('.gc');if(!c)return;var i=+c.dataset.i;if(favs[i])delete favs[i];else favs[i]=1;markFav();badge($('#favN'),Object.keys(favs).length);});
+function markFav(){cards.forEach(function(c){c.classList.toggle('isfav',!!favs[+c.dataset.i]);});$('#favPath').setAttribute('fill',favs[S.look]?'#fff':'none');}
+function pickLook(i){if(i===S.look)return;showLook(i);commit();}
+var openG=null;
+function renderAcc(){
+  var L=LOOKS[S.look];
+  $('#acc').innerHTML=GROUPS.map(function(g){
+    var arr=L[g[0]],items=arr.length?arr.map(function(p,k){var key=S.look+':'+g[0]+':'+k;
+      return '<div class="it"><span>'+p.n+'</span><em>'+p.c+'</em><b>$'+p.p+'</b><button data-k="'+key+'" class="'+(cart[key]?'in':'')+'">'+(cart[key]?'✓':'+')+'</button></div>';}).join(''):'<div class="it none">Nothing in this look</div>';
+    return '<div class="ar'+(openG===g[0]?' open':'')+'" data-g="'+g[0]+'"><button>'+g[1]+(arr.length?'<small>· '+arr.length+'</small>':'')+'<span style="flex:1"></span><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg></button><div class="ab"><div>'+items+'</div></div></div>';
+  }).join('');
+}
+function openRow(g){openG=openG===g?null:g;$$('.ar').forEach(function(r){r.classList.toggle('open',r.dataset.g===openG);});}
+$('#acc').addEventListener('click',function(e){
+  var add=e.target.closest('.it button');
+  if(add){var k=add.dataset.k;if(cart[k])delete cart[k];else{cart[k]=1;toast('Added to cart');}
+    add.classList.toggle('in',!!cart[k]);add.textContent=cart[k]?'✓':'+';badge($('#cartN'),Object.keys(cart).length);return;}
+  var h=e.target.closest('.ar>button');if(h)openRow(h.parentNode.dataset.g);
+});
+
+/* 7. tabs + views */
+var VIEWS=['outfits','tune','dna','body','personality','story'],styleView='outfits';
+function showView(v){VIEWS.forEach(function(n){$('#v-'+n).classList.toggle('hide',n!==v);});if(v==='story')typeStory();}
+function moveInd(container,ind,btn,vertical){
+  if(!btn)return;
+  if(vertical)ind.style.top=btn.offsetTop+'px';else{ind.style.left=btn.offsetLeft+'px';ind.style.width=btn.offsetWidth+'px';}
+}
+function setTab(t){
+  $$('#tabs button').forEach(function(b){b.classList.toggle('on',b.dataset.t===t);});
+  moveInd($('#tabs'),$('#tabInd'),$('#tabs button.on'));
+  document.body.classList.toggle('notstyle',t!=='style');
+  showView(t==='style'?styleView:t);
+}
+$('#tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(b)setTab(b.dataset.t);});
+
+/* 9. side */
+var SIDE=[['Face','face'],['Hair','hair'],['Makeup','makeup'],['Body','body'],['Outfits','outfit'],['Accessories','acc'],['Tattoos','tattoo'],['Details','details']];
+$('#side').insertAdjacentHTML('beforeend',SIDE.map(function(s){return '<button data-s="'+s[0]+'"'+(s[0]==='Outfits'?' class="on"':'')+'>'+svg(s[1])+s[0]+'</button>';}).join(''));
+$('#side').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  $$('#side button').forEach(function(x){x.classList.toggle('on',x===b);});moveInd(null,$('#sideInd'),b,true);
+  var s=b.dataset.s;styleView=s==='Outfits'?'outfits':s==='Body'?'body':'tune';
+  if(styleView==='tune')renderTune(s);
+  showView(styleView);
+});
+
+/* 10.2 tune */
+var TUNE={
+ Face:{sl:[['Smile',35],['Jawline',50],['Freckles',10]],pre:['Soft','Defined','Natural','Sculpted']},
+ Hair:{sw:['#14110f','#3b2a20','#6b4a35','#a07c5a','#d9c3a1'],sl:[['Volume',60],['Shine',70]],pre:['High bun','Low bun','Long straight','Bob','Ponytail']},
+ Makeup:{sw:['#e8b4a8','#d98c8c','#b5525e','#8e3c4a'],sl:[['Blush',30],['Lip tint',45],['Glow',55]],pre:['No-makeup','Glass skin','Soft glam','Editorial']},
+ Accessories:{multi:true,pre:['Gold hoops','Silver chain','Shoulder bag','Sunglasses','Watch','Hair clip']},
+ Tattoos:{sl:[['Opacity',40]],pre:['None','Fine line','Floral','Script','Minimal dots']},
+ Details:{sl:[['Skin texture',70],['Fabric detail',80],['Lighting softness',60]],pre:['Studio','Natural','Cinematic']}
+};
+var tuneState={},tuneItem='Face';
+function ts(item){if(!tuneState[item]){var T=TUNE[item];tuneState[item]={sw:0,pre:T.multi?[]:[0],sl:(T.sl||[]).map(function(s){return s[1];})};}return tuneState[item];}
+function renderTune(item){
+  tuneItem=item;var T=TUNE[item],st=ts(item),h='';
+  $('#tuneH').textContent=item;
+  if(T.sw)h+='<div class="sw">'+T.sw.map(function(c,k){return '<button data-sw="'+k+'" class="'+(st.sw===k?'on':'')+'" style="background:'+c+'"></button>';}).join('')+'</div>';
+  if(T.multi)h+='<div class="lbl">Add items</div>';
+  h+='<div class="opts">'+T.pre.map(function(p,k){return '<button class="opt'+(st.pre.indexOf(k)>-1?' on':'')+'" data-pre="'+k+'">'+p+'</button>';}).join('')+'</div>';
+  (T.sl||[]).forEach(function(s,k){h+='<div class="sl"><div class="lr"><span>'+s[0]+'</span><b>'+st.sl[k]+'</b></div><input type="range" min="0" max="100" value="'+st.sl[k]+'" data-sl="'+k+'"></div>';});
+  $('#tuneBody').innerHTML=h;$$('#tuneBody input[type=range]').forEach(paint);
+}
+$('#tuneBody').addEventListener('click',function(e){
+  var st=ts(tuneItem),T=TUNE[tuneItem];
+  var sw=e.target.closest('[data-sw]');if(sw){st.sw=+sw.dataset.sw;renderTune(tuneItem);rescan();return;}
+  var p=e.target.closest('[data-pre]');if(!p)return;var k=+p.dataset.pre;
+  if(T.multi){var ix=st.pre.indexOf(k);if(ix>-1)st.pre.splice(ix,1);else st.pre.push(k);}else st.pre=[k];
+  renderTune(tuneItem);rescan();toast(tuneItem+': '+T.pre[k]);
+});
+$('#tuneBody').addEventListener('input',function(e){var r=e.target;if(r.dataset.sl==null)return;ts(tuneItem).sl[+r.dataset.sl]=+r.value;r.previousElementSibling.querySelector('b').textContent=r.value;paint(r);});
+$('#tuneBody').addEventListener('change',function(e){if(e.target.dataset.sl!=null)rescan();});
+function paint(r){var p=(r.value-r.min)/(r.max-r.min)*100;r.style.setProperty('--p',p+'%');}
+
+/* 8. profile */
+var idk=0;
+var pname=$('#pname'),pencil=$('#pencil'),editing=false;
+function endEdit(){editing=false;pname.contentEditable='false';pname.classList.remove('edit');toast('Name updated');}
+pencil.addEventListener('click',function(){
+  if(editing){endEdit();return;}
+  editing=true;pname.contentEditable='true';pname.classList.add('edit');pname.focus();
+  var r=document.createRange();r.selectNodeContents(pname);var s=getSelection();s.removeAllRanges();s.addRange(r);
+});
+pname.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();endEdit();}});
+var shRot=0;
+function shuffleId(){
+  shRot+=180;$('#shuffle').style.transform='rotate('+shRot+'deg)';
+  idk=(idk+1)%IDS.length;var id=IDS[idk],target=id[0],f=0;
+  var A='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  (function scr(){
+    f++;pname.textContent=f<14?target.split('').map(function(c){return c===' '||c==='-'?c:A[Math.random()*A.length|0];}).join(''):target;
+    if(f<14)requestAnimationFrame(scr);
+  })();
+  $('#page').textContent=id[1];$('#pcity').textContent=id[2];$('#ptemp').textContent=id[3];
+  $('#dage').textContent=id[1];$('#dseed').textContent='VL-0'+(400+idk*37)+'-KR';
+}
+$('#shuffle').addEventListener('click',shuffleId);
+$('#reseed').addEventListener('click',function(){shuffleId();rescan();});
+
+/* 10.3 helix */
+var helix=$('#helix'),ht=0;
+(function hloop(){
+  ht+=.03;var h='';
+  for(var i=0;i<26;i++){
+    var x=12+i*11,s=Math.sin(i*.42+ht),c=Math.cos(i*.42+ht);
+    var y1=60+s*38,y2=60-s*38,d1=(c+1)/2,d2=1-d1;
+    h+='<line x1="'+x+'" y1="'+y1+'" x2="'+x+'" y2="'+y2+'" stroke="rgba(255,255,255,'+(.15+Math.max(d1,d2)*.25).toFixed(2)+')" stroke-width="1"/>';
+    h+='<circle cx="'+x+'" cy="'+y1+'" r="'+(2+d1*2.4).toFixed(2)+'" fill="rgba(255,255,255,'+(.4+d1*.6).toFixed(2)+')"/>';
+    h+='<circle cx="'+x+'" cy="'+y2+'" r="'+(2+d2*2.4).toFixed(2)+'" fill="rgba(255,255,255,'+(.4+d2*.6).toFixed(2)+')"/>';
+  }
+  helix.innerHTML=h;requestAnimationFrame(hloop);
+})();
+
+/* 10.4 body */
+var hR=$('#hR'),bR=$('#bR');
+function applyBody(){
+  hR.value=S.height;bR.value=S.build;$('#hV').textContent=S.height;$('#bV').textContent=S.build;paint(hR);paint(bR);
+  var mi=$('#modelInner').style;mi.setProperty('--height',1+(S.height-168)/168*.9);mi.setProperty('--build',1+(S.build-50)/50*.07);
+}
+hR.addEventListener('input',function(){S.height=+hR.value;applyBody();});
+bR.addEventListener('input',function(){S.build=+bR.value;applyBody();});
+hR.addEventListener('change',commit);bR.addEventListener('change',commit);
+$('#posture').addEventListener('click',function(e){var b=e.target.closest('.opt');if(!b)return;$$('#posture .opt').forEach(function(x){x.classList.toggle('on',x===b);});rescan();});
+var FR=['full','mid','portrait'],FRL={full:'Full',mid:'Mid',portrait:'Portrait'};
+function setFraming(f){framing=f;var w=$('#modelWrap');w.classList.remove('full','mid','portrait');w.classList.add(f);$('#poseL').textContent=FRL[f];
+  $$('#framing .opt').forEach(function(x){x.classList.toggle('on',x.dataset.f===f);});}
+$('#framing').addEventListener('click',function(e){var b=e.target.closest('.opt');if(b)setFraming(b.dataset.f);});
+$('#pose').addEventListener('click',function(){setFraming(FR[(FR.indexOf(framing)+1)%3]);});
+
+/* 10.5 personality */
+var sel=['Curious','Creative','Gentle'],radar=[50,50,50,50,50];
+$('#traits').innerHTML=TRAITS.map(function(t){return '<button class="opt" data-t="'+t+'">'+t+'</button>';}).join('');
+function hash(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))>>>0;return h;}
+function computeRadar(){var key=sel.slice().sort().join('|');for(var a=0;a<5;a++)radar[a]=30+hash(key+'#'+a)%65;}
+function drawRadar(){
+  var cx=125,cy=110,R=78,AX=['Openness','Energy','Warmth','Focus','Humour'],h='';
+  function pt(a,r){var ang=-Math.PI/2+a*2*Math.PI/5;return [cx+Math.cos(ang)*r,cy+Math.sin(ang)*r];}
+  for(var g=1;g<=4;g++){h+='<polygon fill="none" stroke="rgba(255,255,255,.2)" points="'+[0,1,2,3,4].map(function(a){return pt(a,R*g/4).join(',');}).join(' ')+'"/>';}
+  for(var a=0;a<5;a++){var e=pt(a,R),l=pt(a,R+14);h+='<line x1="'+cx+'" y1="'+cy+'" x2="'+e[0]+'" y2="'+e[1]+'" stroke="rgba(255,255,255,.2)"/><text x="'+l[0]+'" y="'+(l[1]+4)+'" fill="rgba(255,255,255,.72)" font-size="11" text-anchor="middle">'+AX[a]+'</text>';}
+  h+='<polygon fill="rgba(255,255,255,.28)" stroke="#fff" stroke-width="1.5" points="'+radar.map(function(v,a){return pt(a,R*v/100).join(',');}).join(' ')+'"/>';
+  $('#radar').innerHTML=h;
+  $('#oR').value=radar[0];$('#eR').value=radar[1];$('#oV').textContent=radar[0];$('#eV').textContent=radar[1];paint($('#oR'));paint($('#eR'));
+}
+function markTraits(){$$('#traits .opt').forEach(function(b){b.classList.toggle('on',sel.indexOf(b.dataset.t)>-1);});}
+$('#traits').addEventListener('click',function(e){var b=e.target.closest('.opt');if(!b)return;var t=b.dataset.t,ix=sel.indexOf(t);
+  if(ix>-1)sel.splice(ix,1);else{sel.push(t);if(sel.length>3)sel.shift();}markTraits();computeRadar();drawRadar();});
+$('#oR').addEventListener('input',function(){radar[0]=+this.value;drawRadar();});
+$('#eR').addEventListener('input',function(){radar[1]=+this.value;drawRadar();});
+
+/* 10.6 story */
+var typeT=null;
+function typeStory(){
+  clearInterval(typeT);
+  var t=sel.length?sel:['Curious','Creative','Gentle'];
+  var txt=pname.textContent+' is '+S.height+' cm of '+t[0].toLowerCase()+' energy from '+$('#pcity').textContent.split(',')[0]+'. Mornings start with a long walk along the river in her '+LOOKS[S.look].name.toLowerCase()+' look; friends call her '+(t[1]||t[0]).toLowerCase()+' and a little '+(t[2]||t[0]).toLowerCase()+'. She collects film cameras, keeps a sketchbook of strangers\' outfits, and is saving for a studio of her own.';
+  var n=0,el=$('#story');
+  typeT=setInterval(function(){n=Math.min(txt.length,n+2);el.innerHTML=txt.slice(0,n).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'<span class="caret"></span>';if(n>=txt.length)clearInterval(typeT);},22);
+}
+$('#rewrite').addEventListener('click',function(){var p=TRAITS.slice().sort(function(){return Math.random()-.5;});sel=p.slice(0,3);markTraits();computeRadar();drawRadar();typeStory();});
+
+/* 11.2 realism */
+var realR=$('#realR');
+function applyReal(){
+  realR.value=S.real;$('#realV').textContent=S.real+'%';paint(realR);
+  var k=Math.max(0,(80-S.real)/80);
+  document.documentElement.style.setProperty('--real','saturate('+(1+k*.9)+') contrast('+(1+k*.25)+') blur('+(k*1.4)+'px) brightness('+(1+k*.05)+')');
+  $('#bg').style.filter='blur('+(k*5)+'px) saturate('+(1+k*.5)+')';
+}
+realR.addEventListener('input',function(){S.real=+realR.value;applyReal();});
+realR.addEventListener('change',commit);
+
+/* 11.3 filter */
+var fOff=0;
+$('#flist').innerHTML=FILTERS.map(function(f,k){return '<button data-k="'+k+'">'+f[0]+'</button>';}).join('');
+function applyGrade(){var f=FILTERS[S.grade];$('#grade').style.filter=f[1];$('#tint').style.background=f[2];$('#fname').textContent=f[0];renderThumbs();}
+function renderThumbs(){
+  var h='';for(var j=0;j<5;j++){var k=(fOff+j)%FILTERS.length;h+='<button class="ft'+(k===S.grade?' on':'')+'" data-k="'+k+'" title="'+FILTERS[k][0]+'" style="filter:'+FILTERS[k][1]+'"><i style="background:'+FILTERS[k][2]+'"></i></button>';}
+  $('#fthumbs').innerHTML=h;$$('.ft').forEach(function(t){crop(t,64,S.look);});
+}
+function setGrade(k){S.grade=k;applyGrade();commit();}
+$('#fthumbs').addEventListener('click',function(e){var b=e.target.closest('.ft');if(b)setGrade(+b.dataset.k);});
+$('#fbtn').addEventListener('click',function(e){e.stopPropagation();this.classList.toggle('open');$('#flist').classList.toggle('open');});
+$('#flist').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;setGrade(+b.dataset.k);$('#flist').classList.remove('open');$('#fbtn').classList.remove('open');});
+$('#fnext').addEventListener('click',function(){fOff=(fOff+1)%FILTERS.length;var t=$('#fthumbs');t.style.transition='none';t.style.transform='translateX(-14px)';renderThumbs();
+  requestAnimationFrame(function(){t.style.transition='transform .35s';t.style.transform='none';});});
+
+/* 11.1 controls */
+$('#undo').addEventListener('click',undo);$('#redo').addEventListener('click',redo);
+function undo(){if(hi<=0)return;hi--;applySnap(hist[hi]);histBtns();}
+function redo(){if(hi>=hist.length-1)return;hi++;applySnap(hist[hi]);histBtns();}
+$('#reset').addEventListener('click',function(){applySnap({look:0,grade:0,real:75,height:168,build:50});setFraming('full');commit();toast('Reset to default');});
+addEventListener('keydown',function(e){
+  if(editing||e.target.tagName==='INPUT')return;
+  var m=e.metaKey||e.ctrlKey;
+  if(m&&e.key.toLowerCase()==='z'){e.preventDefault();if(e.shiftKey)redo();else undo();}
+  else if(e.key==='ArrowRight')pickLook((S.look+1)%8);
+  else if(e.key==='ArrowLeft')pickLook((S.look+7)%8);
+});
+
+/* more menu / icons */
+$('#moreB').addEventListener('click',function(e){e.stopPropagation();$('#more').classList.toggle('open');});
+$('#more').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;$('#more').classList.remove('open');toast(b.dataset.m);});
+$('#favB').addEventListener('click',function(){var i=S.look;if(favs[i])delete favs[i];else favs[i]=1;markFav();badge($('#favN'),Object.keys(favs).length);});
+var lib=$('#lib');
+$('#bagB').addEventListener('click',function(e){e.stopPropagation();lib.classList.toggle('open');});
+document.addEventListener('click',function(e){
+  if(!e.target.closest('#lib')&&!e.target.closest('#bagB')&&!e.target.closest('#save'))lib.classList.remove('open');
+  if(!e.target.closest('#more')&&!e.target.closest('#moreB'))$('#more').classList.remove('open');
+  if(!e.target.closest('.fsel'))$('#flist').classList.remove('open'),$('#fbtn').classList.remove('open');
+});
+
+/* 11.4 save */
+$('#saveBtn').addEventListener('click',function(){
+  var b=this;b.classList.remove('shine');void b.offsetWidth;b.classList.add('shine');
+  lib.classList.add('open');
+  var look=S.look,grade=S.grade,slot=saved.length;
+  var fl=document.createElement('div');fl.className='flyer';fl.style.backgroundImage="url('"+H(LOOKS[look].f,1000)+"')";fl.style.filter=FILTERS[grade][1];
+  // start over the model box (middle 50% of its width)
+  fl.style.left=(800-110)+'px';fl.style.top='72px';fl.style.width='220px';fl.style.height='663px';
+  stage.appendChild(fl);
+  var row=$('#libRow');$('#libEmpty').style.display='none';
+  var tx=504+18+slot*82,ty=560+16+30;
+  requestAnimationFrame(function(){requestAnimationFrame(function(){fl.style.left=tx+'px';fl.style.top=ty+'px';fl.style.width='72px';fl.style.height='104px';});});
+  setTimeout(function(){
+    fl.remove();saved.push(look);
+    var c=document.createElement('button');c.className='lc';c.style.backgroundImage="url('"+H(LOOKS[look].f,360)+"')";c.style.filter=FILTERS[grade][1];
+    c.addEventListener('click',function(){pickLook(look);});row.appendChild(c);
+    badge($('#libN'),saved.length);$('#libNote').textContent=saved.length+' saved';toast('Saved to library');
+  },860);
+});
+
+/* 12. randomize */
+var randRot=0;
+$('#rand').addEventListener('click',function(){
+  randRot+=360;$('#rand svg').style.transform='rotate('+randRot+'deg)';
+  var vis=[].filter.call(cards,function(c){return c.style.display!=='none';});
+  var target;do{target=Math.random()*8|0;}while(target===S.look);
+  var step=0,delay=50;
+  (function r(){
+    cards.forEach(function(c){c.classList.remove('roul');});
+    if(step<12){vis[step%vis.length].classList.add('roul');step++;delay+=8;setTimeout(r,delay);}
+    else{
+      showLook(target);S.grade=Math.random()*4|0;applyGrade();S.real=55+(Math.random()*45|0);applyReal();commit();
+    }
+  })();
+});
+
+/* 14. init */
+setTimeout(function(){},0);
+showLook(0,true);applyGrade();applyReal();applyBody();computeRadar();drawRadar();markTraits();renderTune('Face');
+commit();
+function place(){moveInd($('#tabs'),$('#tabInd'),$('#tabs button.on'));moveInd(null,$('#sideInd'),$('#side button.on'),true);}
+place();addEventListener('load',place);if(document.fonts)document.fonts.ready.then(place);
+})();
+</script>
+</body>
+</html>

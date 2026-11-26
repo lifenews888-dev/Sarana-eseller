@@ -71,6 +71,23 @@ const PLATFORM_HOSTS = new Set([
   '127.0.0.1:3000',
 ]);
 
+// Шинэ загварын хуудсууд (public/designs/*.html). Параметргүй үед л солигдоно —
+// ?q=, ?category=, ?entityType= гэх мэт шүүлтүүртэй хуучин хуудсууд хэвээр ажиллана.
+const DESIGN_PAGES: Record<string, string> = {
+  '/': '/designs/vertex.html',
+  '/store': '/designs/atelia.html',
+  '/feed': '/designs/krung.html',
+  '/looks': '/designs/nowhere.html',
+  '/try-on': '/designs/vell.html',
+};
+function designRewrite(req: NextRequest): NextResponse | null {
+  const target = DESIGN_PAGES[req.nextUrl.pathname];
+  if (!target) return null;
+  const keys = [...req.nextUrl.searchParams.keys()].filter((k) => k !== 'ref');
+  if (keys.length) return null;
+  return NextResponse.rewrite(new URL(target, req.url));
+}
+
 // Борлуулагчийн холбоос (?ref=код) — 30 хоног cookie-д хадгална. Шалгалтыг захиалга үүсэх үед серверт хийнэ.
 function withReferralCookie(req: NextRequest, res: NextResponse): NextResponse {
   const ref = req.nextUrl.searchParams.get('ref');
@@ -196,12 +213,12 @@ export async function proxy(req: NextRequest) {
 
   // Skip platform's own domains
   if (PLATFORM_HOSTS.has(hostname) || PLATFORM_HOSTS.has(hostname.split(':')[0])) {
-    return withReferralCookie(req, NextResponse.next());
+    return withReferralCookie(req, designRewrite(req) ?? NextResponse.next());
   }
 
   // Skip Vercel preview URLs
   if (hostname.includes('vercel.app') || hostname.includes('vercel-') || hostname.includes('.local')) {
-    return withReferralCookie(req, NextResponse.next());
+    return withReferralCookie(req, designRewrite(req) ?? NextResponse.next());
   }
 
   // Custom domain: shop.nomin.mn → /shop-sub/_custom/...

@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>eseller.mn — Spatial Closet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300&family=Inter:wght@300;400;500&family=Montserrat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tile:rgba(112,101,94,.66);--tile-hi:rgba(150,139,131,.84);
+  --frame:rgba(133,122,114,.80);--edge:rgba(255,255,255,.22);
+  --u:calc(min(100vw,177.78vh)/100);--py:0deg;--px:0deg;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#1a120c;overflow:hidden;color:#fff;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;height:100vh}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+a{color:inherit;text-decoration:none}
+.glass{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%),var(--tile);border:1px solid var(--edge);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 24px 50px -26px rgba(0,0,0,.65)}
+
+#room{position:fixed;inset:-2%;background:center/cover no-repeat;will-change:transform}
+#shade{position:fixed;inset:0;background:radial-gradient(120% 95% at 50% 45%,transparent 55%,rgba(10,6,3,.42) 100%);pointer-events:none}
+.corner{position:fixed;font-weight:300;z-index:40}
+#brand{left:3.1vw;top:4.4vh;font-size:clamp(16px,1.5vw,27px)}
+#arc{left:3.1vw;bottom:4.4vh;font-size:clamp(14px,1.25vw,22px)}
+#yr{right:3.1vw;bottom:4.4vh;font-size:clamp(14px,1.25vw,22px)}
+
+#scene{position:fixed;left:50%;top:50%;width:min(100vw,177.78vh);height:min(56.25vw,100vh);transform:translate(-50%,-50%);perspective:calc(var(--u)*140)}
+#plane{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(var(--py)) rotateX(var(--px))}
+
+/* 4. window */
+#win{position:absolute;left:19.4%;top:20.5%;width:32.4%;height:58%;transform:rotateY(-7deg) rotateZ(-.8deg);transform-origin:0 50%;transform-style:preserve-3d}
+.frame{position:absolute;inset:0;border-radius:calc(var(--u)*1.45);border:1px solid rgba(255,255,255,.34);
+  background:linear-gradient(165deg,rgba(255,255,255,.16),transparent 35%),var(--frame);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 40px 80px -30px rgba(0,0,0,.7),0 10px 30px -10px rgba(0,0,0,.4)}
+.photo{position:absolute;left:2.6%;right:2.6%;top:3.4%;bottom:3.4%;border-radius:calc(var(--u)*.55);overflow:hidden;background:#2a211b}
+.lay{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity .7s}
+.lay.on{opacity:1}
+#catLay{background:radial-gradient(70% 80% at 35% 50%,#8a7d70,#5c5047 60%,#3f352e)}
+#catSprite{position:absolute;left:5%;top:14%;width:40%;height:68%;background-repeat:no-repeat;filter:drop-shadow(0 20px 26px rgba(0,0,0,.45));
+  transform:translateY(6%);transition:transform .8s cubic-bezier(.2,.85,.25,1.05)}
+#catLay.on #catSprite{transform:none}
+.over{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(18,12,8,.55),rgba(18,12,8,.1) 55%,transparent),linear-gradient(0deg,rgba(18,12,8,.35),transparent 45%)}
+.cap{position:absolute;left:4.5%;bottom:8.5%;transition:opacity .35s,transform .35s}
+.cap.out{opacity:0;transform:translateY(10px)}
+.kick{font-size:calc(var(--u)*.5);letter-spacing:.12em;text-transform:uppercase;font-variant:small-caps;color:rgba(255,255,255,.8);margin-bottom:calc(var(--u)*.5)}
+.head{font-family:Fraunces,serif;font-weight:300;font-variation-settings:"opsz" 144;font-size:calc(var(--u)*2.15);line-height:1.08;letter-spacing:-.015em}
+.side{position:absolute;left:49%;top:50%;transform:translateY(-50%);width:30%;opacity:0;pointer-events:none;transition:opacity .5s}
+.side.on{opacity:1;pointer-events:auto}
+.pills{display:flex;gap:calc(var(--u)*.5);margin-top:calc(var(--u)*1)}
+.pills a,.pills button{white-space:nowrap;border-radius:99px;padding:calc(var(--u)*.45) calc(var(--u)*.9);font-size:calc(var(--u)*.62);font-weight:500}
+.pills .shop{background:#fff;color:#1a120c}
+.pills .back{border:1px solid rgba(255,255,255,.8)}
+#tabs{position:absolute;left:3%;bottom:100%;margin-bottom:calc(var(--u)*1.15);display:flex;gap:calc(var(--u)*.9);align-items:flex-end;transform:rotateZ(-4deg);transform-origin:0 100%}
+.tab{position:relative;height:calc(var(--u)*2.05);padding:0 calc(var(--u)*1.25);border-radius:99px;font-family:Montserrat,sans-serif;font-weight:500;font-size:calc(var(--u)*.55);
+  letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-bottom:calc(var(--u)*.35);white-space:nowrap;
+  transition:height .5s cubic-bezier(.3,1.25,.5,1),padding .5s cubic-bezier(.3,1.25,.5,1),font-size .5s cubic-bezier(.3,1.25,.5,1),margin .5s cubic-bezier(.3,1.25,.5,1),background .5s,letter-spacing .5s}
+.tab:hover{background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%),var(--tile-hi)}
+.tab.on{height:calc(var(--u)*3.1);padding:0 calc(var(--u)*1.7);font-weight:600;font-size:calc(var(--u)*1.05);letter-spacing:.12em;color:#fff;margin-bottom:0;
+  background:linear-gradient(160deg,rgba(255,255,255,.1),rgba(255,255,255,0) 40%),var(--tile-hi)}
+.tab .stem{position:absolute;left:50%;top:100%;width:calc(var(--u)*1.6);height:calc(var(--u)*1.25);margin-left:calc(var(--u)*-.8);background:var(--frame);
+  border-left:1px solid var(--edge);border-right:1px solid var(--edge);transform:scaleY(0);transform-origin:50% 100%;transition:transform .5s cubic-bezier(.3,1.25,.5,1)}
+.tab.on .stem{transform:scaleY(1)}
+
+/* 5. wall */
+#wall{position:absolute;left:52.2%;top:2.5%;width:28.6%;height:88%;transform:rotateY(-24deg);transform-origin:0 50%;transform-style:preserve-3d}
+.tile{position:absolute;border-radius:calc(var(--u)*1.05);transition:transform .45s cubic-bezier(.25,1.3,.45,1),background .45s,opacity .3s}
+.tile:hover{transform:translateZ(calc(var(--u)*2.4));background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(255,255,255,0) 40%),var(--tile-hi)}
+.tile.gone{opacity:0;pointer-events:none}
+.tile .sp{position:absolute;left:14%;right:14%;top:10%;bottom:30%;background-repeat:no-repeat;filter:drop-shadow(0 6px 8px rgba(0,0,0,.35))}
+.tile .lb{position:absolute;left:0;right:0;bottom:11%;text-align:center;font-size:calc(var(--u)*.78);font-weight:400}
+
+/* 6. pop */
+#pop{position:absolute;z-index:30;left:45.3%;top:41%;width:18.2%;height:28.5%;border-radius:calc(var(--u)*1.25);
+  background:linear-gradient(160deg,rgba(255,255,255,.18),transparent 40%),var(--tile-hi);border:1px solid rgba(255,255,255,.38);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 40px 70px -24px rgba(0,0,0,.75);will-change:transform;cursor:pointer}
+#pop .sp{position:absolute;left:18%;right:18%;top:8%;bottom:34%;background-repeat:no-repeat;filter:drop-shadow(0 10px 14px rgba(0,0,0,.4))}
+#pop .nm{position:absolute;left:0;right:0;bottom:17%;text-align:center;font-weight:500;font-size:calc(var(--u)*1.25)}
+#pop .ct{position:absolute;left:0;right:0;bottom:8%;text-align:center;font-size:calc(var(--u)*.72);color:rgba(255,255,255,.8)}
+#pop .arr{position:absolute;right:8%;top:7%;width:calc(var(--u)*1.2);height:calc(var(--u)*1.2);transition:transform .35s}
+#pop:hover .arr{transform:translate(3px,-3px)}
+
+@media (max-aspect-ratio:1/1){
+  :root{--u:calc(100vw/52)}
+  #scene{width:100vw;height:100vh}
+  #win{left:5%;top:14%;width:90%;height:34%;transform:none}
+  #wall{left:6%;top:56%;width:88%;height:40%;transform:none}
+  #pop{left:56%;top:30%;width:38%;height:24%}
+}
+</style>
+</head>
+<body>
+<div id="room"></div><div id="shade"></div>
+<a class="corner" id="brand" href="/">eseller.mn</a>
+<div class="corner" id="arc">AR Concept</div>
+<div class="corner" id="yr">2026</div>
+
+<div id="scene">
+  <div id="plane">
+    <div id="win">
+      <div id="tabs">
+        <button class="tab glass" data-t="0">Trending<span class="stem"></span></button>
+        <button class="tab glass on" data-t="1">Collections<span class="stem"></span></button>
+        <button class="tab glass" data-t="2">Explore<span class="stem"></span></button>
+      </div>
+      <div class="frame"></div>
+      <div class="photo">
+        <div class="lay" id="e0"></div><div class="lay on" id="e1"></div><div class="lay" id="e2"></div>
+        <div class="lay" id="catLay"><div id="catSprite"></div></div>
+        <div class="over"></div>
+        <div class="cap" id="cap"><div class="kick" id="kick">Featured collections</div><div class="head" id="head">Change of season,<br>change of clothes</div></div>
+        <div class="side" id="side"><div class="kick" id="sKick"></div><div class="head" id="sHead"></div>
+          <div class="pills"><a class="shop" id="shopNow" href="/store">Shop now</a><button class="back" id="back">← Back</button></div></div>
+      </div>
+    </div>
+    <div id="wall"></div>
+  </div>
+  <div id="pop" class="glass" role="button" tabindex="0"><div class="sp" id="popSp"></div><div class="nm" id="popNm"></div><div class="ct" id="popCt"></div>
+    <svg class="arr" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var CDN='https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/';
+function H(f,w){return 'https://images.higgs.ai/?default=1&output=webp&url='+encodeURIComponent(CDN+f)+'&w='+w+'&q=86';}
+var A={
+  bg:H('hf_20261114_023843_9fce0893-294b-4ede-8abb-5962c0f6f88a.png',2400),
+  e1:H('hf_20261114_023840_7405e42a-f5b5-4fc5-875d-3465a2919c7f.png',1400),
+  e2:H('hf_20261114_023840_1717a76f-b56b-4b5e-8fc9-b37f35f4bc5d.png',1400),
+  e3:H('hf_20261114_023840_614d8b2e-873e-490c-970a-0292c1076ace.png',1400),
+  ps:H('hf_20261114_023841_93d89f89-7be4-4b0c-8b6c-6fbb7cf46112.png',1400)
+};
+var BOX={brooch:[36,132,469,580],boot:[546,152,993,567],blouse:[1045,89,1519,622],prism:[1623,67,1983,624],
+  red:[43,753,479,1239],beige:[550,753,986,1239],coat:[1066,681,1498,1297],sandal:[1576,818,2008,1207]};
+var TILES=[
+  {n:'Jewelry',p:'brooch',slot:[0,9,46,19],c:128},
+  {n:'Outerwear',p:'coat',slot:[0,30,46,19],c:87},
+  {n:'Clothing',p:'blouse',slot:[0,51,46,19],c:345},
+  {n:'Editorial',p:'red',slot:[0,72,46,19],c:24},
+  {n:'Shoes',p:'boot',slot:[52,2,48,22],c:212},
+  {n:'Accessories',p:'prism',slot:[52,26,48,22],c:96},
+  {n:'Bags',p:'beige',slot:[52,52,48,22],c:158},
+  {n:'Sale',p:'sandal',slot:[52,76,48,22],c:63}
+];
+var TABS=[['Trending now','Warm coats,<br>cold mornings'],['Featured collections','Change of season,<br>change of clothes'],['Explore the night','After dark,<br>dressed in silk']];
+var $=function(s){return document.querySelector(s);},$$=function(s){return document.querySelectorAll(s);};
+
+$('#room').style.backgroundImage="url('"+A.bg+"')";
+$('#e0').style.backgroundImage="url('"+A.e2+"')";$('#e1').style.backgroundImage="url('"+A.e1+"')";$('#e2').style.backgroundImage="url('"+A.e3+"')";
+
+/* sprites — measured with offsetWidth/Height (3D transforms distort rects) */
+function sprite(el,key){
+  var b=BOX[key],bw=b[2]-b[0],bh=b[3]-b[1],W=el.offsetWidth,Hh=el.offsetHeight;if(!W||!Hh)return;
+  var k=Math.min(W/bw,Hh/bh),dw=bw*k,dh=bh*k,ox=(W-dw)/2,oy=(Hh-dh)/2;
+  el.style.backgroundImage="url('"+A.ps+"')";
+  el.style.backgroundSize=(2048*k)+'px '+(1360*k)+'px';
+  el.style.backgroundPosition=(ox-b[0]*k)+'px '+(oy-b[1]*k)+'px';
+  el.style.clipPath='inset('+oy+'px '+ox+'px '+oy+'px '+ox+'px)';
+  el.dataset.key=key;
+}
+var wall=$('#wall');
+wall.innerHTML=TILES.map(function(t,i){var s=t.slot;return '<button class="tile glass" data-i="'+i+'" style="left:'+s[0]+'%;top:'+s[1]+'%;width:'+s[2]+'%;height:'+s[3]+'%"><span class="sp"></span><span class="lb">'+t.n+'</span></button>';}).join('');
+var tiles=$$('.tile');
+function drawSprites(){
+  tiles.forEach(function(t){sprite(t.querySelector('.sp'),TILES[+t.dataset.i].p);});
+  sprite($('#popSp'),TILES[popI].p);sprite($('#catSprite'),TILES[catI].p);
+}
+
+/* state */
+var tab=1,popI=2,catI=2,mode='tab';
+function setTab(t){
+  tab=(t+3)%3;mode='tab';
+  $$('.tab').forEach(function(b){b.classList.toggle('on',+b.dataset.t===tab);});
+  ['e0','e1','e2'].forEach(function(id,k){$('#'+id).classList.toggle('on',k===tab);});
+  $('#catLay').classList.remove('on');$('#side').classList.remove('on');
+  var cap=$('#cap');cap.classList.add('out');
+  setTimeout(function(){$('#kick').textContent=TABS[tab][0];$('#head').innerHTML=TABS[tab][1];cap.classList.remove('out');},300);
+}
+function openCat(i){
+  catI=i;mode='cat';var t=TILES[i];
+  sprite($('#catSprite'),t.p);
+  ['e0','e1','e2'].forEach(function(id){$('#'+id).classList.remove('on');});
+  var cl=$('#catLay');cl.classList.remove('on');void cl.offsetWidth;cl.classList.add('on');
+  $('#cap').classList.add('out');
+  $('#sKick').textContent='Category · '+t.c+' items';$('#sHead').textContent=t.n;
+  $('#shopNow').href='/store?q='+encodeURIComponent(t.n);
+  $('#side').classList.add('on');
+}
+function fillPop(i){
+  popI=i;var t=TILES[i];$('#popNm').textContent=t.n;$('#popCt').textContent=t.c+' items';
+  tiles.forEach(function(el){el.classList.toggle('gone',+el.dataset.i===i);});
+  sprite($('#popSp'),t.p);
+}
+$$('.tab').forEach(function(b){b.addEventListener('click',function(){setTab(+b.dataset.t);});});
+$('#back').addEventListener('click',function(){setTab(tab);});
+var pop=$('#pop');
+pop.addEventListener('click',function(){openCat(popI);});
+pop.addEventListener('keydown',function(e){if(e.key==='Enter')openCat(popI);});
+wall.addEventListener('click',function(e){
+  var el=e.target.closest('.tile');if(!el)return;var i=+el.dataset.i;
+  var from=el.getBoundingClientRect();
+  fillPop(i);
+  // FLIP the pop-out card from the tile's on-screen rect to its own place
+  pop.style.transition='none';pop.style.transform='';
+  var to=pop.getBoundingClientRect();
+  var sx=from.width/to.width,sy=from.height/to.height;
+  pop.style.transformOrigin='0 0';
+  pop.style.transform='translate('+(from.left-to.left)+'px,'+(from.top-to.top)+'px) scale('+sx+','+sy+')';pop.style.opacity='.6';
+  void pop.offsetWidth;
+  pop.style.transition='transform .65s cubic-bezier(.2,.85,.25,1.05),opacity .65s cubic-bezier(.2,.85,.25,1.05)';
+  pop.style.transform=popT;pop.style.opacity='1';
+  setTimeout(function(){pop.style.transition='';},700);
+  openCat(i);
+});
+addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight')setTab(tab+1);else if(e.key==='ArrowLeft')setTab(tab-1);else if(e.key==='Escape')setTab(tab);
+});
+
+/* 7. parallax — one eased transform, styles written only while moving */
+var plane=$('#plane'),room=$('#room'),tx=0,ty=0,cx=0,cy=0,popT='',raf=0;
+addEventListener('pointermove',function(e){tx=e.clientX/innerWidth-.5;ty=e.clientY/innerHeight-.5;if(!raf)raf=requestAnimationFrame(loop);});
+function loop(){
+  cx+=(tx-cx)*.06;cy+=(ty-cy)*.06;
+  plane.style.setProperty('--py',(cx*5)+'deg');plane.style.setProperty('--px',(-cy*3)+'deg');
+  room.style.transform='translate('+(-cx*18)+'px,'+(-cy*10)+'px)';
+  popT='translate('+(cx*14)+'px,'+(cy*8)+'px)';if(!pop.style.transition)pop.style.transform=popT;
+  if(Math.abs(tx-cx)>.0005||Math.abs(ty-cy)>.0005)raf=requestAnimationFrame(loop);else raf=0;
+}
+
+/* init */
+fillPop(2);drawSprites();
+addEventListener('resize',drawSprites);
+if(document.fonts)document.fonts.ready.then(drawSprites);
+})();
+</script>
+</body>
+</html>
