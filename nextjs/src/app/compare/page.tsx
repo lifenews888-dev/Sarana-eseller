@@ -2,6 +2,9 @@
 
 import Link from 'next/link';
 import { Check, X, Minus, ArrowRight, Crown, Users, Link2, Shield, Truck, MessageSquare, Smartphone, Percent, Store, CircleAlert, CheckCircle, XCircle, Megaphone } from 'lucide-react';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
+import MobileNav from '@/components/shared/MobileNav';
 
 const rows = [
   { feature: '4 талын экосистем',   eseller: 'Эзэн+Борлуулагч+Авагч+Жолооч', zary: 'Зөвхөн худалдагч+авагч', eOk: true, zOk: false, highlight: true },
@@ -38,7 +41,9 @@ const uniqueFeatures = [
 
 export default function ComparePage() {
   return (
-    <main className="max-w-[900px] mx-auto px-4 py-10 pb-20">
+    <>
+    <Navbar />
+    <main className="max-w-[900px] mx-auto px-4 pt-26 pb-20">
 
       {/* Hero */}
       <div className="text-center mb-12">
@@ -135,5 +140,8 @@ export default function ComparePage() {
         </div>
       </div>
     </main>
+    <Footer />
+    <MobileNav />
+    </>
   );
 }

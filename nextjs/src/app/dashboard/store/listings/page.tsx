@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Plus, Eye, Trash2, MapPin, Package, Loader2, Pencil } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
@@ -23,8 +24,12 @@ export default function ListingsPage() {
   const { user } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
+  // /dashboard/listings — дэлгүүргүй энгийн хэрэглэгчийн "Миний зарууд" (ижил компонент)
+  const userSpace = !pathname?.startsWith('/dashboard/store');
+  const base = userSpace ? '/dashboard/listings' : '/dashboard/store/listings';
   const entityType = user?.entityType || 'store';
-  const createHref = `/dashboard/store/listings/new?entityType=${entityType}`;
+  const createHref = userSpace ? '/feed/post' : `${base}/new?entityType=${entityType}`;
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -54,7 +59,7 @@ export default function ListingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)]">Зарууд</h1>
+          <h1 className="text-2xl font-extrabold text-[var(--esl-text-primary)]">{userSpace ? 'Миний зарууд' : 'Зарууд'}</h1>
           <p className="text-sm text-[var(--esl-text-secondary)]">{listings.length} зар</p>
         </div>
         <Link href={createHref}
@@ -108,7 +113,7 @@ export default function ListingsPage() {
                   className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
                   <Eye className="w-4 h-4" />
                 </Link>
-                <Link href={`/dashboard/store/listings/new?entityType=${item.entityType || entityType}&edit=${item.id}`}
+                <Link href={`${base}/new?entityType=${item.entityType || entityType}&edit=${item.id}`}
                   className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
                   <Pencil className="w-4 h-4" />
                 </Link>

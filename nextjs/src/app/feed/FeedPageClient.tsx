@@ -3,7 +3,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import { useUserLocation } from '@/hooks/useUserLocation';
 import LocationBar from '@/components/location/LocationBar';
@@ -26,6 +25,8 @@ import {
   normalizeMarketplaceCategory,
   categoryLabel as marketplaceCategoryLabel,
 } from '@/lib/marketplaceCategories';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
 
 /* ═══ Types ═══ */
 export type ItemTier = 'vip' | 'featured' | 'discounted' | 'normal';
@@ -1120,19 +1121,8 @@ export default function FeedPageClient({
 
   return (
     <div className="min-h-screen" style={{ background: "var(--esl-bg-page)" }}>
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[var(--esl-bg-section)] border-b border-[var(--esl-border)]">
-        <div className="max-w-[1320px] mx-auto px-4 h-16 flex items-center gap-5">
-          <Link href="/" className="flex items-center gap-2.5 no-underline shrink-0">
-            <EsellerLogo size={32} />
-            <span className="text-xl font-black text-[var(--esl-text)] hidden sm:block">eseller<span className="text-[#E31E24]">.mn</span></span>
-          </Link>
-          <div className="flex-1" />
-          <Link href="/store" className="text-sm font-semibold text-[var(--esl-text-muted)] hover:text-[var(--esl-text)] no-underline transition">Дэлгүүр</Link>
-          <Link href="/shops" className="text-sm font-semibold text-[var(--esl-text-muted)] hover:text-[var(--esl-text)] no-underline transition">Дэлгүүрүүд</Link>
-          <Link href="/feed" className="text-sm font-bold text-[#E8242C] no-underline">Зарын булан</Link>
-        </div>
-      </header>
+      <Navbar />
+      <div className="h-16" aria-hidden />
 
       <div className="max-w-[1320px] mx-auto px-4 py-6">
         {/* Page header */}
@@ -1456,12 +1446,7 @@ export default function FeedPageClient({
         )}
       </div>
 
-      {/* Footer */}
-      <footer className="bg-[var(--esl-bg-section)] border-t border-[var(--esl-border)] py-8 mt-12">
-        <div className="max-w-[1320px] mx-auto px-4 text-center">
-          <p className="text-xs text-[var(--esl-text-disabled)]">© 2026 eseller.mn — Зарын булан</p>
-        </div>
-      </footer>
+      <Footer />
       <MobileNav />
 
       {/* Detail Modal */}
