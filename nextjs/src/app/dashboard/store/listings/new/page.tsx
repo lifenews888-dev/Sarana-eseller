@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Building2, Car, Home, Loader2, MapPin, Send, Tag } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -172,7 +172,8 @@ function normalizeEntityType(value?: string | null): string {
   return VALID_ENTITY_TYPES.has(value) ? value : 'store';
 }
 
-function redirectFor(entityType: string): string {
+function redirectFor(entityType: string, userSpace = false): string {
+  if (userSpace) return '/dashboard/listings';
   if (entityType === 'auto_dealer') return '/dashboard/store/vehicles';
   if (entityType === 'company') return '/dashboard/store/projects';
   return '/dashboard/store/listings';
@@ -264,6 +265,8 @@ function normalizeMetadata(
 
 export default function NewListingPage() {
   const router = useRouter();
+  const pathname = usePathname();
+  const userSpace = !pathname?.startsWith('/dashboard/store');
   const { user } = useAuth();
   const [queryEntityType] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('entityType')
@@ -408,7 +411,7 @@ export default function NewListingPage() {
     });
 
     if (res.ok) {
-      router.push(redirectFor(entityType));
+      router.push(redirectFor(entityType, userSpace));
     } else {
       const payload = await res.json().catch(() => null);
       setError(payload?.error || payload?.data?.error || 'Алдаа гарлаа');
@@ -422,7 +425,7 @@ export default function NewListingPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div className="flex items-center gap-3">
-        <Link href={redirectFor(entityType)} className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
+        <Link href={redirectFor(entityType, userSpace)} className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <div>

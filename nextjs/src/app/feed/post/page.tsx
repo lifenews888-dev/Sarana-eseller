@@ -1415,8 +1415,8 @@ export default function PostAdPage() {
                 <Link href={`/feed/${publishedItemId}`} className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold no-underline hover:bg-[#CC0000] transition flex items-center justify-center gap-2">
                   Дэлгэрэнгүй харах
                 </Link>
-                <button type="button" onClick={() => router.push('/feed')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] text-sm font-bold border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center gap-2">
-                  Зарын булан
+                <button type="button" onClick={() => router.push('/dashboard/listings')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] text-sm font-bold border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center gap-2">
+                  Миний зарууд
                 </button>
               </>
             )}

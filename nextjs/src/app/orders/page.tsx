@@ -5,6 +5,9 @@ import { redirect } from 'next/navigation';
 import jwt from 'jsonwebtoken';
 import SafeImage from '@/components/ui/SafeImage';
 import { getJwtSecret } from '@/lib/api-auth';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
+import MobileNav from '@/components/shared/MobileNav';
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   pending: { label: 'Хүлээгдэж байна', color: '#854F0B', bg: '#FAEEDA' },
@@ -40,20 +43,22 @@ export default async function OrdersPage() {
   });
 
   return (
-    <div style={{ maxWidth: 720, margin: '0 auto', padding: '24px 16px' }}>
-      <h1 style={{ fontSize: 22, fontWeight: 700, color: '#1B3A5C', marginBottom: 20 }}>
+    <>
+    <Navbar />
+    <div style={{ maxWidth: 720, margin: '0 auto', padding: '88px 16px 48px', minHeight: '70vh' }}>
+      <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--esl-text-primary)', marginBottom: 20 }}>
         Миний захиалгууд
       </h1>
 
       {orders.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '80px 0' }}>
           <div style={{ fontSize: 48, marginBottom: 12 }}>📦</div>
-          <p style={{ color: '#888' }}>Захиалга байхгүй байна</p>
+          <p style={{ color: 'var(--esl-text-muted)' }}>Захиалга байхгүй байна</p>
           <Link
             href="/store"
             style={{
               display: 'inline-block', marginTop: 16,
-              backgroundColor: '#1B3A5C', color: '#fff',
+              backgroundColor: '#E8242C', color: '#fff',
               padding: '10px 24px', borderRadius: 10,
               textDecoration: 'none', fontSize: 14,
             }}
@@ -70,8 +75,8 @@ export default async function OrdersPage() {
             return (
               <Link key={order.id} href={`/orders/${order.id}`} style={{ textDecoration: 'none' }}>
                 <div style={{
-                  backgroundColor: '#fff', borderRadius: 12, padding: '14px 16px',
-                  border: '.5px solid #e5e5e5',
+                  backgroundColor: 'var(--esl-bg-card)', borderRadius: 12, padding: '14px 16px',
+                  border: '1px solid var(--esl-border)',
                   display: 'flex', alignItems: 'center', gap: 12,
                 }}>
                   {first.image ? (
@@ -88,7 +93,7 @@ export default async function OrdersPage() {
                   )}
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#1B3A5C' }}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--esl-text-primary)' }}>
                         #{order.id.slice(-6).toUpperCase()}
                       </span>
                       <span
@@ -101,15 +106,15 @@ export default async function OrdersPage() {
                         {st.label}
                       </span>
                     </div>
-                    <p style={{ fontSize: 13, color: '#333', margin: 0 }}>
+                    <p style={{ fontSize: 13, color: 'var(--esl-text-secondary)', margin: 0 }}>
                       {first.name || 'Бараа'}
                       {items.length > 1 ? ` +${items.length - 1}` : ''}
                     </p>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: '#1B3A5C', margin: '3px 0 0' }}>
+                    <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--esl-text-primary)', margin: '3px 0 0' }}>
                       {(order.total || 0).toLocaleString()}₮
                     </p>
                   </div>
-                  <span style={{ color: '#aaa' }}>›</span>
+                  <span style={{ color: 'var(--esl-text-muted)' }}>›</span>
                 </div>
               </Link>
             );
@@ -117,5 +122,8 @@ export default async function OrdersPage() {
         </div>
       )}
     </div>
+    <Footer />
+    <MobileNav />
+    </>
   );
 }

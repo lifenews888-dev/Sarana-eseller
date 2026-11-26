@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
-  Package, Wallet, Clock, CheckCircle, ShoppingCart, Heart,
+  Package, Wallet, Clock, CheckCircle, ShoppingCart, Heart, Megaphone,
   MessageCircle, MapPin, Crown, ChevronRight, ShoppingBag,
   Store, ArrowRight, Sparkles,
 } from 'lucide-react';
@@ -71,7 +71,8 @@ export default function BuyerDashboard() {
         items={[
           { href: '/store', icon: ShoppingBag, label: 'Дэлгүүр', desc: 'Бараа хайх', color: '#E8242C' },
           { href: '/dashboard/orders', icon: Package, label: 'Захиалга', desc: 'Миний түүх', color: '#2563EB' },
-          { href: '/dashboard/wishlist', icon: Heart, label: 'Хүсэлт', desc: 'Хадгалсан', color: '#DB2777' },
+          { href: '/dashboard/listings', icon: Megaphone, label: 'Миний зар', desc: 'Нэмэх, засах', color: '#DB2777' },
+          { href: '/dashboard/wishlist', icon: Heart, label: 'Хүсэлт', desc: 'Хадгалсан', color: '#BE185D' },
           { href: '/dashboard/chat', icon: MessageCircle, label: 'Чат', desc: 'Дэлгүүртэй', color: '#7C3AED' },
           { href: '/dashboard/addresses', icon: MapPin, label: 'Хаяг', desc: 'Хүргэлт', color: '#0891B2' },
           { href: '/gold', icon: Crown, label: 'Gold', desc: 'Урамшуулал', color: '#D97706' },

@@ -26,7 +26,6 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react';
-import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import SafeImage from '@/components/ui/SafeImage';
 import {
@@ -40,6 +39,8 @@ import {
   isStoreDirectoryType,
 } from '@/lib/shop-directory';
 import { cn } from '@/lib/utils';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
 
 type StoreDirectoryResponse = {
   stores: StoreDirectoryItem[];
@@ -270,67 +271,8 @@ export default function ShopsPageClient() {
 
   return (
     <div className="min-h-screen bg-[#0b0c10] text-white">
-      <header className="sticky top-0 z-50 border-b border-white/10 bg-[#111216]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-[1320px] items-center gap-4 px-4">
-          <Link href="/" className="flex shrink-0 items-center gap-2 no-underline">
-            <EsellerLogo size={30} />
-            <span className="hidden text-xl font-black tracking-tight text-white sm:block">
-              eseller<span className="text-[#E8242C]">.mn</span>
-            </span>
-          </Link>
-
-          <form
-            className="relative hidden min-w-0 flex-1 md:block"
-            onSubmit={(event) => {
-              event.preventDefault();
-              updateParams({ q: searchInput.trim() || null, search: null });
-            }}
-          >
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/[.35]" />
-            <input
-              data-testid="shops-search-desktop"
-              value={searchInput}
-              onChange={(event) => setSearchInput(event.target.value)}
-              aria-label="Дэлгүүр, үйлчилгээ хайх"
-              placeholder="Дэлгүүр, үйлчилгээ хайх"
-              className="h-11 w-full rounded-lg border border-white/10 bg-black/[.35] pl-10 pr-10 text-sm font-medium text-white outline-none transition focus:border-[#E8242C]/70 focus:bg-black/[.55]"
-            />
-            {searchInput && (
-              <button
-                type="button"
-                onClick={() => {
-                  setSearchInput('');
-                  updateParams({ q: null, search: null });
-                }}
-                className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-md border border-white/10 bg-white/5 text-white/60 transition hover:text-white"
-                aria-label="Хайлт цэвэрлэх"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </form>
-
-          <nav className="hidden items-center gap-1 text-sm lg:flex">
-            <Link href="/store" className="rounded-lg px-3 py-2 font-semibold text-white/60 no-underline transition hover:bg-white/[.07] hover:text-white">
-              Дэлгүүр
-            </Link>
-            <Link href="/feed" className="rounded-lg px-3 py-2 font-semibold text-white/60 no-underline transition hover:bg-white/[.07] hover:text-white">
-              Зарын булан
-            </Link>
-            <Link href="/gold" className="rounded-lg px-3 py-2 font-semibold text-white/60 no-underline transition hover:bg-white/[.07] hover:text-white">
-              Gold
-            </Link>
-          </nav>
-
-          <Link
-            href="/open-shop"
-            className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[#E8242C] px-4 text-sm font-black text-white no-underline transition hover:bg-[#c91f26]"
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span className="hidden sm:inline">Дэлгүүр нээх</span>
-          </Link>
-        </div>
-      </header>
+      <Navbar />
+      <div className="h-16" aria-hidden />
 
       <main className="mx-auto max-w-[1320px] px-4 pb-24 pt-6">
         <section className="border-b border-white/10 pb-5">
@@ -361,7 +303,7 @@ export default function ShopsPageClient() {
               </div>
 
               <form
-                className="relative mb-4 block md:hidden"
+                className="relative mb-4 block"
                 onSubmit={(event) => {
                   event.preventDefault();
                   updateParams({ q: searchInput.trim() || null, search: null });
@@ -600,6 +542,7 @@ export default function ShopsPageClient() {
         </section>
       </main>
 
+      <Footer />
       <MobileNav />
     </div>
   );

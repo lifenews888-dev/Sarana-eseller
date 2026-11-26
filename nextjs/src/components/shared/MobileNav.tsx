@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Home, ShoppingBag, Megaphone, Store, User } from 'lucide-react';
+import { Home, ShoppingBag, Megaphone, Plus, User } from 'lucide-react';
 import { profileHome, useAuth } from '@/lib/auth';
 
 export default function MobileNav() {
@@ -33,8 +33,8 @@ export default function MobileNav() {
   const tabs = [
     { href: '/', icon: Home, label: 'Нүүр', id: 'home' },
     { href: '/store', icon: ShoppingBag, label: 'Дэлгүүр', id: 'store' },
+    { href: '/feed/post', icon: Plus, label: 'Зар нэмэх', id: 'post' },
     { href: '/feed', icon: Megaphone, label: 'Зар', id: 'feed' },
-    { href: '/shops', icon: Store, label: 'Дэлгүүрүүд', id: 'shops' },
     { href: profileHref, icon: User, label: isLoggedIn ? 'Профайл' : 'Нэвтрэх', id: 'profile' },
   ];
 
@@ -44,10 +44,29 @@ export default function MobileNav() {
         <div className="flex h-14 items-stretch">
           {tabs.map((tab) => {
             const isProfile = tab.id === 'profile';
+            const isPost = tab.id === 'post';
             const isActive = isProfile
               ? pathname.startsWith('/dashboard') || pathname.startsWith('/login')
-              : pathname === tab.href ||
-                (tab.href !== '/' && pathname.startsWith(tab.href));
+              : tab.id === 'feed'
+                ? pathname === '/feed' || (pathname.startsWith('/feed/') && pathname !== '/feed/post')
+                : pathname === tab.href ||
+                  (tab.href !== '/' && pathname.startsWith(tab.href));
+            if (isPost) {
+              return (
+                <Link
+                  key={tab.id}
+                  href={tab.href}
+                  prefetch
+                  aria-label="Зар нэмэх"
+                  className="relative z-10 flex flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 text-[10px] font-bold no-underline text-[var(--esl-text-secondary)]"
+                >
+                  <span className={`-mt-5 flex h-11 w-11 items-center justify-center rounded-full bg-[#E8242C] text-white shadow-[0_4px_14px_rgba(232,36,44,.45)] ring-4 ring-[var(--esl-bg-section)] ${isActive ? 'scale-105' : ''}`}>
+                    <tab.icon size={22} strokeWidth={2.6} />
+                  </span>
+                  <span className={isActive ? 'text-[#E8242C]' : ''}>{tab.label}</span>
+                </Link>
+              );
+            }
             return (
               <Link
                 key={tab.id}

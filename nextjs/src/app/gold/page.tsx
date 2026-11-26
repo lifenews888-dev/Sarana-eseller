@@ -5,6 +5,8 @@ import Link from 'next/link';
 import EsellerLogo from '@/components/shared/EsellerLogo';
 import MobileNav from '@/components/shared/MobileNav';
 import { Truck, Star, Zap, Gem, Gift, RefreshCw, MessageCircle, Cake, Check } from 'lucide-react';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
 
 /* ───────── helpers ───────── */
 const fmt = (n: number) => n.toLocaleString('mn-MN');
@@ -78,18 +80,8 @@ export default function GoldPage() {
     // Gold is a dark marketing surface — force dark canvas so white/gold type never sits on light page bg.
     <div style={{ background: '#0A0A0A', color: '#E5E5E5', minHeight: '100vh', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
 
-      {/* ════════ HEADER ════════ */}
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 24px', borderBottom: '1px solid #1A1A1A', maxWidth: 1200, margin: '0 auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <EsellerLogo size={28} />
-          <span style={{ fontWeight: 700, fontSize: 18, color: '#fff' }}>eseller.mn</span>
-        </div>
-        <nav style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <Link href="/store" style={{ color: '#A3A3A3', textDecoration: 'none', fontSize: 14 }}>Дэлгүүр</Link>
-          <Link href="/feed" style={{ color: '#A3A3A3', textDecoration: 'none', fontSize: 14 }}>Фийд</Link>
-          <MobileNav />
-        </nav>
-      </header>
+      <Navbar />
+      <div style={{ height: 64 }} aria-hidden />
 
       <main style={{ maxWidth: 1200, margin: '0 auto', padding: '0 24px' }}>
 
@@ -309,10 +301,8 @@ export default function GoldPage() {
         </section>
       </main>
 
-      {/* ════════ FOOTER ════════ */}
-      <footer style={{ textAlign: 'center', padding: '40px 24px', borderTop: '1px solid #1A1A1A', color: '#525252', fontSize: 13 }}>
-        © 2026 eseller.mn
-      </footer>
+      <Footer />
+      <MobileNav />
     </div>
   );
 }

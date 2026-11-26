@@ -8,21 +8,25 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { profileHome, useAuth } from '@/lib/auth';
 
 const NAV_LINKS = [
-  { href: '/store', label: 'Дэлгүүр', sm: true },
-  { href: '/feed', label: 'Зарын булан', sm: true },
-  { href: '/compare', label: 'Яагаад бид?', sm: false },
-  { href: '/open-shop', label: 'Дэлгүүр нээх', sm: false },
-  { href: '/gold', label: 'Gold', sm: true },
+  { href: '/store', label: 'Дэлгүүр', show: 'hidden sm:inline-flex' },
+  { href: '/shops', label: 'Дэлгүүрүүд', show: 'hidden md:inline-flex' },
+  { href: '/feed', label: 'Зарын булан', show: 'hidden sm:inline-flex' },
+  { href: '/open-shop', label: 'Дэлгүүр нээх', show: 'hidden lg:inline-flex' },
+  { href: '/gold', label: 'Gold', show: 'hidden md:inline-flex' },
 ] as const;
+
+function isActivePath(pathname: string, href: string) {
+  if (href === '/store') return pathname === '/store' || pathname.startsWith('/store/') || pathname.startsWith('/product/');
+  if (href === '/feed') return pathname === '/feed' || (pathname.startsWith('/feed/') && pathname !== '/feed/post');
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const { isLoggedIn, user } = useAuth();
-  // Always land on the shop onboarding wizard (not role dashboard).
-  const sellerCtaHref = isLoggedIn
-    ? '/become-seller'
-    : '/login?redirect=/become-seller#register';
+  // Гол үйлдэл: зар нэмэх (дэлгүүр нээх нь цэсэнд байгаа). /feed/post нэвтрэлтийг өөрөө шалгана.
+  const postCtaHref = '/feed/post';
   // Buyers → /dashboard (not /); sellers → store dashboard, etc.
   const authHref = isLoggedIn ? profileHome(user?.role) : '/login';
   const authLabel = isLoggedIn ? 'Профайл' : 'Нэвтрэх';
@@ -79,7 +83,8 @@ export default function Navbar() {
         <Link
           key={item.href}
           href={item.href}
-          className={`${item.sm ? 'hidden sm:inline-flex' : 'hidden md:inline-flex'} ${linkBase}`}
+          aria-current={isActivePath(pathname, item.href) ? 'page' : undefined}
+          className={`${item.show} ${linkBase} ${isActivePath(pathname, item.href) ? (overlay ? '!text-white bg-white/[.1]' : '!text-[var(--esl-text-primary)] bg-[var(--esl-bg-hover)]') : ''}`}
         >
           {item.label}
         </Link>
@@ -89,10 +94,10 @@ export default function Navbar() {
       </Link>
       <ThemeToggle />
       <Link
-        href={sellerCtaHref}
-        className="bg-[#CC0000] text-white text-sm font-extrabold px-5 py-2 rounded-xl no-underline shadow-[0_2px_8px_rgba(204,0,0,.3)] hover:bg-[#A30000] hover:-translate-y-0.5 transition-all whitespace-nowrap"
+        href={postCtaHref}
+        className="bg-[#CC0000] text-white text-sm font-extrabold px-4 sm:px-5 py-2 rounded-xl no-underline shadow-[0_2px_8px_rgba(204,0,0,.3)] hover:bg-[#A30000] hover:-translate-y-0.5 transition-all whitespace-nowrap"
       >
-        Дэлгүүр нээх →
+        + Зар нэмэх
       </Link>
     </nav>
   );

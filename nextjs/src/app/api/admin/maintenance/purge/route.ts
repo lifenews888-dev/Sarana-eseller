@@ -17,7 +17,10 @@ import { requireAdminDB } from '@/lib/api-auth';
 // ══════════════════════════════════════════════════════════════
 
 const KEEP_ROLES = ['admin', 'superadmin', 'super_admin'];
-const ROOTS = ['User', 'Shop', 'Product'] as const;
+// entityId-аар эзэмшигчээ заадаг (relation-гүй) загварууд. Эзэн нь байхгүй бол өнчин.
+// Banner-ыг админ гараар тохируулдаг тул энд оруулаагүй.
+const ENTITY_OWNED = ['FeedItem', 'PreOrderProduct', 'StoreLocation', 'Promotion', 'Segment', 'AutomationFlow', 'Campaign'];
+const ENTITY_OWNERS = ['User', 'Shop', 'Agent', 'Company', 'AutoDealer', 'ServiceProvider', 'PartnerCompany', 'PartnerAgent'];
 const NEVER_DELETE = new Set(['AdminLog', 'PlatformConfig']);
 const CHUNK = 500;
 
@@ -25,6 +28,8 @@ const CHUNK = 500;
 function looseTarget(field: string): string | null {
   if (/^(shop|store)Id$/.test(field)) return 'Shop';
   if (/^productId$/.test(field)) return 'Product';
+  if (/^orderId$/.test(field)) return 'Order';
+  if (/^feedItemId$/.test(field)) return 'FeedItem';
   if (/^(user|owner|buyer|seller|customer|driver|referrer|referred|affiliate|sender|author|creator|recipient)Id$/.test(field)) return 'User';
   return null;
 }
@@ -110,25 +115,48 @@ export async function POST(req: NextRequest) {
   // 2) Холбоотой бүх бичлэгийг давталттайгаар цуглуулна (агент → агентын зар г.м.)
   const edges = buildEdges();
   const errors: string[] = [];
-  for (let round = 0; round < 6; round++) {
-    let changed = 0;
-    for (const e of edges) {
-      const parents = toDelete.get(e.target);
-      if (!parents?.size || NEVER_DELETE.has(e.model)) continue;
-      const d = delegate(e.model);
-      if (!d) continue;
-      for (const part of chunks([...parents], CHUNK)) {
-        try {
-          const rows = await d.findMany({ where: { [e.fk]: { in: part } }, select: { id: true } });
-          changed += add(e.model, rows.map((r) => r.id));
-        } catch (err) {
-          errors.push(`${e.model}.${e.fk}: ${(err as Error).message.slice(0, 120)}`);
-          break;
+  const expand = async () => {
+    for (let round = 0; round < 6; round++) {
+      let changed = 0;
+      for (const e of edges) {
+        const parents = toDelete.get(e.target);
+        if (!parents?.size || NEVER_DELETE.has(e.model)) continue;
+        const d = delegate(e.model);
+        if (!d) continue;
+        for (const part of chunks([...parents], CHUNK)) {
+          try {
+            const rows = await d.findMany({ where: { [e.fk]: { in: part } }, select: { id: true } });
+            changed += add(e.model, rows.map((r) => r.id));
+          } catch (err) {
+            errors.push(`${e.model}.${e.fk}: ${(err as Error).message.slice(0, 120)}`);
+            break;
+          }
         }
       }
+      if (!changed) break;
     }
-    if (!changed) break;
+  };
+  await expand();
+
+  // 2b) entityId-аар эзэмшигдсэн өнчин бичлэг (эзэн нь устсан/устах) — зар, урьдчилсан захиалга г.м.
+  const liveOwners = new Set<string>();
+  for (const m of ENTITY_OWNERS) {
+    const d = delegate(m);
+    if (!d) continue;
+    const doomed = toDelete.get(m);
+    for (const r of await d.findMany({ select: { id: true } })) if (!doomed?.has(r.id)) liveOwners.add(r.id);
   }
+  for (const m of ENTITY_OWNED) {
+    const d = delegate(m) as unknown as { findMany: (a: unknown) => Promise<{ id: string; entityId: string | null }[]> } | undefined;
+    if (!d) continue;
+    try {
+      const rows = await d.findMany({ select: { id: true, entityId: true } });
+      add(m, rows.filter((r) => !r.entityId || !liveOwners.has(r.entityId)).map((r) => r.id));
+    } catch (err) {
+      errors.push(`${m}.entityId: ${(err as Error).message.slice(0, 120)}`);
+    }
+  }
+  await expand();
 
   const counts = Object.fromEntries([...toDelete.entries()].map(([m, s]) => [m, s.size]).filter(([, n]) => (n as number) > 0));
 
