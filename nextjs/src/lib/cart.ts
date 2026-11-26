@@ -100,8 +100,12 @@ export const useCartStore = create<CartStore>((set, get) => ({
   },
 
   refresh: async () => {
+    if (typeof window === 'undefined') return { priceChanged: 0, removed: 0 };
+    // Хүүхэд component-ийн effect AuthProvider-ийн load()-оос өмнө ажилладаг тул
+    // сагс хоосон харагдвал localStorage-оос эхлээд ачаална.
+    if (get().items.length === 0) get().load();
     const current = get().items;
-    if (typeof window === 'undefined' || current.length === 0) return { priceChanged: 0, removed: 0 };
+    if (current.length === 0) return { priceChanged: 0, removed: 0 };
     const ids = Array.from(new Set(current.map((i) => i._id)));
     const validIds = ids.filter((id) => /^[a-f\d]{24}$/i.test(id));
     // undefined = мэдээлэл авч чадаагүй (хуучнаар үлдээнэ), null = худалдаанаас гарсан
