@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { PLANS as REAL_PLANS } from '@/lib/subscription';
 import { roleHome, useAuth } from '@/lib/auth';
 import { ensureSlug, normalizeSlug } from '@/lib/slug';
 import EsellerLogo from '@/components/shared/EsellerLogo';
@@ -35,42 +36,42 @@ const ENTITY_DEFS: Record<EntityType, {
     Icon: Clock, color: '#E8242C', badge: 'Шинэ',
     tags: ['Pre-order систем', 'Хүлээх хугацаа', 'Минимум захиалга', 'Урьдчилгаа төлбөр'],
     step2Fields: ['businessName', 'slug', 'sourceCountry', 'deliveryDays', 'minimumOrderQty', 'advancePaymentPct', 'category', 'description'],
-    kycDocs: ['id_card', 'customs_certificate'], planOptions: ['pro', 'business'],
+    kycDocs: ['id_card', 'customs_certificate'], planOptions: ['free', 'pro', 'business'],
   },
   agent: {
     label: 'Үл хөдлөхийн агент', subtitle: 'Орон сууц, газар, оффисийн зуучлал',
     Icon: Users, color: '#10B981',
     tags: ['Зар байршуулах', 'Мэргэжлийн профайл', 'Харилцагч удирдлага', 'Аналитик'],
     step2Fields: ['businessName', 'slug', 'category', 'description', 'address'],
-    kycDocs: ['license'], planOptions: ['free', 'pro'],
+    kycDocs: ['license'], planOptions: ['free', 'pro', 'business'],
   },
   company: {
     label: 'Барилгын компани', subtitle: 'Шинэ барилга, орон сууцны төсөл',
     Icon: Building2, color: '#6366F1',
     tags: ['Төслийн удирдлага', 'Галерей', 'Баримт бичиг', 'VIP байршил'],
     step2Fields: ['businessName', 'slug', 'category', 'description', 'address'],
-    kycDocs: ['business_certificate'], planOptions: ['pro', 'business'],
+    kycDocs: ['business_certificate'], planOptions: ['free', 'pro', 'business'],
   },
   auto_dealer: {
     label: 'Авто худалдаа', subtitle: 'Шинэ болон хуучин автомашин',
     Icon: Car, color: '#F59E0B',
     tags: ['Машины жагсаалт', 'Техник тодорхойлолт', 'Үнийн харьцуулалт', 'Тест драйв'],
     step2Fields: ['businessName', 'slug', 'category', 'description', 'address'],
-    kycDocs: ['business_certificate'], planOptions: ['free', 'pro'],
+    kycDocs: ['business_certificate'], planOptions: ['free', 'pro', 'business'],
   },
   service: {
     label: 'Үйлчилгээ', subtitle: 'Салон, засвар, хэвлэл, сургалт г.м.',
     Icon: Scissors, color: '#EC4899',
     tags: ['Цаг захиалга', 'Үйлчилгээний жагсаалт', 'Хуанли', 'Портфолио'],
     step2Fields: ['businessName', 'slug', 'category', 'description', 'address'],
-    kycDocs: ['id_card'], planOptions: ['free', 'pro'],
+    kycDocs: ['id_card'], planOptions: ['free', 'pro', 'business'],
   },
   digital: {
     label: 'Файл / Дижитал бараа', subtitle: 'Татаж авах дижитал контент зарах',
     Icon: Download, color: '#8B5CF6', badge: 'Шинэ',
     tags: ['PDF, ZIP, видео', 'Instant download', 'Subscription', 'License key'],
     step2Fields: ['businessName', 'slug', 'category', 'description'],
-    kycDocs: ['id_card'], planOptions: ['free', 'pro'],
+    kycDocs: ['id_card'], planOptions: ['free', 'pro', 'business'],
   },
 };
 
@@ -81,10 +82,21 @@ function toSellerSlug(value: string): string {
   return normalizeSlug(value);
 }
 
+// Бодит багцын мэдээлэл (lib/subscription) — өмнө нь энд өөр үнэ/хязгаар бичигдсэн
+// байсан ("Үнэгүй = 10 бараа", "Pro 29,900₮ = хязгааргүй бараа") нь бодит багцтай зөрдөг байв.
+const toPlanCard = (key: 'free' | 'standard' | 'ultimate') => {
+  const p = REAL_PLANS[key];
+  return {
+    name: p.name,
+    price: p.price === 0 ? '0₮/сар' : `${p.price.toLocaleString('en-US')}₮/сар`,
+    priceNum: p.price,
+    features: p.features.slice(0, 5),
+  };
+};
 const PLANS: Record<string, { name: string; price: string; priceNum: number; features: string[]; Icon: React.ElementType; color: string; popular?: boolean }> = {
-  free:     { name: 'Үнэгүй', price: '0₮/сар', priceNum: 0, Icon: Zap, color: '#10B981', features: ['10 бараа хүртэл', 'Үндсэн аналитик', 'Стандарт дэмжлэг'] },
-  pro:      { name: 'Pro', price: '29,900₮/сар', priceNum: 29900, Icon: Star, color: '#3B82F6', popular: true, features: ['Хязгааргүй бараа', 'Дэлгэрэнгүй аналитик', 'Хямдрал & купон', 'Тэргүүлэх дэмжлэг', 'Custom domain'] },
-  business: { name: 'Business', price: '99,900₮/сар', priceNum: 99900, Icon: Crown, color: '#D4AF37', features: ['Pro бүх боломж', 'VIP байршил', 'API хандалт', 'Олон ажилтан', 'Зориулалтын менежер', 'Сурталчилгааны кредит'] },
+  free:     { ...toPlanCard('free'), Icon: Zap, color: '#10B981' },
+  pro:      { ...toPlanCard('standard'), Icon: Star, color: '#3B82F6', popular: true },
+  business: { ...toPlanCard('ultimate'), Icon: Crown, color: '#D4AF37' },
 };
 
 /* ═══ Main Page ═══ */
@@ -185,6 +197,8 @@ export default function BecomeSellerPage() {
         body: JSON.stringify({
           entityType,
           plan: selectedPlan,
+          // Самбарын "Шинэ дэлгүүр нээх"-ээс ирсэн бол одоо байгаа дэлгүүрийг засахгүй, шинээр үүсгэнэ
+          createNew: typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1',
           ...form,
           slug: safeSlug,
           phone: phoneDigits,
@@ -509,6 +523,12 @@ export default function BecomeSellerPage() {
                   })}
                 </div>
 
+                <p className="rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] px-4 py-3 text-xs text-[var(--esl-text-muted)]">
+                  Дэлгүүр эхлээд <b>Үнэгүй</b> багцаар нээгдэнэ. Төлбөртэй багц сонгосон бол самбарын
+                  &ldquo;Багц&rdquo; хэсгээс төлбөрөө баталгаажуулсны дараа идэвхжинэ. Нэмэлт (2 дахь) дэлгүүр
+                  нээхэд Стандарт болон түүнээс дээш багц шаардлагатай.
+                </p>
+
                 {/* Review summary */}
                 <div className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] p-5 space-y-2 text-sm">
                   <h3 className="text-sm font-bold text-white mb-3">Шалгаж баталгаажуулна уу</h3>
@@ -549,6 +569,9 @@ export default function BecomeSellerPage() {
         {submitError && (
           <div className="mt-6 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
             {submitError}
+            {/багц/i.test(submitError) && (
+              <Link href="/dashboard/store/package" className="mt-2 block font-bold text-[#E8242C] no-underline">Багц харах →</Link>
+            )}
           </div>
         )}
 

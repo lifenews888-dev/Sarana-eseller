@@ -1,9 +1,12 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { json, errorJson } from '@/lib/api-auth';
+import { json, errorJson, requireAdmin } from '@/lib/api-auth';
 
 // GET /api/automations?entityId=
 export async function GET(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const entityId = req.nextUrl.searchParams.get('entityId');
     if (!entityId) return errorJson('entityId required');
@@ -22,6 +25,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/automations — create automation flow with steps
 export async function POST(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const body = await req.json();
     const { entityId, name, trigger, steps } = body;

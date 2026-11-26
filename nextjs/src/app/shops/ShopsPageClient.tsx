@@ -345,14 +345,18 @@ export default function ShopsPageClient() {
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-white/[.55]">
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
-                    {verifiedCount.toLocaleString('mn-MN')}
-                  </span>
-                  <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                    <Package className="h-3.5 w-3.5 text-sky-300" />
-                    {inventoryCount.toLocaleString('mn-MN')}
-                  </span>
+                  {verifiedCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2" title="Байршил нь баталгаажсан байгууллага">
+                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-300" />
+                      {verifiedCount.toLocaleString('mn-MN')} баталгаажсан
+                    </span>
+                  )}
+                  {inventoryCount > 0 && (
+                    <span className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-2" title="Нийт бараа, үйлчилгээ, зар">
+                      <Package className="h-3.5 w-3.5 text-sky-300" />
+                      {inventoryCount.toLocaleString('mn-MN')} бараа, зар
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -682,7 +686,7 @@ function ShopCard({ item }: { item: StoreDirectoryItem }) {
         </div>
 
         <p className="mb-3 line-clamp-2 min-h-[36px] text-sm leading-5 text-white/[.62]">
-          {item.description || item.address || item.slug}
+          {item.description || item.address || ''}
         </p>
 
         {hasPreviewRail && (
@@ -747,7 +751,8 @@ function ShopCardMediaFallback({ item, Icon }: { item: StoreDirectoryItem; Icon:
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0])
+    // Array.from — emoji (surrogate pair)-г хагалж "�" болгохгүй; зөвхөн үсэг/тоо авна
+    .map((part) => Array.from(part).find((ch) => /[\p{L}\p{N}]/u.test(ch)) || '')
     .join('')
     .toUpperCase();
 

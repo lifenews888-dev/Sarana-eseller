@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { shopProductWhere } from '@/lib/shop-products';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { readTryOn, type ShowroomProduct } from '@/lib/tryon';
@@ -40,7 +41,7 @@ export default async function ShowroomPage({ params }: Props) {
   if (!shop) notFound();
 
   const rows = await prisma.product.findMany({
-    where: { userId: shop.userId, isActive: true },
+    where: await shopProductWhere(shop),
     orderBy: { createdAt: 'desc' },
     take: 300,
     select: { id: true, name: true, price: true, salePrice: true, description: true, images: true, stock: true, metadata: true },

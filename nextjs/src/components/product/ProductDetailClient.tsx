@@ -158,6 +158,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
     }
     if (stickyAdded) return 'Нэмэгдлээ';
     if (outOfStock) return 'Дууссан';
+    if (ctaMode === 'commerce') return 'Сагсанд нэмэх';
     return config.primaryCta;
   })();
 
@@ -529,7 +530,10 @@ function SellerCard({
 }
 
 function RatingRow({ rating, reviewCount }: { rating?: number; reviewCount?: number }) {
-  if (!rating) return null;
+  // Сэтгэгдэлгүй бол "4.8 (0)" гэх мэт хуурамч үнэлгээ харуулахгүй
+  if (!rating || !reviewCount || reviewCount <= 0) {
+    return <p className="text-sm text-[var(--esl-text-muted)]">Үнэлгээ хараахан алга</p>;
+  }
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-0.5">
@@ -542,8 +546,7 @@ function RatingRow({ rating, reviewCount }: { rating?: number; reviewCount?: num
         ))}
       </div>
       <span className="text-sm text-[var(--esl-text-muted)]">
-        {rating}
-        {reviewCount != null ? ` (${reviewCount})` : ''}
+        {Number(rating).toFixed(1)} · {reviewCount} үнэлгээ
       </span>
     </div>
   );
@@ -658,7 +661,7 @@ function StoreLayout({ product, price, hasDiscount, discount, config }: {
       <DescriptionCard text={product.description} accent={config.color} />
       <TrustBadges accent={config.color} />
       <div className="hidden sm:block">
-        <AddToCartButton product={product} label={config.primaryCta} />
+        <AddToCartButton product={product} label="Сагсанд нэмэх" buyNow />
       </div>
     </>
   );

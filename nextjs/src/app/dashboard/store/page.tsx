@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ProductsAPI, OrdersAPI, Product, Order } from '@/lib/api';
+import { SellerProductsAPI as ProductsAPI, OrdersAPI, Product, Order } from '@/lib/api';
 import { formatPrice, getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import {
@@ -453,12 +453,12 @@ export default function SellerDashboardPage() {
               <div key={u.label} className="space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-[var(--esl-text-secondary)]">{u.label}</span>
-                  <span className="text-sm font-semibold text-[var(--esl-text-primary)]">{u.pct}%</span>
+                  <span className="text-sm font-semibold text-[var(--esl-text-primary)]">{u.pct < 0 ? 'Хязгааргүй' : `${u.pct}%`}</span>
                 </div>
                 <div className="h-2 bg-[var(--esl-bg-section)] rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all duration-700 ${u.color}`}
-                    style={{ width: `${Math.max(u.pct, 2)}%` }}
+                    style={{ width: `${u.pct < 0 ? 0 : Math.max(u.pct, 2)}%` }}
                   />
                 </div>
               </div>

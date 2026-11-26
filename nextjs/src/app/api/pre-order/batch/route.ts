@@ -1,8 +1,12 @@
+import { requireAdmin } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
 // POST /api/pre-order/batch — start batch processing for a product
 export async function POST(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const body = await req.json();
     const { productId } = body;
@@ -61,6 +65,9 @@ export async function POST(req: NextRequest) {
 
 // PATCH /api/pre-order/batch — update batch status + tracking
 export async function PATCH(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const body = await req.json();
     const { batchId, status, trackingCode, eta } = body;

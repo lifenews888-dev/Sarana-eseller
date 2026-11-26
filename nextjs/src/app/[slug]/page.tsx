@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { shopProductWhere } from '@/lib/shop-products';
 import { prisma } from '@/lib/prisma';
 import StorefrontClient from '@/components/storefront/StorefrontClient';
 
@@ -26,7 +27,7 @@ export default async function StorefrontPage({ params }: { params: Promise<{ slu
   if (!shop) notFound();
 
   const products = await prisma.product.findMany({
-    where: { userId: shop.userId, isActive: true },
+    where: await shopProductWhere(shop),
     take: 20,
     orderBy: { createdAt: 'desc' },
   });

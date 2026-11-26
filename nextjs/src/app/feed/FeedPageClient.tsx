@@ -219,7 +219,8 @@ function normalizeFeedItem(item: ApiFeedItem): FeedItem {
   return {
     ...(item as FeedItem),
     id,
-    refId: String(item.refId || id),
+    // seed/demo дотоод ID-г хэрэглэгчид харуулахгүй
+    refId: item.refId && !/^(seed|demo)[-_]/i.test(String(item.refId)) ? String(item.refId) : '',
     title: String(item.title || 'Зар'),
     description: String(item.description || ''),
     price: Number(item.price || 0),
@@ -558,9 +559,18 @@ function FeedDetailModal({ item, onClose, onPrev, onNext, hasPrev, hasNext }: {
             )}
             {item.verified && <BadgeCheck className="w-4 h-4 text-blue-400" />}
             <span className="text-[var(--esl-text-muted)]">·</span>
-            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{item.district}</span>
-            <span className="text-[var(--esl-text-muted)]">·</span>
-            <span className="text-xs text-[var(--esl-text-muted)]">#{item.refId}</span>
+            {item.district ? (
+              <>
+                <span className="text-[var(--esl-text-muted)]">·</span>
+                <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" />{item.district}</span>
+              </>
+            ) : null}
+            {item.refId ? (
+              <>
+                <span className="text-[var(--esl-text-muted)]">·</span>
+                <span className="text-xs text-[var(--esl-text-muted)]">#{item.refId}</span>
+              </>
+            ) : null}
           </div>
           {categoryLabel && (
             <div className="mb-3 inline-flex max-w-full items-center gap-1.5 rounded-full border border-[var(--esl-border)] bg-[var(--esl-bg-elevated)] px-3 py-1.5 text-xs font-semibold text-[var(--esl-text-secondary)]">
@@ -828,7 +838,9 @@ export default function FeedPageClient({
   const [activeProvince, setActiveProvince] = useState(initialProvince);
   const [activeSort, setActiveSort] = useState<FeedSortKey>(initialSort);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [autoLocationFilterEnabled, setAutoLocationFilterEnabled] = useState(true);
+  // Анх орж ирэхэд байршлаар автоматаар шүүхгүй — зар цөөн үед "олдсонгүй" гэх
+  // анхааруулга эхний сэтгэгдлийг муутгадаг. Хэрэглэгч байршлаа сонговол идэвхжинэ.
+  const [autoLocationFilterEnabled, setAutoLocationFilterEnabled] = useState(false);
 
   const applyFeedRouteFilters = useCallback((next: {
     category?: string;
@@ -1159,15 +1171,14 @@ export default function FeedPageClient({
           />
         </div>
 
-        {/* ═══ Featured Businesses ═══ */}
+        {/* ═══ Featured Businesses ═══ — жишээ (demo) өгөгдлийг нийтэд харуулахгүй */}
+        {featuredBusinessMode === 'paid' && (
         <div className="mb-8">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-4">
             <div>
               <h2 className="text-lg font-black text-[var(--esl-text)]">Онцлох бизнесүүд</h2>
               <p className="text-xs text-[var(--esl-text-muted)]">
-                {featuredBusinessMode === 'paid'
-                  ? 'Төлбөртэй онцлох эрхтэй заруудаас үүссэн бизнесүүд. Байршилд таарахгүй үед бүх байршлын онцлох эрхээс харуулна.'
-                  : 'Одоогоор жишээ байршуулалт. Production-д төлбөртэй онцлох эрх, админ баталгаажуулалттай бизнесүүд энд эрэмбэлэгдэнэ.'}
+                Онцлох эрхтэй, баталгаажсан бизнесүүд
               </p>
               {featuredBusinessUsedLocationFallback && (
                 <p className="mt-1 text-[11px] font-semibold text-[#F59E0B]">
@@ -1215,6 +1226,7 @@ export default function FeedPageClient({
             })}
           </div>
         </div>
+        )}
 
         {/* Search + filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">

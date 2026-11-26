@@ -9,6 +9,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MOCK_ORDERS: Order[] = [
   { _id: '1', orderNumber: 'ORD-1001', user: { name: 'Бат-Эрдэнэ' }, total: 70000, status: 'delivered', createdAt: '2026-04-02T10:00:00Z' },
   { _id: '2', orderNumber: 'ORD-1002', user: { name: 'Сарангэрэл' }, total: 99000, status: 'delivered', createdAt: '2026-04-01T14:30:00Z' },
@@ -32,9 +33,9 @@ export default function RevenuePage() {
     setLoading(true);
     try {
       const res = await OrdersAPI.list();
-      setOrders(res.orders?.length ? res.orders : MOCK_ORDERS);
+      setOrders(res.orders || []); // хуурамч захиалгаар орлого/харилцагч харуулахгүй
     } catch {
-      setOrders(MOCK_ORDERS);
+      setOrders([]);
     } finally {
       setLoading(false);
     }

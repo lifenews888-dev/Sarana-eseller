@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
-import { ProductsAPI, Product } from '@/lib/api';
+import { SellerProductsAPI as ProductsAPI, Product } from '@/lib/api';
 import { formatPrice } from '@/lib/utils';
 import { canUseAI, getSubscription, getCurrentPlan, saveSubscription } from '@/lib/subscription';
 import { Palette, Lock, Sparkles, ImageIcon, LayoutGrid, Bold, Gem, PartyPopper } from 'lucide-react';

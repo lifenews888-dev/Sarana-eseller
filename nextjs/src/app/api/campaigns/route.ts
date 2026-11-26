@@ -1,9 +1,12 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { json, errorJson } from '@/lib/api-auth';
+import { json, errorJson, requireAdmin } from '@/lib/api-auth';
 
 // GET /api/campaigns?entityId=&type=&status=&page=1&limit=20
 export async function GET(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const sp = req.nextUrl.searchParams;
     const entityId = sp.get('entityId');
@@ -35,6 +38,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/campaigns — create campaign
 export async function POST(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const body = await req.json();
     const { entityId, createdById, name, type, subject, smsText, emailHtml, pushTitle, pushBody, audienceType, scheduledAt } = body;

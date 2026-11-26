@@ -37,15 +37,21 @@ export default function FeaturedShops({ entities }: { entities: FeaturedShop[] }
                 {e.logoUrl ? (
                   <SafeImage src={e.logoUrl} alt={e.name || 'Дэлгүүр'} className="w-full h-full object-cover rounded-full" />
                 ) : (
-                  <span className="text-white text-2xl font-bold">{e.name?.[0]}</span>
+                  <span className="text-white text-2xl font-bold">{Array.from(e.name || '').find((ch) => /[\p{L}\p{N}]/u.test(ch))?.toUpperCase()}</span>
                 )}
               </div>
               <p className="text-[var(--esl-text-primary)] font-semibold text-[13px] mb-1.5">{e.name}</p>
-              <div className="flex items-center justify-center gap-1 mb-1">
-                <span className="text-[#F9A825]">★</span>
-                <span className="text-[var(--esl-text-muted)] text-xs">{e.rating?.toFixed(1) || '5.0'}</span>
-              </div>
-              <p className="text-[var(--esl-text-muted)] text-[11px]">{e._count?.products || 0} бараа</p>
+              {e.rating ? (
+                <div className="flex items-center justify-center gap-1 mb-1">
+                  <span className="text-[#F9A825]">★</span>
+                  <span className="text-[var(--esl-text-muted)] text-xs">{e.rating.toFixed(1)}</span>
+                </div>
+              ) : (
+                <p className="mb-1 text-[11px] font-semibold text-emerald-500">Шинэ дэлгүүр</p>
+              )}
+              {e._count?.products ? (
+                <p className="text-[var(--esl-text-muted)] text-[11px]">{e._count.products} бараа</p>
+              ) : null}
             </div>
           </Link>
         ))}

@@ -13,6 +13,7 @@ interface ShopData {
   address?: string | null; industry?: string | null; district?: string | null;
   allowSellers?: boolean; sellerCommission?: number;
   storefrontConfig?: Record<string, unknown> | null;
+  locationStatus?: string | null;
   user?: { name: string; avatar?: string | null };
 }
 
@@ -42,6 +43,11 @@ const ENTITY_BADGES: Record<string, { label: string; emoji: string; color: strin
   agent: { label: 'ҮХХ агент', emoji: '🏠', color: '#7F77DD' },
   company: { label: 'Барилгын компани', emoji: '🏗️', color: '#22C55E' },
   auto_dealer: { label: 'Авто худалдаа', emoji: '🚗', color: '#F59E0B' },
+  // shop.industry-ийн бодит утгууд (entities/register) — өмнө нь бүгд "Онлайн дэлгүүр" гэж харагддаг байв
+  general: { label: 'Онлайн дэлгүүр', emoji: '🏪', color: '#3B82F6' },
+  preorder: { label: 'Захиалгын дэлгүүр', emoji: '✈️', color: '#E8242C' },
+  order: { label: 'Захиалгат үйлдвэрлэл', emoji: '🏭', color: '#F97316' },
+  digital: { label: 'Дижитал бараа', emoji: '💾', color: '#8B5CF6' },
 };
 
 function formatPrice(n: number) {
@@ -57,6 +63,10 @@ function discountPct(price: number, sale?: number | null) {
 export default function StorefrontClient({ shop, products }: { shop: ShopData; products: ProductData[] }) {
   const hasShowroom = products.some((p) => readTryOn(p.metadata) !== null);
   const badge = ENTITY_BADGES[shop.industry || 'store'] || ENTITY_BADGES.store;
+  // Захиалгын (pre-order) дэлгүүрийн онцлог мэдээлэл — бүртгэлийн үед хадгалагдсан тохиргоо
+  const preorder = (shop.storefrontConfig?.preorder ?? null) as
+    | { sourceCountry?: string | null; deliveryDays?: number | null; minimumOrderQty?: number | null; advancePaymentPct?: number | null }
+    | null;
   const [shareOpen, setShareOpen] = useState(false);
   const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/${shop.slug}` : `https://eseller.mn/${shop.slug}`;
 
@@ -95,9 +105,11 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ background: badge.color + '33', color: '#fff', border: `1px solid ${badge.color}66` }}>
                   {badge.emoji} {badge.label}
                 </span>
-                <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/90 flex items-center gap-1">
-                  <Shield className="w-3 h-3" /> Баталгаажсан
-                </span>
+                {shop.locationStatus === 'verified' && (
+                  <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-white/10 text-white/90 flex items-center gap-1">
+                    <Shield className="w-3 h-3" /> Баталгаажсан
+                  </span>
+                )}
               </div>
               <h1 className="text-3xl md:text-5xl font-black text-white leading-tight">{heroTitle || shop.name}</h1>
             </div>
@@ -105,6 +117,15 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
 
           {(heroSubtitle || shop.address) && (
             <p className="text-white/70 text-sm mb-6 max-w-xl">{heroSubtitle || shop.address}</p>
+          )}
+
+          {preorder && (
+            <div className="mb-6 inline-flex flex-wrap gap-2 text-xs font-semibold text-white/85">
+              {preorder.sourceCountry && <span className="rounded-full bg-white/10 px-3 py-1">✈️ {preorder.sourceCountry}-аас захиална</span>}
+              {preorder.deliveryDays ? <span className="rounded-full bg-white/10 px-3 py-1">⏱ ~{preorder.deliveryDays} хоногт ирнэ</span> : null}
+              {preorder.advancePaymentPct ? <span className="rounded-full bg-white/10 px-3 py-1">💳 Урьдчилгаа {preorder.advancePaymentPct}%</span> : null}
+              {preorder.minimumOrderQty && preorder.minimumOrderQty > 1 ? <span className="rounded-full bg-white/10 px-3 py-1">Доод захиалга {preorder.minimumOrderQty}</span> : null}
+            </div>
           )}
 
           <div className="flex items-center gap-3 flex-wrap mb-8">

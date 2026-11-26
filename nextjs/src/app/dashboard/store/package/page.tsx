@@ -18,12 +18,12 @@ function UsageBar({ label, percent, color }: { label: string; percent: number; c
     <div>
       <div className="flex justify-between text-xs mb-1">
         <span className="text-[var(--esl-text-secondary)]">{label}</span>
-        <span className="font-semibold text-[var(--esl-text-primary)]">{percent === 0 ? 'Хязгааргүй' : `${percent}%`}</span>
+        <span className="font-semibold text-[var(--esl-text-primary)]">{percent < 0 ? 'Хязгааргүй' : `${percent}%`}</span>
       </div>
       <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--esl-border)' }}>
         <div
           className="h-full rounded-full transition-all"
-          style={{ width: `${Math.min(percent, 100)}%`, backgroundColor: color }}
+          style={{ width: `${percent < 0 ? 0 : Math.min(percent, 100)}%`, backgroundColor: color }}
         />
       </div>
     </div>
@@ -36,9 +36,26 @@ export default function PackagePage() {
   const [currentPlanId, setCurrentPlanId] = useState<PlanId>('free');
   const [mounted, setMounted] = useState(false);
 
+  const [serverExpiresAt, setServerExpiresAt] = useState<string | null>(null);
+  const [requested, setRequested] = useState<PlanId | null>(null);
+
   useEffect(() => {
-    setMounted(true);
-    setCurrentPlanId(getSubscription().planId);
+    // Багцыг серверээс (идэвхтэй дэлгүүрийнх) уншина. Өмнө нь localStorage-аас уншдаг тул
+    // хөтөч дээр "идэвхжүүлсэн" хуурамч багц харагдаж, сервер дээр Үнэгүй хэвээр байв.
+    const token = localStorage.getItem('token');
+    fetch('/api/seller/subscription', { headers: token ? { Authorization: `Bearer ${token}` } : {}, credentials: 'include' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        const key = data?.planKey as PlanId | undefined;
+        const valid = key && PLANS.some((p) => p.id === key);
+        setCurrentPlanId(valid && data?.isActive !== false ? key : 'free');
+        setServerExpiresAt(data?.expiresAt ?? null);
+        // Хуучин хуурамч localStorage багцыг серверийнхтэй тааруулна
+        const local = getSubscription();
+        if (local.planId !== (valid ? key : 'free')) saveSubscription({ ...local, planId: valid ? key! : 'free' });
+      })
+      .catch(() => setCurrentPlanId('free'))
+      .finally(() => setMounted(true));
   }, []);
 
   if (!mounted) {
@@ -51,7 +68,7 @@ export default function PackagePage() {
 
   const plan = getCurrentPlan();
   const sub = getSubscription();
-  const remaining = getRemainingDays();
+  const remaining = getRemainingDays(serverExpiresAt);
   const usageProducts = getUsagePercent('products');
   const usageStaff = getUsagePercent('staff');
   const usageStorage = getUsagePercent('storage');
@@ -59,16 +76,13 @@ export default function PackagePage() {
 
   function handleSelect(planId: PlanId) {
     if (planId === currentPlanId) return;
-    const newPlan = PLANS.find((p) => p.id === planId)!;
-    const newSub = {
-      ...sub,
-      planId,
-      startDate: new Date().toISOString(),
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    };
-    saveSubscription(newSub);
-    setCurrentPlanId(planId);
-    toast.show(`${newPlan.name} багц идэвхжлээ!`, 'ok');
+    // Өмнө нь энд төлбөргүйгээр localStorage-д "идэвхжлээ!" гэж хадгалдаг байв (сервер дээр
+    // өөрчлөгддөггүй, хязгаар нь хэвээр). Бодит идэвхжүүлэлт төлбөр баталгаажсаны дараа
+    // админаас хийгдэнэ.
+    setRequested(planId);
+    const newPlan = PLANS.find((p) => p.id === planId);
+    toast.show(`${newPlan?.name ?? planId} багц идэвхжүүлэх заавар доор харагдана`, 'ok');
+    window.setTimeout(() => document.getElementById('plan-upgrade-help')?.scrollIntoView({ behavior: 'smooth' }), 50);
   }
 
   return (
@@ -81,6 +95,20 @@ export default function PackagePage() {
         </div>
         <p className="text-[var(--esl-text-secondary)] text-sm">Дэлгүүрийнхээ боломжийг нэмэгдүүлж, борлуулалтаа өсгөөрэй</p>
       </div>
+
+      {requested && (
+        <div id="plan-upgrade-help" role="status" className="rounded-xl border border-indigo-500/40 bg-indigo-500/10 p-5 mb-6 text-sm text-[var(--esl-text-primary)]">
+          <p className="font-bold mb-1">
+            {PLANS.find((p) => p.id === requested)?.name} багц идэвхжүүлэх
+            ({formatPrice(yearly ? PLANS.find((p) => p.id === requested)?.yearlyPrice ?? 0 : PLANS.find((p) => p.id === requested)?.price ?? 0)}{yearly ? '/жил' : '/сар'})
+          </p>
+          <p className="text-[var(--esl-text-secondary)]">
+            Төлбөрийг eseller.mn-ийн дансанд шилжүүлж, гүйлгээний утга дээр дэлгүүрийнхээ нэрийг бичнэ үү.
+            Төлбөр баталгаажмагц багц тань энэ дэлгүүр дээр идэвхжиж, хязгаар (бараа, ажилтан, нэмэлт дэлгүүр) шууд нэмэгдэнэ.
+            Асуулт байвал самбарын чатаар эсвэл <a href="mailto:info@eseller.mn" className="text-[#E8242C]">info@eseller.mn</a>-ээр холбогдоно уу.
+          </p>
+        </div>
+      )}
 
       {/* Current Plan Info */}
       <div className="rounded-xl border border-[var(--esl-border)] p-6 mb-6" style={{ backgroundColor: 'var(--esl-bg-card)' }}>

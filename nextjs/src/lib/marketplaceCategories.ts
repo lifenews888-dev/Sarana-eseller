@@ -761,8 +761,26 @@ export function findMarketplaceCategory(value?: string | null): MarketplaceCateg
   return MARKETPLACE_CATEGORIES.find((category) => category.key === normalized);
 }
 
+// Хуучин seed/импорт өгөгдөлд ангиллын оронд entity-ийн enum (DIGITAL, PRE_ORDER…)
+// хадгалагдсан байдаг — хэрэглэгчид англи код харуулахгүй.
+const LEGACY_CATEGORY_LABELS: Record<string, string> = {
+  DIGITAL: 'Дижитал бараа',
+  PRE_ORDER: 'Захиалгаар',
+  CONSTRUCTION: 'Шинэ төсөл',
+  SERVICE: 'Үйлчилгээ',
+  AUTO: 'Автомашин',
+  REAL_ESTATE: 'Үл хөдлөх',
+  STORE: 'Дэлгүүр',
+  general: 'Ерөнхий',
+  product: 'Бараа',
+};
+
 export function categoryLabel(value?: string | null): string {
-  return findMarketplaceCategory(value)?.label || value || 'Ангилалгүй';
+  const found = findMarketplaceCategory(value)?.label;
+  if (found) return found;
+  const raw = typeof value === 'string' ? value.trim() : '';
+  if (!raw) return 'Ангилалгүй';
+  return LEGACY_CATEGORY_LABELS[raw] || LEGACY_CATEGORY_LABELS[raw.toUpperCase()] || raw;
 }
 
 export function categoryPathInfo(value?: string | null): MarketplaceCategoryPath | undefined {

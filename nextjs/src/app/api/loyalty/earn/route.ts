@@ -1,4 +1,5 @@
-import { NextRequest } from 'next/server';
+import { requireAdmin } from '@/lib/api-auth';
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { ok, fail } from '@/lib/api-envelope';
 
@@ -14,6 +15,9 @@ function getTier(lifetime: number) {
 }
 
 export async function POST(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const { userId, type, points, description, refType, refId } = await req.json();
 

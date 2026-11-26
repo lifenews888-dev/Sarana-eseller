@@ -27,14 +27,8 @@ const DEMO_BANNERS: Record<string, BannerData[]> = {
     id: 'mid1', title: 'Gold гишүүнчлэл — Үнэгүй хүргэлт + 2x оноо',
     imageUrl: '', linkUrl: '/gold', bgColor: '#D97706', altText: 'Eseller Gold',
   }],
-  SIDEBAR_RIGHT: [{
-    id: 'side1', title: 'Борлуулагч болох\neseller.mn дээр\nдэлгүүрээ нээ',
-    imageUrl: '', linkUrl: '/become-seller', bgColor: '#6366F1', altText: 'Борлуулагч болох',
-  }],
-  SECTION_SEPARATOR: [{
-    id: 'sep1', title: '50,000₮+ захиалгад үнэгүй хүргэлт · Баталгаатай бараа · 48 цагийн буцаалт',
-    imageUrl: '', linkUrl: '/store', bgColor: '#059669', altText: 'Үнэгүй хүргэлт',
-  }],
+  // SIDEBAR_RIGHT, SECTION_SEPARATOR: админаас бодит баннер ороогүй бол юу ч харуулахгүй
+  // (өмнө нь 600px өндөр нэг өнгийн хайрцаг, давхардсан итгэлийн текст гарч байсан).
 };
 
 export default function BannerSlot({ slot, className }: { slot: string; className?: string }) {

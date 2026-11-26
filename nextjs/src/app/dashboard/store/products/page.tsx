@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ProductsAPI, Product } from '@/lib/api';
+import { SellerProductsAPI as ProductsAPI, Product } from '@/lib/api';
 import { formatPrice, CATEGORIES, cn } from '@/lib/utils';
 import { useToast } from '@/components/shared/Toast';
 import {
@@ -118,17 +118,22 @@ export default function ProductsPage() {
         toast.show('Нэмэгдлээ', 'ok');
       }
       setShowModal(false);
-    } catch {
-      if (editingId) { setProducts((prev) => prev.map((p) => (p._id === editingId ? { ...p, ...data } : p))); }
-      else { setProducts((prev) => [{ _id: 'new_' + Date.now(), ...data } as Product, ...prev]); }
-      toast.show(editingId ? 'Шинэчлэгдлээ' : 'Нэмэгдлээ', 'ok');
-      setShowModal(false);
+    } catch (err) {
+      // Өмнө нь алдааг нууж "Нэмэгдлээ" гэж хуурамч бараа харуулдаг байсан — хадгалагдаагүй бараа
+      // дэлгэц дээр л харагдаж, хуудас сэргээхэд алга болдог байв.
+      const message = (err as { message?: string })?.message || 'Хадгалж чадсангүй';
+      toast.show(message, 'error');
     } finally { setSaving(false); }
   }
 
   async function handleDelete(id: string) {
     if (!confirm('Устгах уу?')) return;
-    try { await ProductsAPI.delete(id); } catch {}
+    try {
+      await ProductsAPI.delete(id);
+    } catch (err) {
+      toast.show((err as { message?: string })?.message || 'Устгаж чадсангүй', 'error');
+      return;
+    }
     setProducts((prev) => prev.filter((p) => p._id !== id));
     toast.show('Устгагдлаа', 'ok');
   }

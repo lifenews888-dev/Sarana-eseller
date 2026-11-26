@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
-import { ProductsAPI, Product } from '@/lib/api';
+import { SellerProductsAPI as ProductsAPI, Product } from '@/lib/api';
 import { DEMO_PRODUCTS } from '@/lib/utils';
 
 interface InventoryItem {

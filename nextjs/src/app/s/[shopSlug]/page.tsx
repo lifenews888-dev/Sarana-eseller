@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { shopProductWhere } from '@/lib/shop-products';
 import type { Metadata } from 'next';
 import { prisma } from '@/lib/prisma';
 import { getShopBySlug } from '@/lib/shop-data';
@@ -64,7 +65,7 @@ export default async function ShopProfilePage({ params }: Props) {
 
   // Product-type shop → StorefrontClient
   const products = await prisma.product.findMany({
-    where: { userId: shop.userId, isActive: true },
+    where: await shopProductWhere(shop),
     take: 20,
     orderBy: { createdAt: 'desc' },
   });

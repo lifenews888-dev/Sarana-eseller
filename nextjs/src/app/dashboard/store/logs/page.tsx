@@ -29,7 +29,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   payment: 'Төлбөр',
 };
 
-const MOCK_LOGS: LogEntry[] = [
+// Үйл ажиллагааны лог API хараахан холбогдоогүй — хуурамч бичлэг харуулахгүй.
+const LOGS: LogEntry[] = [];
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const DEMO_LOGS: LogEntry[] = [
   { id: '1', action: 'Нэвтэрсэн', description: 'Системд нэвтэрлээ (Chrome, Windows)', icon: '🔐', category: 'auth', timestamp: '2026-04-03T08:00:00Z' },
   { id: '2', action: 'Захиалга шинэчилсэн', description: 'ORD-1005 захиалгын төлөв "Хүлээгдэж буй" → "Баталгаажсан"', icon: '📋', category: 'order', timestamp: '2026-04-03T08:15:00Z' },
   { id: '3', action: 'Бүтээгдэхүүн нэмсэн', description: '"Зуны малгай" бүтээгдэхүүн нэмэгдлээ (22,000₮)', icon: '🛍️', category: 'product', timestamp: '2026-04-03T09:30:00Z' },
@@ -53,11 +57,11 @@ export default function LogsPage() {
   const [filter, setFilter] = useState<FilterCategory>('all');
 
   const filtered = useMemo(() => {
-    if (filter === 'all') return MOCK_LOGS;
-    return MOCK_LOGS.filter((l) => l.category === filter);
+    if (filter === 'all') return LOGS;
+    return LOGS.filter((l) => l.category === filter);
   }, [filter]);
 
-  const todayCount = MOCK_LOGS.filter((l) => new Date(l.timestamp).toDateString() === new Date().toDateString()).length;
+  const todayCount = LOGS.filter((l) => new Date(l.timestamp).toDateString() === new Date().toDateString()).length;
 
   // Group by date
   const grouped = useMemo(() => {
@@ -72,16 +76,19 @@ export default function LogsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
+      <div role="status" className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-300">
+        Үйл ажиллагааны лог удахгүй идэвхжинэ.
+      </div>
       <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-6 mb-6">
         <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Үйл ажиллагааны лог</h1>
         <p className="text-[var(--esl-text-secondary)] mt-1">Системийн бүх үйлдлийн түүх</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <StatCard icon="📊" label="Нийт бүртгэл" value={MOCK_LOGS.length} gradient="indigo" />
+        <StatCard icon="📊" label="Нийт бүртгэл" value={LOGS.length} gradient="indigo" />
         <StatCard icon="📅" label="Өнөөдрийн" value={todayCount} gradient="green" />
-        <StatCard icon="📋" label="Захиалга" value={MOCK_LOGS.filter((l) => l.category === 'order').length} gradient="amber" />
-        <StatCard icon="🛍️" label="Бүтээгдэхүүн" value={MOCK_LOGS.filter((l) => l.category === 'product').length} gradient="pink" />
+        <StatCard icon="📋" label="Захиалга" value={LOGS.filter((l) => l.category === 'order').length} gradient="amber" />
+        <StatCard icon="🛍️" label="Бүтээгдэхүүн" value={LOGS.filter((l) => l.category === 'product').length} gradient="pink" />
       </div>
 
       {/* Filter */}

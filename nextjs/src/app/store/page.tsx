@@ -96,13 +96,12 @@ const TRUST_ITEMS = [
   { icon: Lock, label: 'Аюулгүй төлбөр', sub: 'QPay QR', color: '#7C3AED' },
 ];
 
+// Зөвхөн байнгын бодлого — хугацаатай/хувьтай урамшууллыг энд хатуу бичихгүй.
 const MARQUEE_ITEMS = [
-  'Электроник бараанд 50% хямдрал',
-  'Шинэ хэрэглэгчдэд 10,000₮ купон',
-  '50,000₮-с дээш үнэгүй хүргэлт',
-  'Гоо сайхны бүтээгдэхүүн 1+1 урамшуулал',
+  '50,000₮-с дээш захиалгад үнэгүй хүргэлт',
+  'QPay дундын данс — аюулгүй төлбөр',
+  '48 цагийн буцаалт',
   'Gold гишүүнчлэлтэй хамт давуу эрх',
-  'Долоо хоног бүр шинэ ирэлт',
 ];
 
 const WL_KEY = 'eseller_wishlist';
@@ -667,12 +666,9 @@ export default function StorePage() {
             />
           </div>
 
-          {/* ━━━ Sidebar banner (slot: SIDEBAR_RIGHT, desktop only) ━━━ */}
-          <div className="hidden lg:block w-[300px] shrink-0">
-            <div className="sticky top-[140px]">
-              <BannerSlot slot="SIDEBAR_RIGHT" />
-            </div>
-          </div>
+          {/* ━━━ Sidebar banner (slot: SIDEBAR_RIGHT, desktop only) ━━━
+              Бодит баннер байхгүй үед 300px хоосон багана үлдээхгүй. */}
+          <BannerSlot slot="SIDEBAR_RIGHT" className="hidden lg:block w-[300px] shrink-0 self-start sticky top-[140px]" />
         </div>
 
         {/* ━━━ Section separator banner ━━━ */}

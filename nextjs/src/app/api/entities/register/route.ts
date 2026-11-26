@@ -3,6 +3,9 @@ import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth, signToken } from '@/lib/api-auth';
 import { isValidPublicImageUrl } from '@/lib/image-url';
 import { ensureSlug, normalizeSlug } from '@/lib/slug';
+import { getOwnerShopAllowance } from '@/lib/subscription-server';
+import { PLANS } from '@/lib/subscription';
+import { ACTIVE_SHOP_COOKIE } from '@/lib/api-auth';
 
 function publicImageOrNull(value: unknown): string | null {
   return isValidPublicImageUrl(value) ? value : null;
@@ -36,6 +39,14 @@ export async function POST(req: NextRequest) {
     socialIg,
     logo,
     coverImage,
+    createNew,
+    shopId: editShopId,
+    // Захиалгын (pre-order) дэлгүүрийн онцлог тохиргоо — өмнө нь хадгалагддаггүй байв
+    sourceCountry,
+    deliveryDays,
+    minimumOrderQty,
+    advancePaymentPct,
+    category,
   } = body;
 
   if (!entityType || !name) return errorJson('entityType, name шаардлагатай');
@@ -80,14 +91,55 @@ export async function POST(req: NextRequest) {
           pre_order: 'preorder',
         };
         const industry = industryMap[entityType] || 'general';
-        // Prefer same industry / same slug shop for this owner (multi-shop allowed).
-        const existingShop = await prisma.shop.findFirst({
-          where: {
-            userId: auth.id,
-            OR: [{ slug: safeSlug }, { storefrontSlug: safeSlug }, { industry }],
-          },
-          orderBy: { createdAt: 'asc' },
-        });
+        // Олон дэлгүүр: өмнө нь `industry`-ээр тааруулж байсан тул ижил төрлийн 2 дахь дэлгүүр
+        // шинээр үүсэхгүй, эхний дэлгүүрийг ДАРЖ бичдэг байв. Одоо:
+        //  - shopId өгвөл (засах) тэр дэлгүүрийг шинэчилнэ,
+        //  - ижил slug-тай өөрийн дэлгүүр байвал түүнийг шинэчилнэ,
+        //  - бусад тохиолдолд ШИНЭ дэлгүүр үүсгэнэ (багцын дэлгүүрийн хязгаар шалгана).
+        const existingShop = typeof editShopId === 'string' && /^[a-f\d]{24}$/i.test(editShopId)
+          ? await prisma.shop.findFirst({ where: { id: editShopId, userId: auth.id } })
+          : createNew === true
+            ? null
+            : await prisma.shop.findFirst({
+                where: { userId: auth.id, OR: [{ slug: safeSlug }, { storefrontSlug: safeSlug }] },
+              });
+
+        if (!existingShop) {
+          const allowance = await getOwnerShopAllowance(auth.id);
+          if (!allowance.canCreate) {
+            const planName = PLANS[allowance.planKey]?.name ?? allowance.planKey;
+            return json({
+              success: false,
+              error: allowance.used === 0
+                ? 'Дэлгүүр үүсгэх боломжгүй байна'
+                : `${planName} багцаар ${allowance.maxShops} дэлгүүр нээх эрхтэй (одоо ${allowance.used}). Нэмэлт дэлгүүр нээхийн тулд Стандарт эсвэл түүнээс дээш багц идэвхжүүлнэ үү.`,
+              upgradeRequired: true,
+              used: allowance.used,
+              maxShops: allowance.maxShops,
+              requiredPlan: 'standard',
+            }, 402);
+          }
+        }
+
+        const typeSettings = entityType === 'pre_order'
+          ? {
+              preorder: {
+                sourceCountry: typeof sourceCountry === 'string' ? sourceCountry : null,
+                deliveryDays: Number(deliveryDays) || null,
+                minimumOrderQty: Number(minimumOrderQty) || 1,
+                advancePaymentPct: Math.min(100, Math.max(0, Number(advancePaymentPct) || 30)),
+              },
+            }
+          : null;
+        const mergedConfig = typeSettings
+          ? {
+              ...((existingShop?.storefrontConfig as Record<string, unknown> | null) || {}),
+              ...typeSettings,
+              businessType: entityType,
+              category: typeof category === 'string' ? category : undefined,
+            }
+          : undefined;
+
         try {
           entity = existingShop
             ? await prisma.shop.update({
@@ -102,6 +154,7 @@ export async function POST(req: NextRequest) {
                   district: district || undefined,
                   industry,
                   isDemo: false,
+                  storefrontConfig: mergedConfig,
                 },
               })
             : await prisma.shop.create({
@@ -117,14 +170,12 @@ export async function POST(req: NextRequest) {
                   industry,
                   locationStatus: 'pending',
                   isDemo: false,
+                  storefrontConfig: mergedConfig,
                 },
               });
         } catch (shopError) {
           if (isUniqueConstraintError(shopError)) {
-            return errorJson(
-              'Нэг хэрэглэгч олон дэлгүүр үүсгэх боломжгүй (DB index). Админ stores_userId_key-г салгах шаардлагатай.',
-              409,
-            );
+            return errorJson('Энэ URL (slug) өөр дэлгүүрт ашиглагдаж байна. Өөр нэр сонгоно уу.', 409);
           }
           throw shopError;
         }
@@ -280,7 +331,9 @@ export async function POST(req: NextRequest) {
         return errorJson('Буруу entityType: ' + entityType);
     }
 
-    const username = safeSlug;
+    // username нь борлуулагчийн линк/реферал — 2 дахь дэлгүүр нээхэд өөрчлөгдөж эвдрэхгүй байх
+    const currentUser = await prisma.user.findUnique({ where: { id: auth.id }, select: { username: true } });
+    const username = currentUser?.username || safeSlug;
     const updatedUser = await prisma.user.update({
       where: { id: auth.id },
       data: { role: 'seller', entityType, username },
@@ -363,6 +416,16 @@ export async function POST(req: NextRequest) {
       message: 'Амжилттай бүртгэгдлээ',
       next: '/dashboard/store',
     }, 201);
+    // Шинээр үүсгэсэн/зассан дэлгүүрийг самбарын идэвхтэй дэлгүүр болгоно
+    if (entity && ['store', 'order_store', 'digital', 'pre_order'].includes(entityType) && 'id' in entity) {
+      res.cookies.set(ACTIVE_SHOP_COOKIE, String((entity as { id: string }).id), {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 365 * 24 * 60 * 60,
+        path: '/',
+      });
+    }
     res.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

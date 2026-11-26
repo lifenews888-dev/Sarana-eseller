@@ -147,6 +147,27 @@ export function getPublicProductQualityIssue(product: PublicProductInput): strin
   return null;
 }
 
+/**
+ * Худалдан авах боломжтой эсэх (сагс/захиалгад). Зургийн шаардлагыг
+ * оруулаагүй — зураггүй ч идэвхтэй бараа захиалагдах ёстой.
+ */
+export function isSellableProduct(product: PublicProductInput): boolean {
+  if (product.isActive === false) return false;
+  if (product.isDemo === true) return false;
+  if (hasBlockedPublicProductName(product)) return false;
+  const effectivePrice = getPublicProductEffectivePrice(product);
+  return effectivePrice !== null && effectivePrice >= PUBLIC_PRODUCT_MIN_PRICE;
+}
+
+const BLOCKED_PUBLIC_SHOP_NAME = /\b(test|e2e|demo|dummy|sample|placeholder)\b|тест|^shop\s*\d+$|\d{8,}/i;
+
+/** Тест/хуурамч нэртэй дэлгүүрийг нийтийн жагсаалтаас хасах. */
+export function isPublicShopName(name?: string | null): boolean {
+  const value = (name || '').trim();
+  if (value.length < 2) return false;
+  return !BLOCKED_PUBLIC_SHOP_NAME.test(value);
+}
+
 export function isPublicLaunchProduct(product: PublicProductInput) {
   return getPublicProductQualityIssue(product) === null;
 }

@@ -9,10 +9,10 @@ export async function POST(request: NextRequest) {
     const auth = requireAuth(request);
     if (auth instanceof Response) return auth;
 
-    const { orderId, amount, description } = await request.json();
+    const { orderId, description } = await request.json();
 
-    if (!orderId || !amount) {
-      return fail('orderId болон amount шаардлагатай', 400);
+    if (!orderId) {
+      return fail('orderId шаардлагатай', 400);
     }
 
     const order = await prisma.order.findUnique({
@@ -27,9 +27,14 @@ export async function POST(request: NextRequest) {
       return fail('Энэ захиалгад хандах эрхгүй', 403);
     }
 
-    const invoiceAmount = Number(amount);
+    if (order.status && order.status !== 'pending') {
+      return fail('Энэ захиалгын төлбөр аль хэдийн шийдэгдсэн', 409);
+    }
+
+    // Нэхэмжлэлийн дүнг клиентээс биш, захиалгын хадгалсан дүнгээс авна.
+    const invoiceAmount = Number(order.total);
     if (!Number.isFinite(invoiceAmount) || invoiceAmount <= 0) {
-      return fail('amount буруу', 400);
+      return fail('Захиалгын дүн буруу', 400);
     }
 
     // Create QPay invoice

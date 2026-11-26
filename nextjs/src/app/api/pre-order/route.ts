@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sanitizeImageUrls } from '@/lib/image-url';
@@ -41,6 +42,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/pre-order — create pre-order product
 export async function POST(req: NextRequest) {
+  // Аюулгүй байдал: зөвхөн админ (өмнө нь нэвтрэлтгүй дуудагдах боломжтой байсан)
+  const adminUser = requireAdmin(req);
+  if (adminUser instanceof NextResponse) return adminUser;
   try {
     const body = await req.json();
     const {

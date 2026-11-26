@@ -86,6 +86,9 @@ const STATUS_COLORS: Record<BannerStatus, { bg: string; text: string }> = {
    Demo data (used as fallback when API unavailable)
    ═══════════════════════════════════════════════════════════ */
 
+const EMPTY_STATS: BannerStats = { activeBanners: 0, expiringToday: 0, pending: 0, revenueThisMonth: 0, totalImpressions: 0 };
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEMO_STATS: BannerStats = {
   activeBanners: 24,
   expiringToday: 3,
@@ -105,6 +108,7 @@ const DEMO_SLOTS: SlotInfo[] = [
   { slot: 'PRODUCT_BELOW', label: 'Бүтээгдэхүүн доод', maxConcurrent: 6, currentCount: 4, priceRange: '100,000₮ – 350,000₮' },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DEMO_BANNERS: Banner[] = [
   { id: '1', title: 'Зуны хямдрал 50%', refId: 'BNR-001', thumbnailUrl: '', slot: 'HERO', entityName: 'FashionMN', startDate: '2026-03-15', endDate: '2026-04-15', status: 'active', ctr: 4.2 },
   { id: '2', title: 'Шинэ брэнд нээлт', refId: 'BNR-002', thumbnailUrl: '', slot: 'MID_PAGE', entityName: 'AutoCity Mongolia', startDate: '2026-04-01', endDate: '2026-04-30', status: 'active', ctr: 3.1 },
@@ -154,10 +158,11 @@ function occupancyBg(ratio: number): string {
 
 export default function AdminBannersPage() {
   // --- State ---
-  const [stats, setStats] = useState<BannerStats>(DEMO_STATS);
+  const [stats, setStats] = useState<BannerStats>(EMPTY_STATS);
   const [slots] = useState<SlotInfo[]>(DEMO_SLOTS);
-  const [banners, setBanners] = useState<Banner[]>(DEMO_BANNERS);
-  const [total, setTotal] = useState(DEMO_BANNERS.length);
+  // Админд хуурамч (demo) баннер харуулахгүй — бодит өгөгдөл л харагдана
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState('all');
@@ -170,7 +175,19 @@ export default function AdminBannersPage() {
   useEffect(() => {
     fetch('/api/admin/banners/stats')
       .then((r) => r.ok ? r.json() : null)
-      .then((data) => { if (data) setStats(data); })
+      // API нь { success, data } envelope буцаадаг — шууд setStats(data) хийхэд хуудас унаж байсан
+      .then((data) => {
+        const d = data?.data ?? data;
+        if (d && typeof d === 'object') {
+          setStats({
+            activeBanners: Number(d.active ?? d.activeBanners) || 0,
+            expiringToday: Number(d.expiringToday) || 0,
+            pending: Number(d.pending) || 0,
+            revenueThisMonth: Number(d.revenueThisMonth) || 0,
+            totalImpressions: Number(d.totalImpressions) || 0,
+          });
+        }
+      })
       .catch(() => {/* use demo */});
   }, []);
 
@@ -185,29 +202,21 @@ export default function AdminBannersPage() {
     params.set('pageSize', String(pageSize));
 
     fetch(`/api/admin/banners?${params}`)
-      .then((r) => r.ok ? r.json() as Promise<BannersResponse> : null)
-      .then((data) => {
-        if (data) {
+      .then((r) => r.ok ? r.json() as Promise<BannersResponse | { data?: BannersResponse }> : null)
+      .then((raw) => {
+        // { success, data: { banners, total } } envelope-ийг задлана (өмнө нь banners=undefined → crash)
+        const data = raw && 'data' in raw && raw.data ? raw.data : (raw as BannersResponse | null);
+        if (data && Array.isArray(data.banners)) {
           setBanners(data.banners);
-          setTotal(data.total);
+          setTotal(Number(data.total) || data.banners.length);
         } else {
-          // client-side filter on demo data
-          let filtered = DEMO_BANNERS;
-          if (statusFilter !== 'all') filtered = filtered.filter((b) => b.status === statusFilter);
-          if (slotFilter !== 'all') filtered = filtered.filter((b) => b.slot === slotFilter);
-          if (search) filtered = filtered.filter((b) =>
-            b.title.toLowerCase().includes(search.toLowerCase()) ||
-            b.refId.toLowerCase().includes(search.toLowerCase()) ||
-            b.entityName.toLowerCase().includes(search.toLowerCase())
-          );
-          setTotal(filtered.length);
-          const start = (page - 1) * pageSize;
-          setBanners(filtered.slice(start, start + pageSize));
+          setBanners([]);
+          setTotal(0);
         }
       })
       .catch(() => {
-        setBanners(DEMO_BANNERS.slice(0, pageSize));
-        setTotal(DEMO_BANNERS.length);
+        setBanners([]);
+        setTotal(0);
       })
       .finally(() => setLoading(false));
   }, [statusFilter, slotFilter, search, page]);

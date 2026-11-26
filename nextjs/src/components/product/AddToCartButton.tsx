@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { ShoppingCart, Minus, Plus, Check } from 'lucide-react';
 import { useCartStore } from '@/lib/cart';
 import { useToast } from '@/components/shared/Toast';
@@ -13,14 +14,17 @@ interface AddToCartButtonProps {
   label?: string;
   className?: string;
   variant?: 'primary' | 'secondary';
+  /** "Шууд авах" товч харуулах — сагсанд нэмээд шууд төлбөр рүү оруулна */
+  buyNow?: boolean;
 }
 
-export default function AddToCartButton({ product, label = 'Сагслах', className, variant = 'primary' }: AddToCartButtonProps) {
+export default function AddToCartButton({ product, label = 'Сагсанд нэмэх', className, variant = 'primary', buyNow = false }: AddToCartButtonProps) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const add = useCartStore(s => s.add);
   const toast = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     return () => {
@@ -55,6 +59,13 @@ export default function AddToCartButton({ product, label = 'Сагслах', cla
       clearTimeout(resetTimerRef.current);
     }
     resetTimerRef.current = setTimeout(() => setAdded(false), 4000);
+  };
+
+  const handleBuyNow = () => {
+    if (outOfStock) return;
+    const addQty = maxQty === undefined ? qty : Math.min(qty, maxQty);
+    add(product, addQty);
+    router.push('/checkout');
   };
 
   return (
@@ -96,6 +107,16 @@ export default function AddToCartButton({ product, label = 'Сагслах', cla
       >
         {added ? <><Check size={18} /> Дахин нэмэх</> : outOfStock ? 'Дууссан' : <><ShoppingCart size={18} /> {label}</>}
       </button>
+
+      {buyNow && !outOfStock && !added && (
+        <button
+          type="button"
+          onClick={handleBuyNow}
+          className="h-12 w-full rounded-xl border border-[#E8242C] bg-transparent px-4 text-sm font-semibold text-[#E8242C] transition-colors hover:bg-[#E8242C]/10"
+        >
+          Шууд авах
+        </button>
+      )}
 
       {added && !outOfStock && (
         <Link

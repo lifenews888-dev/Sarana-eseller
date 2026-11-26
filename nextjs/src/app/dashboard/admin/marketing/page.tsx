@@ -186,9 +186,9 @@ export default function MarketingPage() {
         {stats && (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Нийт илгээсэн', value: stats.totalSent.toLocaleString(), icon: <Send size={18} />, color: '#3B82F6', change: '+12%' },
-              { label: 'Нээлтийн хувь', value: `${stats.avgOpenRate}%`, icon: <Eye size={18} />, color: '#22C55E', change: '+3%' },
-              { label: 'Клик хувь', value: `${stats.avgClickRate}%`, icon: <MousePointer size={18} />, color: '#8B5CF6', change: '+1.5%' },
+              { label: 'Нийт илгээсэн', value: stats.totalSent.toLocaleString(), icon: <Send size={18} />, color: '#3B82F6', change: '' },
+              { label: 'Нээлтийн хувь', value: `${stats.avgOpenRate}%`, icon: <Eye size={18} />, color: '#22C55E', change: '' },
+              { label: 'Клик хувь', value: `${stats.avgClickRate}%`, icon: <MousePointer size={18} />, color: '#8B5CF6', change: '' },
               { label: 'Энэ сарын зардал', value: `${stats.thisMonthCost.toLocaleString()}₮`, icon: <BarChart3 size={18} />, color: '#F59E0B', change: '' },
             ].map((s, i) => (
               <div key={i} className="bg-dash-card border border-dash-border rounded-2xl p-5 relative overflow-hidden group hover:border-white/10 transition-all">

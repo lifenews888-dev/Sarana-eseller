@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
@@ -23,6 +24,27 @@ export async function POST(req: NextRequest) {
     if (!payment) {
       console.warn('[SocialPay Callback] Payment not found:', invoice);
       return NextResponse.json({ error: 'Payment not found' }, { status: 404 });
+    }
+
+    // Аюулгүй байдал: өмнө нь хэн ч энэ endpoint руу {invoice, status:'PAID'} илгээж
+    // захиалгыг "төлөгдсөн" болгож чадаж байв. Одоо invoice үүсгэхтэй ижил схемээр
+    // (sha256(invoice + amount + SOCIALPAY_SECRET)) checksum шалгаж, дүнг тулгана.
+    const secret = process.env.SOCIALPAY_SECRET;
+    if (!secret) {
+      console.error('[SocialPay Callback] SOCIALPAY_SECRET тохируулаагүй — callback хүлээн авахгүй');
+      return NextResponse.json({ error: 'Not configured' }, { status: 503 });
+    }
+    const expected = crypto.createHash('sha256').update(`${invoice}${amount}${secret}`).digest('hex');
+    const provided = typeof body.checksum === 'string' ? body.checksum : '';
+    const checksumOk = provided.length === expected.length
+      && crypto.timingSafeEqual(Buffer.from(provided), Buffer.from(expected));
+    if (!checksumOk) {
+      console.warn('[SocialPay Callback] Checksum буруу:', invoice);
+      return NextResponse.json({ error: 'Invalid checksum' }, { status: 401 });
+    }
+    if (typeof payment.amount === 'number' && Number(amount) !== payment.amount) {
+      console.warn('[SocialPay Callback] Дүн таарахгүй:', invoice, amount, payment.amount);
+      return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
     }
 
     const isPaid = status === 'PAID' || status === 'SUCCESS' || status === 'paid';

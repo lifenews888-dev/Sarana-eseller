@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { priceOrder, OrderPricingError } from '@/lib/order-pricing';
 import { createInvoice, isDemoMode, createDemoInvoice } from '@/lib/payment/qpay';
 import { generateQRCode } from '@/lib/share/generateShareContent';
 import { getAuthUser } from '@/lib/api-auth';
@@ -14,29 +15,32 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { items, totalAmount, deliveryAddress, phone, sellerProfileId } = body;
+    const { items, deliveryAddress, phone, sellerProfileId } = body;
 
-    // Compute amount from items if not provided
-    const amount = totalAmount || items?.reduce(
-      (s: number, i: { price: number; qty?: number; quantity?: number }) =>
-        s + i.price * (i.qty || i.quantity || 1),
-      0
-    );
-
-    if (!items?.length || !amount) {
+    // Нийт дүнг клиентийн totalAmount/price-аас биш, DB-ээс тооцоолно.
+    let priced;
+    try {
+      priced = await priceOrder({
+        items,
+        couponCode: body.couponCode,
+        loyaltyPoints: body.loyaltyPoints,
+      });
+    } catch (error) {
+      if (error instanceof OrderPricingError) {
+        return NextResponse.json({ error: error.message }, { status: error.status });
+      }
+      throw error;
+    }
+    const amount = priced.total;
+    if (!amount) {
       return NextResponse.json({ error: 'Cart items and amount required' }, { status: 400 });
     }
-
-    // Normalize items (mobile uses qty, web uses quantity)
-    const normalizedItems = items.map((i: {
-      productId?: string; id?: string; name?: string; price: number;
-      qty?: number; quantity?: number; image?: string;
-    }) => ({
-      productId: i.productId || i.id,
+    const normalizedItems = priced.items.map((i) => ({
+      productId: i.productId,
       name: i.name,
       price: i.price,
-      quantity: i.qty || i.quantity || 1,
-      image: i.image || null,
+      quantity: i.quantity,
+      image: i.image,
     }));
 
     // Platform fee 2%

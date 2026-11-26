@@ -219,18 +219,18 @@ export default function LoginPage() {
           </Link>
 
           <h2 className="text-4xl font-black leading-[1.1] mb-4">
-            Борлуулалт<br /><em className="text-brand not-italic">хамтдаа л байна.</em>
+            Монголын нэгдсэн<br /><em className="text-brand not-italic">цахим зах.</em>
           </h2>
           <p className="text-sm leading-relaxed max-w-sm" style={{ color: 'var(--esl-text-muted)' }}>
-            Барааны эзэн дангаараа борлуулж чадахгүй. Борлуулагчтай нэгдэж, хамтдаа ашиг ол.
+            Нэг данстайгаар худалдан авч, дэлгүүрээ нээж, борлуулагч эсвэл жолоочоор орлого олоорой.
           </p>
         </div>
 
         <div className="relative z-10 space-y-3">
           {[
+            { ic: ShoppingBag, t: 'Худалдан авагч', d: 'Захиалгаа хянаж, QPay-ээр аюулгүй төлнө.', earn: 'QPay' },
             { ic: Store, t: 'Дэлгүүр эзэн', d: 'Бараагаа байршуул.', earn: '70–85%' },
             { ic: Megaphone, t: 'Борлуулагч', d: 'Сүлжээгээр зарж комисс ол.', earn: '10–20%' },
-            { ic: ShoppingBag, t: 'Худалдан авагч', d: 'Хамгийн сайн бараа, шилдэг үнэ.', earn: '2–4ц хүргэлт' },
             { ic: Truck, t: 'Жолооч', d: 'Цагаа тохируулж орлого ол.', earn: 'Хүргэлт бүрт' },
           ].map((r) => (
             <div key={r.t} className="flex items-center gap-3 rounded-2xl px-4 py-3" style={{ background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)' }}>
@@ -295,7 +295,13 @@ export default function LoginPage() {
           {mode === 'login' ? (
             <>
               <div className="text-xl font-black mb-1 flex items-center gap-2" style={{ color: 'var(--esl-text-primary)' }}>Сайн уу! <Hand className="w-5 h-5" /></div>
-              <div className="text-sm mb-6" style={{ color: 'var(--esl-text-muted)' }}>Данс руугаа нэвтрэх</div>
+              <div className="text-sm mb-6" style={{ color: 'var(--esl-text-muted)' }}>
+                {redirectTarget.startsWith('/checkout')
+                  ? 'Захиалгаа дуусгахын тулд нэвтэрнэ үү. Сагс тань хадгалагдсан.'
+                  : redirectTarget.startsWith('/become-seller')
+                    ? 'Дэлгүүр нээхийн тулд нэвтэрнэ үү. Данс байхгүй бол дээрх "Бүртгүүлэх"-ийг сонгоно уу.'
+                    : 'Данс руугаа нэвтрэх'}
+              </div>
 
               <div className="space-y-4">
                 <div>

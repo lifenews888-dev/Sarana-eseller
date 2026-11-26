@@ -17,6 +17,8 @@
     "test:store-dashboard": "npx tsx scripts/store-dashboard-readiness-test.ts",
     "test:seller-owner": "npx tsx scripts/seller-owner-contract-test.ts",
     "test:login-redirect": "npx tsx scripts/login-redirect-contract-test.ts",
+    "test:order-pricing": "npx tsx scripts/order-pricing-contract-test.ts",
+    "test:shop-allowance": "npx tsx scripts/shop-allowance-contract-test.ts",
     "test:image-url": "npx tsx scripts/test-image-url.ts",
     "test:readiness": "npx tsx scripts/marketplace-readiness-test.ts",
     "seed:seller": "npx tsx scripts/seed-first-seller.ts",

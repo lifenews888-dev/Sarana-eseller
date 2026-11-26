@@ -24,6 +24,7 @@ const BANKS = [
   { value: 'bogd', label: 'Богд банк' },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MOCK_WITHDRAWALS: Withdrawal[] = [
   { id: '1', amount: 150000, bank: 'Хаан банк', accountNumber: '5000****1234', status: 'completed', date: '2026-04-01T10:00:00Z' },
   { id: '2', amount: 200000, bank: 'Голомт банк', accountNumber: '1200****5678', status: 'completed', date: '2026-03-25T14:00:00Z' },
@@ -38,7 +39,7 @@ const STATUS_LABEL: Record<string, [string, string]> = {
 
 export default function WalletPage() {
   const [balance, setBalance] = useState(580000);
-  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>(MOCK_WITHDRAWALS);
+  const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [loading, setLoading] = useState(true);
   const [amount, setAmount] = useState('');
   const [bank, setBank] = useState('khan');

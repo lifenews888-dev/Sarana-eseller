@@ -101,7 +101,7 @@ export default function SearchBar({ value, onChange, inputRef }: SearchBarProps)
 
       {showDropdown && value.length >= 2 && suggestions.length === 0 && !loading && (
         <div className="absolute top-full left-0 right-0 mt-1.5 bg-[var(--esl-bg-card)] rounded-xl shadow-xl border border-[var(--esl-border)] z-50 p-6 text-center">
-          <p className="text-sm text-[var(--esl-text-muted)]">"{value}" хайлтаар бараа олдсонгүй</p>
+          <p className="text-sm text-[var(--esl-text-muted)]">&ldquo;{value}&rdquo; хайлтаар бараа олдсонгүй</p>
         </div>
       )}
     </div>

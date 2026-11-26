@@ -127,10 +127,26 @@ export async function requireAdminDB(req: NextRequest): Promise<AuthUser | NextR
  * Resolve shopId for an authenticated owner.
  * Multi-store: prefer X-Active-Shop-Id / preferredShopId when owned; else oldest shop.
  */
+export const ACTIVE_SHOP_COOKIE = 'eseller-active-shop';
+
+/** Идэвхтэй дэлгүүрийн cookie-г route handler дотроос уншина (request-гүй үед null). */
+async function readActiveShopCookie(): Promise<string | null> {
+  try {
+    const { cookies } = await import('next/headers');
+    const value = (await cookies()).get(ACTIVE_SHOP_COOKIE)?.value;
+    return value && /^[a-f\d]{24}$/i.test(value) ? value : null;
+  } catch {
+    return null;
+  }
+}
+
 export async function getShopForUser(
   userId: string,
   preferredShopId?: string | null,
 ): Promise<string | null> {
+  // Олон дэлгүүртэй эзэн: header/query өгөөгүй бол сонгосон идэвхтэй дэлгүүрийн
+  // cookie-г ашиглана. Өмнө нь бүх seller API үргэлж хамгийн эхний дэлгүүр дээр ажилладаг байв.
+  if (!preferredShopId) preferredShopId = await readActiveShopCookie();
   if (preferredShopId) {
     const owned = await prisma.shop.findFirst({
       where: { id: preferredShopId, userId },
@@ -152,6 +168,7 @@ export function getPreferredShopId(req: NextRequest): string | null {
     req.headers.get('x-active-shop-id') ||
     req.headers.get('x-shop-id') ||
     req.nextUrl.searchParams.get('shopId') ||
+    req.cookies.get(ACTIVE_SHOP_COOKIE)?.value ||
     null
   );
 }

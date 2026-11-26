@@ -2,7 +2,8 @@ name: Smoke Test
 on: [push]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # ubuntu-latest = 26.04, Playwright chromium үүнийг дэмждэггүй тул түр 24.04-д тогтоов
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: nextjs

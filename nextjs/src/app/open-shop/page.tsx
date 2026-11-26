@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
 import { Banknote, Car, Megaphone, MessageSquare, Lock, BarChart3, Store, Clock } from 'lucide-react';
 
 const benefits = [
@@ -42,7 +44,10 @@ function FaqItem({ q, a }: { q: string; a: string }) {
 
 export default function OpenShopPage() {
   return (
-    <main className="max-w-[860px] mx-auto px-4 py-10 pb-20">
+    <>
+    {/* Өмнө нь цэсгүй байсан тул хэрэглэгч сайт руу буцах замгүй байв */}
+    <Navbar />
+    <main className="max-w-[860px] mx-auto px-4 pt-24 pb-20">
 
       {/* Hero */}
       <div className="text-center mb-12">
@@ -93,5 +98,7 @@ export default function OpenShopPage() {
         </p>
       </div>
     </main>
+    <Footer />
+    </>
   );
 }

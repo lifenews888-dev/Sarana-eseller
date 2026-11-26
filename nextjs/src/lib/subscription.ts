@@ -10,6 +10,8 @@ export interface PlanLimits {
   maxProducts: number;
   maxStaff: number;
   maxBranches: number;
+  /** Нэг эзэмшигчийн нээж болох дэлгүүрийн тоо (-1 = хязгааргүй) */
+  maxShops: number;
   maxCategories: number;
   maxBrands: number;
   maxStorage: number;
@@ -46,45 +48,45 @@ export const PLANS: Record<string, Plan> = {
     id: 'free', name: 'Үнэгүй', nameEn: 'Free', price: 0, yearlyPrice: 0,
     description: 'Эхлэгчдэд зориулсан үнэгүй багц', color: '#94A3B8', commissionRate: 8,
     limits: {
-      maxProducts: 20, maxStaff: 1, maxBranches: 1, maxCategories: 5, maxBrands: 3,
+      maxProducts: 20, maxStaff: 1, maxShops: 1, maxBranches: 1, maxCategories: 5, maxBrands: 3,
       maxStorage: 500, aiCredits: 0, customDomain: false, removeBranding: false,
       analytics: false, prioritySupport: false, blogPosts: 3, promoCodesLimit: 2,
       giftCards: false, multiLanguage: false, apiAccess: false, exportData: false, seoTools: false,
     },
-    features: ['20 бараа хүртэл', '1 ажилтан', '500MB хадгалах зай', 'eseller.mn субдомайн', 'QPay төлбөр'],
+    features: ['1 дэлгүүр', '20 бараа хүртэл', '1 ажилтан', '500MB хадгалах зай', 'eseller.mn субдомайн', 'QPay төлбөр'],
   },
   standard: {
     id: 'standard', name: 'Стандарт', nameEn: 'Standard', price: 29900, yearlyPrice: 299000,
     description: 'Жижиг, дунд бизнест тохиромжтой', badge: 'Түгээмэл', color: '#6366F1', commissionRate: 5,
     limits: {
-      maxProducts: 500, maxStaff: 5, maxBranches: 3, maxCategories: 30, maxBrands: 20,
+      maxProducts: 500, maxStaff: 5, maxShops: 2, maxBranches: 3, maxCategories: 30, maxBrands: 20,
       maxStorage: 5000, aiCredits: 50, customDomain: true, removeBranding: true,
       analytics: true, prioritySupport: false, blogPosts: 50, promoCodesLimit: 20,
       giftCards: true, multiLanguage: false, apiAccess: false, exportData: true, seoTools: true,
     },
-    features: ['500 бараа', '5 ажилтан', '3 салбар', 'Хувийн домайн', '50 AI кредит/сар', 'SEO хэрэгсэл'],
+    features: ['2 дэлгүүр', '500 бараа', '5 ажилтан', '3 салбар', 'Хувийн домайн', '50 AI кредит/сар', 'SEO хэрэгсэл'],
   },
   ultimate: {
     id: 'ultimate', name: 'Алтимэйт', nameEn: 'Ultimate', price: 59900, yearlyPrice: 599000,
     description: 'Том бизнес, enterprise шийдэл', badge: 'Хамгийн сайн', color: '#D97706', commissionRate: 3,
     limits: {
-      maxProducts: 5000, maxStaff: 20, maxBranches: 10, maxCategories: 100, maxBrands: 100,
+      maxProducts: 5000, maxStaff: 20, maxShops: 5, maxBranches: 10, maxCategories: 100, maxBrands: 100,
       maxStorage: 50000, aiCredits: 200, customDomain: true, removeBranding: true,
       analytics: true, prioritySupport: true, blogPosts: -1, promoCodesLimit: -1,
       giftCards: true, multiLanguage: true, apiAccess: true, exportData: true, seoTools: true,
     },
-    features: ['5,000 бараа', '20 ажилтан', '10 салбар', '200 AI кредит/сар', 'API хандалт', 'Тэргүүлэх дэмжлэг'],
+    features: ['5 дэлгүүр', '5,000 бараа', '20 ажилтан', '10 салбар', '200 AI кредит/сар', 'API хандалт', 'Тэргүүлэх дэмжлэг'],
   },
   ai_pro: {
     id: 'ai_pro', name: 'AI Pro', nameEn: 'AI Pro', price: 99900, yearlyPrice: 999000,
     description: 'AI-д суурилсан бүрэн автоматжуулалт', badge: 'AI Хүчирхэг', color: '#EC4899', commissionRate: 2,
     limits: {
-      maxProducts: -1, maxStaff: -1, maxBranches: -1, maxCategories: -1, maxBrands: -1,
+      maxProducts: -1, maxStaff: -1, maxShops: 10, maxBranches: -1, maxCategories: -1, maxBrands: -1,
       maxStorage: 200000, aiCredits: -1, customDomain: true, removeBranding: true,
       analytics: true, prioritySupport: true, blogPosts: -1, promoCodesLimit: -1,
       giftCards: true, multiLanguage: true, apiAccess: true, exportData: true, seoTools: true,
     },
-    features: ['Хязгааргүй бараа', 'Хязгааргүй AI кредит', '200GB хадгалах зай', '24/7 Дэмжлэг'],
+    features: ['10 дэлгүүр', 'Хязгааргүй бараа', 'Хязгааргүй AI кредит', '200GB хадгалах зай', '24/7 Дэмжлэг'],
   },
 };
 
@@ -172,7 +174,10 @@ export function getUsagePercent(field: 'products' | 'staff' | 'storage' | 'aiCre
     aiCredits: [sub.aiCreditsUsed, plan.limits.aiCredits],
   };
   const [current, limit] = map[field] || [0, 1];
-  if (limit === -1) return 0;
+  // -1 = хязгааргүй. Өмнө нь 0 буцааж байсан тул 0% ашиглалт "Хязгааргүй" гэж,
+  // limit=0 (жишээ нь үнэгүй багцын AI кредит) үед 0/0 = "NaN%" гэж харагдаж байв.
+  if (limit === -1) return -1;
+  if (!limit || limit <= 0) return current > 0 ? 100 : 0;
   return Math.min(100, Math.round((current / limit) * 100));
 }
 
