@@ -83,7 +83,10 @@ const DESIGN_PAGES: Record<string, string> = {
 function designRewrite(req: NextRequest): NextResponse | null {
   const target = DESIGN_PAGES[req.nextUrl.pathname];
   if (!target) return null;
-  const keys = [...req.nextUrl.searchParams.keys()].filter((k) => k !== 'ref');
+  // _rsc = Next.js-ийн дотоод (client) шилжилтийн параметр. Түүнийг тоохгүй байх ёстой —
+  // эс бөгөөс цэс/лого дээр дарахад хуучин хуудас гарна. HTML хариу авсан router бүтэн
+  // хуудсаар шилжинэ.
+  const keys = [...req.nextUrl.searchParams.keys()].filter((k) => k !== 'ref' && k !== '_rsc');
   if (keys.length) return null;
   return NextResponse.rewrite(new URL(target, req.url));
 }
