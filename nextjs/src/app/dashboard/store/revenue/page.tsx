@@ -9,17 +9,6 @@ import {
   CheckCircle,
 } from 'lucide-react';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const MOCK_ORDERS: Order[] = [
-  { _id: '1', orderNumber: 'ORD-1001', user: { name: 'Бат-Эрдэнэ' }, total: 70000, status: 'delivered', createdAt: '2026-04-02T10:00:00Z' },
-  { _id: '2', orderNumber: 'ORD-1002', user: { name: 'Сарангэрэл' }, total: 99000, status: 'delivered', createdAt: '2026-04-01T14:30:00Z' },
-  { _id: '3', orderNumber: 'ORD-1003', user: { name: 'Ганбаатар' }, total: 91000, status: 'shipped', createdAt: '2026-03-30T09:15:00Z' },
-  { _id: '4', orderNumber: 'ORD-1004', user: { name: 'Оюунчимэг' }, total: 84000, status: 'delivered', createdAt: '2026-03-28T16:45:00Z' },
-  { _id: '5', orderNumber: 'ORD-1005', user: { name: 'Тэмүүлэн' }, total: 44000, status: 'pending', createdAt: '2026-04-03T08:00:00Z' },
-  { _id: '6', orderNumber: 'ORD-1006', user: { name: 'Болормаа' }, total: 75000, status: 'delivered', createdAt: '2026-03-25T11:20:00Z' },
-  { _id: '7', orderNumber: 'ORD-1007', user: { name: 'Энхтүвшин' }, total: 125000, status: 'delivered', createdAt: '2026-03-15T12:00:00Z' },
-  { _id: '8', orderNumber: 'ORD-1008', user: { name: 'Нарантуяа' }, total: 55000, status: 'delivered', createdAt: '2026-03-10T09:00:00Z' },
-];
 
 export default function RevenuePage() {
   const [orders, setOrders] = useState<Order[]>([]);

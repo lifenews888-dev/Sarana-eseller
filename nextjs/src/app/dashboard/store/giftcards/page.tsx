@@ -23,13 +23,6 @@ const STATUS_STYLES: Record<string, [string, string]> = {
   expired: ['bg-red-100 text-red-600', 'Дууссан'],
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const INITIAL_CARDS: GiftCard[] = [
-  { id: '1', code: 'GIFT-A1B2-C3D4', amount: 50000, status: 'active', createdAt: '2026-04-01T10:00:00Z', expiresAt: '2026-07-01' },
-  { id: '2', code: 'GIFT-E5F6-G7H8', amount: 100000, status: 'used', createdAt: '2026-03-15T09:00:00Z', usedAt: '2026-03-28T14:00:00Z', usedBy: 'Бат-Эрдэнэ', expiresAt: '2026-06-15' },
-  { id: '3', code: 'GIFT-I9J0-K1L2', amount: 25000, status: 'active', createdAt: '2026-04-02T11:00:00Z', expiresAt: '2026-07-02' },
-  { id: '4', code: 'GIFT-M3N4-O5P6', amount: 75000, status: 'expired', createdAt: '2025-12-01T10:00:00Z', expiresAt: '2026-03-01' },
-];
 
 function generateCode() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

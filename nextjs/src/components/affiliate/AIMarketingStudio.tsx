@@ -67,7 +67,7 @@ export default function AIMarketingStudio({ product, username, onClose }: AIMark
               <Wand2 className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#0F172A]">AI Marketing Studio</h2>
+              <h2 className="text-base font-bold text-[var(--esl-text-primary)]">AI Marketing Studio</h2>
               <p className="text-xs text-[var(--esl-text-muted)]">{product.name}</p>
             </div>
           </div>

@@ -168,7 +168,7 @@ export default function AIProductMentor({ product, onClose, onStartSelling, user
                 'max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed',
                 msg.role === 'user'
                   ? 'bg-[#6366F1] text-white rounded-br-md'
-                  : 'bg-[var(--esl-bg-card)] text-[#0F172A] border border-[var(--esl-border)] rounded-bl-md shadow-sm'
+                  : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] border border-[var(--esl-border)] rounded-bl-md shadow-sm'
               )}>
                 {msg.role === 'ai' && (
                   <div className="flex items-center gap-1 text-[10px] text-[#6366F1] font-bold mb-1.5">

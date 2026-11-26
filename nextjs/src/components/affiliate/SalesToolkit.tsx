@@ -118,7 +118,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
             <div className="flex-1 min-w-0">
               <div className="text-[11px] text-[var(--esl-text-muted)] font-medium">{s.label}</div>
               <div className="flex items-baseline gap-2">
-                <span className="text-lg font-black text-[#0F172A]">{s.value}</span>
+                <span className="text-lg font-black text-[var(--esl-text-primary)]">{s.value}</span>
                 <span className="text-[10px] font-bold text-emerald-500">{s.trend}</span>
               </div>
             </div>
@@ -132,7 +132,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
           ════════════════════════════════════════ */}
       <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-2xl p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-[#0F172A] text-sm flex items-center gap-2">
+          <h3 className="font-bold text-[var(--esl-text-primary)] text-sm flex items-center gap-2">
             <Send className="w-4 h-4 text-[#6366F1]" />
             Нэг товшилтоор хуваалцах
           </h3>
@@ -197,7 +197,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
           {activeTab === 'creative' && (
             <div className="space-y-6">
               {/* QR Code — branded */}
-              <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-[#F1F5F9]">
+              <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b border-[var(--esl-border)]">
                 <div className="relative shrink-0">
                   <div className="w-40 h-40 bg-[var(--esl-bg-card)] rounded-2xl border-2 border-[#6366F1]/20 flex items-center justify-center p-2.5 shadow-[0_4px_20px_rgba(99,102,241,.08)]">
                     <img loading="lazy" src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(refLink)}&bgcolor=ffffff&color=4338CA`} alt="QR" className="w-full h-full" width={160} height={160} />
@@ -207,7 +207,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
                   </div>
                 </div>
                 <div className="flex-1 text-center sm:text-left">
-                  <h4 className="text-sm font-bold text-[#0F172A] mb-1">Брэнд QR код</h4>
+                  <h4 className="text-sm font-bold text-[var(--esl-text-primary)] mb-1">Брэнд QR код</h4>
                   <p className="text-xs text-[var(--esl-text-muted)] mb-3 leading-relaxed">Poster, визит карт, нийтлэл дээрээ байршуулж болно</p>
                   <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                     <a href={`https://api.qrserver.com/v1/create-qr-code/?size=600x600&data=${encodeURIComponent(refLink)}&bgcolor=ffffff&color=4338CA&format=png`} download={`eseller-${username}-qr.png`} target="_blank" rel="noopener noreferrer"
@@ -220,7 +220,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
 
               {/* Poster Grid */}
               <div>
-                <h4 className="text-sm font-bold text-[#0F172A] mb-3 flex items-center gap-2">
+                <h4 className="text-sm font-bold text-[var(--esl-text-primary)] mb-3 flex items-center gap-2">
                   <Image className="w-4 h-4 text-[#6366F1]" />
                   Бэлэн постерууд
                   <span className="text-[10px] text-[var(--esl-text-muted)] font-medium">QR код автоматаар нэмэгдсэн</span>
@@ -238,7 +238,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
                         <span className="absolute bottom-2 text-[8px] text-white/40 font-mono">@{username}</span>
                       </div>
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <button className="bg-[var(--esl-bg-card)] text-[#0F172A] px-4 py-2 rounded-lg text-xs font-bold border-none cursor-pointer flex items-center gap-1 hover:bg-[var(--esl-bg-section)] transition">
+                        <button className="bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] px-4 py-2 rounded-lg text-xs font-bold border-none cursor-pointer flex items-center gap-1 hover:bg-[var(--esl-bg-section)] transition">
                           <Download className="w-3 h-3" /> Татах
                         </button>
                         <button className="bg-white/20 text-white px-4 py-2 rounded-lg text-xs font-bold border-none cursor-pointer backdrop-blur-sm flex items-center gap-1 hover:bg-white/30 transition">
@@ -283,7 +283,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
                 {COPY_TEMPLATES[copySection].map((t, i) => (
                   <div key={i} className="bg-[var(--esl-bg-section)] rounded-xl p-4 border border-[var(--esl-border)] hover:border-[#6366F1]/20 transition-colors">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-bold text-[#0F172A]">{t.title}</span>
+                      <span className="text-sm font-bold text-[var(--esl-text-primary)]">{t.title}</span>
                       <button
                         onClick={() => onCopy(t.text.replace(/\{link\}/g, refLink).replace(/\{discount\}/g, '30'), `copy-${copySection}-${i}`)}
                         className={cn(
@@ -304,8 +304,8 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
               </div>
 
               {/* FAQ */}
-              <div className="pt-4 border-t border-[#F1F5F9]">
-                <h4 className="text-sm font-bold text-[#0F172A] mb-3 flex items-center gap-2">
+              <div className="pt-4 border-t border-[var(--esl-border)]">
+                <h4 className="text-sm font-bold text-[var(--esl-text-primary)] mb-3 flex items-center gap-2">
                   <Shield className="w-4 h-4 text-[#6366F1]" />
                   Татгалзалд хариулах шигшмэл хариулт
                 </h4>
@@ -317,7 +317,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
                         className="w-full flex items-center gap-3 px-4 py-3 bg-transparent border-none cursor-pointer text-left hover:bg-[var(--esl-bg-section)] transition-colors"
                       >
                         <HelpCircle className="w-4 h-4 text-[var(--esl-text-muted)] shrink-0" />
-                        <span className="flex-1 text-sm font-semibold text-[#0F172A]">&ldquo;{faq.q}&rdquo;</span>
+                        <span className="flex-1 text-sm font-semibold text-[var(--esl-text-primary)]">&ldquo;{faq.q}&rdquo;</span>
                         <span className="text-[10px] font-bold text-[var(--esl-text-muted)] bg-[var(--esl-bg-section)] px-2 py-0.5 rounded">{faq.tag}</span>
                         <ChevronDown className={cn('w-4 h-4 text-[var(--esl-text-muted)] transition-transform', openFaq === i && 'rotate-180')} />
                       </button>
@@ -359,7 +359,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h5 className="text-sm font-bold text-[#0F172A] truncate group-hover:text-[#6366F1] transition-colors">{v.title}</h5>
+                      <h5 className="text-sm font-bold text-[var(--esl-text-primary)] truncate group-hover:text-[#6366F1] transition-colors">{v.title}</h5>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] text-[var(--esl-text-muted)]">{v.duration}</span>
                         <span className="text-[10px] text-[var(--esl-text-muted)]">&middot;</span>
@@ -378,7 +378,7 @@ export default function SalesToolkit({ refLink, username, onCopy, copiedId }: Sa
 
               {/* Tips */}
               <div className="bg-gradient-to-br from-[#EEF2FF] to-[#F5F3FF] rounded-xl border border-[#6366F1]/10 p-4 mt-4">
-                <h4 className="text-sm font-bold text-[#0F172A] mb-2 flex items-center gap-2">
+                <h4 className="text-sm font-bold text-[var(--esl-text-primary)] mb-2 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#6366F1]" /> Ахисан зөвлөгөө
                 </h4>
                 <ul className="space-y-1.5 text-xs text-[var(--esl-text-secondary)]">
