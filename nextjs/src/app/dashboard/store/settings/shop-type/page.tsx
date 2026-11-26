@@ -39,7 +39,7 @@ const TYPES: EntityOption[] = [
     key: 'pre_order', shopType: 'product',
     icon: Clock, label: 'Захиалгын дэлгүүр', color: '#E8242C', badge: 'Шинэ',
     desc: 'Гадаадаас захиалж оруулдаг бараа — pre-order систем',
-    features: ['Pre-order дараалал', 'Багцын захиалга', 'Урьдчилгаа төлбөр', 'Ирааны мөрдөлт'],
+    features: ['Pre-order дараалал', 'Багцын захиалга', 'Урьдчилгаа төлбөр', 'Ачааны мөрдөлт'],
   },
   {
     key: 'agent', shopType: 'product',

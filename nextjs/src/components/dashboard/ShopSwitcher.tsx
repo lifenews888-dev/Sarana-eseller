@@ -110,7 +110,11 @@ export default function ShopSwitcher({ stores, allowance }: { stores: OwnerStore
               <Lock size={16} className="mt-0.5 shrink-0 text-amber-500" />
               <span>
                 <span className="block font-semibold text-[var(--esl-text-primary)]">Нэмэлт дэлгүүр нээх</span>
-                <span className="block text-[11px] text-[var(--esl-text-muted)]">Стандарт болон дээш багцад 2+ дэлгүүр нээгдэнэ</span>
+                <span className="block text-[11px] text-[var(--esl-text-muted)]">
+                  {allowance && allowance.planKey !== 'free'
+                    ? `Одоогийн багцын хязгаар (${allowance.maxShops}) дүүрсэн — дээд багцад илүү олон дэлгүүр нээгдэнэ`
+                    : 'Стандарт болон дээш багцад 2+ дэлгүүр нээгдэнэ'}
+                </span>
               </span>
             </Link>
           )}

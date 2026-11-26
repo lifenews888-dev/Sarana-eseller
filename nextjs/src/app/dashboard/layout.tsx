@@ -131,7 +131,7 @@ const PRE_ORDER_MANAGEMENT: SidebarSection = {
     { href: '/dashboard/store/catalog', icon: '📖', label: 'Бараа каталог' },
     { href: '/dashboard/store/queue', icon: '📋', label: 'Захиалгын дараалал', isNew: true },
     { href: '/dashboard/store/batches', icon: '📦', label: 'Багцын захиалга', isNew: true },
-    { href: '/dashboard/store/tracking', icon: '📍', label: 'Ирааны мөрдөлт', isNew: true },
+    { href: '/dashboard/store/tracking', icon: '📍', label: 'Ачааны мөрдөлт', isNew: true },
     { href: '/dashboard/store/deposits', icon: '💳', label: 'Урьдчилгаа', isNew: true },
     { href: '/dashboard/store/waitlist', icon: '👥', label: 'Хүлээлтийн жагсаалт' },
   ],

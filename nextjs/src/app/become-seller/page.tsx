@@ -354,19 +354,19 @@ export default function BecomeSellerPage() {
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Хүргэлтийн хоног</label>
-                        <input type="number" value={form.deliveryDays} onChange={(e) => updateForm('deliveryDays', e.target.value)} placeholder="14"
+                        <input type="number" min={1} max={365} value={form.deliveryDays} onChange={(e) => updateForm('deliveryDays', e.target.value)} placeholder="14"
                           className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Мин. захиалга (ш)</label>
-                        <input type="number" value={form.minimumOrderQty} onChange={(e) => updateForm('minimumOrderQty', e.target.value)} placeholder="1"
+                        <input type="number" min={1} value={form.minimumOrderQty} onChange={(e) => updateForm('minimumOrderQty', e.target.value)} placeholder="1"
                           className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
                       </div>
                       <div>
                         <label className="text-xs font-semibold text-[var(--esl-text-muted)] mb-1.5 block">Урьдчилгаа %</label>
-                        <input type="number" value={form.advancePaymentPct} onChange={(e) => updateForm('advancePaymentPct', e.target.value)} placeholder="30"
+                        <input type="number" min={0} max={100} value={form.advancePaymentPct} onChange={(e) => updateForm('advancePaymentPct', String(Math.min(100, Math.max(0, Number(e.target.value) || 0))))} placeholder="30"
                           className="w-full px-4 py-3 bg-[var(--esl-bg-page)] border border-[var(--esl-border)] rounded-xl text-sm text-white outline-none focus:border-[#E8242C] placeholder:text-[#555]" />
                       </div>
                     </div>
