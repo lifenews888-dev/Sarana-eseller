@@ -16,7 +16,7 @@ const FOOTER_LINKS: Record<string, { name: string; href: string }[]> = {
   ],
   'Бизнес': [
     { name: 'Дэлгүүр нээх', href: '/open-shop' },
-    { name: 'Борлуулагч болох', href: '/become-seller' },
+    { name: 'Борлуулагч болох', href: '/become-affiliate' },
     { name: 'Жолооч болох', href: '/become-driver' },
     { name: 'Хамтрах', href: '/partner' },
   ],

@@ -13,7 +13,7 @@ export default function SellerSection() {
             Бараа share хийж 10-20% комисс аваарай. Бараа нөөц, хүргэлт шаардлагагүй.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
-            <Link href="/become-seller" className="bg-[#E8242C] text-white px-6 py-3 rounded-xl no-underline font-bold text-sm hover:bg-[#c91f26] transition-colors">
+            <Link href="/become-affiliate" className="bg-[#E8242C] text-white px-6 py-3 rounded-xl no-underline font-bold text-sm hover:bg-[#c91f26] transition-colors">
               Борлуулагч болох →
             </Link>
             <Link href="/open-shop" className="bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)] px-6 py-3 rounded-xl no-underline font-bold text-sm border border-[var(--esl-border)] hover:border-[#E8242C] transition-colors">

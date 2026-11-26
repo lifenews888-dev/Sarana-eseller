@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { checkPayment, isDemoMode } from '@/lib/payment/qpay';
-import { calculateCommission } from '@/lib/commission/calculateCommission';
+import { recordAffiliateCommission } from '@/lib/affiliate-attribution';
 
 export async function GET(
   req: NextRequest,
@@ -30,30 +30,8 @@ export async function GET(
           data: { status: 'confirmed' },
         });
 
-        // Process commission if seller involved
-        if ((order as any).sellerProfileId) {
-          try {
-            const seller = await prisma.sellerProfile.findUnique({
-              where: { id: (order as any).sellerProfileId },
-            });
-            if (seller) {
-              const breakdown = calculateCommission(order.total || 0, seller.commissionRate);
-              await prisma.sellerCommission.create({
-                data: {
-                  orderId: order.id,
-                  sellerProfileId: seller.id,
-                  shopId: '',
-                  orderAmount: breakdown.orderAmount,
-                  commissionRate: breakdown.sellerRate,
-                  commissionAmount: breakdown.sellerAmount,
-                  platformFee: breakdown.platformAmount,
-                  shopAmount: breakdown.shopAmount,
-                  status: 'pending',
-                },
-              });
-            }
-          } catch {}
-        }
+        // Борлуулагчийн комисс (idempotent)
+        await recordAffiliateCommission(order.id).catch(() => null);
 
         return NextResponse.json({
           paid: true,
@@ -83,30 +61,8 @@ export async function GET(
           data: { status: 'confirmed' },
         });
 
-        // Process commission
-        if ((order as any).sellerProfileId) {
-          try {
-            const seller = await prisma.sellerProfile.findUnique({
-              where: { id: (order as any).sellerProfileId },
-            });
-            if (seller) {
-              const breakdown = calculateCommission(order.total || 0, seller.commissionRate);
-              await prisma.sellerCommission.create({
-                data: {
-                  orderId: order.id,
-                  sellerProfileId: seller.id,
-                  shopId: '',
-                  orderAmount: breakdown.orderAmount,
-                  commissionRate: breakdown.sellerRate,
-                  commissionAmount: breakdown.sellerAmount,
-                  platformFee: breakdown.platformAmount,
-                  shopAmount: breakdown.shopAmount,
-                  status: 'pending',
-                },
-              });
-            }
-          } catch {}
-        }
+        // Борлуулагчийн комисс (idempotent)
+        await recordAffiliateCommission(order.id).catch(() => null);
       }
 
       return NextResponse.json({

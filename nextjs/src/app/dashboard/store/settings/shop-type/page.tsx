@@ -480,7 +480,7 @@ export default function ShopTypeWizard() {
                 value={storeName}
                 onChange={e => setStoreName(e.target.value)}
                 placeholder="жнь: My Store"
-                className="w-full px-4 py-3 rounded-xl bg-[var(--esl-bg-input)] border border-[var(--esl-border)] text-white text-sm outline-none focus:border-[#E8242C] transition placeholder:text-[#555]"
+                className="w-full px-4 py-3 rounded-xl bg-[var(--esl-bg-input)] border border-[var(--esl-border)] text-[var(--esl-text-primary)] text-sm outline-none focus:border-[#E8242C] transition placeholder:text-[var(--esl-text-disabled)]"
               />
             </div>
 
@@ -496,7 +496,7 @@ export default function ShopTypeWizard() {
                   value={slug}
                   onChange={e => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
                   placeholder="mystore"
-                  className="flex-1 px-3 py-3 bg-[var(--esl-bg-input)] text-white text-sm outline-none placeholder:text-[#555]"
+                  className="flex-1 px-3 py-3 bg-[var(--esl-bg-input)] text-[var(--esl-text-primary)] text-sm outline-none placeholder:text-[var(--esl-text-disabled)]"
                 />
               </div>
 
@@ -570,7 +570,7 @@ export default function ShopTypeWizard() {
                     value={itemFields[field.name] || ''}
                     onChange={e => setItemFields(prev => ({ ...prev, [field.name]: e.target.value }))}
                     placeholder={field.placeholder}
-                    className="flex-1 px-4 py-3 bg-[var(--esl-bg-input)] text-white text-sm outline-none placeholder:text-[#555]"
+                    className="flex-1 px-4 py-3 bg-[var(--esl-bg-input)] text-[var(--esl-text-primary)] text-sm outline-none placeholder:text-[var(--esl-text-disabled)]"
                   />
                   {field.suffix && (
                     <span className="px-3 py-3 text-sm text-[var(--esl-text-muted)] bg-[var(--esl-bg-elevated)] border-l border-[var(--esl-border)]">
@@ -651,7 +651,7 @@ export default function ShopTypeWizard() {
                 </a>
                 <a
                   href="/dashboard/store"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-[var(--esl-bg-elevated)] text-white border border-[var(--esl-border)] hover:bg-[#3D3D3D] transition no-underline"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] border border-[var(--esl-border)] hover:bg-[#3D3D3D] transition no-underline"
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard руу орох

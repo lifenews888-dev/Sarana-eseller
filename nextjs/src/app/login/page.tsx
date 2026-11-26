@@ -80,6 +80,7 @@ export default function LoginPage() {
       if (window.location.hash === '#register') {
         setMode('register');
         if (nextRedirectTarget === '/become-seller') setRole('buyer');
+        if (nextRedirectTarget === '/become-affiliate') setRole('affiliate');
       }
 
       // Google OAuth return

@@ -71,6 +71,21 @@ const PLATFORM_HOSTS = new Set([
   '127.0.0.1:3000',
 ]);
 
+// Борлуулагчийн холбоос (?ref=код) — 30 хоног cookie-д хадгална. Шалгалтыг захиалга үүсэх үед серверт хийнэ.
+function withReferralCookie(req: NextRequest, res: NextResponse): NextResponse {
+  const ref = req.nextUrl.searchParams.get('ref');
+  if (ref && /^[a-z0-9_.-]{3,40}$/i.test(ref)) {
+    res.cookies.set('eseller_ref', ref, {
+      path: '/',
+      maxAge: 30 * 24 * 60 * 60,
+      sameSite: 'lax',
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+    });
+  }
+  return res;
+}
+
 export async function proxy(req: NextRequest) {
   const hostname = req.headers.get('host') || '';
   const { pathname } = req.nextUrl;
@@ -181,12 +196,12 @@ export async function proxy(req: NextRequest) {
 
   // Skip platform's own domains
   if (PLATFORM_HOSTS.has(hostname) || PLATFORM_HOSTS.has(hostname.split(':')[0])) {
-    return NextResponse.next();
+    return withReferralCookie(req, NextResponse.next());
   }
 
   // Skip Vercel preview URLs
   if (hostname.includes('vercel.app') || hostname.includes('vercel-') || hostname.includes('.local')) {
-    return NextResponse.next();
+    return withReferralCookie(req, NextResponse.next());
   }
 
   // Custom domain: shop.nomin.mn → /shop-sub/_custom/...

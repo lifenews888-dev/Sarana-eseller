@@ -29,7 +29,7 @@ const uniqueFeatures = [
     icon: Link2, title: 'Борлуулагч referral', color: '#E37400',
     desc: 'Зардалгүй маркетинг — борлуулагчид өөрсдөө тарааж өгнө. TikTok, Instagram, Facebook-р share хийхэд л комисс автоматаар орно.',
     points: ['Бараа нэг товчлоор share хийх', '10-20% комисс автомат', 'QR код + богино линк', 'Борлуулалт realtime хянах'],
-    cta: 'Борлуулагч болох', link: '/become-seller',
+    cta: 'Борлуулагч болох', link: '/become-affiliate',
   },
   {
     icon: Store, title: '4 талын экосистем', color: '#1A73E8',
@@ -134,7 +134,7 @@ export default function ComparePage() {
           <Link href="/open-shop" className="bg-[#E8242C] text-white px-7 py-3.5 rounded-xl no-underline font-extrabold text-[16px] inline-flex items-center gap-2">
             <Store className="w-5 h-5" /> Дэлгүүр нээх
           </Link>
-          <Link href="/become-seller" className="text-white px-7 py-3.5 rounded-xl no-underline font-bold text-[16px] border border-white/20 inline-flex items-center gap-2">
+          <Link href="/become-affiliate" className="text-white px-7 py-3.5 rounded-xl no-underline font-bold text-[16px] border border-white/20 inline-flex items-center gap-2">
             <Megaphone className="w-5 h-5" /> Борлуулагч болох
           </Link>
         </div>
