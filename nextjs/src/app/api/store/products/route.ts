@@ -2,13 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireShopForRequest } from '@/lib/api-auth';
 import { sanitizeImageUrls } from '@/lib/image-url';
+import { checkShopLimit } from '@/lib/subscription-server';
+import { getSalePriceWriteError } from '@/lib/product-visibility';
 
 export async function GET(req: NextRequest) {
   const ctx = await requireShopForRequest(req);
   if (ctx instanceof NextResponse) return ctx;
 
   const products = await prisma.product.findMany({
-    where: { shopId: ctx.shopId, isActive: true },
+    where: {
+      isActive: true,
+      OR: [
+        { shopId: ctx.shopId },
+        // shopId-гүй хадгалагдсан хуучин бараанууд (эзэмшигчийнх)
+        { userId: ctx.user.id, shopId: { isSet: false } },
+        { userId: ctx.user.id, shopId: null },
+      ],
+    },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -23,6 +33,22 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     if (!body.name) {
       return NextResponse.json({ success: false, error: 'Барааны нэр шаардлагатай' }, { status: 400 });
+    }
+    const saleError = getSalePriceWriteError(body.price, body.salePrice);
+    if (saleError) {
+      return NextResponse.json({ success: false, error: saleError }, { status: 400 });
+    }
+
+    // Багцын барааны хязгаар (үнэгүй = 20) — өмнө нь энэ endpoint дээр шалгадаггүй байв
+    const limit = await checkShopLimit(ctx.shopId, 'product');
+    if (!limit.allowed) {
+      return NextResponse.json({
+        success: false,
+        error: limit.reason,
+        upgradeRequired: true,
+        currentPlan: limit.currentPlan,
+        requiredPlan: limit.requiredPlan,
+      }, { status: 403 });
     }
 
     const product = await prisma.product.create({

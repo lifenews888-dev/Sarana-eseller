@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ProductsAPI, OrdersAPI, Product, Order } from '@/lib/api';
+import { SellerProductsAPI as ProductsAPI, OrdersAPI, Product, Order } from '@/lib/api';
 import { formatPrice, getInitials } from '@/lib/utils';
 import { useAuth } from '@/lib/auth';
 import {

@@ -188,6 +188,27 @@ export const ProductsAPI = {
     apiFetch('/products/' + id, { method: 'DELETE' }),
 };
 
+// Дэлгүүрийн эзний өөрийн (идэвхтэй дэлгүүрийн) бараа. ProductsAPI нь нийтийн
+// каталог — өмнө нь самбар түүгээр сайтын бүх барааг "миний бараа" гэж харуулж,
+// POST/PUT/DELETE нь 405 буцааж байсан.
+export const SellerProductsAPI = {
+  list: async () => {
+    const res = await apiFetch<{ products: Product[] }>('/store/products');
+    return { products: (res.products || []).map(withLegacyId) };
+  },
+  create: async (data: Partial<Product>) =>
+    withLegacyId(await apiFetch<Product>('/store/products', { method: 'POST', body: JSON.stringify(data) })),
+  update: async (id: string, data: Partial<Product>) =>
+    withLegacyId(await apiFetch<Product>('/store/products/' + id, { method: 'PUT', body: JSON.stringify(data) })),
+  delete: (id: string) =>
+    apiFetch('/store/products/' + id, { method: 'DELETE' }),
+};
+
+// Prisma `id`-г хуучин UI-ийн хүлээдэг `_id` болгоно.
+function withLegacyId(p: Product): Product {
+  return p && !p._id && p.id ? { ...p, _id: p.id } : p;
+}
+
 // ══════ ORDERS ══════
 export interface OrderItem {
   product?: Product;

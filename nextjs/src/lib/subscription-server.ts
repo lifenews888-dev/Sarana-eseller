@@ -50,7 +50,8 @@ export async function checkShopLimit(
   const planName = PLANS[planKey]?.name ?? planKey;
 
   if (action === 'product') {
-    const count = await prisma.product.count({ where: { userId: shopId } });
+    // Өмнө нь `userId: shopId` гэж тоолж байсан тул хязгаар хэзээ ч ажилладаггүй байв.
+    const count = await prisma.product.count({ where: { shopId, isActive: true } });
     if (limits.maxProducts !== -1 && count >= limits.maxProducts) {
       return {
         allowed: false,
@@ -88,4 +89,37 @@ export async function getPlatformConfig(key: string): Promise<number | null> {
   } catch {
     return null;
   }
+}
+
+
+/**
+ * Эзэмшигч хэдэн дэлгүүр нээх эрхтэй вэ: эзэмшиж буй дэлгүүрүүдийн идэвхтэй
+ * (дуусаагүй) багцуудын хамгийн их `maxShops`. Үнэгүй хэрэглэгч = 1 дэлгүүр.
+ * 2 дахь дэлгүүр нь дор хаяж нэг дэлгүүр нь Стандарт (төлбөртэй) багцтай үед л нээгдэнэ.
+ */
+export async function getOwnerShopAllowance(userId: string) {
+  const shops = await prisma.shop.findMany({
+    where: { userId, isBlocked: false },
+    select: { id: true, subscription: true },
+  });
+  const now = new Date();
+  let maxShops = PLANS.free.limits.maxShops;
+  let bestPlanKey = 'free';
+  for (const shop of shops) {
+    const sub = shop.subscription;
+    if (!sub || sub.status !== 'active') continue;
+    if (sub.expiresAt && new Date(sub.expiresAt) < now) continue;
+    const limit = PLANS[sub.planKey]?.limits.maxShops ?? 1;
+    if (limit === -1 || (maxShops !== -1 && limit > maxShops)) {
+      maxShops = limit;
+      bestPlanKey = sub.planKey;
+    }
+  }
+  const used = shops.length;
+  return {
+    used,
+    maxShops,
+    planKey: bestPlanKey,
+    canCreate: maxShops === -1 || used < maxShops,
+  };
 }

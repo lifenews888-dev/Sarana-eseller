@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useState } from 'react';
+import ShopSwitcher, { setActiveShop, type OwnerStore, type ShopAllowance } from '@/components/dashboard/ShopSwitcher';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { useShopTypeStore, type ShopType } from '@/lib/shop-type-store';
@@ -340,6 +341,8 @@ const OTHER_ROLE_SECTIONS: Record<string, SidebarSection[]> = {
 // ═══════════════════════════════════════════════════════
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const [ownerStores, setOwnerStores] = useState<OwnerStore[]>([]);
+  const [allowance, setAllowance] = useState<ShopAllowance | null>(null);
   const { user } = useAuth();
   const router = useRouter();
   const [ready, setReady] = useState(false);
@@ -354,7 +357,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         router.replace('/login');
       } else {
         setReady(true);
-        loadShopType();
+        // Олон дэлгүүр: идэвхтэй дэлгүүрийг тодорхойлж, shopType-ийг түүнээс ачаална
+        fetch('/api/seller/my-stores', { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((data) => {
+            const stores: OwnerStore[] = Array.isArray(data?.stores) ? data.stores : [];
+            setOwnerStores(stores);
+            setAllowance(data?.allowance ?? null);
+            const active = stores.find((s) => s.active);
+            if (active) {
+              try {
+                if (localStorage.getItem('eseller_shop_id') !== active.id) {
+                  setActiveShop(active.id);
+                }
+              } catch { /* ignore */ }
+            }
+          })
+          .catch(() => {})
+          .finally(() => loadShopType());
       }
     }
   }, [router, loadShopType]);
@@ -372,16 +392,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const role = user?.role || 'buyer';
   const userEntityType = user?.entityType || undefined;
   const isSellerRole = ['seller', 'agent', 'company', 'auto_dealer', 'service'].includes(role);
+  const activeStore = ownerStores.find((st) => st.active);
+  // Цэс нь хэрэглэгчийн биш, идэвхтэй ДЭЛГҮҮРИЙН төрлөөс хамаарна (нэг эзэн өөр өөр төрлийн
+  // дэлгүүртэй байж болно). Дэлгүүргүй entity (агент, компани г.м) бол хэрэглэгчийн төрлийг ашиглана.
+  const sidebarEntityType = activeStore?.entityType && activeStore.entityType !== 'store'
+    ? activeStore.entityType
+    : activeStore ? undefined : userEntityType;
   const sections = isSellerRole
-    ? getSellerSections(shopType, userEntityType)
+    ? getSellerSections(shopType, sidebarEntityType)
     : OTHER_ROLE_SECTIONS[role] || BUYER_SECTIONS;
 
   const storeInfo = isSellerRole
     ? {
-        name: user?.store?.name || user?.name + 'ийн дэлгүүр',
-        url: (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
-        plan: 'Үнэгүй',
-        planBadge: 'Үнэгүй туршилт',
+        name: activeStore?.name || user?.store?.name || user?.name + 'ийн дэлгүүр',
+        url: activeStore ? `eseller.mn/${activeStore.slug}` : (user?.store?.name || user?.name || 'store').toLowerCase().replace(/\s+/g, '-') + '.eseller.mn',
+        plan: activeStore?.planName || 'Үнэгүй',
+        planBadge: activeStore ? activeStore.planName : 'Үнэгүй',
       }
     : undefined;
 
@@ -406,6 +432,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       <main className="ml-0 md:ml-[260px] min-h-screen transition-all duration-300 p-4 pt-20 md:pt-6 md:p-6 lg:p-8">
+        {isSellerRole && ownerStores.length > 0 && (
+          <ShopSwitcher stores={ownerStores} allowance={allowance} />
+        )}
         {children}
       </main>
     </div>
