@@ -121,7 +121,7 @@ export default function StorefrontClient({ shop, products }: { shop: ShopData; p
 
           {preorder && (
             <div className="mb-6 inline-flex flex-wrap gap-2 text-xs font-semibold text-white/85">
-              {preorder.sourceCountry && <span className="rounded-full bg-white/10 px-3 py-1">✈️ {preorder.sourceCountry}-аас захиална</span>}
+              {preorder.sourceCountry && <span className="rounded-full bg-white/10 px-3 py-1">✈️ Захиалах улс: {preorder.sourceCountry.replace(/[\u{1F1E6}-\u{1F1FF}]/gu, '').trim()}</span>}
               {preorder.deliveryDays ? <span className="rounded-full bg-white/10 px-3 py-1">⏱ ~{preorder.deliveryDays} хоногт ирнэ</span> : null}
               {preorder.advancePaymentPct ? <span className="rounded-full bg-white/10 px-3 py-1">💳 Урьдчилгаа {preorder.advancePaymentPct}%</span> : null}
               {preorder.minimumOrderQty && preorder.minimumOrderQty > 1 ? <span className="rounded-full bg-white/10 px-3 py-1">Доод захиалга {preorder.minimumOrderQty}</span> : null}
