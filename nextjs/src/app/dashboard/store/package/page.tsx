@@ -18,12 +18,12 @@ function UsageBar({ label, percent, color }: { label: string; percent: number; c
     <div>
       <div className="flex justify-between text-xs mb-1">
         <span className="text-[var(--esl-text-secondary)]">{label}</span>
-        <span className="font-semibold text-[var(--esl-text-primary)]">{percent === 0 ? 'Хязгааргүй' : `${percent}%`}</span>
+        <span className="font-semibold text-[var(--esl-text-primary)]">{percent < 0 ? 'Хязгааргүй' : `${percent}%`}</span>
       </div>
       <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--esl-border)' }}>
         <div
           className="h-full rounded-full transition-all"
-          style={{ width: `${Math.min(percent, 100)}%`, backgroundColor: color }}
+          style={{ width: `${percent < 0 ? 0 : Math.min(percent, 100)}%`, backgroundColor: color }}
         />
       </div>
     </div>

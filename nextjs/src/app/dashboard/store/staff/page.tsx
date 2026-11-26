@@ -25,6 +25,7 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   viewer: 'Зөвхөн харах эрхтэй',
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const INITIAL_STAFF: StaffMember[] = [
   { id: '1', name: 'Дэлгэрмаа Б.', email: 'delgermaa@email.com', role: 'manager', addedAt: '2026-03-01T10:00:00Z', active: true },
   { id: '2', name: 'Ариунболд Г.', email: 'ariunbold@email.com', role: 'editor', addedAt: '2026-03-15T14:00:00Z', active: true },
@@ -32,7 +33,7 @@ const INITIAL_STAFF: StaffMember[] = [
 ];
 
 export default function StaffPage() {
-  const [staff, setStaff] = useState<StaffMember[]>(INITIAL_STAFF);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', role: 'viewer' as StaffMember['role'] });
   const toast = useToast();

@@ -16,6 +16,7 @@ interface Promotion {
   usedCount: number;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const INITIAL_PROMOS: Promotion[] = [
   { id: '1', code: 'WELCOME10', percentage: 10, minOrder: 20000, expiryDate: '2026-05-01', enabled: true, usedCount: 24 },
   { id: '2', code: 'SUMMER20', percentage: 20, minOrder: 50000, expiryDate: '2026-06-30', enabled: true, usedCount: 8 },
@@ -23,7 +24,7 @@ const INITIAL_PROMOS: Promotion[] = [
 ];
 
 export default function PromotionsPage() {
-  const [promos, setPromos] = useState<Promotion[]>(INITIAL_PROMOS);
+  const [promos, setPromos] = useState<Promotion[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ code: '', percentage: '10', minOrder: '20000', expiryDate: '' });
   const toast = useToast();
@@ -64,6 +65,9 @@ export default function PromotionsPage() {
 
   return (
     <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
+      <div role="status" className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-600 dark:text-amber-300">
+        Энэ хуудасны код хараахан хадгалагддаггүй. Ажиллах хямдралын код үүсгэхийн тулд &ldquo;Купон&rdquo; хуудсыг ашиглана уу.
+      </div>
       <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-6 mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Урамшуулал</h1>

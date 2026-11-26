@@ -172,7 +172,10 @@ export function getUsagePercent(field: 'products' | 'staff' | 'storage' | 'aiCre
     aiCredits: [sub.aiCreditsUsed, plan.limits.aiCredits],
   };
   const [current, limit] = map[field] || [0, 1];
-  if (limit === -1) return 0;
+  // -1 = хязгааргүй. Өмнө нь 0 буцааж байсан тул 0% ашиглалт "Хязгааргүй" гэж,
+  // limit=0 (жишээ нь үнэгүй багцын AI кредит) үед 0/0 = "NaN%" гэж харагдаж байв.
+  if (limit === -1) return -1;
+  if (!limit || limit <= 0) return current > 0 ? 100 : 0;
   return Math.min(100, Math.round((current / limit) * 100));
 }
 
