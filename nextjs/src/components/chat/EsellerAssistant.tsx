@@ -12,7 +12,9 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import { Bot, Headphones, MessageSquare, SendHorizonal, ShoppingBag, X } from 'lucide-react';
+import { Bot, Headphones, MessageCircle, MessageSquare, SendHorizonal, ShoppingBag, X } from 'lucide-react';
+import MiniInbox, { type MiniChatTarget } from './MiniInbox';
+import { readGuestChats } from '@/lib/guestChatClient';
 
 type Mode = 'help' | 'shop';
 
@@ -115,6 +117,49 @@ export default function EsellerAssistant() {
   const pathname = usePathname() || '';
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('help');
+  // "Зурвас" таб — зарын эзэнтэй (хүнтэй) харилцах, зочин ч ашиглана
+  const [chatTab, setChatTab] = useState(false);
+  const [chatTarget, setChatTarget] = useState<MiniChatTarget | null>(null);
+  const [unread, setUnread] = useState(0);
+
+  // Уншаагүй хариу (нэвтэрсэн + зочин) — 30 сек тутамд
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      let n = 0;
+      const t = localStorage.getItem('token');
+      if (t) {
+        const b = await fetch('/api/listing-chats/unread', { headers: { Authorization: `Bearer ${t}` }, credentials: 'include', cache: 'no-store' })
+          .then((r) => r.json()).catch(() => null);
+        n += Number(b?.data?.count) || 0;
+      }
+      const guests = readGuestChats();
+      if (guests.length) {
+        const b = await fetch('/api/listing-chats/guest/unread', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chats: guests.map((g) => ({ chatId: g.chatId, token: g.token })) }),
+        }).then((r) => r.json()).catch(() => null);
+        n += Number(b?.data?.count) || 0;
+      }
+      if (!cancelled) setUnread(n);
+    };
+    void load();
+    const timer = window.setInterval(() => void load(), 30_000);
+    window.addEventListener('focus', load);
+    return () => { cancelled = true; window.clearInterval(timer); window.removeEventListener('focus', load); };
+  }, [open, chatTab]);
+
+  // Зарын хуудаснаас мессеж илгээмэгц жижиг чатыг тухайн чат дээр нь нээнэ
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const d = (e as CustomEvent<MiniChatTarget | undefined>).detail;
+      setChatTarget(d && d.id ? { id: d.id, guest: Boolean(d.guest) } : null);
+      setChatTab(true);
+      setOpen(true);
+    };
+    window.addEventListener('eseller:open-chat', onOpen);
+    return () => window.removeEventListener('eseller:open-chat', onOpen);
+  }, []);
   // Цонх хаалттай үед SSR-д рендерлэгдэхгүй тул localStorage-оос шууд уншихад hydration зөрөхгүй
   const [messages, setMessages] = useState<Message[]>(() =>
     loadThread('help')?.messages || [{ id: '0', role: 'assistant', content: WELCOME.help, time: ts() }],
@@ -364,6 +409,9 @@ export default function EsellerAssistant() {
           }}
         >
           <MessageSquare className="h-6 w-6" />
+          {unread > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-[#111] px-1 text-[10px] font-bold text-white">{unread}</span>
+          )}
         </button>
       )}
 
@@ -411,7 +459,9 @@ export default function EsellerAssistant() {
                     eseller<span className="font-black">.mn</span> туслах
                   </div>
                   <div className="truncate text-[11px] text-white/80">
-                    {mode === 'help'
+                    {chatTab
+                      ? '● Зарын эзэдтэй харилцах'
+                      : mode === 'help'
                       ? '● Онлайн · Захиалга · QPay · Хүргэлт'
                       : '● Бараа санал · Төсөв · Бэлэг'}
                   </div>
@@ -429,12 +479,12 @@ export default function EsellerAssistant() {
               {/* Task switcher */}
               <div className="flex shrink-0 gap-1 border-b border-[var(--esl-border)] bg-[var(--esl-bg-section)] p-1.5">
                 {TABS.map(({ key, label, Icon }) => {
-                  const active = mode === key;
+                  const active = !chatTab && mode === key;
                   return (
                     <button
                       key={key}
                       type="button"
-                      onClick={() => switchMode(key)}
+                      onClick={() => { setChatTab(false); switchMode(key); }}
                       className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 px-2 text-xs font-bold transition ${
                         active
                           ? 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] shadow-sm'
@@ -449,8 +499,27 @@ export default function EsellerAssistant() {
                     </button>
                   );
                 })}
+                <button
+                  type="button"
+                  onClick={() => { setChatTarget(null); setChatTab(true); }}
+                  className={`relative flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 px-2 text-xs font-bold transition ${
+                    chatTab
+                      ? 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] shadow-sm'
+                      : 'bg-transparent text-[var(--esl-text-muted)]'
+                  }`}
+                >
+                  <MessageCircle className="h-4 w-4" style={chatTab ? { color: BRAND } : undefined} />
+                  Зурвас
+                  {unread > 0 && (
+                    <span className="flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold text-white" style={{ background: BRAND }}>{unread}</span>
+                  )}
+                </button>
               </div>
 
+              {chatTab ? (
+                <MiniInbox initial={chatTarget} />
+              ) : (
+              <>
               {mode === 'shop' && (
                 <div className="flex shrink-0 gap-1.5 overflow-x-auto border-b border-[var(--esl-border)] px-3 py-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   <span className="shrink-0 self-center text-[10px] font-semibold text-[var(--esl-text-muted)]">
@@ -605,6 +674,8 @@ export default function EsellerAssistant() {
                   <SendHorizonal className="h-5 w-5" />
                 </button>
               </div>
+              </>
+              )}
             </div>
           </div>
         </>
