@@ -15,11 +15,22 @@ import { Bot, Headphones, MessageSquare, SendHorizonal, ShoppingBag, X } from 'l
 
 type Mode = 'help' | 'shop';
 
+interface ShopCardItem {
+  type: 'product' | 'listing';
+  id: string;
+  title: string;
+  price: number | null;
+  originalPrice?: number | null;
+  image: string | null;
+  href: string;
+}
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   time: string;
+  items?: ShopCardItem[];
 }
 
 const BRAND = '#E8242C';
@@ -267,8 +278,9 @@ export default function EsellerAssistant() {
               (typeof data.reply === 'string' && data.reply) ||
               data.error ||
               'Алдаа гарлаа';
+            const items: ShopCardItem[] = Array.isArray(data.items) ? data.items : [];
             setMessages((prev) =>
-              prev.map((m) => (m.id === assistantId ? { ...m, content: reply } : m)),
+              prev.map((m) => (m.id === assistantId ? { ...m, content: reply, items } : m)),
             );
             setHistory((prev) => [
               ...prev,
@@ -444,6 +456,31 @@ export default function EsellerAssistant() {
                         {msg.content ? (
                           <>
                             {renderChatText(msg.content)}
+                            {msg.items && msg.items.length > 0 && (
+                              <div className="mt-2 grid grid-cols-2 gap-2 whitespace-normal">
+                                {msg.items.map((it) => (
+                                  <a
+                                    key={it.type + it.id}
+                                    href={it.href}
+                                    className="block overflow-hidden rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] no-underline hover:border-[#E8242C]/60"
+                                  >
+                                    <div className="aspect-[4/3] bg-[var(--esl-bg-elevated)]">
+                                      {it.image ? (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={it.image} alt="" loading="lazy" className="h-full w-full object-cover" />
+                                      ) : null}
+                                    </div>
+                                    <div className="p-2">
+                                      <p className="line-clamp-2 text-[11px] font-semibold leading-snug text-[var(--esl-text-primary)]">{it.title}</p>
+                                      <p className="mt-0.5 text-[11px] font-extrabold text-[#E8242C]">
+                                        {typeof it.price === 'number' ? `${Math.round(it.price).toLocaleString('en-US')}₮` : 'Үнэ тохиролцоно'}
+                                      </p>
+                                      <p className="text-[9px] text-[var(--esl-text-muted)]">{it.type === 'listing' ? 'Зар' : 'Дэлгүүр'}</p>
+                                    </div>
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                             <div className="mt-1 text-right text-[10px] opacity-50">
                               {msg.time}
                             </div>
