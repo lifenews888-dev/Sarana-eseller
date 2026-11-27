@@ -2452,9 +2452,77 @@ model HerderShop {
   description   String?
   createdAt     DateTime  @default(now())
 
-  shop Shop @relation(fields: [shopId], references: [id])
+  // Бүртгэлийн хүсэлт (координатор хянана). Хуучин бичлэгт status байхгүй = идэвхтэй гэж үзнэ.
+  status          String?   // pending | under_review | approved | rejected
+  firstName       String?
+  lastName        String?
+  registerNumber  String?
+  phone           String?
+  livestock       Json?     // { horse, cow, sheep, goat, camel }
+  aDansNumber     String?
+  vetCertUrl      String?
+  bankInfo        Json?     // { bankName, accountNumber, accountName? }
+  gps             Json?     // { latitude, longitude }
+  notes           String?
+  reviewedAt      DateTime?
+  reviewedById    String?   @db.ObjectId
+  rejectionReason String?
+  updatedAt       DateTime? @updatedAt
 
+  shop    Shop           @relation(fields: [shopId], references: [id])
+  reviews HerderReview[]
+
+  @@index([province, status])
   @@map("herder_shops")
+}
+
+// Малчны захиалгын үнэлгээ — хүргэгдсэн захиалга бүрт нэг удаа
+model HerderReview {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  herderShopId String   @db.ObjectId
+  orderId      String   @unique @db.ObjectId
+  buyerId      String   @db.ObjectId
+  buyerName    String
+  rating       Int
+  text         String   @default("")
+  isHidden     Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  herderShop HerderShop @relation(fields: [herderShopId], references: [id])
+
+  @@index([herderShopId, createdAt])
+  @@map("herder_reviews")
+}
+
+// Орон нутгийн координатор — хариуцах аймгууд
+model HerderCoordinator {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @unique @db.ObjectId
+  provinces String[]
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("herder_coordinators")
+}
+
+// Байгууллагын (корпоратив) захиалгын хүсэлт
+model CorporateOrderRequest {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String?  @db.ObjectId
+  company   String
+  contact   String
+  phone     String
+  email     String?
+  details   String
+  quantity  Int?
+  status    String   @default("new") // new | contacted | closed
+  adminNote String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
+  @@map("corporate_order_requests")
 }
 
 // ══════════════════════════════════════════════════════════════

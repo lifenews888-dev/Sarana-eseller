@@ -5,9 +5,11 @@
 
 export const HERDER_PROVINCES = [
   { code: 'AKH', name: 'Архангай', deliveryDays: '7-10' },
+  { code: 'BOL', name: 'Баян-Өлгий', deliveryDays: '10-14' },
   { code: 'BKH', name: 'Баянхонгор', deliveryDays: '7-10' },
   { code: 'BUL', name: 'Булган', deliveryDays: '5-7' },
   { code: 'DOR', name: 'Дорнод', deliveryDays: '10-14' },
+  { code: 'DOG', name: 'Дорноговь', deliveryDays: '5-7' },
   { code: 'DUN', name: 'Дундговь', deliveryDays: '7-10' },
   { code: 'GOA', name: 'Говь-Алтай', deliveryDays: '10-14' },
   { code: 'GOS', name: 'Говьсүмбэр', deliveryDays: '5-7' },
@@ -19,7 +21,6 @@ export const HERDER_PROVINCES = [
   { code: 'SEL', name: 'Сэлэнгэ', deliveryDays: '5-7' },
   { code: 'SUK', name: 'Сүхбаатар', deliveryDays: '7-10' },
   { code: 'TOV', name: 'Төв', deliveryDays: '3-5' },
-  { code: 'TUV', name: 'Түв', deliveryDays: '3-5' },
   { code: 'UVS', name: 'Увс', deliveryDays: '10-14' },
   { code: 'ZAV', name: 'Завхан', deliveryDays: '10-14' },
   { code: 'DAR', name: 'Дархан-Уул', deliveryDays: '3-5' },
