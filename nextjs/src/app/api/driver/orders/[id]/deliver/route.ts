@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
-import { sendExpoPush } from '@/lib/push';
+import { notifyUser } from '@/lib/notify';
 
 // POST /api/driver/orders/[id]/deliver
 export async function POST(
@@ -37,28 +37,22 @@ export async function POST(
         create: { userId: shop.userId, balance: amount },
       });
       // Push seller — wallet income
-      if (shop.user?.pushToken) {
-        await sendExpoPush(shop.user.pushToken, {
-          title: '💰 Орлого нэмэгдлээ!',
-          body: `${Math.floor(amount).toLocaleString()}₮ таны хэтэвчид орлоо`,
-          data: { screen: 'wallet' },
-        });
-      }
+      await notifyUser(shop.userId, {
+        type: 'wallet',
+        title: '💰 Орлого нэмэгдлээ!',
+        body: `${Math.floor(amount).toLocaleString()}₮ таны хэтэвчид орлоо`,
+        data: { screen: 'wallet' },
+      });
     }
   }
 
   // Push buyer
-  const buyer = await prisma.user.findUnique({
-    where: { id: order.userId },
-    select: { pushToken: true },
+  await notifyUser(order.userId, {
+    type: 'delivery',
+    title: '📦 Захиалга хүргэгдлээ!',
+    body: 'Хүлээн авсан бол баталгаажуулна уу',
+    data: { orderId: id, action: 'confirm' },
   });
-  if (buyer?.pushToken) {
-    await sendExpoPush(buyer.pushToken, {
-      title: '📦 Захиалга хүргэгдлээ!',
-      body: 'Хүлээн авсан бол баталгаажуулна уу',
-      data: { orderId: id, action: 'confirm' },
-    });
-  }
 
   return json({ success: true });
 }

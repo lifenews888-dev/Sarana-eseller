@@ -3,6 +3,7 @@ import { json, errorJson, requireAuth } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { getCoordinatorScope, inScope } from '@/lib/herder';
 import { toCoordinatorApplication } from '@/lib/herderCoordinator';
+import { notifyUser } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -66,6 +67,18 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
       await prisma.user.update({ where: { id: app.shop.userId }, data: { role: 'herder' } });
     }
   }
+
+  const REVIEW_MSG: Record<string, string> = {
+    approved: 'Таны малчны бүртгэл батлагдлаа. Одоо бүтээгдэхүүнээ нэмэх боломжтой.',
+    rejected: `Таны малчны бүртгэл татгалзагдлаа: ${reason}`,
+    under_review: reason ? `Координатор нэмэлт мэдээлэл хүслээ: ${reason}` : 'Таны хүсэлтийг нэмэлтээр шалгаж байна.',
+  };
+  await notifyUser(app.shop.userId, {
+    type: 'herder',
+    title: 'Малчны бүртгэл',
+    body: REVIEW_MSG[status],
+    data: { screen: status === 'approved' ? 'herder-dashboard' : 'herder-register' },
+  });
 
   return json({
     id: updated.id,

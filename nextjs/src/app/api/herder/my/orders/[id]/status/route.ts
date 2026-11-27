@@ -4,6 +4,7 @@ import { json, errorJson, requireAuth } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 import { HERDER_TRANSITIONS, fromHerderOrderStatus, getMyHerderShop, toMyHerderOrder } from '@/lib/herder';
 import { loadOrderContext } from '@/lib/herderOrders';
+import { notifyUser } from '@/lib/notify';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -37,6 +38,20 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
       statusHistory: [...history, entry] as Prisma.InputJsonValue[],
     },
   });
+  const HERDER_STATUS_MSG: Record<string, string> = {
+    preparing: 'Малчин таны захиалгыг бэлтгэж байна',
+    delivering: 'Таны захиалга илгээгдлээ',
+    delivered: 'Захиалга хүргэгдлээ. Хүлээн авсан бол баталгаажуулна уу',
+    cancelled: 'Малчин захиалгыг цуцаллаа',
+  };
+  if (HERDER_STATUS_MSG[next]) {
+    await notifyUser(updated.userId, {
+      type: 'order_status',
+      title: `Захиалга #${updated.orderNumber || updated.id.slice(-6).toUpperCase()}`,
+      body: HERDER_STATUS_MSG[next],
+      data: { orderId: updated.id },
+    });
+  }
   const ctxData = await loadOrderContext([updated]);
   return json(toMyHerderOrder(updated, ctxData.buyers.get(updated.userId) || null, ctxData.coldChain(updated)));
 }

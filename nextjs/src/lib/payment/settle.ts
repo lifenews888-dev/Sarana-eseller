@@ -14,7 +14,7 @@
 import { prisma } from '@/lib/prisma';
 import { checkPayment, isDemoMode } from '@/lib/payment/qpay';
 import { recordAffiliateCommission } from '@/lib/affiliate-attribution';
-import { sendExpoPush } from '@/lib/push';
+import { notifyUser } from '@/lib/notify';
 
 export type SettleResult = {
   paid: boolean;
@@ -60,20 +60,12 @@ async function applyPaidEffects(tx: { orderId: string; metadata: unknown }) {
     await prisma.order.update({ where: { id: order.id }, data: { status: 'confirmed' } });
   }
   await recordAffiliateCommission(order.id).catch((e) => console.error('[settle] commission failed:', e));
-  try {
-    if (order.userId) {
-      const buyer = await prisma.user.findUnique({ where: { id: order.userId }, select: { pushToken: true } });
-      if (buyer?.pushToken) {
-        await sendExpoPush(buyer.pushToken, {
-          title: '✅ Захиалга баталгаажлаа!',
-          body: 'Таны төлбөр орж, захиалга хүлээн авагдлаа.',
-          data: { orderId: order.id },
-        });
-      }
-    }
-  } catch (e) {
-    console.error('[settle] push failed:', e);
-  }
+  await notifyUser(order.userId, {
+    type: 'order_paid',
+    title: '✅ Захиалга баталгаажлаа!',
+    body: 'Таны төлбөр орж, захиалга хүлээн авагдлаа.',
+    data: { orderId: order.id },
+  });
 }
 
 /** invoiceId-аар QPay-ээс шалгаж, төлөгдсөн бол үр дүнг хэрэгжүүлнэ (idempotent). */

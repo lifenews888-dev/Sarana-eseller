@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireSeller, errorJson } from '@/lib/api-auth';
 import { calculateOrderCommission } from '@/lib/commission';
 import { recordRevenue } from '@/lib/revenue';
-import { sendExpoPush } from '@/lib/push';
+import { notifyUser } from '@/lib/notify';
 
 const STATUS_MSG: Record<string, { title: string; body: string }> = {
   preparing: {
@@ -65,21 +65,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   // Push buyer — status change
   const msg = STATUS_MSG[status];
   if (msg && order.userId) {
-    try {
-      const buyer = await prisma.user.findUnique({
-        where: { id: order.userId },
-        select: { pushToken: true },
-      });
-      if (buyer?.pushToken) {
-        await sendExpoPush(buyer.pushToken, {
-          title: msg.title,
-          body: msg.body,
-          data: { orderId: id },
-        });
-      }
-    } catch (e) {
-      console.error('Status push failed:', e);
-    }
+    await notifyUser(order.userId, { type: 'order_status', title: msg.title, body: msg.body, data: { orderId: id } });
   }
 
   return NextResponse.json({ success: true, status });

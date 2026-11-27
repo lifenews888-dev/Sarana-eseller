@@ -5,7 +5,7 @@ import { createInvoice, isDemoMode, createDemoInvoice } from '@/lib/payment/qpay
 import { generateQRCode } from '@/lib/share/generateShareContent';
 import { getAuthUser } from '@/lib/api-auth';
 import { resolveReferral } from '@/lib/affiliate-attribution';
-import { sendExpoPush } from '@/lib/push';
+import { notifyUser } from '@/lib/notify';
 
 export async function POST(req: NextRequest) {
   try {
@@ -117,17 +117,12 @@ export async function POST(req: NextRequest) {
               data: { shopId: shop.id },
             });
           }
-          const seller = await prisma.user.findUnique({
-            where: { id: product.userId },
-            select: { pushToken: true },
+          await notifyUser(product.userId, {
+            type: 'order_new',
+            title: '🛍️ Шинэ захиалга ирлээ!',
+            body: `${normalizedItems.length} бараа — ${amount.toLocaleString()}₮`,
+            data: { orderId: order.id, screen: 'seller-orders' },
           });
-          if (seller?.pushToken) {
-            await sendExpoPush(seller.pushToken, {
-              title: '🛍️ Шинэ захиалга ирлээ!',
-              body: `${normalizedItems.length} бараа — ${amount.toLocaleString()}₮`,
-              data: { orderId: order.id, screen: 'seller-orders' },
-            });
-          }
         }
       }
     } catch (e) {
