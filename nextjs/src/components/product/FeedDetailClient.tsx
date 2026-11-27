@@ -54,7 +54,8 @@ interface FeedPost {
   allowAffiliate?: boolean;
   affiliateCommission?: number;
   media: MediaItem[];
-  owner?: { name: string; phone?: string; href?: string } | null;
+  owner?: { name: string; phone?: string; href?: string; verified?: boolean } | null;
+  ownerPosts?: RelatedFeedPost[];
   createdAt?: string;
   relatedPosts?: RelatedFeedPost[];
 }
@@ -170,7 +171,7 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
                   {post.owner.name?.[0] || '?'}
                 </div>
                 <div className="min-w-0">
-                  <p className="font-semibold text-sm text-[var(--esl-text)] truncate">{post.owner.name}</p>
+                  <p className="font-semibold text-sm text-[var(--esl-text)] truncate flex items-center gap-1">{post.owner.name}{post.owner.verified ? <ShieldCheck size={14} className="text-green-500 shrink-0" aria-label="Баталгаажсан" /> : null}</p>
                   <p className="text-xs text-[var(--esl-text-muted)]">
                     Зарын эзэн · Профайл харах
                   </p>
@@ -182,7 +183,7 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
                   {post.owner.name?.[0] || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate">{post.owner.name}</p>
+                  <p className="font-semibold text-sm truncate flex items-center gap-1">{post.owner.name}{post.owner.verified ? <ShieldCheck size={14} className="text-green-500 shrink-0" aria-label="Баталгаажсан" /> : null}</p>
                   <p className="text-xs text-[var(--esl-text-muted)]">
                     Зарын эзэн
                   </p>
@@ -206,7 +207,12 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
           <StartSellingButton productId={post._id} productName={post.title} commission={post.affiliateCommission} />
         ) : null}
 
-        <RelatedFeedSection posts={post.relatedPosts || []} accent={config.color} />
+        <RelatedFeedSection posts={post.ownerPosts || []} accent={config.color} title="Зарын эзний бусад зарууд" />
+
+        <RelatedFeedSection
+          posts={(post.relatedPosts || []).filter((r) => !(post.ownerPosts || []).some((o) => o.id === r.id))}
+          accent={config.color}
+        />
       </div>
     </div>
   );
@@ -284,13 +290,13 @@ function ListingCategoryActions({ post, accent }: { post: FeedPost; accent: stri
   );
 }
 
-function RelatedFeedSection({ posts, accent }: { posts: RelatedFeedPost[]; accent: string }) {
+function RelatedFeedSection({ posts, accent, title = 'Ижил төстэй зарууд' }: { posts: RelatedFeedPost[]; accent: string; title?: string }) {
   if (posts.length === 0) return null;
 
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-base font-bold">Ижил төстэй зарууд</h2>
+        <h2 className="text-base font-bold">{title}</h2>
         <Link href="/feed" className="text-xs font-semibold no-underline" style={{ color: accent }}>
           Бүгдийг харах
         </Link>
