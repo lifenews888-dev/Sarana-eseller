@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Bot, Headphones, MessageSquare, SendHorizonal, ShoppingBag, X } from 'lucide-react';
 
 type Mode = 'help' | 'shop';
@@ -111,6 +112,7 @@ function saveThread(mode: Mode, thread: Omit<StoredThread, 'at'>) {
 }
 
 export default function EsellerAssistant() {
+  const pathname = usePathname() || '';
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('help');
   // Цонх хаалттай үед SSR-д рендерлэгдэхгүй тул localStorage-оос шууд уншихад hydration зөрөхгүй
@@ -343,6 +345,9 @@ export default function EsellerAssistant() {
     },
     [budget, history, input, loading, mode],
   );
+
+  // Хүнтэй чатлах хуудсууд дээр AI туслахын товч мессеж бичих талбарыг халхлахгүй
+  if (pathname.startsWith('/messages') || pathname.includes('/chat')) return null;
 
   return (
     <>
