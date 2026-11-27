@@ -85,18 +85,51 @@ const TABS: { key: Mode; label: string; Icon: typeof Bot }[] = [
   { key: 'shop', label: 'Бараа', Icon: ShoppingBag },
 ];
 
+// Ярилцлагыг хуудас солих, шинэчлэхэд алдагдуулахгүйн тулд таб тус бүрээр 24 цаг хадгална
+const STORE_KEY = 'eseller:assistant:v1';
+const STORE_TTL_MS = 24 * 60 * 60 * 1000;
+type StoredThread = { messages: Message[]; history: { role: 'user' | 'assistant'; content: string }[]; at: number };
+
+function loadThread(mode: Mode): StoredThread | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const all = JSON.parse(localStorage.getItem(STORE_KEY) || '{}') as Partial<Record<Mode, StoredThread>>;
+    const t = all[mode];
+    if (!t || !Array.isArray(t.messages) || Date.now() - t.at > STORE_TTL_MS) return null;
+    return t;
+  } catch {
+    return null;
+  }
+}
+
+function saveThread(mode: Mode, thread: Omit<StoredThread, 'at'>) {
+  try {
+    const all = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    all[mode] = { ...thread, messages: thread.messages.slice(-40), history: thread.history.slice(-20), at: Date.now() };
+    localStorage.setItem(STORE_KEY, JSON.stringify(all));
+  } catch { /* storage unavailable */ }
+}
+
 export default function EsellerAssistant() {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<Mode>('help');
-  const [messages, setMessages] = useState<Message[]>([
-    { id: '0', role: 'assistant', content: WELCOME.help, time: ts() },
-  ]);
-  const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>([]);
+  // Цонх хаалттай үед SSR-д рендерлэгдэхгүй тул localStorage-оос шууд уншихад hydration зөрөхгүй
+  const [messages, setMessages] = useState<Message[]>(() =>
+    loadThread('help')?.messages || [{ id: '0', role: 'assistant', content: WELCOME.help, time: ts() }],
+  );
+  const [history, setHistory] = useState<{ role: 'user' | 'assistant'; content: string }[]>(() => loadThread('help')?.history || []);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [budget, setBudget] = useState(0);
   /** Mobile sheet height in px (visualViewport-aware for keyboard) */
   const [sheetHeight, setSheetHeight] = useState<number | null>(null);
+
+  // Ярилцлагыг хадгална (хариу ирж дууссаны дараа)
+  useEffect(() => {
+    if (loading) return;
+    if (messages.length <= 1 && history.length === 0) return;
+    saveThread(mode, { messages, history });
+  }, [messages, history, mode, loading]);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -171,8 +204,9 @@ export default function EsellerAssistant() {
   const switchMode = (next: Mode) => {
     if (next === mode) return;
     setMode(next);
-    setHistory([]);
-    setMessages([{ id: uid(), role: 'assistant', content: WELCOME[next], time: ts() }]);
+    const stored = loadThread(next);
+    setHistory(stored?.history || []);
+    setMessages(stored?.messages || [{ id: uid(), role: 'assistant', content: WELCOME[next], time: ts() }]);
     setInput('');
     setLoading(false);
   };
