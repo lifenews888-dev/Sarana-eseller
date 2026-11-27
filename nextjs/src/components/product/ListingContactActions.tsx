@@ -31,7 +31,7 @@ export default function ListingContactActions({
   feedItemId,
   phone,
   accent,
-  primaryCta,
+  primaryCta: _primaryCta,
 }: {
   feedItemId: string;
   phone?: string;
@@ -138,7 +138,6 @@ export default function ListingContactActions({
           onClick={() => { if (!requireLogin()) setChatOpen((v) => !v); }}
           className="h-12 rounded-xl font-semibold text-sm flex items-center justify-center gap-2 border-2"
           style={{ borderColor: accent, color: accent }}
-          aria-label={primaryCta}
         >
           <MessageCircle size={18} /> Чатлах
         </button>
