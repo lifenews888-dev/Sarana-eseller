@@ -44,7 +44,7 @@ export default function AdminListingReportsPage() {
         <h1 className="text-xl font-extrabold text-[var(--esl-text-primary)]">🚩 Зарын гомдол</h1>
         <div className="ml-auto flex gap-1 rounded-xl border border-[var(--esl-border)] p-1">
           {(['open', 'all'] as const).map((s) => (
-            <button key={s} type="button" onClick={() => { setRows(null); setStatus(s); }} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${status === s ? 'bg-[#E8242C] text-white' : 'text-[var(--esl-text-secondary)]'}`}>
+            <button key={s} type="button" onClick={() => { setRows(null); setStatus(s); }} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${status === s ? 'bg-brand text-white' : 'text-[var(--esl-text-secondary)]'}`}>
               {s === 'open' ? 'Шийдээгүй' : 'Бүгд'}
             </button>
           ))}
@@ -60,13 +60,13 @@ export default function AdminListingReportsPage() {
           <div key={row.feedItem.id} className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-4">
             <div className="flex flex-wrap items-center gap-2">
               <Link href={`/feed/${row.feedItem.id}`} target="_blank" className="font-bold text-[var(--esl-text-primary)] no-underline hover:underline">{row.feedItem.title}</Link>
-              <span className="rounded-full bg-[#E8242C]/15 px-2 py-0.5 text-[11px] font-bold text-[#E8242C]">{row.count} гомдол</span>
+              <span className="rounded-full bg-brand/15 px-2 py-0.5 text-[11px] font-bold text-brand">{row.count} гомдол</span>
               <span className="rounded-full border border-[var(--esl-border)] px-2 py-0.5 text-[11px] text-[var(--esl-text-muted)]">{row.feedItem.status}</span>
               <div className="ml-auto flex gap-2">
                 {row.feedItem.status === 'suspended' ? (
                   <button type="button" disabled={!!busy} onClick={() => act(row.feedItem.id, 'restore')} className="rounded-lg border border-[var(--esl-border)] px-3 py-1.5 text-xs font-bold text-[var(--esl-text-primary)]">Сэргээх</button>
                 ) : (
-                  <button type="button" disabled={!!busy} onClick={() => act(row.feedItem.id, 'suspend')} className="rounded-lg bg-[#E8242C] px-3 py-1.5 text-xs font-bold text-white">Зарыг хаах</button>
+                  <button type="button" disabled={!!busy} onClick={() => act(row.feedItem.id, 'suspend')} className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-white">Зарыг хаах</button>
                 )}
                 <button type="button" disabled={!!busy} onClick={() => act(row.feedItem.id, 'dismiss')} className="rounded-lg border border-[var(--esl-border)] px-3 py-1.5 text-xs font-bold text-[var(--esl-text-secondary)]">Хэрэгсэхгүй</button>
               </div>

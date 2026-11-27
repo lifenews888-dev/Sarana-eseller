@@ -48,7 +48,7 @@ export default function AdminCorporateOrdersPage() {
         <h1 className="text-xl font-extrabold text-[var(--esl-text-primary)]">🏢 Байгууллагын захиалга</h1>
         <div className="ml-auto flex gap-1 rounded-xl border border-[var(--esl-border)] p-1">
           {Object.keys(STATUS_LABEL).map((s) => (
-            <button key={s} type="button" onClick={() => { setRows(null); setStatus(s); }} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${status === s ? 'bg-[#E8242C] text-white' : 'text-[var(--esl-text-secondary)]'}`}>
+            <button key={s} type="button" onClick={() => { setRows(null); setStatus(s); }} className={`rounded-lg px-3 py-1.5 text-xs font-bold ${status === s ? 'bg-brand text-white' : 'text-[var(--esl-text-secondary)]'}`}>
               {STATUS_LABEL[s]}
             </button>
           ))}
