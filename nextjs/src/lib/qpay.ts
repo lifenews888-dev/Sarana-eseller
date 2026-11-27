@@ -1,115 +1,60 @@
 /**
- * QPay — Mongolian QR Payment Gateway
+ * QPay — хуучин импортуудад зориулсан нимгэн давхарга.
  *
- * API: https://merchant.qpay.mn/v2
- * Env: QPAY_USERNAME, QPAY_PASSWORD, QPAY_INVOICE_CODE
- *
- * Flow: authenticate → create invoice → show QR → check payment → callback
+ * Өмнө нь энэ файл бүхэлдээ mock байсан (зохиомол QR, үргэлж paid:false) тул сагснаас хийсэн
+ * захиалгын төлбөр хэзээ ч бодитоор ороогүй. Одоо бодит клиент `lib/payment/qpay.ts`-г ашиглана.
+ * QPAY_USERNAME/QPAY_PASSWORD тохируулаагүй үед `demo: true` бүхий тест нэхэмжлэл буцаана —
+ * тест нэхэмжлэл хэзээ ч автоматаар "төлөгдсөн" болохгүй (lib/payment/settle.ts).
  */
+import {
+  createInvoice as qpayCreateInvoice,
+  createDemoInvoice,
+  isDemoMode,
+} from '@/lib/payment/qpay';
+import { settleInvoice } from '@/lib/payment/settle';
 
-const API_BASE = 'https://merchant.qpay.mn/v2';
-
-let cachedToken: { token: string; expiresAt: number } | null = null;
-
-interface QPayInvoice {
+export interface QPayInvoice {
   invoiceId: string;
-  qrImage: string;   // base64 QR image
-  qrText: string;    // QR text data
-  urls: { name: string; link: string }[];
+  qrImage: string; // base64 PNG (data: prefix-гүй)
+  qrText: string;
+  shortUrl?: string;
+  urls: { name: string; description?: string; logo?: string; link: string }[];
+  demo: boolean;
 }
 
-interface QPayPaymentStatus {
+export interface QPayPaymentStatus {
   paid: boolean;
   paidAmount: number;
   paidDate: string | null;
+  status?: string;
 }
 
-export async function getToken(): Promise<string> {
-  if (cachedToken && cachedToken.expiresAt > Date.now()) {
-    return cachedToken.token;
-  }
-
-  // In production, call QPay auth:
-  // const res = await fetch(`${API_BASE}/auth/token`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Authorization': 'Basic ' + btoa(
-  //       `${process.env.QPAY_USERNAME}:${process.env.QPAY_PASSWORD}`
-  //     ),
-  //   },
-  // });
-  // const data = await res.json();
-
-  const token = `qpay_mock_${Date.now()}`;
-  cachedToken = {
-    token,
-    expiresAt: Date.now() + 2 * 60 * 60 * 1000, // 2 hours
+export async function createInvoice(orderId: string, amount: number, description: string): Promise<QPayInvoice> {
+  const base = process.env.NEXT_PUBLIC_URL || 'https://eseller.mn';
+  const params = {
+    orderId,
+    amount: Math.round(amount),
+    description,
+    callbackUrl: `${base}/api/payment/qpay/callback`,
   };
-  return token;
-}
-
-export async function createInvoice(
-  orderId: string,
-  amount: number,
-  description: string
-): Promise<QPayInvoice> {
-  const token = await getToken();
-
-  // In production, call QPay:
-  // const res = await fetch(`${API_BASE}/invoice`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Authorization': `Bearer ${token}`,
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify({
-  //     invoice_code: process.env.QPAY_INVOICE_CODE,
-  //     sender_invoice_no: orderId,
-  //     invoice_receiver_code: '',
-  //     invoice_description: description,
-  //     amount,
-  //     callback_url: `${process.env.NEXT_PUBLIC_URL}/api/payment/qpay/callback?orderId=${orderId}`,
-  //   }),
-  // });
-
-  const invoiceId = `QP${Date.now().toString(36).toUpperCase()}`;
-
+  const demo = isDemoMode();
+  const inv = demo ? createDemoInvoice(params) : await qpayCreateInvoice(params);
   return {
-    invoiceId,
-    qrImage: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==',
-    qrText: `qpay://pay?invoice=${invoiceId}&amount=${amount}`,
-    urls: [
-      { name: 'Хаан банк', link: `khanbank://qpay?id=${invoiceId}` },
-      { name: 'Голомт банк', link: `golomtbank://qpay?id=${invoiceId}` },
-      { name: 'ХХБ', link: `statebank://qpay?id=${invoiceId}` },
-      { name: 'Хас банк', link: `xacbank://qpay?id=${invoiceId}` },
-      { name: 'Богд банк', link: `bogdbank://qpay?id=${invoiceId}` },
-      { name: 'SocialPay', link: `socialpay://qpay?id=${invoiceId}` },
-      { name: 'MonPay', link: `monpay://qpay?id=${invoiceId}` },
-    ],
+    invoiceId: inv.invoice_id,
+    qrImage: inv.qr_image || '',
+    qrText: inv.qr_text,
+    shortUrl: inv.qPay_shortUrl,
+    urls: inv.urls || [],
+    demo,
   };
 }
 
+/** QPay-ээс шалгаж, төлөгдсөн бол захиалга/зарыг баталгаажуулна. */
 export async function checkPayment(invoiceId: string): Promise<QPayPaymentStatus> {
-  const token = await getToken();
-
-  // In production, call QPay:
-  // const res = await fetch(`${API_BASE}/payment/check`, {
-  //   method: 'POST',
-  //   headers: {
-  //     'Authorization': `Bearer ${token}`,
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify({ object_type: 'INVOICE', object_id: invoiceId }),
-  // });
-
-  // Mock: return unpaid status
-  return {
-    paid: false,
-    paidAmount: 0,
-    paidDate: null,
-  };
+  const r = await settleInvoice(invoiceId);
+  return { paid: r.paid, paidAmount: 0, paidDate: r.paid ? new Date().toISOString() : null, status: r.status };
 }
 
-export const qpay = { getToken, createInvoice, checkPayment };
+export { isDemoMode };
+export const qpay = { createInvoice, checkPayment };
 export default qpay;

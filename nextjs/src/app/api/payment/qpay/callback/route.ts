@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { sendExpoPush } from '@/lib/push';
-import { recordAffiliateCommission } from '@/lib/affiliate-attribution';
+import { settleInvoice, settleByOrderId } from '@/lib/payment/settle';
 
 /**
  * QPay webhook callback
@@ -64,88 +62,17 @@ async function handleCallback(req: NextRequest): Promise<NextResponse> {
       sp.get('payment_id') ||
       sp.get('qpay_payment_id');
 
-    console.log('[QPay callback]', { method: req.method, invoiceId, orderId, paymentId, body, query: Object.fromEntries(sp) });
+    console.log('[QPay callback]', { method: req.method, invoiceId, orderId, paymentId });
 
     if (!invoiceId && !orderId) {
       // Invalid callback — QPay retries-аас хамгаалахын тулд 200 буцаана
       return NextResponse.json({ success: false, error: 'No invoice/order id' });
     }
 
-    // Transaction хайх — invoiceId эсвэл orderId-ээр
-    let transaction = null;
-    if (invoiceId) {
-      transaction = await prisma.paymentTransaction.findFirst({
-        where: { invoiceId },
-      });
-    }
-    if (!transaction && orderId) {
-      transaction = await prisma.paymentTransaction.findFirst({
-        where: { orderId },
-      });
-    }
-
-    if (!transaction) {
-      console.warn('[QPay callback] Transaction not found', { invoiceId, orderId });
-      // 200 буцаана — QPay retry хийхээс сэргийлнэ
-      return NextResponse.json({ success: false, error: 'Transaction not found' });
-    }
-
-    // Already paid — idempotent
-    if (transaction.status === 'PAID') {
-      return NextResponse.json({ success: true, alreadyPaid: true });
-    }
-
-    // Mark paid
-    await prisma.paymentTransaction.update({
-      where: { id: transaction.id },
-      data: {
-        status: 'PAID',
-        paidAt: new Date(),
-        metadata: {
-          ...((transaction.metadata as any) || {}),
-          qpayPaymentId: paymentId,
-          callbackReceived: new Date().toISOString(),
-          callbackBody: body,
-        },
-      },
-    });
-
-    // Update order status
-    let confirmedOrder = null;
-    try {
-      confirmedOrder = await prisma.order.update({
-        where: { id: transaction.orderId },
-        data: { status: 'confirmed' },
-      });
-    } catch (e) {
-      console.error('[QPay callback] Order update failed:', e);
-    }
-
-    // Борлуулагчийн комисс (idempotent)
-    if (confirmedOrder?.id) {
-      await recordAffiliateCommission(confirmedOrder.id).catch((e) => console.error('[QPay callback] Commission failed:', e));
-    }
-
-    // Push buyer — payment confirmed
-    try {
-      if (confirmedOrder?.userId) {
-        const buyer = await prisma.user.findUnique({
-          where: { id: confirmedOrder.userId },
-          select: { pushToken: true },
-        });
-        if (buyer?.pushToken) {
-          await sendExpoPush(buyer.pushToken, {
-            title: '✅ Захиалга баталгаажлаа!',
-            body: 'Таны захиалга хүлээн авагдлаа. Дэлгэрэнгүйг харах →',
-            data: { orderId: confirmedOrder.id },
-          });
-        }
-      }
-    } catch (e) {
-      console.error('[QPay callback] Buyer push failed:', e);
-    }
-
-    return NextResponse.json({ success: true });
+    // Callback-ийн агуулгад итгэхгүй: QPay-ээс өөрөө шалгаж байж баталгаажуулна
+    // (өмнө нь invoice_id илгээсэн хэн ч захиалгыг "төлөгдсөн" болгох боломжтой байсан).
+    const result = invoiceId ? await settleInvoice(String(invoiceId)) : await settleByOrderId(String(orderId));
+    return NextResponse.json({ success: result.paid, status: result.status });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error('[QPay callback] Error:', message);

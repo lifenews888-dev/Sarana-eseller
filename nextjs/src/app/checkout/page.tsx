@@ -92,6 +92,7 @@ export default function CheckoutPage() {
   const [qpayStatus, setQpayStatus] = useState<'idle' | 'pending' | 'paid'>('idle');
   const [qpayChecking, setQpayChecking] = useState(false);
   const [qpayInvoiceId, setQpayInvoiceId] = useState<string | null>(null);
+  const [qpayInfo, setQpayInfo] = useState<{ qrImage?: string; qrText?: string; shortUrl?: string; urls?: { name: string; description?: string; logo?: string; link: string }[]; demo?: boolean } | null>(null);
   const qpayPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Loyalty points state
@@ -262,6 +263,13 @@ export default function CheckoutPage() {
             : (qpayRes as Record<string, unknown>) ?? {};
         const invId = (qpayData.invoiceId ?? qpayData.invoice_id) as string | undefined;
         if (invId) setQpayInvoiceId(invId);
+        setQpayInfo({
+          qrImage: typeof qpayData.qrImage === 'string' ? qpayData.qrImage : undefined,
+          qrText: typeof qpayData.qrText === 'string' ? qpayData.qrText : undefined,
+          shortUrl: typeof qpayData.shortUrl === 'string' ? qpayData.shortUrl : undefined,
+          urls: Array.isArray(qpayData.urls) ? (qpayData.urls as { name: string; description?: string; logo?: string; link: string }[]) : [],
+          demo: qpayData.demo === true,
+        });
       } catch {
         // QPay invoice creation failure is non-blocking
       }
@@ -320,10 +328,18 @@ export default function CheckoutPage() {
             {paymentMethod === 'qpay' && qpayStatus !== 'paid' && (
               <div className="bg-[var(--esl-bg-section)] rounded-xl border border-[var(--esl-border)] p-6 space-y-4">
                 <h3 className="font-semibold text-[var(--esl-text-primary)]">QPay-р төлбөр төлөх</h3>
-                {/* QR Code Placeholder */}
-                <div className="mx-auto w-[200px] h-[200px] rounded-xl bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] flex items-center justify-center">
-                  <span className="text-[var(--esl-text-muted)] font-medium text-sm">QPay QR</span>
-                </div>
+                {qpayInfo?.demo ? (
+                  <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-[var(--esl-text-primary)]">
+                    <b>Тест горим:</b> QPay төлбөрийн систем хараахан холбогдоогүй байна. Энэ захиалгын төлбөрийг онлайнаар хүлээн авах боломжгүй — дэлгүүртэй холбогдоно уу.
+                  </div>
+                ) : qpayInfo?.qrImage ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={`data:image/png;base64,${qpayInfo.qrImage}`} alt="QPay QR код" className="mx-auto w-[220px] h-[220px] rounded-xl bg-white p-2" />
+                ) : (
+                  <div className="mx-auto w-[200px] h-[200px] rounded-xl bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] flex items-center justify-center text-center px-4">
+                    <span className="text-[var(--esl-text-muted)] font-medium text-sm">QR код үүсгэж чадсангүй. «Төлбөр шалгах» дарж дахин оролдоно уу.</span>
+                  </div>
+                )}
 
                 {/* Payment status */}
                 <div className="flex items-center justify-center gap-2">
@@ -350,19 +366,24 @@ export default function CheckoutPage() {
                   )}
                 </button>
 
-                {/* Bank deep links */}
-                <div className="grid grid-cols-2 gap-2">
-                  {BANK_LINKS.map((bank) => (
-                    <button
-                      key={bank.name}
-                      type="button"
-                      className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-medium text-[var(--esl-text-primary)] hover:border-[var(--esl-border-strong)] transition-colors"
-                    >
-                      <span>{bank.icon}</span>
-                      <span className="truncate">{bank.name}</span>
-                    </button>
-                  ))}
-                </div>
+                {/* Банкны апп-ууд (QPay-ээс ирсэн бодит холбоосууд — гар утсан дээр апп-ыг шууд нээнэ) */}
+                {!qpayInfo?.demo && (qpayInfo?.urls?.length ?? 0) > 0 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {qpayInfo!.urls!.map((bank) => (
+                      <a
+                        key={bank.name + bank.link}
+                        href={bank.link}
+                        className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-medium text-[var(--esl-text-primary)] no-underline hover:border-[var(--esl-border-strong)] transition-colors"
+                      >
+                        {bank.logo
+                          // eslint-disable-next-line @next/next/no-img-element
+                          ? <img src={bank.logo} alt="" className="w-5 h-5 rounded" />
+                          : null}
+                        <span className="truncate">{bank.description || bank.name}</span>
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

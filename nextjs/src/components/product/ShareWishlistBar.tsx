@@ -9,6 +9,8 @@ interface ShareWishlistBarProps {
   url?: string;
   title?: string;
   productId?: string;
+  /** Хадгалах товчийг нуух (зарын булан өөрийн серверийн хадгалалттай) */
+  hideSave?: boolean;
   className?: string;
 }
 
@@ -73,7 +75,7 @@ function writeWishlistSaved(productId: string | undefined, saved: boolean): void
   }
 }
 
-export default function ShareWishlistBar({ url, title, productId, className }: ShareWishlistBarProps) {
+export default function ShareWishlistBar({ url, title, productId, className, hideSave }: ShareWishlistBarProps) {
   const [liked, setLiked] = useState(() => readWishlistSaved(productId));
   const [copied, setCopied] = useState(false);
   const toast = useToast();
@@ -126,7 +128,7 @@ export default function ShareWishlistBar({ url, title, productId, className }: S
       >
         {copied ? <Check size={16} className="text-green-500" /> : <Link2 size={16} />}
       </button>
-      <button
+      {!hideSave && <button
         type="button"
         onClick={handleWishlist}
         aria-pressed={liked}
@@ -136,7 +138,7 @@ export default function ShareWishlistBar({ url, title, productId, className }: S
         )}
       >
         <Heart size={16} fill={liked ? 'currentColor' : 'none'} /> Хадгалах
-      </button>
+      </button>}
     </div>
   );
 }

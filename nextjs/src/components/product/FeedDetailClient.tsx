@@ -17,6 +17,7 @@ import { listingMetadataPreviewItems, metadataFieldsForCategory } from '@/lib/li
 import SafeImage from '@/components/ui/SafeImage';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
 import ShareWishlistBar from './ShareWishlistBar';
+import ListingContactActions from './ListingContactActions';
 import StartSellingButton from './StartSellingButton';
 
 type FeedMetadata = Record<string, unknown>;
@@ -98,8 +99,6 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
   const config = ENTITY_CARD_CONFIG[et];
   const meta = post.metadata || {};
   const ownerHref = post.owner?.href;
-  const ownerPhoneHref = phoneHref(post.owner?.phone);
-  const ownerPhoneLabel = formatPhoneLabel(post.owner?.phone);
 
   const media: MediaItem[] = post.media.length > 0
     ? post.media
@@ -173,7 +172,7 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
                 <div className="min-w-0">
                   <p className="font-semibold text-sm text-[var(--esl-text)] truncate">{post.owner.name}</p>
                   <p className="text-xs text-[var(--esl-text-muted)]">
-                    {ownerPhoneLabel ? `Утас: ${ownerPhoneLabel}` : 'Зарын эзэн · Профайл харах'}
+                    Зарын эзэн · Профайл харах
                   </p>
                 </div>
               </Link>
@@ -185,7 +184,7 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{post.owner.name}</p>
                   <p className="text-xs text-[var(--esl-text-muted)]">
-                    {ownerPhoneLabel ? `Утас: ${ownerPhoneLabel}` : 'Зарын эзэн'}
+                    Зарын эзэн
                   </p>
                 </div>
               </>
@@ -195,25 +194,13 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
                 Профайл
               </Link>
             ) : null}
-            {ownerPhoneHref ? (
-              <a href={ownerPhoneHref} className="w-10 h-10 rounded-full flex items-center justify-center text-white" style={{ background: config.color }} aria-label="Залгах">
-                <Phone size={18} />
-              </a>
-            ) : null}
           </div>
         ) : null}
 
-        {ownerPhoneHref ? (
-          <a href={ownerPhoneHref} className="w-full h-12 rounded-xl font-semibold text-white text-sm flex items-center justify-center gap-2 no-underline" style={{ background: config.color }}>
-            <Phone size={18} /> {config.primaryCta}
-          </a>
-        ) : (
-          <p className="rounded-xl border border-dashed border-[var(--esl-border)] px-4 py-3 text-center text-xs text-[var(--esl-text-muted)]">
-            Зар нэмэгч холбоо барих утсаа оруулаагүй байна. Доорх линкээр хуваалцах эсвэл хадгалаад дараа нь шалгаарай.
-          </p>
-        )}
+        {/* Дугаар харах · Чатлах · Хадгалах · Гомдол */}
+        <ListingContactActions feedItemId={post._id} phone={post.owner?.phone ?? valueToText(pick(meta, ['ownerPhone'])) ?? undefined} accent={config.color} primaryCta={config.primaryCta} />
 
-        <ShareWishlistBar url={`/feed/${post._id}`} title={post.title} productId={post._id} />
+        <ShareWishlistBar url={`/feed/${post._id}`} title={post.title} hideSave />
 
         {post.allowAffiliate ? (
           <StartSellingButton productId={post._id} productName={post.title} commission={post.affiliateCommission} />

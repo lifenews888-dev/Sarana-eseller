@@ -47,6 +47,8 @@ export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('buyer');
   const [loading, setLoading] = useState(false);
@@ -178,7 +180,7 @@ export default function LoginPage() {
       // Shop wizard path: always register as buyer then complete /become-seller
       const registerRole =
         (redirectTarget || readRedirectTargetFromLocation()) === '/become-seller' ? 'buyer' : role;
-      const data = await AuthAPI.register(name, emailValue, password, registerRole, phone);
+      const data = await AuthAPI.register(name, emailValue, password, registerRole, phone, otpStep ? otpCode.trim() : undefined);
       if (data.token && data.user) {
         login(data.token, data.user);
         setSuccess('Бүртгэл амжилттай!');
@@ -188,7 +190,25 @@ export default function LoginPage() {
         setLoading(false);
       }
     } catch (e: unknown) {
-      const apiErr = e as { message?: string };
+      const apiErr = e as { message?: string; status?: number };
+      // Утсаар бүртгүүлэхэд SMS код шаардлагатай — код илгээгээд оруулах талбар гаргана
+      if (apiErr?.status === 428) {
+        const trimmed = email.trim().replace(/[\s-]/g, '').replace(/^\+976/, '');
+        try {
+          const r = await fetch('/api/auth/otp/send', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: trimmed, purpose: 'register' }),
+          });
+          const b = await r.json().catch(() => ({}));
+          if (!r.ok) throw new Error(b?.error || 'Код илгээж чадсангүй');
+          setOtpStep(true);
+          setSuccess(`${trimmed} дугаарт баталгаажуулах код илгээлээ.`);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : 'Код илгээж чадсангүй');
+        }
+        setLoading(false);
+        return;
+      }
       setError(apiErr?.message || (e instanceof Error ? e.message : 'Бүртгэхэд алдаа гарлаа'));
       setLoading(false);
     }
@@ -493,6 +513,25 @@ export default function LoginPage() {
                     </div>
                   )}
                 </div>
+
+                {otpStep && (
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--esl-text-muted)' }}>
+                      Утсанд ирсэн код
+                    </label>
+                    <input
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      placeholder="6 оронтой код"
+                      className="w-full rounded-xl px-4 py-3 text-sm tracking-[0.4em] outline-none"
+                      style={{ border: '1.5px solid var(--esl-border)', background: 'var(--esl-bg-card)', color: 'var(--esl-text-primary)' }}
+                      onKeyDown={(e) => e.key === 'Enter' && doRegister()}
+                    />
+                  </div>
+                )}
 
                 <button
                   onClick={doRegister}
