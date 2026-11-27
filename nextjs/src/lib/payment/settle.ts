@@ -9,6 +9,7 @@
  * Төлбөрийн зориулалт PaymentTransaction.metadata.kind-д хадгалагдана:
  *   - 'order'    (анхдагч) → захиалгыг 'confirmed' болгож, борлуулагчийн комисс бичнэ
  *   - 'feed_vip'          → зарыг VIP болгож, tierExpiresAt тохируулна
+ *   - 'banner'            → баннерыг төлөгдсөн болгож админы шалгалт руу (PENDING) шилжүүлнэ
  */
 import { prisma } from '@/lib/prisma';
 import { checkPayment, isDemoMode } from '@/lib/payment/qpay';
@@ -39,6 +40,15 @@ async function applyPaidEffects(tx: { orderId: string; metadata: unknown }) {
     await prisma.feedItem.update({
       where: { id: item.id },
       data: { tier: 'vip', tierExpiresAt: new Date(base.getTime() + days * 24 * 60 * 60 * 1000) },
+    });
+    return;
+  }
+
+  if (meta.kind === 'banner') {
+    // Төлбөр орсон — админ зураг, холбоосыг шалгаад баталгаажуулна (/dashboard/admin/banners)
+    await prisma.banner.updateMany({
+      where: { id: tx.orderId, status: 'AWAITING_PAYMENT' },
+      data: { isPaid: true, status: 'PENDING', paymentId: String(meta.qpayPaymentId || tx.orderId) },
     });
     return;
   }

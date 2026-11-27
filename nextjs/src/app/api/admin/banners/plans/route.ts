@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth } from '@/lib/api-auth';
+import { pickPlanFields } from '@/lib/bannerAds';
 
 // GET /api/admin/banners/plans
 export async function GET(req: NextRequest) {
@@ -29,9 +30,10 @@ export async function POST(req: NextRequest) {
       return errorJson('name, slot, durationDays, price шаардлагатай');
     }
 
-    const plan = await prisma.bannerPlan.create({ data: body });
+    const plan = await prisma.bannerPlan.create({ data: pickPlanFields(body) as { name: string; slot: string; durationDays: number; price: number } });
     return json(plan, 201);
   } catch (e: unknown) {
     return errorJson((e as Error).message, 500);
   }
 }
+
