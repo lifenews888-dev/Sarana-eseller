@@ -326,7 +326,6 @@ const BUYER_SECTIONS: SidebarSection[] = [
   {
     title: 'Нээгдэх боломж',
     items: [
-      { href: '/gold', icon: '👑', label: 'Loyalty & Gold' },
       { href: '/feed', icon: '🗂️', label: 'Зарын булан' },
       { href: '/become-affiliate', icon: '📢', label: 'Борлуулагч болох' },
       { href: '/become-seller', icon: '🏪', label: 'Дэлгүүр нээх' },

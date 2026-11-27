@@ -15,7 +15,6 @@ const NAV_LINKS = [
   { href: '/shops', label: 'Дэлгүүрүүд', show: 'hidden md:inline-flex' },
   { href: '/feed', label: 'Зарын булан', show: 'hidden sm:inline-flex' },
   { href: '/open-shop', label: 'Дэлгүүр нээх', show: 'hidden lg:inline-flex' },
-  { href: '/gold', label: 'Gold', show: 'hidden md:inline-flex' },
 ] as const;
 
 function isActivePath(pathname: string, href: string) {

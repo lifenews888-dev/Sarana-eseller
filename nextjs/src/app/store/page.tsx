@@ -29,7 +29,7 @@ import {
   Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse, Home, Laptop,
   Mars, Monitor, Palette, Plane, Plug, Printer, Scissors, Shield, Shirt, Sparkles,
   Smartphone, TentTree, UtensilsCrossed, Venus, Wrench,
-  Store, Newspaper, Crown,
+  Store, Newspaper,
   type LucideIcon,
 } from 'lucide-react';
 import {
@@ -438,10 +438,6 @@ export default function StorePage() {
                 <Newspaper className="w-3 h-3 inline mr-1 opacity-60" />Зар
               </Link>
               <span className="text-xs" style={{ color: 'var(--esl-border)' }}>|</span>
-              <Link href="/gold" className="text-xs font-semibold no-underline" style={{ color: '#D97706' }}>
-                <Crown className="w-3 h-3 inline mr-1" />Gold
-              </Link>
-              <span className="text-xs" style={{ color: 'var(--esl-border)' }}>|</span>
               <Link href="/shops" className="text-xs font-medium no-underline transition-colors hover:opacity-80" style={{ color: 'var(--esl-text-secondary)' }}>
                 <Store className="w-3 h-3 inline mr-1 opacity-60" />Дэлгүүрүүд
               </Link>
@@ -756,7 +752,6 @@ export default function StorePage() {
                 <ul className="list-none p-0 m-0 space-y-2">
                   {[
                     { t: 'Бүх дэлгүүрүүд', h: '/shops' },
-                    { t: 'Gold гишүүнчлэл', h: '/gold' },
                     { t: 'Борлуулагч болох', h: '/become-affiliate' },
                     { t: 'Нэвтрэх', h: '/login' },
                   ].map(l => (

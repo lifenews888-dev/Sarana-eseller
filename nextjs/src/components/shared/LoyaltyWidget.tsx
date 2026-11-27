@@ -48,7 +48,7 @@ export function LoyaltyWidget({ context, userId }: Props) {
   // Compact sidebar version
   if (context === 'sidebar') {
     return (
-      <Link href="/gold" style={{
+      <Link href="/dashboard" style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '8px 12px', borderRadius: 8,
         background: tierConfig.bg, border: `0.5px solid ${tierConfig.text}30`,
