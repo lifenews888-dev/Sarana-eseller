@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   Package, Wallet, Clock, CheckCircle, ShoppingCart, Heart, Megaphone,
-  MessageCircle, MapPin, Crown, ChevronRight, ShoppingBag,
+  MessageCircle, MapPin, ChevronRight, ShoppingBag,
   Store, ArrowRight, Sparkles,
 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -75,7 +75,6 @@ export default function BuyerDashboard() {
           { href: '/dashboard/wishlist', icon: Heart, label: 'Хүсэлт', desc: 'Хадгалсан', color: '#BE185D' },
           { href: '/dashboard/chat', icon: MessageCircle, label: 'Чат', desc: 'Дэлгүүртэй', color: '#7C3AED' },
           { href: '/dashboard/addresses', icon: MapPin, label: 'Хаяг', desc: 'Хүргэлт', color: '#0891B2' },
-          { href: '/gold', icon: Crown, label: 'Gold', desc: 'Урамшуулал', color: '#D97706' },
         ]}
       />
 
@@ -206,22 +205,6 @@ export default function BuyerDashboard() {
             </span>
           </Link>
 
-          <Link
-            href="/gold"
-            className="block overflow-hidden rounded-2xl border border-[rgba(249,168,37,0.25)] p-4 no-underline"
-            style={{ background: 'linear-gradient(135deg, #1A1100 0%, #2D1F00 100%)' }}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <Crown size={16} className="text-[#F9A825]" />
-              <span className="text-sm font-bold text-white">Gold гишүүнчлэл</span>
-            </div>
-            <p className="text-xs leading-relaxed text-white/60">
-              Үнэгүй хүргэлт · нэмэлт хямдрал · 2× оноо
-            </p>
-            <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#F9A825]">
-              Дэлгэрэнгүй <ChevronRight size={14} />
-            </span>
-          </Link>
         </div>
       </div>
     </DashboardPage>

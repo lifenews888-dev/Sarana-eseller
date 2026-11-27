@@ -4,10 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
-import {
-  Crown, Users, Truck, Store, ShoppingBag, BarChart3,
-  Package, ArrowRight, Mail, Gem, Megaphone, Car,
-} from 'lucide-react';
+import { Users, Store, ShoppingBag, Package, ArrowRight, Mail, Megaphone } from 'lucide-react';
 
 interface Stats {
   productCount: number;
@@ -17,17 +14,10 @@ interface Stats {
 }
 
 const ADVANTAGES = [
-  { icon: Crown, title: 'Gold гишүүнчлэл', desc: 'Үнэгүй хүргэлт, тусгай хямдрал, priority дэмжлэг. 3 төлөвлөгөөнөөс сонгох боломж.', color: '#F59E0B' },
-  { icon: Megaphone, title: 'Борлуулагч систем', desc: 'Линкээр share хийж 10-20% комисс олох. Инфлюэнсер программ, AI маркетинг хэрэгсэл.', color: '#8B5CF6' },
-  { icon: Truck, title: 'Жолооч экосистем', desc: 'Өөрийн жолоочийн сүлжээ, GPS tracking, 2-4 цагийн хүргэлт, автомат хуваарилалт.', color: '#3B82F6' },
-  { icon: Store, title: '7 төрөл дэлгүүр', desc: 'Энгийн дэлгүүр, захиалгын, үл хөдлөх, барилга, авто, үйлчилгээ, дижитал бараа.', color: '#E8242C' },
-];
-
-const TEAM = [
-  { name: 'Б. Бат-Эрдэнэ', role: 'Үүсгэн байгуулагч & CEO', initials: 'ББ' },
-  { name: 'Г. Сарана', role: 'CTO & Техникийн удирдагч', initials: 'ГС' },
-  { name: 'Д. Тэмүүлэн', role: 'Маркетинг менежер', initials: 'ДТ' },
-  { name: 'Э. Номин', role: 'Дизайн удирдагч', initials: 'ЭН' },
+  { icon: Megaphone, title: 'Үнэгүй зар', desc: 'Машин, байр, ажил, үйлчилгээ — зараа үнэгүй нийтэлж, 30 хоногоор байршуулна. VIP-ээр дээгүүр гаргах боломжтой.', color: '#8B5CF6' },
+  { icon: Store, title: 'Онлайн дэлгүүр', desc: 'Дэлгүүрээ нээж бараагаа байршуулна, захиалгаа нэг дороос удирдана.', color: '#E8242C' },
+  { icon: ShoppingBag, title: 'QPay төлбөр', desc: 'Банкны апп-аар QR уншуулж төлнө. Төлбөр баталгаажсаны дараа л захиалга төлөгдсөнд тооцогдоно.', color: '#10B981' },
+  { icon: Users, title: 'Шууд чат', desc: 'Зарын эзэнтэй сайт дээрээ чатлана — бүртгэлгүй ч бичиж болно.', color: '#3B82F6' },
 ];
 
 function formatNum(n: number): string {
@@ -56,8 +46,7 @@ export default function AboutPage() {
             Бидний тухай
           </h1>
           <p className="text-lg text-white/60 max-w-xl mx-auto">
-            Монголын анхны бүрэн экосистемтэй цахим худалдааны платформ.
-            Худалдан авагч, дэлгүүр эзэн, борлуулагч, жолоочийг нэг дор холбоно.
+            Зар, онлайн дэлгүүр, QPay төлбөрийг нэг дор нэгтгэсэн Монголын цахим худалдааны платформ.
           </p>
         </div>
       </section>
@@ -93,8 +82,8 @@ export default function AboutPage() {
             Бид зөвхөн бараа зарах платформ биш — бүрэн экосистем бүтээж байна.
           </p>
           <p className="text-[var(--esl-text-secondary)] leading-relaxed">
-            Дэлгүүр эзэн 5 минутын дотор дэлгүүрээ нээж, бараагаа байршуулж, QPay-р аюулгүй төлбөр хүлээн авч,
-            борлуулагчдын сүлжээгээр тарааж, жолоочоор хүргүүлж чадна. Бүгд нэг платформ дээр.
+            Дэлгүүр эзэн дэлгүүрээ нээж, бараагаа байршуулж, QPay-ээр төлбөр хүлээн авна. Хувь хүн зараа үнэгүй
+            нийтэлж, худалдан авагчтайгаа сайт дээрээ шууд чатлана.
           </p>
         </div>
       </section>
@@ -117,28 +106,13 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ⑤ Баг */}
-      <section className="max-w-[900px] mx-auto px-4 pb-16">
-        <h2 className="text-2xl font-black text-[var(--esl-text-primary)] mb-8 text-center">Манай баг</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {TEAM.map(t => (
-            <div key={t.name} className="bg-[var(--esl-bg-card)] rounded-2xl border border-[var(--esl-border)] p-5 text-center">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#E8242C] to-[#FF4D53] flex items-center justify-center mx-auto mb-3 text-white font-bold text-lg">
-                {t.initials}
-              </div>
-              <h3 className="font-bold text-sm text-[var(--esl-text-primary)]">{t.name}</h3>
-              <p className="text-xs text-[var(--esl-text-muted)] mt-1">{t.role}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* ⑥ CTA */}
       <section className="bg-gradient-to-r from-[#E8242C] to-[#C41E25] py-16">
         <div className="max-w-[900px] mx-auto px-4 text-center">
           <h2 className="text-2xl md:text-3xl font-black text-white mb-4">Бидэнтэй хамт өсөөрэй</h2>
           <p className="text-white/70 mb-8 max-w-md mx-auto">
-            Өнөөдөр дэлгүүрээ нээж, Монголын хамгийн хурдан өсөж буй платформд нэгдээрэй
+            Өнөөдөр дэлгүүрээ нээх эсвэл зараа үнэгүй нийтлээрэй
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
             <Link href="/open-shop" className="inline-flex items-center gap-2 bg-white text-[#E8242C] px-8 py-3 rounded-xl font-bold text-sm no-underline hover:bg-white/90 transition">

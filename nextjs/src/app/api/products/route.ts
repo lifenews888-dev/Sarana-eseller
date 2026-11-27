@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { ok } from '@/lib/api-envelope';
-import { DEMO_PRODUCTS } from '@/lib/utils';
 import { getSafeImageList } from '@/lib/image-url';
 import { fetchPublicLaunchProductPage, publicProductWhere } from '@/lib/product-visibility';
 
@@ -91,17 +90,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     console.error('Products list error:', err);
-    const products = DEMO_PRODUCTS.map((product) => ({
-      ...product,
-      id: product._id,
-      _id: product._id,
-      images: getSafeImageList('images' in product ? product.images : []),
-      isActive: true,
-    }));
-
+    // Алдаа гарвал хуурамч бараа биш, хоосон жагсаалт буцаана
     return ok({
-      products,
-      total: products.length,
+      products: [],
+      total: 0,
       page,
       hasMore: false,
     });

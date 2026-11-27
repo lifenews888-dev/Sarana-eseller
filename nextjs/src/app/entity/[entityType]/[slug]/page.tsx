@@ -20,7 +20,7 @@ import {
 type FeedCardMetadata = Record<string, unknown>;
 
 /* ═══════════════════════════════════════════════════════════════
-   DEMO DATA — Rich profiles with real images
+   Profile types
    ═══════════════════════════════════════════════════════════════ */
 
 interface DemoVehicle {
@@ -103,177 +103,7 @@ interface ApiEntityResponse {
   feedItems?: ApiFeedItem[] | null;
 }
 
-const DEMO: Record<string, Record<string, DemoEntity>> = {
-  auto_dealer: {
-    autocity: {
-      name: 'AutoCity Mongolia', slug: 'autocity', type: 'auto_dealer',
-      logo: 'https://picsum.photos/seed/eseller-200/200',
-      coverImage: 'https://picsum.photos/seed/eseller-1400/1400',
-      coverImages: [
-        'https://picsum.photos/seed/eseller-1400/1400',
-        'https://picsum.photos/seed/eseller-1400/1400',
-        'https://picsum.photos/seed/eseller-1400/1400',
-      ],
-      description: 'Монголын тэргүүлэгч автомашин импортлогч, борлуулагч. 2015 оноос хойш 5,000+ машин амжилттай борлуулсан. Toyota, Hyundai, Kia, Honda, BMW брэндүүдийн албан ёсны дилер.',
-      phone: '7700-8899', district: 'БЗД', isVerified: true, rating: 4.8, reviewCount: 312,
-      website: 'autocity.mn', email: 'info@autocity.mn', social: { ig: '@autocity_mn', fb: 'AutoCityMN' },
-      brands: ['Toyota', 'Hyundai', 'Kia', 'Honda', 'BMW', 'Mercedes'],
-      stats: [
-        { label: 'Борлуулсан', value: '5,200+' },
-        { label: 'Жилийн туршлага', value: '11' },
-        { label: 'Одоо байгаа', value: '48' },
-        { label: 'Сэтгэл ханамж', value: '98%' },
-      ],
-      vehicles: [
-        { id: 'v1', title: 'Toyota Land Cruiser 300', price: 185000000, year: 2024, mileage: 5000, fuel: 'Дизель', image: 'https://picsum.photos/seed/eseller-600/600', badge: 'Шинэ' },
-        { id: 'v2', title: 'BMW X5 xDrive40i', price: 145000000, year: 2023, mileage: 18000, fuel: 'Бензин', image: 'https://picsum.photos/seed/eseller-600/600', badge: 'Premium' },
-        { id: 'v3', title: 'Toyota Prius 2023', price: 52000000, year: 2023, mileage: 12000, fuel: 'Hybrid', image: 'https://picsum.photos/seed/eseller-600/600' },
-        { id: 'v4', title: 'Hyundai Tucson 2024', price: 78000000, year: 2024, mileage: 3000, fuel: 'Бензин', image: 'https://picsum.photos/seed/eseller-600/600', badge: 'Шинэ' },
-        { id: 'v5', title: 'Kia Sportage 2023', price: 65000000, year: 2023, mileage: 22000, fuel: 'Бензин', image: 'https://picsum.photos/seed/eseller-600/600' },
-        { id: 'v6', title: 'Honda CR-V 2022', price: 58000000, year: 2022, mileage: 35000, fuel: 'Бензин', image: 'https://picsum.photos/seed/eseller-600/600', sold: true },
-      ],
-      gallery: [
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-      ],
-      testimonials: [
-        { name: 'Б. Мөнхбат', text: 'Маш найдвартай, чанартай машин авсан. Баримт бичиг бүрэн, баталгаатай.', rating: 5 },
-        { name: 'О. Сарангэрэл', text: 'Анхны машинаа авахад маш сайн зөвлөгөө өгсөн. Үнэхээр мэргэжлийн.', rating: 5 },
-        { name: 'Д. Ганбаатар', text: 'Prius маш сайн нөхцөлтэй байсан. Үнэ нь зах зээлийн дунджаас хямд.', rating: 4 },
-      ],
-      awards: ['Шилдэг автодилер 2025', 'Хэрэглэгчийн итгэлийн шагнал'],
-    },
-  },
-  company: {
-    'mongolian-properties': {
-      name: 'Монголиан Пропертиз', slug: 'mongolian-properties', type: 'company',
-      logo: 'https://picsum.photos/seed/eseller-200/200',
-      coverImage: 'https://picsum.photos/seed/eseller-1400/1400',
-      coverImages: [
-        'https://picsum.photos/seed/eseller-1400/1400',
-        'https://picsum.photos/seed/eseller-1400/1400',
-        'https://picsum.photos/seed/eseller-1400/1400',
-      ],
-      description: '2010 оноос хойш 15+ амины орон сууцны төсөл амжилттай хэрэгжүүлсэн. 3,000+ гэр бүлд орон сууцтай болоход тусалсан. ISO 9001 чанарын удирдлагын тогтолцоотой.',
-      phone: '7012-3456', district: 'ХУД', isVerified: true, rating: 4.7, reviewCount: 189,
-      website: 'mongolianproperties.mn', email: 'info@mp.mn',
-      stats: [
-        { label: 'Төсөл', value: '15+' },
-        { label: 'Айлын тоо', value: '3,200+' },
-        { label: 'Жилийн туршлага', value: '16' },
-        { label: 'Ажилтан', value: '120+' },
-      ],
-      projects: [
-        { id: 'p1', title: 'Zaisan Heights', status: 'Борлуулж байна', progress: 75, image: 'https://picsum.photos/seed/eseller-600/600', units: 240, priceFrom: 261000000, pricePerSqm: 4500000, availableUnits: 60, roomChoices: ['2 өрөө 58м²', '3 өрөө 92м²', '4 өрөө 128м²'], location: 'ХУД, Зайсан', year: '2027' },
-        { id: 'p2', title: 'Central Park Residence', status: 'Барьж байна', progress: 45, image: 'https://picsum.photos/seed/eseller-600/600', units: 180, priceFrom: 218400000, pricePerSqm: 5200000, availableUnits: 99, roomChoices: ['1 өрөө 42м²', '2 өрөө 68м²', '3 өрөө 105м²'], location: 'СБД, 1-р хороолол', year: '2028' },
-        { id: 'p3', title: 'Green Valley', status: 'Ашиглалтад орсон', progress: 99, image: 'https://picsum.photos/seed/eseller-600/600', units: 320, priceFrom: 198000000, pricePerSqm: 3600000, availableUnits: 4, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²'], location: 'БГД, 3-р хороолол', year: '2025' },
-        { id: 'p4', title: 'River Garden II', status: 'Төлөвлөж байна', progress: 10, image: 'https://picsum.photos/seed/eseller-600/600', units: 150, priceFrom: 330000000, pricePerSqm: 6000000, availableUnits: 135, roomChoices: ['2 өрөө 55м²', '3 өрөө 88м²', 'Пентхаус 160м²'], location: 'СБД, Туул голын эрэг', year: '2029' },
-      ],
-      milestones: [
-        { year: '2010', text: 'Компани үүсгэн байгуулагдсан' },
-        { year: '2014', text: 'Эхний төсөл "Sky Tower" ашиглалтад орсон' },
-        { year: '2018', text: 'ISO 9001 гэрчилгээ авсан' },
-        { year: '2022', text: '"Шилдэг барилгын компани" шагнал' },
-        { year: '2025', text: 'Green Valley төсөл дууссан, 320 айл' },
-      ],
-      awards: ['Шилдэг барилгын компани 2022', 'ISO 9001:2015', 'Шилдэг ажил олгогч 2024'],
-      gallery: [
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-        'https://picsum.photos/seed/eseller-600/600',
-      ],
-      testimonials: [
-        { name: 'Г. Батбаяр', text: 'Green Valley-д орон сууц авсан. Чанар маш сайн, цаг хугацаандаа хүлээлгэж өгсөн.', rating: 5 },
-        { name: 'Э. Оюунчимэг', text: 'Банкны зээлийн зөвлөгөө маш их тусалсан. Мэргэжлийн хандлага.', rating: 5 },
-      ],
-    },
-  },
-  agent: {
-    erdenbat: {
-      name: 'Б. Эрдэнэбат', slug: 'erdenbat', type: 'agent',
-      logo: 'https://picsum.photos/seed/eseller-200/200',
-      coverImage: 'https://picsum.photos/seed/eseller-1400/1400',
-      coverImages: [
-        'https://picsum.photos/seed/eseller-1400/1400',
-        'https://picsum.photos/seed/eseller-1400/1400',
-      ],
-      description: 'Үл хөдлөх хөрөнгийн чиглэлээр 12 жил ажилласан мэргэжлийн лицензтэй агент. 800+ амжилттай хэлцэл. Орон сууц, оффис, газар зуучлал.',
-      phone: '9911-2233', district: 'СБД', isVerified: true, rating: 4.9, reviewCount: 87,
-      experience: 12,
-      specialties: ['Орон сууц', 'Оффис', 'Газар', 'Үнэлгээ'],
-      stats: [
-        { label: 'Хэлцэл', value: '800+' },
-        { label: 'Туршлага', value: '12 жил' },
-        { label: 'Идэвхтэй зар', value: '24' },
-        { label: 'Үнэлгээ', value: '4.9★' },
-      ],
-      listings: [
-        { id: 'l1', title: '3 өрөө байр, Ривер Гарден', price: 450000000, image: 'https://picsum.photos/seed/eseller-600/600', sqm: 98, rooms: 3, district: 'СБД', badge: 'VIP' },
-        { id: 'l2', title: '2 өрөө, 13-р хороолол', price: 180000000, image: 'https://picsum.photos/seed/eseller-600/600', sqm: 65, rooms: 2, district: 'БЗД' },
-        { id: 'l3', title: '4 өрөө пентхаус, Zaisan', price: 780000000, image: 'https://picsum.photos/seed/eseller-600/600', sqm: 180, rooms: 4, district: 'ХУД', badge: 'Premium' },
-        { id: 'l4', title: 'Оффис, Central Tower', price: 3500000, image: 'https://picsum.photos/seed/eseller-600/600', sqm: 120, rooms: 0, district: 'СБД' },
-        { id: 'l5', title: '1 өрөө студио, Хан-Уул', price: 95000000, image: 'https://picsum.photos/seed/eseller-600/600', sqm: 38, rooms: 1, district: 'ХУД' },
-        { id: 'l6', title: 'Газар 500м², Налайх', price: 45000000, image: 'https://picsum.photos/seed/eseller-600/600', sqm: 500, rooms: 0, district: 'НД' },
-      ],
-      testimonials: [
-        { name: 'С. Нарангэрэл', text: 'Эрдэнэбат маш мэргэжлийн, цаг алдалгүй ажилласан. Гэрийн маань үнийг зөв тогтоож, хурдан зарсан.', rating: 5 },
-        { name: 'Б. Ганзориг', text: 'Байр авахад тусалсан, бүх процессыг тайлбарлаж өгсөн. Итгэлтэй хүн.', rating: 5 },
-        { name: 'Д. Оюунтуяа', text: 'Оффис хайхад маш олон сонголт санал болгосон. Хурдан шийдвэрлэсэн.', rating: 4 },
-      ],
-    },
-  },
-  service: {
-    techpro: {
-      name: 'TechPro', slug: 'techpro', type: 'service',
-      logo: 'https://picsum.photos/seed/eseller-techpro-logo/200',
-      coverImage: 'https://picsum.photos/seed/eseller-techpro-cover/1400',
-      coverImages: [
-        'https://picsum.photos/seed/eseller-techpro-cover/1400',
-        'https://picsum.photos/seed/eseller-techpro-workspace/1400',
-      ],
-      description: 'Вэб систем, marketplace, booking, админ dashboard, SEO суурь болон production deployment хийдэг үйлчилгээний баг.',
-      phone: '9900-4455', district: 'СБД', isVerified: false, rating: 4.8, reviewCount: 42,
-      website: 'techpro.mn', email: 'hello@techpro.mn',
-      stats: [
-        { label: 'Төсөл', value: '70+' },
-        { label: 'Дундаж хугацаа', value: '3 өдөр' },
-        { label: 'Баталгаа', value: '14 хоног' },
-        { label: 'Үнэлгээ', value: '4.8★' },
-      ],
-      services: ['Next.js вэб хөгжүүлэлт', 'UI/UX дизайн', 'SEO суурь тохиргоо', 'Админ dashboard', 'Deployment'],
-      serviceListings: [
-        {
-          id: '4',
-          title: 'Вэбсайт хийж өгнө',
-          price: 2500000,
-          image: 'https://picsum.photos/seed/feed-web-development-service-1/1000/760',
-          duration: 4320,
-          packageName: 'Next.js вэб + SEO',
-          district: 'СБД',
-          badge: 'Featured',
-          category: 'tech-it-services',
-          metadata: {
-            duration: 4320,
-            packageName: 'Next.js вэб + SEO',
-            availableSlots: 2,
-            warranty: '14 хоногийн засвар',
-            highlights: ['UI/UX дизайн', 'Mobile responsive', 'SEO суурь тохиргоо', 'Админ самбар', 'Deployment'],
-          },
-        },
-      ],
-      testimonials: [
-        { name: 'B. Энхтөр', text: 'Landing page болон админ хэсгийг хурдан гаргаж, mobile дээр цэвэр болгож өгсөн.', rating: 5 },
-        { name: 'M. Саруул', text: 'SEO суурь, analytics, deployment бүгдийг нэг багцаар шийдсэн нь их амар байсан.', rating: 5 },
-      ],
-      awards: ['Verified service workflow', 'Launch support'],
-    },
-  },
-};
+// Хуурамч (демо) профайлууд устгагдсан — зөвхөн өгөгдлийн сангийн бодит мэдээлэл харуулна.
 
 /* ═══ Helpers ═══ */
 function formatPrice(n: number) {
@@ -923,7 +753,7 @@ export default function EntityProfilePage() {
   const params = useParams();
   const entityType = Array.isArray(params.entityType) ? params.entityType[0] : params.entityType as string;
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug as string;
-  const demoEntity = DEMO[entityType]?.[slug];
+  const demoEntity: DemoEntity | undefined = undefined;
   const [activeTab, setActiveTab] = useState(0);
   const [showPhone, setShowPhone] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState<DemoVehicle | null>(null);

@@ -6,7 +6,6 @@ const FOOTER_LINKS: Record<string, { name: string; href: string }[]> = {
     { name: 'Дэлгүүрүүд', href: '/shops' },
     { name: 'Зарын булан', href: '/feed' },
     { name: 'Бараанууд', href: '/store' },
-    { name: 'Gold', href: '/gold' },
   ],
   'Дэмжлэг': [
     { name: 'Нөхцөл', href: '/terms' },
