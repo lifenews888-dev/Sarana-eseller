@@ -39,6 +39,26 @@ export default function ChatMonitorPage() {
   const [repeatFilter, setRepeatFilter] = useState(false);
   const [page, setPage] = useState(1);
   const [chatType, setChatType] = useState<'shop' | 'listing'>('listing');
+  const [thread, setThread] = useState<{ id: string; text: string; createdAt: string; side: 'buyer' | 'seller'; senderName: string }[] | null>(null);
+  const [threadFeedId, setThreadFeedId] = useState<string | null>(null);
+
+  // Чат сонгоход мессежүүдийг (зөвхөн унших) ачаална
+  const openChat = async (chat: ChatEntry) => {
+    setSelected(chat);
+    setThread(null);
+    setThreadFeedId(null);
+    const token = localStorage.getItem('token');
+    try {
+      const res = await fetch(`/api/admin/chats/${chat.id}?type=${chatType}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      const data = await res.json();
+      setThread(Array.isArray(data.messages) ? data.messages : []);
+      setThreadFeedId(data.feedItemId || null);
+    } catch {
+      setThread([]);
+    }
+  };
 
   const fetchChats = async () => {
     setLoading(true);
@@ -103,7 +123,7 @@ export default function ChatMonitorPage() {
         <div className="lg:col-span-2 space-y-4">
           <div className="flex gap-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-1 w-fit">
             {([['listing', 'Зарын чат'], ['shop', 'Дэлгүүрийн чат']] as const).map(([k, label]) => (
-              <button key={k} type="button" onClick={() => { setSelected(null); setPage(1); setChatType(k); }}
+              <button key={k} type="button" onClick={() => { setSelected(null); setThread(null); setPage(1); setChatType(k); }}
                 className={cn('rounded-lg px-3 py-1.5 text-xs font-bold border-none cursor-pointer', chatType === k ? 'bg-[#E8242C] text-white' : 'bg-transparent text-[var(--esl-text-secondary)]')}>
                 {label}
               </button>
@@ -139,7 +159,7 @@ export default function ChatMonitorPage() {
                   {filtered.map(chat => {
                     const isActive = selected?.id === chat.id;
                     return (
-                      <tr key={chat.id} onClick={() => setSelected(chat)}
+                      <tr key={chat.id} onClick={() => openChat(chat)}
                         className={cn('cursor-pointer transition', isActive ? 'bg-indigo-500/10' : 'hover:bg-[var(--esl-bg-section)]/50')}>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -228,13 +248,28 @@ export default function ChatMonitorPage() {
                   ))}
                 </div>
 
-                <div className="flex gap-2 pt-2">
-                  <button className="flex-1 py-2 rounded-lg text-xs font-semibold bg-[var(--esl-bg-section)] text-[var(--esl-text-primary)] hover:bg-[var(--esl-bg-card-hover)] cursor-pointer border-none transition">
-                    <Eye className="w-3 h-3 inline mr-1" /> Дэлгэрэнгүй
-                  </button>
-                  <button className="flex-1 py-2 rounded-lg text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 cursor-pointer border-none transition">
-                    <Ban className="w-3 h-3 inline mr-1" /> Блоклох
-                  </button>
+                {threadFeedId && (
+                  <a href={`/feed/${threadFeedId}`} target="_blank" rel="noreferrer" className="block text-xs font-semibold text-[#E8242C] no-underline">
+                    <Eye className="w-3 h-3 inline mr-1" /> Зарыг харах
+                  </a>
+                )}
+
+                {/* Мессежүүд (админ зөвхөн уншина — хариуг зарын эзэн /messages-ээс бичнэ) */}
+                <div className="max-h-[360px] overflow-y-auto space-y-2 rounded-lg bg-[var(--esl-bg-section)] p-3">
+                  {thread === null ? (
+                    <p className="text-xs text-[var(--esl-text-muted)]">Ачаалж байна...</p>
+                  ) : thread.length === 0 ? (
+                    <p className="text-xs text-[var(--esl-text-muted)]">Мессеж алга</p>
+                  ) : (
+                    thread.map((m) => (
+                      <div key={m.id} className={cn('flex', m.side === 'seller' ? 'justify-end' : 'justify-start')}>
+                        <div className={cn('max-w-[85%] rounded-xl px-3 py-2 text-xs', m.side === 'seller' ? 'bg-indigo-500/20 text-[var(--esl-text-primary)]' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)]')}>
+                          <div className="mb-0.5 text-[10px] font-bold text-[var(--esl-text-muted)]">{m.senderName} · {new Date(m.createdAt).toLocaleString('mn-MN')}</div>
+                          <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
 
