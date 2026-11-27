@@ -975,16 +975,6 @@ function ProductInquiryPanel({
         </div>
 
         <div className="grid gap-2 sm:grid-cols-3">
-          {href ? (
-            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
-              <Phone size={16} /> Залгаж лавлах
-            </a>
-          ) : null}
-          {sms ? (
-            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
-              <MessageCircle size={16} /> Мессеж
-            </a>
-          ) : null}
           <button
             type="button"
             onClick={copyListingLink}
@@ -1127,16 +1117,6 @@ function RealEstateInquiryPanel({ meta, post }: { meta: FeedMetadata; post: Feed
         </div>
 
         <div className="grid gap-2 sm:grid-cols-3">
-          {href ? (
-            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
-              <Phone size={16} /> Залгаж лавлах
-            </a>
-          ) : null}
-          {sms ? (
-            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
-              <MessageCircle size={16} /> Мессеж
-            </a>
-          ) : null}
           <button
             type="button"
             onClick={copyListingLink}
@@ -1261,16 +1241,6 @@ function AutoInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPost }
         </div>
 
         <div className="grid gap-2 sm:grid-cols-3">
-          {href ? (
-            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
-              <Phone size={16} /> Залгаж лавлах
-            </a>
-          ) : null}
-          {sms ? (
-            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
-              <MessageCircle size={16} /> Мессеж
-            </a>
-          ) : null}
           <button
             type="button"
             onClick={copyListingLink}
@@ -1741,24 +1711,6 @@ function RoomChoiceInquiryModal({
           </div>
 
           <div className="grid gap-2 sm:grid-cols-3">
-            {href ? (
-              <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
-                <Phone size={16} /> Залгаж лавлах
-              </a>
-            ) : (
-              <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C]/50 text-sm font-bold text-white/70">
-                <Phone size={16} /> Утас алга
-              </button>
-            )}
-            {sms ? (
-              <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
-                <MessageCircle size={16} /> Мессеж
-              </a>
-            ) : (
-              <button type="button" disabled className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-muted)] text-sm font-bold text-[var(--esl-text-muted)] opacity-60">
-                <MessageCircle size={16} /> Мессеж алга
-              </button>
-            )}
             <button
               type="button"
               onClick={onClose}
@@ -1768,7 +1720,6 @@ function RoomChoiceInquiryModal({
             </button>
           </div>
 
-          {phone ? <p className="text-center text-[11px] text-[var(--esl-text-muted)]">Холбогдох утас: {phone}</p> : null}
         </div>
       </div>
     </div>
@@ -2316,16 +2267,6 @@ function ServiceInquiryPanel({ meta, post }: { meta: FeedMetadata; post: FeedPos
         </div>
 
         <div className="grid gap-2 sm:grid-cols-3">
-          {href ? (
-            <a href={href} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-[#E8242C] text-sm font-bold text-white no-underline hover:bg-[#c91f26]">
-              <Phone size={16} /> Залгаж лавлах
-            </a>
-          ) : null}
-          {sms ? (
-            <a href={sms} className="flex h-11 items-center justify-center gap-2 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] text-sm font-bold text-[var(--esl-text)] no-underline hover:bg-[var(--esl-bg)]">
-              <MessageCircle size={16} /> Мессеж
-            </a>
-          ) : null}
           <button
             type="button"
             onClick={copyListingLink}
