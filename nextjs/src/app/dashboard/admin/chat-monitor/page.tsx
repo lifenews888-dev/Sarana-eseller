@@ -24,6 +24,7 @@ interface ChatEntry {
   status: string;
   unreadCount: number;
   createdAt: string;
+  context?: string;
 }
 
 export default function ChatMonitorPage() {
@@ -37,22 +38,23 @@ export default function ChatMonitorPage() {
   const [linkFilter, setLinkFilter] = useState(true);
   const [repeatFilter, setRepeatFilter] = useState(false);
   const [page, setPage] = useState(1);
+  const [chatType, setChatType] = useState<'shop' | 'listing'>('listing');
 
   const fetchChats = async () => {
     setLoading(true);
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch(`/api/admin/chats?page=${page}`, {
+      const res = await fetch(`/api/admin/chats?page=${page}${chatType === 'listing' ? '&type=listing' : ''}`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await res.json();
-      if (data.chats) setChats(data.chats);
-      if (data.total) setTotal(data.total);
+      setChats(data.chats || []);
+      setTotal(data.total || 0);
     } catch {}
     setLoading(false);
   };
 
-  useEffect(() => { fetchChats(); }, [page]);
+  useEffect(() => { fetchChats(); }, [page, chatType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const filtered = chats.filter(c => {
     if (!search) return true;
@@ -99,6 +101,14 @@ export default function ChatMonitorPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Chat List */}
         <div className="lg:col-span-2 space-y-4">
+          <div className="flex gap-1 rounded-xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-1 w-fit">
+            {([['listing', 'Зарын чат'], ['shop', 'Дэлгүүрийн чат']] as const).map(([k, label]) => (
+              <button key={k} type="button" onClick={() => { setSelected(null); setPage(1); setChatType(k); }}
+                className={cn('rounded-lg px-3 py-1.5 text-xs font-bold border-none cursor-pointer', chatType === k ? 'bg-[#E8242C] text-white' : 'bg-transparent text-[var(--esl-text-secondary)]')}>
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--esl-text-muted)]" />
@@ -146,6 +156,7 @@ export default function ChatMonitorPage() {
                           <div className="text-xs text-[var(--esl-text-primary)] truncate max-w-[200px]">
                             {chat.lastMessage || '(мессеж байхгүй)'}
                           </div>
+                          {chat.context && <div className="text-[10px] text-[var(--esl-text-muted)] truncate max-w-[220px]">{chat.context}</div>}
                           {chat.unreadCount > 0 && (
                             <span className="text-[9px] font-bold bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded mt-0.5 inline-block">
                               {chat.unreadCount} уншаагүй

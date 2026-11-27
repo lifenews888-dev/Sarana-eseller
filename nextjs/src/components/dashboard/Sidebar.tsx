@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useListingUnread } from '@/lib/hooks/useListingUnread';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth';
@@ -63,6 +64,8 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ sections, storeInfo }: SidebarProps) {
+  // Зарын мессежийн уншаагүй тоо (/messages цэсний тэмдэгт)
+  const listingUnread = useListingUnread(true);
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
@@ -183,6 +186,9 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
                     {!collapsed && (
                       <>
                         <span className="flex-1 truncate">{item.label}</span>
+                        {item.href === '/messages' && listingUnread > 0 && (
+                          <span className="text-[10px] font-bold px-1.5 py-px rounded-md leading-tight bg-[#E8242C] text-white">{listingUnread}</span>
+                        )}
                         {item.badge !== undefined && (
                           <span className={`text-[10px] font-semibold px-1.5 py-px rounded-md leading-tight ${
                             typeof item.badge === 'number' && item.badge > 0
