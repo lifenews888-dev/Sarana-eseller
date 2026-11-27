@@ -32,6 +32,7 @@
 
 import { NextResponse } from 'next/server';
 import { ok } from '@/lib/api-envelope';
+import { HERDER_PROVINCES } from '@/lib/herder-delivery';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,8 @@ export const dynamic = 'force-dynamic';
 // 404 (or this route shipping with no env vars set) leaves mobile on the
 // same effective values as a clean install.
 const DEFAULT_MALCHNAAS_ENABLED = true;
-const DEFAULT_PILOT_AIMAGS = ['AKH', 'TOV', 'SEL'] as const;
+// Бүх 21 аймаг нээлттэй (2026-11-27). Хязгаарлах бол BFF_MALCHNAAS_PILOT_AIMAGS env-ээр.
+const DEFAULT_PILOT_AIMAGS: readonly string[] = HERDER_PROVINCES.map((p) => p.code);
 const DEFAULT_SELLER_NETWORK_ENABLED = process.env.NODE_ENV !== 'production';
 
 function readBool(value: string | undefined, fallback: boolean): boolean {
