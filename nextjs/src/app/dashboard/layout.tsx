@@ -317,7 +317,7 @@ const BUYER_SECTIONS: SidebarSection[] = [
       { href: '/dashboard/orders', icon: '📦', label: 'Захиалгууд' },
       { href: '/dashboard/listings', icon: '📋', label: 'Миний зарууд' },
       { href: '/messages', icon: '✉️', label: 'Зарын мессеж', isNew: true },
-      { href: '/saved', icon: '🔖', label: 'Хадгалсан зарууд', isNew: true },
+      { href: '/saved', icon: '🔖', label: 'Хадгалсан зар, хайлт', isNew: true },
       { href: '/dashboard/wishlist', icon: '❤️', label: 'Хүслийн жагсаалт' },
       { href: '/dashboard/chat', icon: '💬', label: 'Чат', isNew: true },
       { href: '/dashboard/addresses', icon: '📍', label: 'Хаягууд' },

@@ -10,6 +10,12 @@ export type FilterDef =
   | { key: string; label: string; kind: 'min' | 'max'; field: string; placeholder?: string }
   | { key: string; label: string; kind: 'contains'; field: string; placeholder?: string };
 
+// Үнийн шүүлтүүр — FeedItem.price (metadata биш) дээр ажиллана
+const PRICE_FILTERS: FilterDef[] = [
+  { key: 'priceMin', label: 'Үнэ (доод), ₮', kind: 'min', field: '__price', placeholder: '10000000' },
+  { key: 'priceMax', label: 'Үнэ (дээд), ₮', kind: 'max', field: '__price', placeholder: '50000000' },
+];
+
 export const LISTING_FILTERS: Record<string, FilterDef[]> = {
   vehicles: [
     { key: 'brand', label: 'Үйлдвэрлэгч', kind: 'facet', field: 'brand' },
@@ -41,7 +47,8 @@ export const LISTING_FILTERS: Record<string, FilterDef[]> = {
 };
 
 export function filtersForCategory(root?: string | null): FilterDef[] {
-  return (root && LISTING_FILTERS[root]) || [];
+  const defs = (root && LISTING_FILTERS[root]) || [];
+  return defs.length ? [...defs, ...PRICE_FILTERS] : [];
 }
 
 function escapeRegex(s: string) {
@@ -55,6 +62,7 @@ export function buildMetadataMongoFilter(root: string | null | undefined, sp: UR
   const and: Record<string, unknown>[] = [];
 
   for (const def of defs) {
+    if (def.field === '__price') continue; // үнийг FeedItem.price дээр шүүнэ
     const raw = (sp.get(`m_${def.key}`) || '').trim();
     if (!raw) continue;
     const path = `metadata.${def.field}`;

@@ -1,13 +1,12 @@
 import { NextRequest } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
-import { buildMetadataMongoFilter } from '@/lib/listingFilters';
+import { buildFeedFilterWhere } from '@/lib/feedQuery';
 
 const LISTING_TTL_DAYS = 30;
 import { json, requireAuth, errorJson } from '@/lib/api-auth';
 import { buildOwnedFeedWhere, normalizeListingEntityType } from '@/lib/feedOwnership';
 import {
-  categoryDescendantValues,
   categoryPathInfo,
   normalizeMarketplaceCategory,
 } from '@/lib/marketplaceCategories';
@@ -228,18 +227,12 @@ function validateSpecialListing(
 // GET /api/feed?category=agent&tier=vip&page=1&limit=20&sort=newest&search=...&mine=1&entityType=auto_dealer
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
-  const category = sp.get('category');
   const tier = sp.get('tier');
   const page = Math.max(1, Number(sp.get('page') || '1'));
   const limit = Math.min(50, Number(sp.get('limit') || '20'));
   const sort = sp.get('sort') || 'newest';
-  const search = sp.get('search');
-  const district = sp.get('district');
-  const province = sp.get('province');
   const entityType = normalizeListingEntityType(sp.get('entityType'));
   const mine = ['1', 'true', 'yes'].includes((sp.get('mine') || '').toLowerCase());
-  const priceMin = sp.get('priceMin') ? Number(sp.get('priceMin')) : undefined;
-  const priceMax = sp.get('priceMax') ? Number(sp.get('priceMax')) : undefined;
   const requestedTier = tier && VALID_TIERS.has(tier) ? tier : null;
 
   let ownedWhere: Prisma.FeedItemWhereInput | null = null;
@@ -255,56 +248,9 @@ export async function GET(req: NextRequest) {
     .catch(() => null);
 
   try {
-    const where: Prisma.FeedItemWhereInput = mine ? {} : { status: 'active' };
-    if (category && category !== 'all') {
-      const categoryRoot = normalizeMarketplaceCategory(category);
-      const descendantValues = categoryDescendantValues(category);
-      const categoryWhere: Prisma.FeedItemWhereInput =
-        categoryRoot && categoryRoot !== 'all' && categoryRoot !== category
-          ? {
-              OR: [
-                { category },
-                { category: categoryRoot, subcategory: { in: descendantValues } },
-              ],
-            }
-          : { category };
-      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), categoryWhere];
-    }
-    if (entityType && !mine) where.entityType = entityType;
-    if (district) where.district = district;
-    if (province) where.province = province;
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: 'insensitive' } },
-        { description: { contains: search, mode: 'insensitive' } },
-      ];
-    }
-    if (priceMin !== undefined || priceMax !== undefined) {
-      where.price = {};
-      if (priceMin !== undefined) where.price.gte = priceMin;
-      if (priceMax !== undefined) where.price.lte = priceMax;
-    }
+    const where = await buildFeedFilterWhere(sp, { mine });
     if (ownedWhere) {
       where.AND = [...(Array.isArray(where.AND) ? where.AND : []), ownedWhere];
-    }
-
-    // Нийтийн жагсаалтад хугацаа нь дууссан зарыг харуулахгүй (эзэн нь "Миний зарууд"-аас сунгана)
-    if (!mine) {
-      where.AND = [
-        ...(Array.isArray(where.AND) ? where.AND : []),
-        { OR: [{ expiresAt: null }, { expiresAt: { isSet: false } }, { expiresAt: { gt: new Date() } }] },
-      ];
-    }
-
-    // Ангиллын нарийн шүүлтүүр (metadata.*) — Prisma MongoDB JSON шүүлт дэмждэггүй тул findRaw
-    const metaFilter = category ? buildMetadataMongoFilter(normalizeMarketplaceCategory(category), sp) : null;
-    if (metaFilter) {
-      const rows = (await prisma.feedItem.findRaw({
-        filter: { status: 'active', ...metaFilter },
-        options: { projection: { _id: 1 }, limit: 3000 },
-      })) as unknown as Array<{ _id: { $oid: string } | string }>;
-      const ids = rows.map((r) => (typeof r._id === 'string' ? r._id : r._id.$oid));
-      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), { id: { in: ids } }];
     }
 
     const normalOrder =

@@ -6,6 +6,7 @@ import { Heart, Package } from 'lucide-react';
 import Navbar from '@/components/shared/Navbar';
 import MobileNav from '@/components/shared/MobileNav';
 import SafeImage from '@/components/ui/SafeImage';
+import SavedSearchList from '@/components/feed/SavedSearchList';
 import { useAuth } from '@/lib/auth';
 import { useHydrated } from '@/lib/hooks/useHydrated';
 
@@ -30,6 +31,7 @@ export default function SavedListingsPage() {
       <Navbar />
       <main className="min-h-screen bg-[var(--esl-bg-page)] pb-20 md:pb-0">
         <div className="mx-auto max-w-5xl px-4 py-6">
+          {hydrated && isLoggedIn && <SavedSearchList />}
           <h1 className="mb-4 flex items-center gap-2 text-xl font-extrabold text-[var(--esl-text-primary)]">
             <Heart className="h-5 w-5 text-[#E8242C]" /> Хадгалсан зарууд
           </h1>
