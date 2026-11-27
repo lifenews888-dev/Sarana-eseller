@@ -39,12 +39,14 @@ export default function AddressesPage() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await fetch('/api/user/addresses', {
+      const res = await fetch('/api/user/addresses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
         body: JSON.stringify({ addresses: newList }),
       });
-      setAddresses(newList);
+      const d = await res.json().catch(() => null);
+      if (!res.ok || !d?.success) throw new Error(d?.error || 'save failed');
+      setAddresses(Array.isArray(d.data) ? d.data : newList);
       toast.show('Хадгалагдлаа');
     } catch {
       toast.show('Алдаа гарлаа', 'error');

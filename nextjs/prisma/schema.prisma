@@ -24,6 +24,15 @@ type StoreInfo {
   commission  Int?    @default(15)
 }
 
+// Хэрэглэгчийн хадгалсан хүргэлтийн хаягууд (/dashboard/addresses)
+type SavedAddress {
+  id        String?
+  label     String?
+  address   String
+  phone     String?
+  isDefault Boolean? @default(false)
+}
+
 type AffiliateInfo {
   bio       String?
   avatar    String?
@@ -91,6 +100,7 @@ model User {
   provinceAgents     ProvinceAgent[]   @relation("ProvinceAgentUser")
 
   @@map("users")
+  savedAddresses SavedAddress[]
 }
 
 model Product {

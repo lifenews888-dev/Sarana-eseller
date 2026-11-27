@@ -23,28 +23,10 @@ interface Message {
   role: 'ai' | 'user';
   content: string;
   timestamp: Date;
+  /** false — AI холбогдоогүй, барааны мэдээлэлд тулгуурласан энгийн зөвлөмж */
+  ai?: boolean;
 }
 
-/* Mock AI responses based on product */
-function getAIResponse(product: Product, userMsg: string): string {
-  const q = userMsg.toLowerCase();
-  const name = product.name;
-  const price = formatPrice(product.salePrice || product.price);
-
-  if (q.includes('давуу') || q.includes('онцлог') || q.includes('юу'))
-    return `${name}-ийн гол давуу тал:\n\n✅ Чанарын баталгаатай — 4.5+ үнэлгээтэй\n✅ Хурдан хүргэлт — УБ дотор 2-4 цаг\n✅ Буцаалтын бодлого — 7 хоногийн дотор\n✅ QPay аюулгүй төлбөр\n\nҮнэ: ${price} — зах зээлийн дундаж үнээс 15% хямд.`;
-
-  if (q.includes('яаж') || q.includes('зар') || q.includes('борлуул'))
-    return `${name}-г зарах шилдэг стратеги:\n\n1️⃣ Story-д бараагийн зургийг "Before/After" хэлбэрээр тавь\n2️⃣ "Миний хэрэглэж үзсэн сэтгэгдэл" гэж бичээд найдвартай мэт харагдуул\n3️⃣ Хязгаарлагдмал хугацааны хямдрал гэдгийг онцол\n4️⃣ QR код бүхий poster хий, offline-д ч тараа\n\n💡 Зөвлөгөө: Оройн 19-21 цагт нийтлэвэл хамгийн үр дүнтэй.`;
-
-  if (q.includes('асуулт') || q.includes('хариул') || q.includes('татгалз'))
-    return `Хэрэглэгчийн түгээмэл асуултууд:\n\n❓ "Үнэтэй байна" → "Чанартай бараа удаан эдлэгддэг. Мөн одоо хямдралтай байгаа шүү!"\n\n❓ "Дараа авъя" → "Энэ хямдрал зөвхөн энэ долоо хоногт л байгаа. Линк илгээчихье?"\n\n❓ "Жинхэнэ юм уу?" → "Баталгаатай, буцаалтын бодлоготой. 500+ хэрэглэгч авсан."`;
-
-  if (q.includes('харьцуул') || q.includes('өрсөлд'))
-    return `${name}-ийн өрсөлдөх давуу тал:\n\n📊 Зах зээлийн дундаж үнэ: ${formatPrice((product.price || 0) * 1.15)}\n💰 Бидний үнэ: ${price}\n🚚 Хүргэлт: 2-4 цаг (өрсөлдөгч: 1-3 хоног)\n⭐ Үнэлгээ: ${product.rating || 4.5}/5\n🔄 Буцаалт: 7 хоног (өрсөлдөгч: байхгүй)\n\nЭнэ бараа таны хэрэглэгчдэд хамгийн сайн сонголт!`;
-
-  return `${name}-ийн талаар:\n\nЭнэ бүтээгдэхүүн ${product.category || 'ерөнхий'} ангилалд хамаарна. Үнэ ${price}, ${product.commission ? product.commission + '% шимтгэлтэй' : 'шимтгэлтэй'}.\n\n${product.description || 'Чанартай, баталгаатай бүтээгдэхүүн.'}\n\nНадаас юу ч асуугаарай — давуу тал, зарах арга, хэрэглэгчийн асуултад хариулах гэх мэт! 🚀`;
-}
 
 const QUICK_QUESTIONS = [
   { icon: Star, label: 'Давуу тал юу вэ?' },
@@ -58,7 +40,7 @@ export default function AIProductMentor({ product, onClose, onStartSelling, user
     {
       id: '0',
       role: 'ai',
-      content: `Сайн байна уу! 🤖 Би "${product.name}"-ийн AI зөвлөх байна.\n\nЭнэ бүтээгдэхүүний талаар бүх зүйлийг мэднэ — давуу тал, зарах арга, хэрэглэгчийн асуултад хариулах стратеги.\n\nЮу мэдмээр байна?`,
+      content: `Сайн байна уу! "${product.name}"-ийг хэрхэн санал болгох талаар асуугаарай — гол онцлог, пост бичих, хэрэглэгчийн асуултад хариулах.\n\nЗөвлөгөө нь барааны хуудсан дээрх мэдээлэлд тулгуурлана.`,
       timestamp: new Date(),
     },
   ]);
@@ -71,26 +53,33 @@ export default function AIProductMentor({ product, onClose, onStartSelling, user
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const sendMessage = (text: string) => {
-    if (!text.trim()) return;
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || typing) return;
 
     const now = new Date();
     const userMsg: Message = { id: `u${now.getTime()}`, role: 'user', content: text, timestamp: now };
+    const history = messages.slice(1).map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: `a${now.getTime()}`,
-        role: 'ai',
-        content: getAIResponse(product, text),
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-      setTyping(false);
-    }, 1200);
+    let reply = 'Хариу авч чадсангүй. Дахин оролдоно уу.';
+    let ai = false;
+    try {
+      const r = await fetch('/api/ai/product-mentor', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          history,
+          product: { name: product.name, price: product.price, salePrice: product.salePrice, category: product.category, description: product.description, commission: product.commission },
+        }),
+      });
+      const b = await r.json();
+      if (b?.success && b.data?.reply) { reply = b.data.reply; ai = Boolean(b.data.ai); }
+    } catch { /* сүлжээний алдаа */ }
+    setMessages((prev) => [...prev, { id: `a${now.getTime()}`, role: 'ai', content: reply, timestamp: new Date(), ai }]);
+    setTyping(false);
   };
 
   const disc = discountPercent(product.price, product.salePrice);
@@ -173,7 +162,7 @@ export default function AIProductMentor({ product, onClose, onStartSelling, user
               )}>
                 {msg.role === 'ai' && (
                   <div className="flex items-center gap-1 text-[10px] text-[#6366F1] font-bold mb-1.5">
-                    <Sparkles className="w-3 h-3" /> AI Зөвлөх
+                    <Sparkles className="w-3 h-3" /> {msg.ai === false ? 'Зөвлөмж' : 'AI Зөвлөх'}
                   </div>
                 )}
                 <div className="whitespace-pre-line text-[13px]">{msg.content}</div>
