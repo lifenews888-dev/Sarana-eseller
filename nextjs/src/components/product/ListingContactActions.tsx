@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Phone, MessageCircle, Heart, Flag, Send, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -78,6 +77,11 @@ export default function ListingContactActions({
     return true;
   };
 
+  // Жижиг чатын цонхыг тухайн чат дээр нээнэ — харилцаагаа тэндээ үргэлжлүүлнэ
+  const openMiniChat = (id: string, guest: boolean) => {
+    window.dispatchEvent(new CustomEvent('eseller:open-chat', { detail: { id, guest } }));
+  };
+
   const postAsUser = async (message: string) => {
     const r = await fetch('/api/listing-chats', {
       method: 'POST',
@@ -96,7 +100,7 @@ export default function ListingContactActions({
     const pending = takePendingChat(feedItemId);
     if (!pending) return;
     postAsUser(pending)
-      .then((chatId) => { setChatOpen(true); setSentChatId(chatId); })
+      .then((chatId) => { setChatOpen(true); setSentChatId(chatId); openMiniChat(chatId, false); })
       .catch((e) => { setChatOpen(true); setText(pending); setError(e instanceof Error ? e.message : 'Алдаа гарлаа'); });
   }, [isLoggedIn, feedItemId]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -111,8 +115,10 @@ export default function ListingContactActions({
     setSending(true);
     setError('');
     try {
-      setSentChatId(await postAsUser(text.trim()));
+      const chatId = await postAsUser(text.trim());
+      setSentChatId(chatId);
       setText('');
+      openMiniChat(chatId, false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Алдаа гарлаа');
     } finally {
@@ -150,6 +156,7 @@ export default function ListingContactActions({
       setSentChatId(chatId);
       setGuestSent(true);
       setText('');
+      openMiniChat(chatId, true);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Алдаа гарлаа');
     } finally {
@@ -213,7 +220,7 @@ export default function ListingContactActions({
           {sentChatId ? (
             <div className="flex items-center gap-2 text-sm text-green-600">
               <CheckCircle2 size={18} /> Мессеж илгээгдлээ.
-              <Link href={guestSent ? `/messages?guest=${sentChatId}` : `/messages?chat=${sentChatId}`} className="ml-auto text-xs font-bold no-underline" style={{ color: accent }}>Чат руу орох →</Link>
+              <button type="button" onClick={() => openMiniChat(sentChatId, guestSent)} className="ml-auto cursor-pointer border-0 bg-transparent text-xs font-bold" style={{ color: accent }}>Чат нээх →</button>
             </div>
           ) : (
             <>
