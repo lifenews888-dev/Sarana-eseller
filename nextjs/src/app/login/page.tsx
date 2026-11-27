@@ -317,12 +317,35 @@ export default function LoginPage() {
             <>
               <div className="text-xl font-black mb-1 flex items-center gap-2" style={{ color: 'var(--esl-text-primary)' }}>Сайн уу! <Hand className="w-5 h-5" /></div>
               <div className="text-sm mb-6" style={{ color: 'var(--esl-text-muted)' }}>
-                {redirectTarget.startsWith('/checkout')
+                {redirectTarget.startsWith('/feed/')
+                  ? 'Зарын эзэнд мессежээ илгээхийн тулд нэвтэрнэ үү. Бичсэн мессеж тань хадгалагдсан — нэвтэрмэгц автоматаар илгээгдэнэ.'
+                  : redirectTarget.startsWith('/checkout')
                   ? 'Захиалгаа дуусгахын тулд нэвтэрнэ үү. Сагс тань хадгалагдсан.'
                   : redirectTarget.startsWith('/become-seller')
                     ? 'Дэлгүүр нээхийн тулд нэвтэрнэ үү. Данс байхгүй бол дээрх "Бүртгүүлэх"-ийг сонгоно уу.'
                     : 'Данс руугаа нэвтрэх'}
               </div>
+
+              {/* Зарын чатаас ирсэн бол нэг товчоор нэвтрэх аргуудыг эхэнд нь */}
+              {redirectTarget.startsWith('/feed/') && (
+                <div className="mb-5 grid grid-cols-2 gap-2">
+                  <a
+                    href={buildAuthHref('/api/auth/google', {}, redirectTarget)}
+                    className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm no-underline"
+                    style={{ background: 'var(--esl-bg-card)', border: '1.5px solid var(--esl-border)', color: 'var(--esl-text-primary)' }}
+                  >
+                    Google-ээр
+                  </a>
+                  <a
+                    href={buildAuthHref('/api/auth/dan', {}, redirectTarget)}
+                    className="flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm text-white no-underline"
+                    style={{ background: '#1D4ED8' }}
+                  >
+                    🇲🇳 ДАН-аар
+                  </a>
+                  <p className="col-span-2 text-center text-[11px]" style={{ color: 'var(--esl-text-muted)' }}>эсвэл имэйл/утсаар</p>
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div>

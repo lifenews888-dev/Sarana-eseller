@@ -8,6 +8,7 @@ import Navbar from '@/components/shared/Navbar';
 import MobileNav from '@/components/shared/MobileNav';
 import { useAuth } from '@/lib/auth';
 import { useHydrated } from '@/lib/hooks/useHydrated';
+import GuestInbox from '@/components/chat/GuestInbox';
 
 type ChatRow = {
   id: string;
@@ -20,7 +21,7 @@ type ChatRow = {
   unread: number;
 };
 type Msg = { id: string; text: string; mine: boolean; createdAt: string };
-type ChatInfo = { id: string; feedItemId: string; title?: string | null; role: 'buyer' | 'seller'; otherName: string };
+type ChatInfo = { id: string; feedItemId: string; title?: string | null; role: 'buyer' | 'seller'; otherName: string; guestPhone?: string | null };
 
 function headers(): Record<string, string> {
   const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -94,14 +95,8 @@ function MessagesInner() {
   };
 
   if (!hydrated) return null;
-  if (!isLoggedIn) {
-    return (
-      <div className="py-20 text-center">
-        <p className="text-sm text-[var(--esl-text-muted)] mb-4">Мессежээ харахын тулд нэвтэрнэ үү.</p>
-        <Link href="/login?redirect=/messages" className="rounded-xl bg-[#E8242C] px-5 py-2.5 text-sm font-bold text-white no-underline">Нэвтрэх</Link>
-      </div>
-    );
-  }
+  // Нэвтрээгүй бол энэ төхөөрөмж дээрх зочин чатуудыг харуулна
+  if (!isLoggedIn) return <GuestInbox initialChatId={sp.get('guest')} />;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6">
@@ -147,6 +142,9 @@ function MessagesInner() {
                 <div className="min-w-0">
                   <p className="truncate text-sm font-bold text-[var(--esl-text-primary)]">{info.otherName}</p>
                   <Link href={`/feed/${info.feedItemId}`} className="block truncate text-xs text-[#E8242C] no-underline">{info.title}</Link>
+                  {info.guestPhone && (
+                    <a href={`tel:${info.guestPhone}`} className="text-xs font-semibold text-[var(--esl-text-secondary)] no-underline">📞 {info.guestPhone} · бүртгэлгүй хэрэглэгч</a>
+                  )}
                 </div>
               </div>
               <div className="flex-1 space-y-2 overflow-y-auto p-4" style={{ maxHeight: '55vh' }}>

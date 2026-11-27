@@ -34,7 +34,9 @@ export async function GET(req: NextRequest) {
         lastMessage: c.lastMessage,
         lastAt: c.lastAt,
         role: iAmBuyer ? 'buyer' : 'seller',
-        otherName: names.get(otherId) || (iAmBuyer ? 'Зарын эзэн' : 'Худалдан авагч'),
+        otherName: !iAmBuyer && c.guestName
+          ? `${c.guestName} (зочин)`
+          : names.get(otherId) || (iAmBuyer ? 'Зарын эзэн' : 'Худалдан авагч'),
         unread: iAmBuyer ? c.buyerUnread : c.sellerUnread,
       };
     }),
