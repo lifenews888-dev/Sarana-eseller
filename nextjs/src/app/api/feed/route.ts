@@ -246,6 +246,11 @@ export async function GET(req: NextRequest) {
     ownedWhere = await buildOwnedFeedWhere(auth.id, entityType);
   }
 
+  // Хугацаа нь дууссан VIP/онцлох байрлалыг энгийн болгоно (cron шаардлагагүй, хүлээлгүй)
+  prisma.feedItem
+    .updateMany({ where: { tier: { in: ['vip', 'featured'] }, tierExpiresAt: { lt: new Date() } }, data: { tier: 'normal' } })
+    .catch(() => null);
+
   try {
     const where: Prisma.FeedItemWhereInput = mine ? {} : { status: 'active' };
     if (category && category !== 'all') {
@@ -379,7 +384,9 @@ export async function POST(req: NextRequest) {
     const normalizedDistrict = cleanString(district);
     const normalizedProvince = cleanString(province);
     const requestedSubcategory = cleanString(subcategory);
-    const normalizedTier = VALID_TIERS.has(cleanString(tier)) ? cleanString(tier) : 'normal';
+    // VIP/онцлох байрлал төлбөртэй (QPay → /api/feed/:id/promote). Зөвхөн админ шууд тавьж болно.
+    const isAdminUser = ['admin', 'superadmin', 'super_admin'].includes(user.role);
+    const normalizedTier = isAdminUser && VALID_TIERS.has(cleanString(tier)) ? cleanString(tier) : 'normal';
     const normalizedPrice = toOptionalNumber(price);
     const normalizedOriginalPrice = toOptionalNumber(originalPrice);
     const normalizedLat = toOptionalNumber(lat);

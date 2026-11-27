@@ -981,7 +981,7 @@ export default function PostAdPage() {
           district,
           province,
           metadata,
-          tier: isVip ? 'vip' : 'normal',
+          tier: 'normal', // VIP-ийг нийтэлсний дараа QPay-ээр төлнө (/feed/:id/promote)
         }),
       });
       const body = await res.json().catch(() => ({})) as FeedCreateResponse;
@@ -995,6 +995,10 @@ export default function PostAdPage() {
       if (!createdId) throw new Error('Зар үүссэн боловч дугаар буцаж ирсэнгүй.');
       setPublishedItemId(createdId);
       clearSavedDraft();
+      if (isVip) {
+        router.push(`/feed/${createdId}/promote`);
+        return;
+      }
     } catch (error) {
       setPublishError(error instanceof Error ? error.message : 'Зар нийтлэхэд алдаа гарлаа.');
     } finally {
@@ -1414,6 +1418,9 @@ export default function PostAdPage() {
               <>
                 <Link href={`/feed/${publishedItemId}`} className="flex-1 h-12 rounded-xl bg-[#E8242C] text-white text-sm font-bold no-underline hover:bg-[#CC0000] transition flex items-center justify-center gap-2">
                   Дэлгэрэнгүй харах
+                </Link>
+                <Link href={`/feed/${publishedItemId}/promote`} className="flex-1 h-12 rounded-xl bg-amber-500 text-black text-sm font-bold no-underline transition flex items-center justify-center gap-2">
+                  <Crown className="w-4 h-4" /> VIP болгох
                 </Link>
                 <button type="button" onClick={() => router.push('/dashboard/listings')} className="flex-1 h-12 rounded-xl bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] text-sm font-bold border-none cursor-pointer hover:bg-[var(--esl-bg-card-hover)] transition flex items-center justify-center gap-2">
                   Миний зарууд
@@ -1966,7 +1973,7 @@ export default function PostAdPage() {
           <div className="text-right flex items-center gap-3">
             <div>
               <p className="text-lg font-black text-amber-700 dark:text-amber-300">5,000₮</p>
-              <p className="text-[10px] text-[var(--esl-text-muted)]">7 хоног</p>
+              <p className="text-[10px] text-[var(--esl-text-muted)]">7 хоног · QPay</p>
             </div>
             <div className={`w-12 h-7 rounded-full transition-colors flex items-center px-1 ${isVip ? 'bg-[#D4AF37]' : 'bg-[var(--esl-border)]'}`}>
               <div className={`w-5 h-5 rounded-full bg-[var(--esl-bg-card)] shadow-sm transition-transform ${isVip ? 'translate-x-5' : 'translate-x-0'}`} />

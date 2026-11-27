@@ -2709,3 +2709,78 @@ model GroupBuyMember {
   @@unique([groupBuyId, userId])
   @@map("group_buy_members")
 }
+
+// ═══ Зарын булан: худалдан авагч ↔ зарын эзэн чат, хадгалсан зар, гомдол ═══
+
+model ListingChat {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  feedItemId   String   @db.ObjectId
+  buyerId      String   @db.ObjectId
+  sellerId     String   @db.ObjectId // зарын эзний User.id
+  title        String? // зарын гарчиг (cache)
+  lastMessage  String?
+  lastAt       DateTime @default(now())
+  buyerUnread  Int      @default(0)
+  sellerUnread Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  messages ListingChatMessage[]
+
+  @@unique([feedItemId, buyerId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@map("listing_chats")
+}
+
+model ListingChatMessage {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  chatId    String      @db.ObjectId
+  chat      ListingChat @relation(fields: [chatId], references: [id])
+  senderId  String      @db.ObjectId
+  text      String
+  createdAt DateTime    @default(now())
+
+  @@index([chatId])
+  @@map("listing_chat_messages")
+}
+
+model ListingFavorite {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  feedItemId String   @db.ObjectId
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, feedItemId])
+  @@map("listing_favorites")
+}
+
+model ListingReport {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  feedItemId   String    @db.ObjectId
+  reporterId   String?   @db.ObjectId
+  reason       String // fraud | wrong_category | sold | duplicate | offensive | other
+  note         String?
+  status       String    @default("open") // open | resolved | dismissed
+  resolvedById String?   @db.ObjectId
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+
+  @@index([feedItemId])
+  @@index([status])
+  @@map("listing_reports")
+}
+
+// Утасны баталгаажуулах код (бүртгэл, OTP нэвтрэлт). Кодыг hash-лаж хадгална.
+model PhoneOtp {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  phone     String
+  purpose   String // register | login
+  codeHash  String
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([phone, purpose])
+  @@map("phone_otps")
+}

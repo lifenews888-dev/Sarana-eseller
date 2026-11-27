@@ -796,6 +796,8 @@ export default async function FeedDetailPage({ params }: Props) {
   } catch { notFound(); }
 
   if (!post) notFound();
+  // Админ хаасан (suspended) эсвэл хугацаа дууссан зарыг нийтэд харуулахгүй
+  if (post.status && !['active', 'sold'].includes(post.status)) notFound();
 
   const owner = post.agent || post.company || post.autoDealer || post.serviceProvider;
 

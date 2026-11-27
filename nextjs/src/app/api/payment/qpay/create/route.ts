@@ -44,25 +44,27 @@ export async function POST(request: NextRequest) {
       description || 'Захиалгын төлбөр',
     );
 
-    // Save transaction (non-blocking — works even if DB is unavailable)
-    prisma.paymentTransaction.create({
+    // Гүйлгээг заавал хадгална — төлбөр шалгах (settle) нь энэ бичлэгээр ажилладаг.
+    await prisma.paymentTransaction.create({
       data: {
         orderId,
         method: 'qpay',
         invoiceId: invoice.invoiceId,
         amount: invoiceAmount,
         status: 'PENDING',
-        qrImage: invoice.qrImage,
+        qrImage: invoice.qrImage || null,
         qrText: invoice.qrText,
-        metadata: { urls: invoice.urls } as object,
+        metadata: { kind: 'order', urls: invoice.urls, demo: invoice.demo } as object,
       },
-    }).catch((e: Error) => console.warn('QPay transaction save failed:', e.message));
+    });
 
     return ok({
       invoiceId: invoice.invoiceId,
       qrImage: invoice.qrImage,
       qrText: invoice.qrText,
+      shortUrl: invoice.shortUrl,
       urls: invoice.urls,
+      demo: invoice.demo,
     });
   } catch (error: unknown) {
     console.error('QPay invoice алдаа:', error);

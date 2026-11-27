@@ -58,3 +58,40 @@ export async function buildOwnedFeedWhere(
 
   return filters.length > 0 ? { OR: filters } : { id: EMPTY_OBJECT_ID };
 }
+
+/** Зарын эзний User.id-г олно (чат, мэдэгдэлд). Олдохгүй бол null. */
+export async function resolveFeedOwnerUserId(item: {
+  entityType: string;
+  entityId: string;
+  agentId?: string | null;
+  companyId?: string | null;
+  autoDealerId?: string | null;
+  serviceProviderId?: string | null;
+}): Promise<string | null> {
+  const type = normalizeListingEntityType(item.entityType);
+  switch (type) {
+    case 'agent': {
+      const a = await prisma.agent.findUnique({ where: { id: item.agentId || item.entityId }, select: { userId: true } });
+      return a?.userId ?? null;
+    }
+    case 'company': {
+      const c = await prisma.company.findUnique({ where: { id: item.companyId || item.entityId }, select: { userId: true } });
+      return c?.userId ?? null;
+    }
+    case 'auto_dealer': {
+      const d = await prisma.autoDealer.findUnique({ where: { id: item.autoDealerId || item.entityId }, select: { userId: true } });
+      return d?.userId ?? null;
+    }
+    case 'service': {
+      const s = await prisma.serviceProvider.findUnique({ where: { id: item.serviceProviderId || item.entityId }, select: { userId: true } });
+      return s?.userId ?? null;
+    }
+    default: {
+      // store / user / pre_order / digital: entityId нь User.id (зарим хуучин зар Shop.id байж болно)
+      const u = await prisma.user.findUnique({ where: { id: item.entityId }, select: { id: true } });
+      if (u) return u.id;
+      const shop = await prisma.shop.findUnique({ where: { id: item.entityId }, select: { userId: true } });
+      return shop?.userId ?? null;
+    }
+  }
+}

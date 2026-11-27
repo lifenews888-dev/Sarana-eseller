@@ -2,10 +2,12 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { ok, fail } from '@/lib/api-envelope';
 import { signToken } from '@/lib/api-auth';
+import { isSmsConfigured } from '@/lib/smsGateway';
+import { normalizeMnPhone, verifyPhoneOtp } from '@/lib/phoneOtp';
 
 export async function POST(req: Request) {
   try {
-    const { name, email, phone, password, role: requestedRole } = await req.json();
+    const { name, email, phone, password, role: requestedRole, otp } = await req.json();
 
     if (!name || !password) {
       return fail('Нэр, нууц үг оруулна уу', 400);
@@ -30,6 +32,21 @@ export async function POST(req: Request) {
     });
     if (existing) {
       return fail('Энэ имэйл/утас бүртгэлтэй байна', 400);
+    }
+
+    // Утсаар бүртгүүлэхэд SMS код шаардана (SMS үйлчилгээ тохируулагдсан үед).
+    // 428 + code=OTP_REQUIRED → клиент код илгээгээд дахин илгээнэ.
+    if (phone && isSmsConfigured()) {
+      const normalizedPhone = normalizeMnPhone(phone);
+      if (!normalizedPhone) return fail('Утасны дугаар буруу байна', 400);
+      if (!otp) {
+        return Response.json(
+          { success: false, data: null, error: 'Утсанд ирсэн кодыг оруулна уу', code: 'OTP_REQUIRED' },
+          { status: 428 },
+        );
+      }
+      const v = await verifyPhoneOtp(normalizedPhone, 'register', String(otp));
+      if (!v.ok) return fail(v.error, 400);
     }
 
     const VALID_ROLES = ['seller', 'affiliate', 'buyer', 'delivery'];

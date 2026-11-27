@@ -93,10 +93,10 @@ export interface AuthResponse {
 export type LoginIdentifier = { email?: string; phone?: string };
 
 export const AuthAPI = {
-  register: (name: string, email: string, password: string, role: string, phone?: string) =>
+  register: (name: string, email: string, password: string, role: string, phone?: string, otp?: string) =>
     apiFetch<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ name, email, password, role, phone }),
+      body: JSON.stringify({ name, email, password, role, phone, otp }),
     }),
   login: (identifier: string | LoginIdentifier, password: string) => {
     const body: Record<string, string> = { password };

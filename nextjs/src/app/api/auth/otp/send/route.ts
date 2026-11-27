@@ -1,35 +1,16 @@
 import { NextRequest } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { ok, fail } from '@/lib/api-envelope';
+import { issuePhoneOtp, normalizeMnPhone } from '@/lib/phoneOtp';
 
+// POST /api/auth/otp/send { phone, purpose?: 'register' | 'login' }
+// Өмнө нь код зөвхөн логт бичигдэж, дугаар бүрт хуурамч хэрэглэгч үүсгэдэг байсан.
 export async function POST(req: NextRequest) {
-  const { phone } = await req.json();
-  if (!phone) return fail('Утасны дугаар оруулна уу', 400);
+  const body = await req.json().catch(() => ({}));
+  const phone = normalizeMnPhone(body?.phone);
+  if (!phone) return fail('Утасны дугаар буруу байна (8 оронтой)', 400);
+  const purpose = body?.purpose === 'register' ? 'register' : 'login';
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
-  const expires = new Date(Date.now() + 5 * 60 * 1000);
-
-  // User байвал OTP хадгалах, байхгүй бол шинэ user үүсгэх
-  await prisma.user.upsert({
-    where: { email: `${phone}@otp.eseller.mn` },
-    create: {
-      phone,
-      name: 'Хэрэглэгч',
-      email: `${phone}@otp.eseller.mn`,
-      password: '',
-      otpCode: code,
-      otpExpires: expires,
-    },
-    update: { otpCode: code, otpExpires: expires },
-  });
-
-  // TODO: SMS илгээх (Unitel/Mobicom API)
-  console.log(`OTP [${phone}]: ${code}`);
-
-  const isDev = process.env.NODE_ENV === 'development';
-
-  return ok({
-    message: 'OTP илгээгдлээ',
-    ...(isDev && { code }),
-  });
+  const r = await issuePhoneOtp(phone, purpose);
+  if (!r.ok) return fail(r.error, r.status);
+  return ok({ message: 'Код илгээгдлээ', ...(r.devCode ? { code: r.devCode } : {}) });
 }

@@ -214,7 +214,9 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     const nextDistrict = hasField(body, 'district') ? cleanString(body.district) : item.district || '';
     const nextProvince = hasField(body, 'province') ? cleanString(body.province) : item.province || '';
     const nextSubcategory = hasField(body, 'subcategory') ? cleanString(body.subcategory) : item.subcategory || '';
-    const nextTier = hasField(body, 'tier') && VALID_TIERS.has(cleanString(body.tier))
+    // Tier-ийг зөвхөн админ өөрчилнө — хэрэглэгч VIP-ийг QPay-ээр худалдаж авна.
+    const isAdminUser = ['admin', 'superadmin', 'super_admin'].includes(auth.role);
+    const nextTier = isAdminUser && hasField(body, 'tier') && VALID_TIERS.has(cleanString(body.tier))
       ? cleanString(body.tier)
       : item.tier;
     const nextPrice = hasField(body, 'price') ? toOptionalNumber(body.price) : item.price;
