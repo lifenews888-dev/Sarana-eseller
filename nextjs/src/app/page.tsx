@@ -2,6 +2,9 @@ import { prisma } from '@/lib/prisma';
 import { isPublicShopName, isSellableProduct, normalizePublicPricing, publicProductWhere } from '@/lib/product-visibility';
 import { getEffectiveUnitPrice } from '@/lib/utils';
 import { categoryLabel } from '@/lib/marketplaceCategories';
+
+// Нүүр хуудсыг build үед нэг удаа үүсгээд орхихгүй — 60 секунд тутамд шинэ бараа/зарыг татна.
+export const revalidate = 60;
 import { Lock, Megaphone, Store } from 'lucide-react';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
