@@ -5,6 +5,8 @@ import { json, errorJson, requireAuth } from '@/lib/api-auth';
 
 type Ctx = { params: Promise<{ id: string }> };
 
+const ADMIN_ROLES = ['admin', 'superadmin', 'super_admin'];
+
 const VALID_TRANSITIONS: Record<string, string[]> = {
   pending: ['confirmed', 'cancelled'],
   confirmed: ['preparing', 'cancelled'],
@@ -28,6 +30,14 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
     const order = await prisma.order.findUnique({ where: { id } });
     if (!order) return errorJson('Захиалга олдсонгүй', 404);
+
+    // Зөвхөн тухайн дэлгүүрийн эзэн, оноогдсон жолооч эсвэл админ төлөв өөрчилнө
+    const isAdmin = ADMIN_ROLES.includes(auth.role) ||
+      ADMIN_ROLES.includes((await prisma.user.findUnique({ where: { id: auth.id }, select: { role: true } }))?.role || '');
+    const ownsShop = order.shopId
+      ? !!(await prisma.shop.findFirst({ where: { id: order.shopId, userId: auth.id }, select: { id: true } }))
+      : false;
+    if (!isAdmin && !ownsShop && order.driverId !== auth.id) return errorJson('Захиалга олдсонгүй', 404);
 
     const allowed = VALID_TRANSITIONS[order.status] || [];
     if (!allowed.includes(status)) {

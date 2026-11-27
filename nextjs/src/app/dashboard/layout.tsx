@@ -228,6 +228,8 @@ const ADMIN_SECTIONS: SidebarSection[] = [
       { href: '/dashboard/admin/sellers', icon: '🏷️', label: 'Борлуулагчид', isNew: true },
       { href: '/dashboard/admin/shops', icon: '🏪', label: 'Дэлгүүрүүд' },
       { href: '/dashboard/admin/listing-reports', icon: '🚩', label: 'Зарын гомдол', isNew: true },
+      { href: '/dashboard/admin/herders', icon: '🐑', label: 'Малчид', isNew: true },
+      { href: '/dashboard/admin/corporate-orders', icon: '🏢', label: 'Байгууллагын захиалга', isNew: true },
       { href: '/messages', icon: '✉️', label: 'Зарын мессеж' },
       { href: '/dashboard/admin/revenue', icon: '💵', label: 'Орлого' },
       { href: '/dashboard/admin/commission', icon: '💰', label: 'Комисс' },
