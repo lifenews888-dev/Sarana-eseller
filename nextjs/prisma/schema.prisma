@@ -2793,3 +2793,16 @@ model PhoneOtp {
   @@index([phone, purpose])
   @@map("phone_otps")
 }
+
+// Хадгалсан хайлт — тохирох шинэ зар гарвал хэрэглэгчид мэдэгдэнэ
+model SavedSearch {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  name       String
+  query      String // /feed URL-ийн query string (category, q, district, m_* ...)
+  lastSeenAt DateTime @default(now()) // хэрэглэгч сүүлд үзсэн үе — үүнээс хойших зар "шинэ"
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@map("saved_searches")
+}

@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import ListingFilterPanel from '@/components/feed/ListingFilterPanel';
+import SaveSearchButton from '@/components/feed/SaveSearchButton';
 import { filtersForCategory } from '@/lib/listingFilters';
 import { usePathname, useRouter } from 'next/navigation';
 import MobileNav from '@/components/shared/MobileNav';
@@ -1055,6 +1056,19 @@ export default function FeedPageClient({
   const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
   const canRelaxLocationFilter = filtered.length === 0 && hasLocationFilter && filteredWithoutLocation.length > 0;
   const visibleFeedItems = canRelaxLocationFilter ? filteredWithoutLocation : filtered;
+
+  // Хадгалах хайлт: ангилал/хайлт/байршил/нарийн шүүлтүүр (эрэмбэ, tier-г оруулахгүй)
+  const savedSearchQuery = (() => {
+    const p = new URLSearchParams();
+    if (activeCat !== 'all') p.set('category', activeCat);
+    if (search.trim()) p.set('q', search.trim());
+    if (activeEntityType) p.set('entityType', activeEntityType);
+    if (activeDistrict !== 'Бүгд') p.set('district', activeDistrict);
+    if (activeProvince) p.set('province', activeProvince);
+    Object.entries(metaFilters).forEach(([k, v]) => { if (v) p.set(`m_${k}`, v); });
+    p.sort();
+    return p.toString();
+  })();
   const vipCount = visibleFeedItems.filter(i => i.tier === 'vip').length;
   const activeCategoryPath = activeCat === 'all' ? undefined : categoryPathInfo(activeCat);
   const activeCategoryChildren = activeCat === 'all' ? [] : categoryChildOptions(activeCat);
@@ -1398,6 +1412,8 @@ export default function FeedPageClient({
             onChange={(next) => setMetaFiltersByRoot((prev) => ({ ...prev, [metaRoot]: next }))}
           />
         )}
+
+        <SaveSearchButton query={savedSearchQuery} />
 
         {/* Feed grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
