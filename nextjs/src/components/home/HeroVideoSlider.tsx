@@ -29,14 +29,8 @@ const FALLBACK_SLIDES: BannerData[] = [
     color: '#E8242C', gradient: 'from-[#0d1b2e] to-[#1a3a5c]',
   },
   {
-    id: 'f2', badge: 'Gold гишүүнчлэл', title: 'Gold болж давуу эрх эдлэ',
-    subtitle: 'Үнэгүй хүргэлт · 2x оноо · Flash sale',
-    buttonText: 'Gold авах', buttonLink: '/gold',
-    color: '#C0953C', gradient: 'from-[#1a1200] to-[#3d2e00]',
-  },
-  {
     id: 'f3', badge: 'Дэлгүүрийн эзэн', title: 'Дэлгүүрээ нээж онлайн борлуул',
-    subtitle: 'Эхний 3 сар 0% комисс · Бүрэн dashboard',
+    subtitle: 'Бараагаа байршуулж, захиалгаа нэг дороос удирд',
     buttonText: 'Дэлгүүр нээх', buttonLink: '/open-shop',
     color: '#1D9E75', gradient: 'from-[#0a1a10] to-[#0d3a20]',
   },
@@ -156,9 +150,9 @@ export default function HeroVideoSlider({ banners }: { banners?: BannerData[] })
             )}
 
             {/* Title */}
-            <h1 className="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-3">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-white leading-tight mb-3">
               {slide.title}
-            </h1>
+            </h2>
 
             {/* Subtitle */}
             {slide.subtitle && (

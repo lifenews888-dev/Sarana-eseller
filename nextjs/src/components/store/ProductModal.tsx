@@ -10,7 +10,7 @@ import { useToast } from '@/components/shared/Toast';
 import SafeImage from '@/components/ui/SafeImage';
 import {
   X, ShoppingCart, Minus, Plus, Share2, Heart, Star,
-  Truck, Shield, RotateCcw, Clock, ChevronLeft, ChevronRight,
+  Truck, Shield, Clock, ChevronLeft, ChevronRight,
   Package, Check, Play, ZoomIn, Info,
   Tag, Layers, Ruler, Palette, Box,
 } from 'lucide-react';
@@ -563,23 +563,15 @@ export default function ProductModal({ product, onClose, isAffiliate, onShare, o
                   </div>
                 )}
 
-                {/* Trust badges */}
+                {/* Trust badges — зөвхөн бодитоор ажилладаг зүйл. Хүргэлт/буцаалтыг дэлгүүр тус бүр өөрөө тодорхойлно. */}
                 <div className="bg-[var(--esl-bg-section)] rounded-xl p-3.5 space-y-2.5">
                   <div className="flex items-center gap-2.5 text-xs text-[var(--esl-text-secondary)]">
-                    <Truck className="w-4 h-4 text-green-500 shrink-0" />
-                    <span><strong>Үнэгүй хүргэлт</strong> · 50,000₮-с дээш захиалгад</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs text-[var(--esl-text-secondary)]">
-                    <Clock className="w-4 h-4 text-blue-500 shrink-0" />
-                    <span><strong>2-4 цагийн</strong> дотор хүргэнэ</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs text-[var(--esl-text-secondary)]">
-                    <RotateCcw className="w-4 h-4 text-amber-500 shrink-0" />
-                    <span><strong>14 хоног</strong> дотор буцаалт боломжтой</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 text-xs text-[var(--esl-text-secondary)]">
                     <Shield className="w-4 h-4 text-purple-500 shrink-0" />
-                    <span><strong>Баталгаат бараа</strong> · QPay аюулгүй төлбөр</span>
+                    <span><strong>QPay</strong> аюулгүй төлбөр</span>
+                  </div>
+                  <div className="flex items-center gap-2.5 text-xs text-[var(--esl-text-secondary)]">
+                    <Truck className="w-4 h-4 text-green-500 shrink-0" />
+                    <span>Хүргэлтийн нөхцөлийг дэлгүүрээс лавлана уу</span>
                   </div>
                 </div>
               </>

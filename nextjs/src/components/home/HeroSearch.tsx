@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Crown, Link2, Car, Lock } from 'lucide-react';
 import { MARKETPLACE_CATEGORIES } from '@/lib/marketplaceCategories';
 
 const CATEGORIES = [
@@ -87,26 +86,6 @@ export default function HeroSearch() {
           ))}
         </div>
 
-        {/* Давуу тал badges */}
-        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', flexWrap: 'wrap', marginTop: 20 }}>
-          {[
-            { icon: <Crown size={14} />, text: 'Gold гишүүнчлэл' },
-            { icon: <Link2 size={14} />, text: 'Борлуулагч комисс' },
-            { icon: <Car size={14} />, text: 'Өөрийн жолооч' },
-            { icon: <Lock size={14} />, text: 'Дундын данс' },
-          ].map((b, i) => (
-            <div key={i} style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 20, padding: '6px 12px',
-              fontSize: 12, color: 'rgba(255,255,255,0.7)',
-            }}>
-              {b.icon}
-              <span>{b.text}</span>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );

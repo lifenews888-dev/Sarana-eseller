@@ -44,12 +44,14 @@ interface ProductGridProps {
   onToggleWish: (id: string) => void;
   dealOnly?: boolean;
   searchQuery?: string;
+  /** Платформ дээр нэг ч бодит бараа байхгүй (шүүлтүүрээс үл хамаарна) */
+  catalogEmpty?: boolean;
 }
 
 export default function ProductGrid({
   products, loading, activeType, activeCat, onTypeChange, onCatChange,
   onClearFilters, onDealChange, onSearchChange, activeSort, onSortChange, onProductClick, onQuickAdd, wishlist, onToggleWish,
-  dealOnly = false, searchQuery = '',
+  dealOnly = false, searchQuery = '', catalogEmpty,
 }: ProductGridProps) {
   const filterCategories = [
     { key: 'all', label: 'Бүгд', emoji: '🛍' },
@@ -275,6 +277,24 @@ export default function ProductGrid({
             {Array.from({ length: 10 }).map((_, i) => (
               <ProductCardSkeleton key={i} />
             ))}
+          </div>
+        ) : products.length === 0 && catalogEmpty ? (
+          <div className="text-center py-20">
+            <div className="w-20 h-20 rounded-2xl bg-[var(--esl-bg-card)] flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-[#3D3D3D]" />
+            </div>
+            <h3 className="mb-1 text-base font-bold text-[var(--esl-text-primary)]">Анхны дэлгүүрүүд нэгдэж байна</h3>
+            <p className="text-sm text-[var(--esl-text-muted)] mb-4 max-w-md mx-auto">
+              eseller.mn шинээр нээгдэж байна. Удахгүй энд бодит дэлгүүрүүдийн бараа гарна. Та өөрөө анхны борлуулагч болох боломжтой.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Link href="/become-seller" className="rounded-xl bg-[#E8242C] px-5 py-2.5 text-sm font-bold text-white no-underline transition hover:bg-[#D31E25]">
+                Дэлгүүр нээх
+              </Link>
+              <Link href="/feed" className="rounded-xl bg-[rgba(232,36,44,0.15)] px-5 py-2.5 text-sm font-bold text-[#FF4D53] no-underline transition hover:bg-[rgba(232,36,44,0.25)]">
+                Зарын булан үзэх
+              </Link>
+            </div>
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-20">

@@ -2,7 +2,6 @@ import { NextRequest } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { json, requireAuth, errorJson } from '@/lib/api-auth';
-import { DEMO_FEED } from '@/lib/types/entity';
 import { buildOwnedFeedWhere, normalizeListingEntityType } from '@/lib/feedOwnership';
 import {
   categoryDescendantValues,
@@ -341,34 +340,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    let items = [...DEMO_FEED];
-    if (category && category !== 'all') {
-      const categoryRoot = normalizeMarketplaceCategory(category);
-      const descendantValues = categoryDescendantValues(category);
-      items = items.filter((i) => {
-        if (i.category === category) return true;
-        return categoryRoot !== category
-          && i.category === categoryRoot
-          && typeof i.subcategory === 'string'
-          && descendantValues.includes(i.subcategory);
-      });
-    }
-    if (entityType) items = items.filter((i) => normalizeListingEntityType(i.entityType) === entityType);
-    if (requestedTier) items = items.filter((i) => i.tier === requestedTier);
-    if (district) items = items.filter((i) => i.district === district);
-    if (province) items = items.filter((i) => 'province' in i && i.province === province);
-    if (search) {
-      const q = search.toLowerCase();
-      items = items.filter((i) => i.title.toLowerCase().includes(q) || (i.description || '').toLowerCase().includes(q));
-    }
-
-    return json({
-      vip: items.filter((i) => i.tier === 'vip'),
-      featured: items.filter((i) => i.tier === 'featured'),
-      discounted: items.filter((i) => i.tier === 'discounted'),
-      normal: items.filter((i) => i.tier === 'normal'),
-      meta: { total: items.length, page: 1, hasMore: false },
-    });
+    // DB алдаа гарвал зохиомол (demo) зар биш, хоосон жагсаалт буцаана.
+    return json({ vip: [], featured: [], discounted: [], normal: [], meta: { total: 0, page: 1, hasMore: false } });
   }
 }
 

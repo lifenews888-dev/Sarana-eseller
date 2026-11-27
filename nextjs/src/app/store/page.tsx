@@ -4,10 +4,10 @@ import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
-import { DEMO_PRODUCTS, cn } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 import { useAuth, roleHome } from '@/lib/auth';
 import { canSeeAffiliateSalesTools } from '@/lib/affiliate-permissions';
-import { DEMO_SERVICES, type Service } from '@/lib/types/service';
+import { type Service } from '@/lib/types/service';
 import type { ItemType } from '@/lib/marketplace';
 import CartDrawer from '@/components/store/CartDrawer';
 import MobileNav from '@/components/shared/MobileNav';
@@ -23,7 +23,7 @@ import ErrorBoundary from '@/components/shared/ErrorBoundary';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import {
   Search, ShoppingCart, User, ChevronDown, Tag, ChevronRight,
-  ShieldCheck, Truck, RefreshCw, Lock,
+  Truck, Lock,
   Armchair, Baby, BookOpen, BriefcaseBusiness, Building2, Car, Camera, Construction, Cpu, Dog,
   Dumbbell, Factory, Gamepad2, Gem, Gift, GraduationCap, HeartPulse, Home, Laptop,
   Mars, Monitor, Palette, Plane, Plug, Printer, Scissors, Shield, Shirt, Sparkles,
@@ -89,19 +89,17 @@ const CATEGORY_ICONS = MARKETPLACE_CATEGORIES.map((category) => ({
   color: category.color,
 }));
 
+// Зөвхөн бодитоор ажиллаж буй зүйлс. Хүргэлт/буцаалтын нийтлэг бодлого батлагдаагүй тул амлахгүй.
 const TRUST_ITEMS = [
-  { icon: ShieldCheck, label: 'Баталгаат', sub: 'Бүх бараа баталгаатай', color: '#059669' },
-  { icon: Truck, label: 'Хурдан хүргэлт', sub: '2-4 цагийн дотор', color: '#0891B2' },
-  { icon: RefreshCw, label: '48 цагийн буцаалт', sub: 'Эрсдэлгүй худалдан авалт', color: '#D97706' },
   { icon: Lock, label: 'Аюулгүй төлбөр', sub: 'QPay QR', color: '#7C3AED' },
+  { icon: Store, label: 'Олон дэлгүүр', sub: 'Нэг дороос харьцуулна', color: '#059669' },
+  { icon: Truck, label: 'Захиалга хянах', sub: 'Төлөв нь шууд харагдана', color: '#0891B2' },
 ];
 
-// Зөвхөн байнгын бодлого — хугацаатай/хувьтай урамшууллыг энд хатуу бичихгүй.
 const MARQUEE_ITEMS = [
-  '50,000₮-с дээш захиалгад үнэгүй хүргэлт',
-  'QPay дундын данс — аюулгүй төлбөр',
-  '48 цагийн буцаалт',
-  'Gold гишүүнчлэлтэй хамт давуу эрх',
+  'QPay-ээр аюулгүй төлбөр',
+  'Зарын буланд үнэгүй зар байршуулах',
+  'Борлуулагч болж комисс олох',
 ];
 
 const WL_KEY = 'eseller_wishlist';
@@ -344,9 +342,10 @@ export default function StorePage() {
             .then(r => r || fetch('/api/products?limit=60').then(res => res.json()).then(d => ({ products: d.data?.products || d.products || [] }))),
           fetch('/api/services?shopId=all').then(r => r.json()).catch(() => ({ data: [] })),
         ]);
-        setProducts(normalizeProducts(pr.status === 'fulfilled' && pr.value.products?.length ? pr.value.products : DEMO_PRODUCTS as unknown as Product[]));
-        setServices(sv.status === 'fulfilled' && Array.isArray(sv.value?.data) ? sv.value.data : DEMO_SERVICES as unknown as Service[]);
-      } catch { setProducts(normalizeProducts(DEMO_PRODUCTS as unknown as Product[])); setServices(DEMO_SERVICES as unknown as Service[]); }
+        // Зохиомол (demo) бараа харуулахгүй — бодит бараа байхгүй бол хоосон төлөв гарна.
+        setProducts(normalizeProducts(pr.status === 'fulfilled' && pr.value.products?.length ? pr.value.products : []));
+        setServices(sv.status === 'fulfilled' && Array.isArray(sv.value?.data) ? sv.value.data : []);
+      } catch { setProducts([]); setServices([]); }
       finally { setLoading(false); }
     })();
   }, []); // eslint-disable-line
@@ -427,7 +426,7 @@ export default function StorePage() {
           <div className="max-w-[1320px] mx-auto px-4 h-9 flex items-center justify-between">
             <div className="flex items-center gap-4">
               <span className="text-xs font-medium" style={{ color: 'var(--esl-text-secondary)' }}>
-                <Truck className="w-3 h-3 inline mr-1 opacity-60" />50,000₮+ үнэгүй хүргэлт
+                <Lock className="w-3 h-3 inline mr-1 opacity-60" />QPay аюулгүй төлбөр
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -663,6 +662,7 @@ export default function StorePage() {
               onToggleWish={toggleWL}
               dealOnly={dealOnly}
               searchQuery={search}
+              catalogEmpty={!loading && products.length === 0 && services.length === 0}
             />
           </div>
 
@@ -697,11 +697,11 @@ export default function StorePage() {
         {/* ━━━ Pre-footer trust banner ━━━ */}
         <div style={{ background: 'linear-gradient(135deg, #E8242C 0%, #D91E24 100%)' }} className="py-3">
           <div className="max-w-[1320px] mx-auto px-4 flex items-center justify-center gap-6 text-white text-xs font-medium">
-            <span>50,000₮+ захиалгад үнэгүй хүргэлт</span>
+            <span>QPay аюулгүй төлбөр</span>
             <span className="opacity-40">·</span>
-            <span>Баталгаатай бараа</span>
+            <span>Олон дэлгүүр нэг дор</span>
             <span className="opacity-40">·</span>
-            <span>48 цагийн буцаалт</span>
+            <span>Үнэгүй зар</span>
           </div>
         </div>
 
@@ -716,7 +716,7 @@ export default function StorePage() {
                   <span className="text-lg font-black">eseller<span className="text-[#E8242C]">.mn</span></span>
                 </div>
                 <p className="text-xs text-white/40 leading-relaxed m-0 max-w-xs">
-                  Монголын хамгийн том онлайн marketplace. Баталгаатай бараа, хурдан хүргэлт, найдвартай худалдан авалт.
+                  Монголын дэлгүүр, бараа, зарыг нэг дороос. QPay-ээр аюулгүй төлбөр.
                 </p>
               </div>
               <div className="flex items-center gap-2 w-full md:w-auto">

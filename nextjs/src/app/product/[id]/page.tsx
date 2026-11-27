@@ -96,12 +96,8 @@ function buildProductJsonLd(product: ProductJsonLdInput): Record<string, unknown
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidObjectId(id)) {
-    const product = demoProduct(id);
-    return product
-      ? { title: `${product.name} - eseller.mn`, description: product.description?.slice(0, 160) || product.name }
-      : { title: 'Олдсонгүй' };
-  }
+  // Зохиомол (demo) бараа харуулахгүй.
+  if (!isValidObjectId(id)) return { title: 'Олдсонгүй' };
 
   let product;
   try {
@@ -124,22 +120,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { id } = await params;
-  if (!isValidObjectId(id)) {
-    const product = demoProduct(id);
-    if (!product) notFound();
-    const clientProduct = demoDetailProduct(product);
-    const relatedProducts = demoRelatedProducts(product._id);
-
-    return (
-      <>
-        <JsonLdScript id={`product-jsonld-${clientProduct.id}`} data={buildProductJsonLd(clientProduct)} />
-        <ProductDetailClient
-          product={clientProduct as unknown as DetailProduct}
-          relatedProducts={relatedProducts as unknown as Product[]}
-        />
-      </>
-    );
-  }
+  if (!isValidObjectId(id)) notFound();
 
   let product;
   try {

@@ -830,7 +830,8 @@ export default function FeedPageClient({
 }: FeedPageClientProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [feedItems, setFeedItems] = useState<FeedItem[]>(DEMO_FEED);
+  const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
+  const [feedLoaded, setFeedLoaded] = useState(false);
   const [search, setSearch] = useState(initialSearch);
   const [activeCat, setActiveCat] = useState(initialCategory || 'all');
   const [activeEntityType, setActiveEntityType] = useState<EntityType | ''>(initialEntityType);
@@ -939,7 +940,7 @@ export default function FeedPageClient({
     }, 0);
   }, [initialCategory, initialDistrict, initialEntityType, initialProvince, initialSearch, initialSort, initialTier]);
 
-  // Fetch real feed data from API, fallback to DEMO_FEED
+  // Бодит зарууд — зохиомол (demo) зар харуулахгүй
   useEffect(() => {
     let cancelled = false;
     const params = new URLSearchParams();
@@ -950,14 +951,6 @@ export default function FeedPageClient({
     if (activeDistrict !== 'Бүгд') params.set('district', activeDistrict);
     if (activeProvince) params.set('province', activeProvince);
     if (activeSort !== 'newest') params.set('sort', activeSort);
-    const canUseDemoFeed =
-      activeCat === 'all'
-      && !activeEntityType
-      && !activeTier
-      && !search.trim()
-      && activeDistrict === 'Бүгд'
-      && !activeProvince
-      && activeSort === 'newest';
     const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
     const toFeedItems = (res: unknown) => {
       const d = (res as { data?: { vip?: ApiFeedItem[]; featured?: ApiFeedItem[]; discounted?: ApiFeedItem[]; normal?: ApiFeedItem[] } }).data
@@ -976,13 +969,13 @@ export default function FeedPageClient({
         relaxedParams.delete('district');
         relaxedParams.delete('province');
         const relaxed = await fetchFeed(relaxedParams);
-        if (!cancelled) setFeedItems(relaxed.length > 0 ? relaxed : []);
+        if (!cancelled) { setFeedItems(relaxed.length > 0 ? relaxed : []); setFeedLoaded(true); }
         return;
       }
 
-      if (!cancelled) setFeedItems(all.length > 0 ? all : (canUseDemoFeed ? DEMO_FEED : []));
+      if (!cancelled) { setFeedItems(all); setFeedLoaded(true); }
     }).catch(() => {
-      if (!cancelled) setFeedItems(canUseDemoFeed ? DEMO_FEED : []);
+      if (!cancelled) { setFeedItems([]); setFeedLoaded(true); }
     });
     return () => {
       cancelled = true;
@@ -1388,7 +1381,18 @@ export default function FeedPageClient({
           ))}
         </div>
 
-        {visibleFeedItems.length === 0 && (
+        {feedLoaded && feedItems.length === 0 && activeCat === 'all' && !activeEntityType && !activeTier && !search.trim() && activeDistrict === 'Бүгд' && !activeProvince && (
+          <div className="text-center py-16 px-6 rounded-2xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] max-w-xl mx-auto">
+            <span className="text-5xl block mb-4">📋</span>
+            <p className="text-lg font-bold text-[var(--esl-text)]">Зарын булан шинээр нээгдэж байна</p>
+            <p className="text-sm text-[var(--esl-text-muted)] mt-2 mb-5">Одоогоор зар алга. Анхны зараа үнэгүй байршуулаарай.</p>
+            <Link href="/feed/post" className="inline-block px-5 py-2.5 rounded-xl bg-[#E8242C] text-white text-sm font-semibold hover:bg-[#c91f26] transition no-underline">
+              + Зар нэмэх
+            </Link>
+          </div>
+        )}
+
+        {feedLoaded && visibleFeedItems.length === 0 && !(feedItems.length === 0 && activeCat === 'all' && !activeEntityType && !activeTier && !search.trim() && activeDistrict === 'Бүгд' && !activeProvince) && (
           <div className="text-center py-16 px-6 rounded-2xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)] max-w-xl mx-auto">
             <span className="text-5xl block mb-4">📋</span>
             <p className="text-lg font-bold text-[var(--esl-text)]">Энэ шүүлтүүрээр зар олдсонгүй</p>
