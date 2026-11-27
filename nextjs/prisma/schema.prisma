@@ -2726,6 +2726,10 @@ model ListingChat {
   guestName      String?
   guestPhone     String?
   guestTokenHash String?
+  // Модерац: null/"active" — идэвхтэй, "blocked" — админ эсвэл spam шүүлт хаасан
+  status        String?
+  blockedReason String?
+  spamHits      Int?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 

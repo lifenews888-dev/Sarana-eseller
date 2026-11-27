@@ -46,6 +46,7 @@ function MessagesInner() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
   const loadChats = useCallback(() => {
@@ -88,7 +89,8 @@ function MessagesInner() {
         method: 'POST', headers: headers(), credentials: 'include', body: JSON.stringify({ text: text.trim() }),
       });
       const b = await r.json();
-      if (b?.success) { setMsgs((m) => [...m, b.data]); setText(''); loadChats(); }
+      if (b?.success) { setMsgs((m) => [...m, b.data]); setText(''); setSendError(''); loadChats(); }
+      else setSendError(b?.error || 'Мессеж илгээж чадсангүй');
     } finally {
       setSending(false);
     }
@@ -158,6 +160,7 @@ function MessagesInner() {
                 ))}
                 <div ref={endRef} />
               </div>
+              {sendError && <p className="border-t border-[var(--esl-border)] px-3 pt-2 text-xs text-red-500">{sendError}</p>}
               <div className="flex gap-2 border-t border-[var(--esl-border)] p-3">
                 <input
                   value={text}

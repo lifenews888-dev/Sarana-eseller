@@ -45,3 +45,31 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ messages: [] }, { status: 500 });
   }
 }
+
+// PATCH /api/admin/chats/:id { type: 'listing'|'shop', action: 'block'|'unblock' } — чатыг хаах/нээх
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const admin = await requireAdminDB(req);
+  if (admin instanceof NextResponse) return admin;
+  const { id } = await params;
+  if (!/^[a-f\d]{24}$/i.test(id)) return NextResponse.json({ error: 'Буруу ID' }, { status: 400 });
+  const body = await req.json().catch(() => ({}));
+  const block = body?.action === 'block';
+  if (!block && body?.action !== 'unblock') return NextResponse.json({ error: 'action: block|unblock' }, { status: 400 });
+
+  try {
+    if (body?.type === 'listing') {
+      await prisma.listingChat.update({
+        where: { id },
+        data: block
+          ? { status: 'blocked', blockedReason: 'Админ хаасан' }
+          : { status: 'active', blockedReason: null, spamHits: 0 },
+      });
+    } else {
+      await prisma.conversation.update({ where: { id }, data: { status: block ? 'blocked' : 'active' } });
+    }
+    return NextResponse.json({ success: true, status: block ? 'blocked' : 'active' });
+  } catch (e) {
+    console.error('[admin/chats/:id PATCH]', e);
+    return NextResponse.json({ error: 'Чат олдсонгүй' }, { status: 404 });
+  }
+}

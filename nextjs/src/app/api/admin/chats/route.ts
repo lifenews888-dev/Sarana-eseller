@@ -29,7 +29,8 @@ export async function GET(req: NextRequest) {
         context: `Зар: ${r.title || ''} → ${um[r.sellerId]?.name || 'Зарын эзэн'}`,
         lastMessage: r.lastMessage,
         lastAt: r.lastAt,
-        status: 'active',
+        status: r.status === 'blocked' ? 'blocked' : 'active',
+        blockedReason: r.blockedReason || undefined,
         unreadCount: r.sellerUnread,
         createdAt: r.createdAt,
       }));

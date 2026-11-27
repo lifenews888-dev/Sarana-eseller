@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { json, errorJson } from '@/lib/api-auth';
 import { resolveFeedOwnerUserId } from '@/lib/feedOwnership';
 import { normalizeMnPhone } from '@/lib/phoneOtp';
+import { checkNewChatText } from '@/lib/chatModeration';
 import { newGuestToken, hashGuestToken, randomObjectId, ipLimited, looksLikeSpam } from '@/lib/guestChat';
 
 const MAX_NEW_CHATS_PER_PHONE_PER_DAY = 5;
@@ -26,6 +27,12 @@ export async function POST(req: NextRequest) {
   if (!phone) return errorJson('Утасны дугаараа зөв оруулна уу (8 оронтой)', 400);
   if (!text) return errorJson('Мессеж хоосон байна', 400);
   if (looksLikeSpam(text)) return errorJson('Мессежийг илгээх боломжгүй (холбоос хэт олон).', 400);
+
+  const mod = await checkNewChatText(text);
+  if (!mod.ok) return errorJson(mod.error, mod.status);
+  // Админ эсвэл spam шүүлт хаасан дугаараас шинэ чат эхлүүлэхгүй
+  const blockedPhone = await prisma.listingChat.findFirst({ where: { guestPhone: phone, status: 'blocked' }, select: { id: true } });
+  if (blockedPhone) return errorJson('Энэ дугаараас чат бичих эрхийг хаасан байна.', 403);
 
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
   const recent = await prisma.listingChat.count({ where: { guestPhone: phone, createdAt: { gt: since } } });
