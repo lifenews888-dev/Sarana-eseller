@@ -54,11 +54,14 @@ export async function POST(req: Request) {
         }),
       });
 
-      const data = await res.json();
-      const text = data.content?.[0]?.text || 'Алдаа гарлаа';
-      const needsHuman = text.includes('хүний агент');
-
-      return NextResponse.json({ reply: text, needsHuman });
+      const data = await res.json().catch(() => null);
+      const text: string | undefined = data?.content?.[0]?.text;
+      if (res.ok && text) {
+        return NextResponse.json({ reply: text, needsHuman: text.includes('хүний агент') });
+      }
+      // Түлхүүр хүчингүй, кредит дууссан, модель буруу гэх мэт — хэрэглэгчид "Алдаа гарлаа" биш, бэлэн хариу өгнө
+      console.error('[chat/bot] Anthropic error', res.status, data?.error?.type, data?.error?.message);
+      return NextResponse.json({ reply: getFallbackReply(message), needsHuman: false });
     }
 
     // API key байхгүй бол rule-based fallback
