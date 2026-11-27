@@ -37,7 +37,8 @@ export default function GalleryPage() {
       const form = new FormData();
       form.append('file', file);
       form.append('context', 'gallery');
-      const res = await fetch('/api/upload', { method: 'POST', body: form });
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/upload', { method: 'POST', body: form, headers: token ? { Authorization: `Bearer ${token}` } : {} });
       const data = await res.json();
 
       if (!res.ok || !data.url) {
