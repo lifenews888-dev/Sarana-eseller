@@ -768,10 +768,10 @@ export default async function FeedDetailPage({ params }: Props) {
       where: { id },
       include: {
         media: { orderBy: { sortOrder: 'asc' } },
-        agent: { select: { id: true, name: true, phone: true, slug: true } },
-        company: { select: { id: true, name: true, phone: true, slug: true } },
-        autoDealer: { select: { id: true, name: true, phone: true, slug: true } },
-        serviceProvider: { select: { id: true, name: true, phone: true, slug: true } },
+        agent: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
+        company: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
+        autoDealer: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
+        serviceProvider: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
       },
     });
 
@@ -800,6 +800,34 @@ export default async function FeedDetailPage({ params }: Props) {
   if (post.status && !['active', 'sold'].includes(post.status)) notFound();
 
   const owner = post.agent || post.company || post.autoDealer || post.serviceProvider;
+
+  // Энгийн хэрэглэгч/дэлгүүрийн зар: эзний нэрийг User-ээс авна. Зарын эзний бусад зарууд.
+  let ownerName: string | null = owner?.name || null;
+  let ownerPosts: typeof relatedPosts = [];
+  try {
+    if (!owner && /^[a-f\d]{24}$/i.test(post.entityId)) {
+      const u = await prisma.user.findUnique({ where: { id: post.entityId }, select: { name: true } });
+      ownerName = u?.name || null;
+    }
+    ownerPosts = await prisma.feedItem.findMany({
+      where: { id: { not: post.id }, status: 'active', entityId: post.entityId, entityType: post.entityType },
+      include: { media: { orderBy: { sortOrder: 'asc' } } },
+      orderBy: { createdAt: 'desc' },
+      take: 6,
+    });
+  } catch { /* нэмэлт мэдээлэл — алдаа гарвал алгасна */ }
+  const toRelated = (item: (typeof relatedPosts)[number]) => ({
+    id: item.id,
+    title: item.title,
+    price: item.price || undefined,
+    image: getSafeImageUrl(item.media[0]?.url || item.images[0] || DETAIL_IMAGE),
+    category: item.category || undefined,
+    subcategory: item.subcategory || undefined,
+    entityType: item.entityType,
+    district: item.district || undefined,
+    metadata: metadataRecord(item.metadata),
+    createdAt: item.createdAt.toISOString(),
+  });
 
   const safePostImages = getSafeImageList(post.images);
   const clientPost = {
@@ -833,8 +861,12 @@ export default async function FeedDetailPage({ params }: Props) {
           name: owner.name,
           phone: owner.phone || undefined,
           href: entityProfileHref(post.entityType, owner.slug),
+          verified: Boolean(owner.isVerified),
         }
-      : null,
+      : ownerName
+        ? { name: ownerName }
+        : null,
+    ownerPosts: ownerPosts.map(toRelated),
     createdAt: post.createdAt.toISOString(),
     relatedPosts: relatedPosts.map((item) => ({
       id: item.id,

@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import ListingFilterPanel from '@/components/feed/ListingFilterPanel';
+import { filtersForCategory } from '@/lib/listingFilters';
 import { usePathname, useRouter } from 'next/navigation';
 import MobileNav from '@/components/shared/MobileNav';
 import { useUserLocation } from '@/hooks/useUserLocation';
@@ -834,6 +836,19 @@ export default function FeedPageClient({
   const [feedLoaded, setFeedLoaded] = useState(false);
   const [search, setSearch] = useState(initialSearch);
   const [activeCat, setActiveCat] = useState(initialCategory || 'all');
+  // Ангиллын нарийн шүүлтүүр (root тус бүрд тусдаа хадгална — ангилал солиход өөрөө "цэвэрлэгдэнэ")
+  const [metaFiltersByRoot, setMetaFiltersByRoot] = useState<Record<string, Record<string, string>>>({});
+  // URL-ийн m_* параметрийг hydration-ий дараа уншина (серверийн HTML-тэй зөрөхгүйн тулд)
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search);
+    const root = normalizeMarketplaceCategory(sp.get('category'));
+    const init: Record<string, string> = {};
+    sp.forEach((v, k) => { if (k.startsWith('m_') && v) init[k.slice(2)] = v; });
+    if (Object.keys(init).length) window.setTimeout(() => setMetaFiltersByRoot({ [root]: init }), 0);
+  }, []);
+  const metaRoot = normalizeMarketplaceCategory(activeCat);
+  const metaFilters = metaFiltersByRoot[metaRoot] || {};
+  const metaFiltersKey = JSON.stringify(metaFilters);
   const [activeEntityType, setActiveEntityType] = useState<EntityType | ''>(initialEntityType);
   const [activeTier, setActiveTier] = useState<ItemTier | ''>(initialTier);
   const [activeDistrict, setActiveDistrict] = useState(initialDistrict || 'Бүгд');
@@ -951,6 +966,7 @@ export default function FeedPageClient({
     if (activeDistrict !== 'Бүгд') params.set('district', activeDistrict);
     if (activeProvince) params.set('province', activeProvince);
     if (activeSort !== 'newest') params.set('sort', activeSort);
+    Object.entries(JSON.parse(metaFiltersKey) as Record<string, string>).forEach(([k, v]) => { if (v) params.set(`m_${k}`, v); });
     const hasLocationFilter = activeDistrict !== 'Бүгд' || Boolean(activeProvince);
     const toFeedItems = (res: unknown) => {
       const d = (res as { data?: { vip?: ApiFeedItem[]; featured?: ApiFeedItem[]; discounted?: ApiFeedItem[]; normal?: ApiFeedItem[] } }).data
@@ -980,7 +996,7 @@ export default function FeedPageClient({
     return () => {
       cancelled = true;
     };
-  }, [activeCat, activeEntityType, activeTier, search, activeDistrict, activeProvince, activeSort]);
+  }, [activeCat, activeEntityType, activeTier, search, activeDistrict, activeProvince, activeSort, metaFiltersKey]);
   const { district: userDistrict, loading: locLoading, permissionDenied, refresh: refreshLoc, setManualDistrict } = useUserLocation();
 
   // Auto-set district from GPS
@@ -1372,6 +1388,15 @@ export default function FeedPageClient({
               Байршлын шүүлтүүрийг авах
             </button>
           </div>
+        )}
+
+        {filtersForCategory(metaRoot).length > 0 && (
+          <ListingFilterPanel
+            key={metaRoot}
+            root={metaRoot}
+            values={metaFilters}
+            onChange={(next) => setMetaFiltersByRoot((prev) => ({ ...prev, [metaRoot]: next }))}
+          />
         )}
 
         {/* Feed grid */}

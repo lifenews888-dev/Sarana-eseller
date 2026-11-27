@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { buildMetadataMongoFilter } from '@/lib/listingFilters';
+
+const LISTING_TTL_DAYS = 30;
 import { json, requireAuth, errorJson } from '@/lib/api-auth';
 import { buildOwnedFeedWhere, normalizeListingEntityType } from '@/lib/feedOwnership';
 import {
@@ -285,6 +288,25 @@ export async function GET(req: NextRequest) {
       where.AND = [...(Array.isArray(where.AND) ? where.AND : []), ownedWhere];
     }
 
+    // Нийтийн жагсаалтад хугацаа нь дууссан зарыг харуулахгүй (эзэн нь "Миний зарууд"-аас сунгана)
+    if (!mine) {
+      where.AND = [
+        ...(Array.isArray(where.AND) ? where.AND : []),
+        { OR: [{ expiresAt: null }, { expiresAt: { isSet: false } }, { expiresAt: { gt: new Date() } }] },
+      ];
+    }
+
+    // Ангиллын нарийн шүүлтүүр (metadata.*) — Prisma MongoDB JSON шүүлт дэмждэггүй тул findRaw
+    const metaFilter = category ? buildMetadataMongoFilter(normalizeMarketplaceCategory(category), sp) : null;
+    if (metaFilter) {
+      const rows = (await prisma.feedItem.findRaw({
+        filter: { status: 'active', ...metaFilter },
+        options: { projection: { _id: 1 }, limit: 3000 },
+      })) as unknown as Array<{ _id: { $oid: string } | string }>;
+      const ids = rows.map((r) => (typeof r._id === 'string' ? r._id : r._id.$oid));
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : []), { id: { in: ids } }];
+    }
+
     const normalOrder =
       sort === 'price_asc'
         ? { price: 'asc' as const }
@@ -483,6 +505,8 @@ export async function POST(req: NextRequest) {
         entityId,
         tier: normalizedTier,
         status: 'active',
+        // Зар 30 хоног идэвхтэй; эзэн нь "Миний зарууд"-аас сунгана (/api/feed/:id/renew)
+        expiresAt: new Date(Date.now() + LISTING_TTL_DAYS * 24 * 60 * 60 * 1000),
         district: normalizedDistrict || null,
         province: normalizedProvince || null,
         lat: normalizedLat,

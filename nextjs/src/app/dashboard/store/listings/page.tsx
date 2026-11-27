@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Plus, Eye, Trash2, MapPin, Package, Loader2, Pencil } from 'lucide-react';
+import { Plus, Eye, Trash2, MapPin, Package, Loader2, Pencil, RefreshCw, Crown } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
 
 interface Listing {
@@ -18,12 +18,15 @@ interface Listing {
   tier: string;
   viewCount: number;
   createdAt: string;
+  expiresAt?: string | null;
+  tierExpiresAt?: string | null;
 }
 
 export default function ListingsPage() {
   const { user } = useAuth();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [nowMs] = useState(() => Date.now());
   const pathname = usePathname();
   // /dashboard/listings — дэлгүүргүй энгийн хэрэглэгчийн "Миний зарууд" (ижил компонент)
   const userSpace = !pathname?.startsWith('/dashboard/store');
@@ -53,6 +56,25 @@ export default function ListingsPage() {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     setListings(prev => prev.filter(l => l.id !== id));
+  };
+
+  const renewListing = async (id: string) => {
+    const token = localStorage.getItem('token');
+    const r = await fetch(`/api/feed/${id}/renew`, {
+      method: 'POST',
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    const b = await r.json().catch(() => null);
+    if (b?.success) {
+      setListings(prev => prev.map(l => (l.id === id ? { ...l, status: 'active', expiresAt: b.data.expiresAt } : l)));
+    } else {
+      alert(b?.error || 'Сунгаж чадсангүй');
+    }
+  };
+
+  const daysLeft = (iso?: string | null) => {
+    if (!iso) return null;
+    return Math.ceil((new Date(iso).getTime() - nowMs) / 86_400_000);
   };
 
   return (
@@ -101,14 +123,38 @@ export default function ListingsPage() {
                   {item.district && (
                     <span className="flex items-center gap-1 text-xs text-[var(--esl-text-muted)]"><MapPin className="w-3 h-3" />{item.district}</span>
                   )}
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${item.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
-                    {item.status === 'active' ? 'Идэвхтэй' : 'Хүлээгдэж'}
-                  </span>
+                  {(() => {
+                    const left = daysLeft(item.expiresAt);
+                    const expired = item.status === 'expired' || (left !== null && left <= 0);
+                    const label = item.status === 'suspended' ? 'Админ хаасан' : expired ? 'Хугацаа дууссан' : item.status === 'active' ? 'Идэвхтэй' : 'Хүлээгдэж';
+                    const cls = item.status === 'active' && !expired ? 'bg-green-100 text-green-700' : item.status === 'suspended' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700';
+                    return (
+                      <>
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${cls}`}>{label}</span>
+                        {left !== null && left > 0 && <span className="text-[10px] text-[var(--esl-text-muted)]">{left} хоног үлдсэн</span>}
+                      </>
+                    );
+                  })()}
+                  {item.tier === 'vip' && (
+                    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700"><Crown className="w-3 h-3" />VIP{item.tierExpiresAt ? ` · ${daysLeft(item.tierExpiresAt)} хоног` : ''}</span>
+                  )}
                   <span className="flex items-center gap-1 text-[10px] text-[var(--esl-text-muted)]"><Eye className="w-3 h-3" />{item.viewCount}</span>
                 </div>
               </div>
 
               <div className="flex gap-2 shrink-0">
+                {item.status !== 'suspended' && (daysLeft(item.expiresAt) ?? 99) <= 7 && (
+                  <button onClick={() => renewListing(item.id)} title="30 хоногоор сунгах"
+                    className="h-8 px-2 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center gap-1 text-xs font-semibold text-[var(--esl-text-primary)] cursor-pointer">
+                    <RefreshCw className="w-3.5 h-3.5" /> Сунгах
+                  </button>
+                )}
+                {item.status === 'active' && item.tier !== 'vip' && (
+                  <Link href={`/feed/${item.id}/promote`} title="VIP болгох"
+                    className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 no-underline">
+                    <Crown className="w-4 h-4" />
+                  </Link>
+                )}
                 <Link href={`/feed/${item.id}`} target="_blank"
                   className="w-8 h-8 rounded-lg bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-muted)] no-underline hover:bg-[var(--esl-bg-card)]">
                   <Eye className="w-4 h-4" />
