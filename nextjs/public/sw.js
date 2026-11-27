@@ -1,6 +1,8 @@
-const STATIC_CACHE = 'eseller-static-v2';
-const DYNAMIC_CACHE = 'eseller-dynamic-v2';
-const STATIC_ASSETS = ['/', '/store', '/feed', '/offline', '/manifest.json'];
+// v3: гадны домэйн (фонт, зураг) болон GET-ээс бусад хүсэлтийг дамжуулахгүй — CSP connect-src-д
+// хориглогдож фонт/зураг ачаалагдахгүй, 'Failed to convert value to Response' алдаа гардаг байсан.
+const STATIC_CACHE = 'eseller-static-v3';
+const DYNAMIC_CACHE = 'eseller-dynamic-v3';
+const STATIC_ASSETS = ['/offline', '/manifest.json'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(STATIC_CACHE).then((c) => c.addAll(STATIC_ASSETS)).then(() => self.skipWaiting()));
@@ -15,6 +17,9 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // Гадны домэйн болон POST/PUT г.м. хүсэлтийг хөтөч өөрөө шийднэ (service worker оролцохгүй).
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   if (url.pathname.startsWith('/api/')) {
     event.respondWith(fetch(request).catch(() => new Response(JSON.stringify({ error: 'Офлайн' }), { headers: { 'Content-Type': 'application/json' } })));
@@ -41,7 +46,17 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(fetch(request).then((res) => { const clone = res.clone(); caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone)); return res; }).catch(() => caches.match(request)));
+  event.respondWith(
+    fetch(request)
+      .then((res) => {
+        if (res.ok) {
+          const clone = res.clone();
+          caches.open(DYNAMIC_CACHE).then((c) => c.put(request, clone));
+        }
+        return res;
+      })
+      .catch(() => caches.match(request).then((cached) => cached || Response.error()))
+  );
 });
 
 self.addEventListener('push', (event) => {

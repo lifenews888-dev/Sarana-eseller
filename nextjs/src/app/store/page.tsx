@@ -6,6 +6,7 @@ import type { Product } from '@/lib/api';
 import { useCartStore } from '@/lib/cart';
 import { cn } from '@/lib/utils';
 import { useAuth, roleHome } from '@/lib/auth';
+import { useHydrated } from '@/lib/hooks/useHydrated';
 import { canSeeAffiliateSalesTools } from '@/lib/affiliate-permissions';
 import { type Service } from '@/lib/types/service';
 import type { ItemType } from '@/lib/marketplace';
@@ -267,7 +268,10 @@ export default function StorePage() {
   const searchRef = useRef<HTMLInputElement>(null);
   const cart = useCartStore();
   const cartCount = useCartStore((s) => s.count());
-  const { user, isLoggedIn } = useAuth();
+  const auth = useAuth();
+  const hydrated = useHydrated();
+  const isLoggedIn = hydrated && auth.isLoggedIn;
+  const user = hydrated ? auth.user : null;
   const toast = useToast();
 
   const syncUrlFilters = useCallback((category: string, type: 'all' | ItemType, query: string, deals: boolean, sort: StoreSortKey) => {

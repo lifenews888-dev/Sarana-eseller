@@ -5,10 +5,14 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Home, ShoppingBag, Megaphone, Plus, User } from 'lucide-react';
 import { profileHome, useAuth } from '@/lib/auth';
+import { useHydrated } from '@/lib/hooks/useHydrated';
 
 export default function MobileNav() {
   const pathname = usePathname();
-  const { isLoggedIn, user } = useAuth();
+  const auth = useAuth();
+  const hydrated = useHydrated();
+  const isLoggedIn = hydrated && auth.isLoggedIn;
+  const user = hydrated ? auth.user : null;
   // Always a real destination (buyer → /dashboard, not /)
   const profileHref = isLoggedIn ? profileHome(user?.role) : '/login';
   // Hide bottom tabs while eseller assistant sheet is open (covers composer)
