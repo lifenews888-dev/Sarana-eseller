@@ -33,10 +33,10 @@ export default function ChatMonitorPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<ChatEntry | null>(null);
-  const [spamAutoBlock, setSpamAutoBlock] = useState(true);
-  const [phoneFilter, setPhoneFilter] = useState(true);
-  const [linkFilter, setLinkFilter] = useState(true);
-  const [repeatFilter, setRepeatFilter] = useState(false);
+  // Spam шүүлтийн тохиргоо — серверт хадгалагдаж, зарын чатын мессеж бүрд мөрдөгдөнө
+  const [mod, setMod] = useState<{ autoBlock: boolean; phoneFilter: boolean; linkFilter: boolean; repeatFilter: boolean } | null>(null);
+  const [modSaving, setModSaving] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
   const [page, setPage] = useState(1);
   const [chatType, setChatType] = useState<'shop' | 'listing'>('listing');
   const [thread, setThread] = useState<{ id: string; text: string; createdAt: string; side: 'buyer' | 'seller'; senderName: string }[] | null>(null);
@@ -57,6 +57,47 @@ export default function ChatMonitorPage() {
       setThreadFeedId(data.feedItemId || null);
     } catch {
       setThread([]);
+    }
+  };
+
+  const authHdr = (): Record<string, string> => {
+    const token = localStorage.getItem('token');
+    return token ? { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } : { 'Content-Type': 'application/json' };
+  };
+
+  useEffect(() => {
+    fetch('/api/admin/chat-moderation', { headers: authHdr() })
+      .then((r) => r.json())
+      .then((d) => { if (d && typeof d.autoBlock === 'boolean') setMod(d); })
+      .catch(() => null);
+  }, []);
+
+  const toggleMod = async (key: 'autoBlock' | 'phoneFilter' | 'linkFilter' | 'repeatFilter') => {
+    if (!mod || modSaving) return;
+    const next = { ...mod, [key]: !mod[key] };
+    setMod(next);
+    setModSaving(true);
+    try {
+      const r = await fetch('/api/admin/chat-moderation', { method: 'PUT', headers: authHdr(), body: JSON.stringify(next) });
+      const d = await r.json();
+      if (r.ok && typeof d.autoBlock === 'boolean') setMod(d); else setMod(mod);
+    } catch { setMod(mod); }
+    setModSaving(false);
+  };
+
+  const setBlocked = async (chat: ChatEntry, block: boolean) => {
+    setBlockBusy(true);
+    try {
+      const r = await fetch(`/api/admin/chats/${chat.id}`, {
+        method: 'PATCH', headers: authHdr(), body: JSON.stringify({ type: chatType, action: block ? 'block' : 'unblock' }),
+      });
+      if (r.ok) {
+        const status = block ? 'blocked' : 'active';
+        setChats((cs) => cs.map((c) => (c.id === chat.id ? { ...c, status } : c)));
+        setSelected((c) => (c && c.id === chat.id ? { ...c, status } : c));
+      }
+    } finally {
+      setBlockBusy(false);
     }
   };
 
@@ -96,7 +137,7 @@ export default function ChatMonitorPage() {
           <button onClick={fetchChats} className="flex items-center gap-1.5 px-4 py-2 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl text-xs font-semibold text-[var(--esl-text-secondary)] hover:bg-[var(--esl-bg-section)] cursor-pointer transition">
             <RefreshCw className="w-3.5 h-3.5" /> Шинэчлэх
           </button>
-          <button className="flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-semibold hover:bg-red-100 cursor-pointer transition border-none">
+          <button onClick={() => document.getElementById('spam-rules')?.scrollIntoView({ behavior: 'smooth', block: 'center' })} className="flex items-center gap-1.5 px-4 py-2 bg-red-50 text-red-600 rounded-xl text-xs font-semibold hover:bg-red-100 cursor-pointer transition border-none">
             <Shield className="w-3.5 h-3.5" /> Spam дүрэм
           </button>
         </div>
@@ -248,6 +289,20 @@ export default function ChatMonitorPage() {
                   ))}
                 </div>
 
+                <button
+                  type="button"
+                  disabled={blockBusy}
+                  onClick={() => setBlocked(selected, selected.status !== 'blocked')}
+                  className={cn('w-full flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-bold border cursor-pointer disabled:opacity-50',
+                    selected.status === 'blocked' ? 'border-green-500/40 bg-green-500/10 text-green-400' : 'border-red-500/40 bg-red-500/10 text-red-400')}
+                >
+                  <Ban className="w-3.5 h-3.5" />
+                  {selected.status === 'blocked' ? 'Блок цуцлах' : 'Чатыг блоклох'}
+                </button>
+                {selected.status === 'blocked' && chatType === 'listing' && (
+                  <p className="text-[10px] text-[var(--esl-text-muted)]">Блоклосон чатад аль ч тал бичих боломжгүй. Зочин бол тэр дугаараас шинэ чат эхлүүлэх боломжгүй.</p>
+                )}
+
                 {threadFeedId && (
                   <a href={`/feed/${threadFeedId}`} target="_blank" rel="noreferrer" className="block text-xs font-semibold text-[#E8242C] no-underline">
                     <Eye className="w-3 h-3 inline mr-1" /> Зарыг харах
@@ -273,23 +328,6 @@ export default function ChatMonitorPage() {
                 </div>
               </div>
 
-              {/* Spam auto filter */}
-              <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-4 space-y-3">
-                <h4 className="text-xs font-bold text-[var(--esl-text-primary)]">Spam автомат шүүлт</h4>
-                {[
-                  { label: 'Spam автомат блок', state: spamAutoBlock, setter: setSpamAutoBlock },
-                  { label: 'Утасны дугаар шүүлт', state: phoneFilter, setter: setPhoneFilter },
-                  { label: 'Гадаад холбоос шүүлт', state: linkFilter, setter: setLinkFilter },
-                  { label: 'Хэт давтамжтай мессеж', state: repeatFilter, setter: setRepeatFilter },
-                ].map(t => (
-                  <div key={t.label} className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--esl-text-secondary)]">{t.label}</span>
-                    <button onClick={() => t.setter(!t.state)} className="bg-transparent border-none cursor-pointer p-0">
-                      {t.state ? <ToggleRight className="w-6 h-6 text-indigo-600" /> : <ToggleLeft className="w-6 h-6 text-[var(--esl-text-muted)]" />}
-                    </button>
-                  </div>
-                ))}
-              </div>
             </>
           ) : (
             <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-8 text-center">
@@ -298,6 +336,31 @@ export default function ChatMonitorPage() {
               <p className="text-xs text-[var(--esl-text-muted)] mt-1">Чат сонгоход мессеж харагдана</p>
             </div>
           )}
+
+          {/* Spam автомат шүүлт — зарын чатын бүх мессежид мөрдөгдөнө */}
+          <div id="spam-rules" className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-4 space-y-3">
+            <h4 className="text-xs font-bold text-[var(--esl-text-primary)]">Spam автомат шүүлт <span className="font-normal text-[var(--esl-text-muted)]">(зарын чат)</span></h4>
+            {!mod ? (
+              <p className="text-xs text-[var(--esl-text-muted)]">Ачаалж байна...</p>
+            ) : (
+              ([
+                { key: 'autoBlock', label: 'Spam автомат блок', hint: '3 удаа шүүлтэд баригдвал чатыг хаана' },
+                { key: 'phoneFilter', label: 'Утасны дугаар шүүлт', hint: 'Мессеж дэх утасны дугаарыг хориглоно' },
+                { key: 'linkFilter', label: 'Гадаад холбоос шүүлт', hint: 'Вэб холбоос илгээхийг хориглоно' },
+                { key: 'repeatFilter', label: 'Хэт давтамжтай мессеж', hint: '1 минутад 8-аас олныг хориглоно' },
+              ] as const).map(t => (
+                <div key={t.key} className="flex items-center justify-between gap-3">
+                  <div>
+                    <span className="block text-xs text-[var(--esl-text-secondary)]">{t.label}</span>
+                    <span className="block text-[10px] text-[var(--esl-text-muted)]">{t.hint}</span>
+                  </div>
+                  <button onClick={() => toggleMod(t.key)} disabled={modSaving} className="bg-transparent border-none cursor-pointer p-0 disabled:opacity-50" aria-label={t.label}>
+                    {mod[t.key] ? <ToggleRight className="w-6 h-6 text-indigo-600" /> : <ToggleLeft className="w-6 h-6 text-[var(--esl-text-muted)]" />}
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

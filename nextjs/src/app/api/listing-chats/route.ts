@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { findRecentDuplicate } from '@/lib/listingChatDedupe';
+import { checkNewChatText, moderateListingMessage } from '@/lib/chatModeration';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
 import { resolveFeedOwnerUserId } from '@/lib/feedOwnership';
 
@@ -70,9 +71,11 @@ export async function POST(req: NextRequest) {
 
   const existing = await prisma.listingChat.findUnique({
     where: { feedItemId_buyerId: { feedItemId, buyerId: auth.id } },
-    select: { id: true },
+    select: { id: true, status: true, spamHits: true },
   });
   if (existing && (await findRecentDuplicate(existing.id, auth.id, text))) return json({ chatId: existing.id });
+  const mod = existing ? await moderateListingMessage(existing, auth.id, text) : await checkNewChatText(text);
+  if (!mod.ok) return errorJson(mod.error, mod.status);
 
   const chat = await prisma.listingChat.upsert({
     where: { feedItemId_buyerId: { feedItemId, buyerId: auth.id } },

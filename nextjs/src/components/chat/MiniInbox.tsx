@@ -48,6 +48,7 @@ export default function MiniInbox({ initial }: { initial?: MiniChatTarget | null
   const [missing, setMissing] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => { if (initial) setActive(initial); }, [initial]);
@@ -140,7 +141,8 @@ export default function MiniInbox({ initial }: { initial?: MiniChatTarget | null
         });
       }
       const b = await r.json().catch(() => null);
-      if (b?.success) { setMsgs((m) => [...m, b.data]); setText(''); }
+      if (b?.success) { setMsgs((m) => [...m, b.data]); setText(''); setSendError(''); }
+      else setSendError(b?.error || 'Мессеж илгээж чадсангүй');
     } finally {
       setSending(false);
     }
@@ -186,6 +188,7 @@ export default function MiniInbox({ initial }: { initial?: MiniChatTarget | null
             </div>
           )}
         </div>
+        {sendError && <p className="border-t border-[var(--esl-border)] px-3 pt-2 text-xs text-red-500">{sendError}</p>}
         <div className="flex shrink-0 gap-2 border-t border-[var(--esl-border)] px-2.5 pt-2.5" style={{ paddingBottom: 'max(0.75rem, calc(env(safe-area-inset-bottom, 0px) + 0.35rem))' }}>
           <input
             value={text}
