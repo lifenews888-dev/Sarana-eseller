@@ -7,6 +7,8 @@ import EsellerLogo from './EsellerLogo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { profileHome, useAuth } from '@/lib/auth';
 import { useHydrated } from '@/lib/hooks/useHydrated';
+import { useListingUnread } from '@/lib/hooks/useListingUnread';
+import { MessageCircle } from 'lucide-react';
 
 const NAV_LINKS = [
   { href: '/store', label: 'Дэлгүүр', show: 'hidden sm:inline-flex' },
@@ -34,6 +36,7 @@ export default function Navbar() {
   // Buyers → /dashboard (not /); sellers → store dashboard, etc.
   const authHref = isLoggedIn ? profileHome(user?.role) : '/login';
   const authLabel = isLoggedIn ? 'Профайл' : 'Нэвтрэх';
+  const unread = useListingUnread(isLoggedIn);
 
   // Home hero is dark: white text only while overlaying it (top, un-scrolled).
   // Everywhere else: themed solid bar + primary/secondary text (no white-on-white).
@@ -96,6 +99,21 @@ export default function Navbar() {
       <Link href={authHref} prefetch className={authLink}>
         {authLabel}
       </Link>
+      {isLoggedIn && (
+        <Link
+          href="/messages"
+          aria-label={unread > 0 ? `Мессеж, ${unread} уншаагүй` : 'Мессеж'}
+          title="Мессеж"
+          className={`relative flex h-10 w-10 items-center justify-center rounded-xl no-underline transition-all ${overlay ? 'text-white/85 hover:bg-white/[.07]' : 'text-[var(--esl-text-primary)] hover:bg-[var(--esl-bg-hover)]'}`}
+        >
+          <MessageCircle className="h-5 w-5" />
+          {unread > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 min-w-[18px] rounded-full bg-[#E8242C] px-1 text-center text-[10px] font-bold leading-[18px] text-white">
+              {unread > 99 ? '99+' : unread}
+            </span>
+          )}
+        </Link>
+      )}
       <ThemeToggle />
       <Link
         href={postCtaHref}

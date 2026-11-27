@@ -11,6 +11,31 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = 20;
 
+    // ?type=listing — зарын булангийн худалдан авагч ↔ зарын эзний чатууд
+    if (searchParams.get('type') === 'listing') {
+      const [rows, total] = await Promise.all([
+        prisma.listingChat.findMany({ orderBy: { lastAt: 'desc' }, skip: (page - 1) * limit, take: limit }),
+        prisma.listingChat.count(),
+      ]);
+      const ids = [...new Set(rows.flatMap((r) => [r.buyerId, r.sellerId]))];
+      const users = ids.length
+        ? await prisma.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true, email: true, role: true, avatar: true } })
+        : [];
+      const um = Object.fromEntries(users.map((u) => [u.id, u]));
+      const chats = rows.map((r) => ({
+        id: r.id,
+        shopId: r.feedItemId,
+        customer: um[r.buyerId] || { id: r.buyerId, name: 'Хэрэглэгч', role: 'buyer' },
+        context: `Зар: ${r.title || ''} → ${um[r.sellerId]?.name || 'Зарын эзэн'}`,
+        lastMessage: r.lastMessage,
+        lastAt: r.lastAt,
+        status: 'active',
+        unreadCount: r.sellerUnread,
+        createdAt: r.createdAt,
+      }));
+      return NextResponse.json({ chats, total, page });
+    }
+
     const [conversations, total] = await Promise.all([
       prisma.conversation.findMany({
         orderBy: { lastAt: 'desc' },
