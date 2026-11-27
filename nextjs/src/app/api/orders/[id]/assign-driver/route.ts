@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAuthUser, errorJson, json } from '@/lib/api-auth';
-import { sendExpoPush } from '@/lib/push';
+import { notifyUser } from '@/lib/notify';
 
 export async function PUT(
   req: NextRequest,
@@ -57,13 +57,12 @@ export async function PUT(
   });
 
   // Send push notification to driver
-  if (driver.pushToken) {
-    await sendExpoPush(driver.pushToken, {
-      title: 'Шинэ хүргэлт!',
-      body: `Захиалга #${order.id.slice(-6)} таньд хуваарилагдлаа`,
-      data: { orderId: order.id },
-    });
-  }
+  await notifyUser(driver.id, {
+    type: 'delivery_assigned',
+    title: 'Шинэ хүргэлт!',
+    body: `Захиалга #${order.id.slice(-6)} танд хуваарилагдлаа`,
+    data: { orderId: order.id, screen: 'driver-deliveries' },
+  });
 
   return json({ order: updated });
 }

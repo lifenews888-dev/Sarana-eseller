@@ -170,6 +170,26 @@ function validateSpecialListing(
     : null;
 }
 
+// GET /api/feed/[id] — нийтэд харагдах зарын дэлгэрэнгүй (мобайл апп)
+export async function GET(_req: NextRequest, ctx: Ctx) {
+  const { id } = await ctx.params;
+  if (!isValidObjectId(id)) return errorJson('Зар олдсонгүй', 404);
+  const item = await prisma.feedItem.findUnique({
+    where: { id },
+    include: {
+      media: { orderBy: { sortOrder: 'asc' } },
+      agent: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
+      company: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
+      autoDealer: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
+      serviceProvider: { select: { id: true, name: true, phone: true, slug: true, isVerified: true } },
+    },
+  });
+  // Админ хаасан, хугацаа дууссан зарыг нийтэд харуулахгүй (вэбийн хуудастай ижил)
+  if (!item || (item.status && !['active', 'sold'].includes(item.status))) return errorJson('Зар олдсонгүй', 404);
+  prisma.feedItem.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
+  return json(item);
+}
+
 export async function DELETE(req: NextRequest, ctx: Ctx) {
   const auth = requireAuth(req);
   if (auth instanceof Response) return auth;

@@ -1978,6 +1978,21 @@ model FeedbackTicket {
   @@map("feedback_tickets")
 }
 
+// Хэрэглэгчийн мэдэгдлийн хайрцаг (апп/вэб дээр харагдана; push-тэй зэрэг үүснэ)
+model UserNotification {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String    @db.ObjectId
+  type      String    // order_paid | order_status | order_new | delivery | wallet | herder | system
+  title     String
+  body      String
+  data      Json?     // { orderId?, screen? }
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("user_notifications")
+}
+
 model ScheduledNotification {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   sendAt     DateTime
