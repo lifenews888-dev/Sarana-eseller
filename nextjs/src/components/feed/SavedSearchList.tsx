@@ -48,7 +48,7 @@ export default function SavedSearchList() {
             <li key={i.id} className="flex items-center gap-3 px-4 py-3">
               <Link href={`${i.href}${i.href.includes('?') ? '&' : '?'}ss=${i.id}`} className="min-w-0 flex-1 no-underline">
                 <span className="block truncate text-sm font-bold text-[var(--esl-text-primary)]">{i.name}</span>
-                <span className="block truncate text-xs text-[var(--esl-text-muted)]">{i.summary}</span>
+                {i.summary !== i.name && <span className="block truncate text-xs text-[var(--esl-text-muted)]">{i.summary}</span>}
               </Link>
               {i.newCount > 0 ? (
                 <span className="shrink-0 rounded-full bg-[#E8242C] px-2.5 py-1 text-[11px] font-bold text-white">{i.newCount} шинэ</span>
