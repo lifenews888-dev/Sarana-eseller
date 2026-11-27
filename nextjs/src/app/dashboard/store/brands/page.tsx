@@ -41,8 +41,11 @@ export default function BrandsPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    setBrands(loadBrands());
+    const deferred = window.setTimeout(() => {
+      setMounted(true);
+      setBrands(loadBrands());
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   if (!mounted) {

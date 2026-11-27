@@ -35,16 +35,19 @@ export function NotificationBell({ role = 'buyer' }: Props) {
 
   // Fetch notifications when opened
   useEffect(() => {
-    if (!open) return;
-    setLoading(true);
-    const token = localStorage.getItem('token');
-    fetch(`/api/notifications?role=${role}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setNotifications(data); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const deferred = window.setTimeout(() => {
+      if (!open) return;
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      fetch(`/api/notifications?role=${role}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.json())
+        .then(data => { if (Array.isArray(data)) setNotifications(data); })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [open, role]);
 
   return (

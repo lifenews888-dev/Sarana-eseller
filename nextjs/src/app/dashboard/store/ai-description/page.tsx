@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
@@ -73,7 +74,10 @@ export default function AIDescriptionPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const deferred = window.setTimeout(() => {
+      setMounted(true);
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   if (!mounted) {
@@ -101,9 +105,9 @@ export default function AIDescriptionPage() {
           <span className="text-5xl block mb-4"><Lock className="w-12 h-12 mx-auto" /></span>
           <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-2">AI боломж хязгаарлагдсан</h2>
           <p className="text-[var(--esl-text-secondary)] mb-4">Энэ боломжийг ашиглахын тулд Стандарт эсвэл дээш багц руу шилжинэ үү.</p>
-          <a href="/dashboard/store/package" className="inline-block bg-gradient-to-r from-blue-500 to-[#C41E25] text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
+          <Link href="/dashboard/store/package" className="inline-block bg-gradient-to-r from-blue-500 to-[#C41E25] text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
             Багц шинэчлэх
-          </a>
+          </Link>
         </div>
       </div>
     );

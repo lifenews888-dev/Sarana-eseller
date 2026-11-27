@@ -19,8 +19,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [resolved, setResolved] = useState<ResolvedTheme>('dark');
 
   useEffect(() => {
-    const saved = localStorage.getItem('esl-theme') as Theme | null;
-    if (saved) setThemeState(saved);
+    const deferred = window.setTimeout(() => {
+      const saved = localStorage.getItem('esl-theme') as Theme | null;
+      if (saved) setThemeState(saved);
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   useEffect(() => {

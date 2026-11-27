@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/components/shared/Toast';
@@ -53,14 +54,17 @@ export default function AIPosterPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    ProductsAPI.list()
-      .then((res) => setProducts(res.products || []))
-      .catch(() => {});
-    try {
-      const saved = localStorage.getItem('eseller_poster_history');
-      if (saved) setHistory(JSON.parse(saved));
-    } catch {}
+    const deferred = window.setTimeout(() => {
+      setMounted(true);
+      ProductsAPI.list()
+        .then((res) => setProducts(res.products || []))
+        .catch(() => {});
+      try {
+        const saved = localStorage.getItem('eseller_poster_history');
+        if (saved) setHistory(JSON.parse(saved));
+      } catch {}
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   if (!mounted) {
@@ -124,12 +128,12 @@ export default function AIPosterPage() {
           <p className="text-[var(--esl-text-secondary)] mb-4">
             Энэ боломжийг ашиглахын тулд Стандарт эсвэл дээш багц руу шилжинэ үү.
           </p>
-          <a
+          <Link
             href="/dashboard/store/package"
             className="inline-block bg-gradient-to-r from-pink-500 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition"
           >
             Багц шинэчлэх
-          </a>
+          </Link>
         </div>
       </div>
     );

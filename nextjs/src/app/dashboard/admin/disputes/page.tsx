@@ -54,7 +54,10 @@ export default function AdminDisputesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchDisputes(); }, [tab]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchDisputes(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [tab]);
 
   const handleResolve = async () => {
     if (!resolveModal) return;

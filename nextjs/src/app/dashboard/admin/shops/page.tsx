@@ -65,8 +65,8 @@ export default function AdminShopsPage() {
       if (d.stats) setStats(d.stats);
       if (d.total != null) setTotal(d.total);
       if (d.pages) setTotalPages(d.pages);
-    } catch (e: any) {
-      setError(e.message || 'Сервертэй холбогдож чадсангүй');
+    } catch (e: unknown) {
+      setError((e instanceof Error ? e.message : String(e)) || 'Сервертэй холбогдож чадсангүй');
     } finally {
       setLoading(false);
     }
@@ -169,7 +169,7 @@ export default function AdminShopsPage() {
             <div key={key} className="bg-dash-card border border-dash-border rounded-xl p-4 flex items-center gap-3">
               <div className="w-3 h-8 rounded-full" style={{ backgroundColor: p.color }} />
               <div>
-                <div className="text-lg font-black" style={{ color: p.color }}>{(planBreakdown as any)[key] || 0}</div>
+                <div className="text-lg font-black" style={{ color: p.color }}>{planBreakdown[key as keyof typeof planBreakdown] || 0}</div>
                 <div className="text-[10px] text-white/40">{p.label}</div>
               </div>
             </div>

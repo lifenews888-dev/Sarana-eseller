@@ -80,12 +80,18 @@ export default function HerderProvincePage(
   }, [provinceCode, category, page, search]);
 
   useEffect(() => {
-    fetchProducts();
+    const deferred = window.setTimeout(() => {
+      fetchProducts();
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [fetchProducts]);
 
   // Reset page when category or search changes
   useEffect(() => {
-    setPage(1);
+    const deferred = window.setTimeout(() => {
+      setPage(1);
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [category, search]);
 
   if (!province) {

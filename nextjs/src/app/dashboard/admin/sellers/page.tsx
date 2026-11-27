@@ -49,7 +49,7 @@ export default function AdminSellersPage() {
         total: json.total || json.data?.total || users.length,
         seller: json.breakdown?.seller || json.data?.breakdown?.seller || 0,
         affiliate: json.breakdown?.affiliate || json.data?.breakdown?.affiliate || 0,
-        active: users.filter((u: any) => u.isActive).length,
+        active: (users as SellerRow[]).filter((u) => u.isActive).length,
       });
 
       // Also fetch affiliate users
@@ -60,7 +60,7 @@ export default function AdminSellersPage() {
       const allSellers = [...users, ...affiliates];
 
       // Enrich with shop data (batch, not per-user)
-      const enriched = await Promise.all(allSellers.map(async (u: any) => {
+      const enriched = await Promise.all((allSellers as SellerRow[]).map(async (u) => {
         try {
           const shopRes = await fetch(`/api/admin/shops?search=${encodeURIComponent(u.email)}&limit=1`, { headers });
           const shopData = await shopRes.json();
@@ -69,8 +69,8 @@ export default function AdminSellersPage() {
         } catch { return { ...u, shop: null }; }
       }));
       setSellers(enriched);
-    } catch (e: any) {
-      setError(e.message || 'Сервертэй холбогдож чадсангүй');
+    } catch (e: unknown) {
+      setError((e instanceof Error ? e.message : String(e)) || 'Сервертэй холбогдож чадсангүй');
     } finally {
       setLoading(false);
     }

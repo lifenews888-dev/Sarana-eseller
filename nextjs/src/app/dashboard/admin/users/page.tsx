@@ -43,8 +43,14 @@ export default function AdminUsersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchUsers(); }, [roleFilter, search, page]);
-  useEffect(() => { setPage(1); }, [roleFilter, search]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchUsers(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [roleFilter, search, page]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { setPage(1); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [roleFilter, search]);
 
   const updateUser = async (userId: string, updates: Record<string, unknown>) => {
     const token = localStorage.getItem('token');

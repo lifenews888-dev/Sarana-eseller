@@ -53,7 +53,10 @@ export default function AdminInfluencersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchApps(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchApps(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const filtered = tab === 'ALL' ? apps : apps.filter((a) => a.status === tab);
 

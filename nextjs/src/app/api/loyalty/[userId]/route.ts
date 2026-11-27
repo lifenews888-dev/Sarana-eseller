@@ -41,7 +41,7 @@ export async function GET(
           }
         : null,
     });
-  } catch (error: any) {
-    return fail(error.message, 500);
+  } catch (error: unknown) {
+    return fail((error instanceof Error ? error.message : String(error)), 500);
   }
 }

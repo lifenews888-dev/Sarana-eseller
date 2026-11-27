@@ -45,7 +45,10 @@ export default function TeamPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { load(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const invite = async () => {
     if (!email) return;

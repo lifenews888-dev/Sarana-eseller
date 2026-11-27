@@ -90,7 +90,10 @@ export default function AdminCategoriesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchCategories(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const handleCreate = async () => {
     const token = localStorage.getItem('token');

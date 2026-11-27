@@ -1,3 +1,4 @@
+import Link from 'next/link';
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -447,7 +448,7 @@ export default function SocialPage() {
               <h3 className="font-bold text-sm text-[var(--esl-text-primary)]">Одоо live</h3>
             </div>
             <p className="text-xs text-[var(--esl-text-muted)]">
-              <a href="/live" className="text-blue-600 hover:underline">Бүгдийг харах →</a>
+              <Link href="/live" className="text-blue-600 hover:underline">Бүгдийг харах →</Link>
             </p>
           </div>
         </aside>
@@ -486,13 +487,14 @@ export default function SocialPage() {
 function GroupBuyCardWeb({ groupBuy }: { groupBuy: GroupBuy }) {
   const [joining, setJoining] = useState(false);
   const [count, setCount] = useState(groupBuy.currentCount);
+  const [now] = useState(() => Date.now());
 
   const base = groupBuy.product.salePrice || groupBuy.product.price;
   const discounted = Math.floor(base * (1 - groupBuy.discount));
   const progress = Math.min(100, (count / groupBuy.targetCount) * 100);
   const remaining = Math.max(0, groupBuy.targetCount - count);
 
-  const diff = new Date(groupBuy.expiresAt).getTime() - Date.now();
+  const diff = new Date(groupBuy.expiresAt).getTime() - now;
   const hours = Math.max(0, Math.floor(diff / 3600000));
   const minutes = Math.max(0, Math.floor((diff % 3600000) / 60000));
 

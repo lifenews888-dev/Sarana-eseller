@@ -28,7 +28,10 @@ export default function CategoryRequestsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchRequests(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchRequests(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const handleAction = async (id: string, action: 'approve' | 'reject') => {
     const token = localStorage.getItem('token');

@@ -58,8 +58,8 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ data: batch }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }
 
@@ -111,7 +111,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ data: batch });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

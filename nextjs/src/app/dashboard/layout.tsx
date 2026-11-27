@@ -357,32 +357,35 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const loadShopType = useShopTypeStore((s) => s.load);
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        router.replace('/login');
-      } else {
-        setReady(true);
-        // Олон дэлгүүр: идэвхтэй дэлгүүрийг тодорхойлж, shopType-ийг түүнээс ачаална
-        fetch('/api/seller/my-stores', { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' })
-          .then((r) => (r.ok ? r.json() : null))
-          .then((data) => {
-            const stores: OwnerStore[] = Array.isArray(data?.stores) ? data.stores : [];
-            setOwnerStores(stores);
-            setAllowance(data?.allowance ?? null);
-            const active = stores.find((s) => s.active);
-            if (active) {
-              try {
-                if (localStorage.getItem('eseller_shop_id') !== active.id) {
-                  setActiveShop(active.id);
-                }
-              } catch { /* ignore */ }
-            }
-          })
-          .catch(() => {})
-          .finally(() => loadShopType());
+    const deferred = window.setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          router.replace('/login');
+        } else {
+          setReady(true);
+          // Олон дэлгүүр: идэвхтэй дэлгүүрийг тодорхойлж, shopType-ийг түүнээс ачаална
+          fetch('/api/seller/my-stores', { headers: { Authorization: `Bearer ${token}` }, credentials: 'include' })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+              const stores: OwnerStore[] = Array.isArray(data?.stores) ? data.stores : [];
+              setOwnerStores(stores);
+              setAllowance(data?.allowance ?? null);
+              const active = stores.find((s) => s.active);
+              if (active) {
+                try {
+                  if (localStorage.getItem('eseller_shop_id') !== active.id) {
+                    setActiveShop(active.id);
+                  }
+                } catch { /* ignore */ }
+              }
+            })
+            .catch(() => {})
+            .finally(() => loadShopType());
+        }
       }
-    }
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [router, loadShopType]);
 
   const [mobileOpen, setMobileOpen] = useState(false);

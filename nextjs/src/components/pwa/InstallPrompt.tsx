@@ -3,12 +3,15 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
+// Хөтчийн 'beforeinstallprompt' үйл явдал (стандарт TS төрөлд байхгүй)
+type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void> };
+
 export default function InstallPrompt() {
-  const [prompt, setPrompt] = useState<any>(null);
+  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const handler = (e: Event) => { e.preventDefault(); setPrompt(e); setShow(true); };
+    const handler = (e: Event) => { e.preventDefault(); setPrompt(e as BeforeInstallPromptEvent); setShow(true); };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);

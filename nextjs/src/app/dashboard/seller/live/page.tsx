@@ -1,3 +1,4 @@
+import Link from 'next/link';
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
@@ -181,19 +182,19 @@ export default function SellerLivePage() {
           Live худалдаа
         </h1>
         <div className="flex items-center gap-3">
-          <a
+          <Link
             href="/dashboard/seller/live/plans"
             className="flex items-center gap-2 border border-[var(--esl-border)] text-[var(--esl-text-primary)] px-4 py-2 rounded-lg font-medium hover:bg-[var(--esl-bg-hover)] transition text-sm"
           >
             Багц удирдах
-          </a>
-          <a
+          </Link>
+          <Link
             href="/dashboard/seller/live/create"
             className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium transition"
           >
             <Plus className="w-4 h-4" />
             Шинэ Live үүсгэх
-          </a>
+          </Link>
         </div>
       </div>
 

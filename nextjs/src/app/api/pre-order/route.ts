@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { requireAdmin } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
@@ -13,7 +14,7 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50);
     const page = parseInt(searchParams.get('page') || '1');
 
-    const where: any = {};
+    const where: Prisma.PreOrderProductWhereInput = {};
     if (entityId) where.entityId = entityId;
     if (status) where.status = status;
     if (category) where.category = category;
@@ -35,8 +36,8 @@ export async function GET(req: NextRequest) {
       data: products,
       meta: { total, page, hasMore: page * limit < total },
     });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }
 
@@ -84,7 +85,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ data: product }, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    return NextResponse.json({ error: (err instanceof Error ? err.message : String(err)) }, { status: 500 });
   }
 }

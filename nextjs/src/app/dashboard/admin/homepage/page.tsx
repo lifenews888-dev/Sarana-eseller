@@ -6,6 +6,9 @@ import {
   Home, X, Search, Loader2, Video, Image as ImageIcon, ChevronUp, ChevronDown,
 } from 'lucide-react';
 
+type SearchProduct = { id: string; name: string; images?: string[]; price?: number; salePrice?: number };
+type SearchShop = { id: string; name: string; logo?: string | null };
+
 // ═══════════════════════════════════════════════════════
 // Types
 // ═══════════════════════════════════════════════════════
@@ -116,7 +119,7 @@ export default function AdminHomepagePage() {
     // Load stats config
     const configs = await api('/api/admin/homepage');
     if (Array.isArray(configs)) {
-      const get = (k: string) => configs.find((c: any) => c.key === k)?.value || '';
+      const get = (k: string) => (configs as { key: string; value?: string }[]).find((c) => c.key === k)?.value || '';
       if (get('stats_products')) setStatsProducts(get('stats_products'));
       if (get('stats_shops')) setStatsShops(get('stats_shops'));
       if (get('stats_users')) setStatsUsers(get('stats_users'));
@@ -125,7 +128,10 @@ export default function AdminHomepagePage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadAll(); }, [loadAll]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { loadAll(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [loadAll]);
 
   const tabs = [
     { key: 'hero' as const, label: 'Hero Banner', count: banners.length },
@@ -523,7 +529,7 @@ function SectionsTab({ sections, onRefresh }: { sections: Section[]; onRefresh: 
 
 function FeaturedProductsTab({ items, onRefresh }: { items: FeaturedProductRow[]; onRefresh: () => void }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchProduct[]>([]);
   const [searching, setSearching] = useState(false);
 
   const searchProducts = async () => {
@@ -578,7 +584,7 @@ function FeaturedProductsTab({ items, onRefresh }: { items: FeaturedProductRow[]
       {/* Search results */}
       {results.length > 0 && (
         <div className="bg-dash-elevated border border-dash-border rounded-xl divide-y divide-dash-border">
-          {results.map((p: any) => (
+          {results.map((p) => (
             <div key={p.id} className="flex items-center gap-3 px-4 py-2.5">
               <div className="w-10 h-10 rounded-lg bg-dash-card overflow-hidden flex-shrink-0">
                 {p.images?.[0] ? (
@@ -637,7 +643,7 @@ function FeaturedProductsTab({ items, onRefresh }: { items: FeaturedProductRow[]
 
 function FeaturedShopsTab({ items, onRefresh }: { items: FeaturedShopRow[]; onRefresh: () => void }) {
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchShop[]>([]);
   const [searching, setSearching] = useState(false);
 
   const searchShops = async () => {
@@ -684,7 +690,7 @@ function FeaturedShopsTab({ items, onRefresh }: { items: FeaturedShopRow[]; onRe
       {/* Search results */}
       {results.length > 0 && (
         <div className="bg-dash-elevated border border-dash-border rounded-xl divide-y divide-dash-border">
-          {results.map((s: any) => (
+          {results.map((s) => (
             <div key={s.id} className="flex items-center gap-3 px-4 py-2.5">
               <div className="w-10 h-10 rounded-full bg-dash-card overflow-hidden flex-shrink-0 flex items-center justify-center"
                 style={{ background: s.logo ? 'transparent' : '#E8242C' }}>

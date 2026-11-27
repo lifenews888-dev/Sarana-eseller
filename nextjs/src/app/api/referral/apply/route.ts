@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, referrerId: referral.referrerId });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: (error instanceof Error ? error.message : String(error)) }, { status: 500 });
   }
 }

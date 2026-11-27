@@ -73,8 +73,8 @@ export default function NewBannerPage() {
       }
 
       router.push('/dashboard/admin/banners');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err instanceof Error ? err.message : String(err)));
     } finally {
       setSaving(false);
     }

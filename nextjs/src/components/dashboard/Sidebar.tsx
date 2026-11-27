@@ -72,8 +72,11 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    const saved = localStorage.getItem('sb-collapsed');
-    if (saved === 'true') setCollapsed(true);
+    const deferred = window.setTimeout(() => {
+      const saved = localStorage.getItem('sb-collapsed');
+      if (saved === 'true') setCollapsed(true);
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   const toggle = () => {

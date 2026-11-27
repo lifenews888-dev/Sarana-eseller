@@ -64,7 +64,10 @@ export default function AchievementsPage() {
     setLoading(false);
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { load(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [load]);
 
   if (loading) {
     return (

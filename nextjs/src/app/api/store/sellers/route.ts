@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     orderBy: { createdAt: 'desc' },
   });
 
-  const sellerMap = new Map<string, any>();
+  const sellerMap = new Map<string, Record<string, unknown> & { products: unknown[]; pendingCount: number; approvedCount: number }>();
   for (const sp of sellers) {
     const sid = sp.sellerProfileId;
     if (!sellerMap.has(sid)) {

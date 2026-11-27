@@ -59,7 +59,10 @@ export default function AdminReturnsPage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, [page, filter]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { load(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [page, filter]);
 
   const handleAction = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     await fetch(`/api/admin/returns/${id}`, {

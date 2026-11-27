@@ -23,7 +23,7 @@ function mapOrder(order: {
   commissions: unknown;
   createdAt: Date;
 } | Record<string, unknown>) {
-  const orderAny = order as Record<string, any>;
+  const orderAny = order as Record<string, unknown> & { id?: string; total?: number };
   return {
     _id: orderAny.id,
     id: orderAny.id,

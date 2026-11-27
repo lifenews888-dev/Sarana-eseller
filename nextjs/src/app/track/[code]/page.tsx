@@ -10,7 +10,7 @@ interface TrackingData {
   trackingCode: string; orderNumber: string; status: string; total: number;
   estimatedAt?: string; events: TrackingEvent[];
   driverLat?: number; driverLng?: number; driverUpdatedAt?: string;
-  items: any[]; createdAt: string;
+  items: { name?: string; price?: number; quantity?: number; image?: string }[]; createdAt: string;
 }
 
 const STATUS_STEPS = [

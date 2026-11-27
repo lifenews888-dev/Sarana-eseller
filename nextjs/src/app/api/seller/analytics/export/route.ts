@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
     const header = 'Захиалга,Огноо,Статус,Төлбөр,Дүн,Бараа\n';
     const rows = orders
       .map((o) => {
-        const items = (o.items as any[]).map((i: any) => i.name || '').join('; ');
+        const items = ((o.items || []) as Array<{ name?: string }>).map((i) => i.name || '').join('; ');
         return `${o.orderNumber || o.id.slice(-6)},${o.createdAt.toISOString().split('T')[0]},${o.status},${o.paymentMethod || ''},${o.total || 0},"${items}"`;
       })
       .join('\n');

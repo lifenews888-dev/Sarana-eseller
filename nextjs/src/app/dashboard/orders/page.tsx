@@ -58,23 +58,26 @@ export default function BuyerOrdersPage() {
   const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      setError('Нэвтэрнэ үү');
-      return;
-    }
+    const deferred = window.setTimeout(() => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoading(false);
+        setError('Нэвтэрнэ үү');
+        return;
+      }
 
-    fetch('/api/buyer/orders', {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => r.json())
-      .then((res) => {
-        if (res.success) setOrders(res.data || []);
-        else setError('Захиалга ачаалахад алдаа гарлаа');
+      fetch('/api/buyer/orders', {
+        headers: { Authorization: `Bearer ${token}` },
       })
-      .catch(() => setError('Сервертэй холбогдоход алдаа гарлаа'))
-      .finally(() => setLoading(false));
+        .then((r) => r.json())
+        .then((res) => {
+          if (res.success) setOrders(res.data || []);
+          else setError('Захиалга ачаалахад алдаа гарлаа');
+        })
+        .catch(() => setError('Сервертэй холбогдоход алдаа гарлаа'))
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   const filtered = tab === 'all' ? orders : orders.filter((o) => o.status === tab);

@@ -38,7 +38,10 @@ export default function AdminEnterprisePage() {
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { load(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const toggleActive = async (id: string, isActive: boolean) => {
     await fetch('/api/admin/enterprise', {

@@ -112,7 +112,7 @@ function DriverSignupForm() {
             <label style={labelStyle}>{f.label}</label>
             <input
               type={f.type}
-              value={(form as any)[f.key]}
+              value={form[f.key as keyof typeof form]}
               onChange={e => setForm({ ...form, [f.key]: e.target.value })}
               placeholder={f.ph}
               required

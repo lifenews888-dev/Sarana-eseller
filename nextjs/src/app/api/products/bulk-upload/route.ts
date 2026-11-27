@@ -40,8 +40,8 @@ export async function POST(req: NextRequest) {
   let rows: Record<string, string>[]
   try {
     rows = parseCSV(text)
-  } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 400 })
+  } catch (e: unknown) {
+    return NextResponse.json({ error: (e instanceof Error ? e.message : String(e)) }, { status: 400 })
   }
 
   const results = { success: 0, failed: 0, errors: [] as string[] }
@@ -83,10 +83,10 @@ export async function POST(req: NextRequest) {
         },
       })
       results.success++
-    } catch (e: any) {
+    } catch (e: unknown) {
       results.failed++
       if (results.errors.length < 20) {
-        results.errors.push(`${name}: ${e.message}`)
+        results.errors.push(`${name}: ${(e instanceof Error ? e.message : String(e))}`)
       }
     }
   }

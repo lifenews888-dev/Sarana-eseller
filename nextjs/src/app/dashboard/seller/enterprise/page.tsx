@@ -16,7 +16,7 @@ export default function EnterpriseSetupPage() {
   const [accentColor, setAccentColor] = useState('#E67E22');
   const [logoUrl, setLogoUrl] = useState('');
   const [saving, setSaving] = useState(false);
-  const [enterprise, setEnterprise] = useState<any>(null);
+  const [enterprise, setEnterprise] = useState<{ plan?: string; primaryColor?: string; subdomain?: string } | null>(null);
   const [error, setError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
 

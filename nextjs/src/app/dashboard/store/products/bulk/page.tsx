@@ -13,7 +13,7 @@ Nike Air Max,450000,380000,Хэмжээ 42,,3,fashion,true`
 export default function BulkUploadPage() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
+  const [result, setResult] = useState<{ success: number; failed: number; errors: string[] } | null>(null)
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 

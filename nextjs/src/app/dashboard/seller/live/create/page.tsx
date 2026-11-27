@@ -1,3 +1,4 @@
+import Link from 'next/link';
 "use client";
 
 import { useState, useEffect } from "react";
@@ -442,13 +443,13 @@ export default function CreateLivePage() {
             >
               Буцах
             </button>
-            <a
+            <Link
               href="/dashboard/seller/live/plans"
               className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2.5 rounded-lg font-medium transition"
             >
               <ArrowUpCircle className="w-5 h-5" />
               Багц шинэчлэх
-            </a>
+            </Link>
           </div>
         </div>
       )}

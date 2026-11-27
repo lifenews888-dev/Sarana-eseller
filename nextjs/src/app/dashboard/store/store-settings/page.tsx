@@ -75,17 +75,20 @@ export default function StoreSettingsPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'storefront' | 'social' | 'seo'>('general');
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(STORE_CONFIG_KEY);
-      if (saved) {
-        setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
-      } else {
-        setConfig({
-          ...DEFAULT_CONFIG,
-          storeName: user?.store?.name || user?.name + 'ийн дэлгүүр',
-        });
-      }
-    } catch {}
+    const deferred = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(STORE_CONFIG_KEY);
+        if (saved) {
+          setConfig({ ...DEFAULT_CONFIG, ...JSON.parse(saved) });
+        } else {
+          setConfig({
+            ...DEFAULT_CONFIG,
+            storeName: user?.store?.name || user?.name + 'ийн дэлгүүр',
+          });
+        }
+      } catch {}
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [user]);
 
   const save = () => {
@@ -93,7 +96,7 @@ export default function StoreSettingsPage() {
     toast.show('✅ Тохиргоо хадгалагдлаа');
   };
 
-  const update = (key: keyof StoreConfig, value: any) => {
+  const update = <K extends keyof StoreConfig>(key: K, value: StoreConfig[K]) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 

@@ -70,7 +70,7 @@ export default async function OrdersPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {orders.map((order) => {
             const st = STATUS_CONFIG[order.status] || { label: order.status, color: '#888', bg: '#f0f0f0' };
-            const items = Array.isArray(order.items) ? (order.items as any[]) : [];
+            const items = Array.isArray(order.items) ? (order.items as { name?: string; image?: string }[]) : [];
             const first = items[0] || {};
             return (
               <Link key={order.id} href={`/orders/${order.id}`} style={{ textDecoration: 'none' }}>

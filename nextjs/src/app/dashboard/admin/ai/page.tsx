@@ -16,7 +16,7 @@ interface HistoryItem {
   title: string;
   description: string;
   suggestion: string;
-  evidence: any;
+  evidence: { score?: number; issues?: Analysis['issues']; stats?: Analysis['stats'] } | null;
   createdAt: string;
 }
 
@@ -49,7 +49,7 @@ export default function AdminAiPage() {
       });
       const data = await res.json();
       if (data.data) setAnalysis(data.data);
-      else if (data.fullText) setAnalysis(data as any);
+      else if (data.fullText) setAnalysis(data as Analysis);
       else setProgress('Алдаа: ' + (data.error || 'Unknown'));
     } catch (e) {
       setProgress('Алдаа гарлаа');
@@ -68,7 +68,7 @@ export default function AdminAiPage() {
       score: meta.score || 0,
       issues: meta.issues || [],
       fullText: h.suggestion || h.description || '',
-      stats: meta.stats || {},
+      stats: meta.stats || ({} as Analysis['stats']),
     });
   };
 
@@ -173,7 +173,7 @@ export default function AdminAiPage() {
           <h3 className="text-sm font-bold mb-3" style={{ color: 'var(--esl-text-primary)' }}>Шинжилгээний түүх</h3>
           <div className="space-y-2">
             {history.map(h => {
-              const score = (h.evidence as any)?.score || 0;
+              const score = h.evidence?.score || 0;
               return (
                 <div key={h.id} onClick={() => viewHistory(h)}
                   className="flex items-center justify-between p-3 rounded-xl cursor-pointer hover:opacity-80 transition"

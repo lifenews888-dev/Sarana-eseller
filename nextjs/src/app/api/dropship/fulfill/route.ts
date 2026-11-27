@@ -4,6 +4,8 @@ import { requireAuth, json, errorJson, getShopForUser } from '@/lib/api-auth';
 import { placeCJOrder } from '@/lib/aliexpress';
 
 // POST /api/dropship/fulfill — fulfill a dropship order
+type OrderLineItem = { productId?: string; id?: string; name?: string; price?: number; quantity?: number };
+
 export async function POST(req: NextRequest) {
   const user = requireAuth(req);
   if (user instanceof NextResponse) return user;
@@ -16,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (!order) return errorJson('Захиалга олдсонгүй', 404);
 
   // Check order has dropship items
-  const items = order.items as any[];
+  const items = (order.items || []) as OrderLineItem[];
   const dropshipItems = [];
 
   for (const item of items) {
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
   if (existing) return errorJson('Аль хэдийн нийлүүлэгчид илгээсэн');
 
   // Parse delivery address
-  const delivery = order.delivery as any;
+  const delivery = order.delivery as { phone?: string; address?: { building?: string; district?: string; street?: string } } | null;
   const address = {
     name: delivery?.address?.building || 'Customer',
     phone: delivery?.phone || '',
