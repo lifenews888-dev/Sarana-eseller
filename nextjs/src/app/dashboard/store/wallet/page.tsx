@@ -107,11 +107,11 @@ export default function WalletPage() {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
         <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-8 mb-6">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-8 w-48 bg-[var(--esl-bg-elevated)] rounded animate-pulse mb-2" />
           <div className="h-4 w-72 bg-[var(--esl-bg-section)] rounded animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {[1, 2, 3].map((i) => <div key={i} className="h-28 bg-gray-200 rounded-2xl animate-pulse" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="h-28 bg-[var(--esl-bg-elevated)] rounded-2xl animate-pulse" />)}
         </div>
       </div>
     );
@@ -142,7 +142,7 @@ export default function WalletPage() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="50000"
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               />
               <p className="text-xs text-[var(--esl-text-muted)] mt-1">Боломжит: {formatPrice(balance)}</p>
             </div>
@@ -151,7 +151,7 @@ export default function WalletPage() {
               <select
                 value={bank}
                 onChange={(e) => setBank(e.target.value)}
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               >
                 {BANKS.map((b) => (
                   <option key={b.value} value={b.value}>{b.label}</option>
@@ -165,13 +165,13 @@ export default function WalletPage() {
                 value={accountNumber}
                 onChange={(e) => setAccountNumber(e.target.value)}
                 placeholder="1234567890"
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               />
             </div>
             <button
               onClick={handleWithdraw}
               disabled={submitting}
-              className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className="w-full py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors disabled:opacity-50"
             >
               {submitting ? 'Илгээж байна...' : 'Татан авах'}
             </button>

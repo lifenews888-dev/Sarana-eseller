@@ -165,7 +165,7 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
           <div className="flex items-center gap-1 px-5 pt-4">
             {['date', 'time', 'info'].map((s, i) => (
               <div key={s} className="flex items-center gap-1 flex-1">
-                <div className={cn('h-1 flex-1 rounded-full transition-colors', step === s || ['time', 'info'].indexOf(step) > i ? 'bg-indigo-500' : 'bg-gray-200')} />
+                <div className={cn('h-1 flex-1 rounded-full transition-colors', step === s || ['time', 'info'].indexOf(step) > i ? 'bg-[#E8242C]' : 'bg-[var(--esl-bg-elevated)]')} />
               </div>
             ))}
           </div>
@@ -209,9 +209,9 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
                       className={cn(
                         'h-10 rounded-lg text-sm font-medium transition border-none cursor-pointer',
                         disabled && 'text-[var(--esl-text-muted)] cursor-not-allowed bg-transparent',
-                        !disabled && !isSelected && 'hover:bg-indigo-50 text-[var(--esl-text-primary)] bg-transparent',
-                        isSelected && 'bg-indigo-600 text-white shadow-sm',
-                        isToday && !isSelected && !disabled && 'ring-1 ring-indigo-300',
+                        !disabled && !isSelected && 'hover:bg-[var(--esl-brand-bg)] text-[var(--esl-text-primary)] bg-transparent',
+                        isSelected && 'bg-[#E8242C] text-white shadow-sm',
+                        isToday && !isSelected && !disabled && 'ring-1 ring-[#E8242C]/40',
                       )}
                     >
                       {d.getDate()}
@@ -222,8 +222,8 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
 
               {/* Closed days legend */}
               <div className="mt-3 flex items-center gap-3 text-[10px] text-[var(--esl-text-muted)]">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-gray-200" /> Амралтын өдөр</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-600" /> Сонгосон</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[var(--esl-bg-elevated)]" /> Амралтын өдөр</span>
+                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#E8242C]" /> Сонгосон</span>
               </div>
             </div>
           )}
@@ -231,7 +231,7 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
           {/* ═══ STEP: Time ═══ */}
           {step === 'time' && (
             <div>
-              <button onClick={() => setStep('date')} className="flex items-center gap-1 text-xs text-indigo-600 font-semibold mb-3 bg-transparent border-none cursor-pointer">
+              <button onClick={() => setStep('date')} className="flex items-center gap-1 text-xs text-[#E8242C] font-semibold mb-3 bg-transparent border-none cursor-pointer">
                 <ChevronLeft className="w-3 h-3" /> Өдөр солих
               </button>
               <p className="text-sm text-[var(--esl-text-secondary)] mb-3">
@@ -250,8 +250,8 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
                       className={cn(
                         'py-2.5 rounded-lg text-sm font-semibold border transition cursor-pointer',
                         selectedTime === t
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                          : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] border-[var(--esl-border)] hover:border-indigo-300 hover:bg-indigo-50'
+                          ? 'bg-[#E8242C] text-white border-[#E8242C] shadow-sm'
+                          : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] border-[var(--esl-border)] hover:border-[var(--esl-brand-border)] hover:bg-[var(--esl-brand-bg)]'
                       )}
                     >
                       {t}
@@ -265,12 +265,12 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
           {/* ═══ STEP: Info ═══ */}
           {step === 'info' && (
             <div className="space-y-4">
-              <button onClick={() => setStep('time')} className="flex items-center gap-1 text-xs text-indigo-600 font-semibold mb-1 bg-transparent border-none cursor-pointer">
+              <button onClick={() => setStep('time')} className="flex items-center gap-1 text-xs text-[#E8242C] font-semibold mb-1 bg-transparent border-none cursor-pointer">
                 <ChevronLeft className="w-3 h-3" /> Цаг солих
               </button>
 
               {/* Summary */}
-              <div className="bg-indigo-50 rounded-xl p-3 space-y-1 text-sm">
+              <div className="bg-[var(--esl-brand-bg)] rounded-xl p-3 space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span className="text-[var(--esl-text-secondary)]">Үйлчилгээ</span>
                   <span className="font-semibold text-[var(--esl-text-primary)]">{service.name}</span>
@@ -283,9 +283,9 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
                   <span className="text-[var(--esl-text-secondary)]">Цаг</span>
                   <span className="font-semibold text-[var(--esl-text-primary)]">{selectedTime}</span>
                 </div>
-                <div className="flex justify-between border-t border-indigo-100 pt-1 mt-1">
+                <div className="flex justify-between border-t border-[var(--esl-brand-border)] pt-1 mt-1">
                   <span className="text-[var(--esl-text-secondary)]">Үнэ</span>
-                  <span className="font-bold text-indigo-600">{(service.salePrice || service.price).toLocaleString()}₮</span>
+                  <span className="font-bold text-[#E8242C]">{(service.salePrice || service.price).toLocaleString()}₮</span>
                 </div>
               </div>
 
@@ -294,21 +294,21 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
                   <User className="w-3 h-3 inline mr-1" />Нэр *
                 </label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Таны нэр"
-                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 transition" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5">
                   <Phone className="w-3 h-3 inline mr-1" />Утас *
                 </label>
                 <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="9911-2233"
-                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 transition" />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5">
                   <MessageSquare className="w-3 h-3 inline mr-1" />Тэмдэглэл
                 </label>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Нэмэлт мэдээлэл (заавал биш)"
-                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 transition resize-none" />
+                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 transition resize-none" />
               </div>
 
               {error && (
@@ -337,21 +337,21 @@ export default function BookingModal({ service, shopId, shopName, hours, onClose
           {step === 'date' && (
             <button onClick={() => selectedDate && setStep('time')} disabled={!selectedDate}
               className={cn('w-full py-3 rounded-xl text-sm font-semibold border-none cursor-pointer transition',
-                selectedDate ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-200 text-[var(--esl-text-muted)] cursor-not-allowed')}>
+                selectedDate ? 'bg-[#E8242C] text-white hover:bg-[#C41E25]' : 'bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] cursor-not-allowed')}>
               Цаг сонгох →
             </button>
           )}
           {step === 'time' && (
             <button onClick={() => selectedTime && setStep('info')} disabled={!selectedTime}
               className={cn('w-full py-3 rounded-xl text-sm font-semibold border-none cursor-pointer transition',
-                selectedTime ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'bg-gray-200 text-[var(--esl-text-muted)] cursor-not-allowed')}>
+                selectedTime ? 'bg-[#E8242C] text-white hover:bg-[#C41E25]' : 'bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)] cursor-not-allowed')}>
               Мэдээлэл бөглөх →
             </button>
           )}
           {step === 'info' && (
             <button onClick={handleSubmit} disabled={submitting || !name.trim() || !phone.trim()}
               className={cn('w-full py-3 rounded-xl text-sm font-semibold border-none cursor-pointer transition flex items-center justify-center gap-2',
-                submitting ? 'bg-gray-200 text-[var(--esl-text-muted)]' : 'bg-indigo-600 text-white hover:bg-indigo-700')}>
+                submitting ? 'bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)]' : 'bg-[#E8242C] text-white hover:bg-[#C41E25]')}>
               {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Илгээж байна...</> : 'Захиалга баталгаажуулах'}
             </button>
           )}

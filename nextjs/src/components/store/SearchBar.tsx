@@ -64,15 +64,15 @@ export default function SearchBar({ value, onChange, inputRef }: SearchBarProps)
           onChange={(e) => onChange(e.target.value)}
           onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
           placeholder="Бараа, дэлгүүр хайх..."
-          className="w-full h-11 pl-4 pr-20 rounded-xl bg-[var(--esl-bg-section)] border-2 border-transparent text-sm outline-none focus:border-[#E31E24] focus:bg-[var(--esl-bg-card)] transition-all"
+          className="w-full h-11 pl-4 pr-20 rounded-xl bg-[var(--esl-bg-section)] border-2 border-transparent text-sm outline-none focus:border-[#E8242C] focus:bg-[var(--esl-bg-card)] transition-all"
         />
         {value && (
           <button onClick={() => { onChange(''); setSuggestions([]); }}
-            className="absolute right-12 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center border-none cursor-pointer hover:bg-gray-300 transition">
+            className="absolute right-12 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-[var(--esl-bg-elevated)] flex items-center justify-center border-none cursor-pointer hover:bg-gray-300 transition">
             <X className="w-3 h-3 text-[var(--esl-text-secondary)]" />
           </button>
         )}
-        <button className="absolute right-1 top-1 bottom-1 px-3 bg-[#E31E24] text-white rounded-lg border-none cursor-pointer hover:bg-[#C41A1F] transition flex items-center justify-center">
+        <button className="absolute right-1 top-1 bottom-1 px-3 bg-[#E8242C] text-white rounded-lg border-none cursor-pointer hover:bg-[#C41E25] transition flex items-center justify-center">
           <Search className="w-4 h-4" />
         </button>
       </div>
@@ -90,7 +90,7 @@ export default function SearchBar({ value, onChange, inputRef }: SearchBarProps)
                 <p className="text-sm font-semibold text-[var(--esl-text-primary)] truncate">{s.name}</p>
                 {s.category && <p className="text-[10px] text-[var(--esl-text-muted)]">{s.category}</p>}
               </div>
-              <span className="text-sm font-bold text-[#E31E24] shrink-0">{formatPrice(s.price)}</span>
+              <span className="text-sm font-bold text-[#E8242C] shrink-0">{formatPrice(s.price)}</span>
             </Link>
           ))}
           <div className="px-4 py-2 border-t border-[var(--esl-border)] text-center">

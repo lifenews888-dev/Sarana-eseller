@@ -104,20 +104,20 @@ export default function TeamPage() {
       </div>
 
       {/* Members */}
-      <div className="bg-white rounded-xl border divide-y">
+      <div className="bg-[var(--esl-bg-card)] rounded-xl border divide-y">
         {loading ? (
-          <div className="p-8 text-center text-gray-400">Ачааллаж байна...</div>
+          <div className="p-8 text-center text-[var(--esl-text-muted)]">Ачааллаж байна...</div>
         ) : members.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">Ажилтан байхгүй</div>
+          <div className="p-8 text-center text-[var(--esl-text-muted)]">Ажилтан байхгүй</div>
         ) : (
           members.map((m) => (
             <div key={m.id} className="flex items-center gap-4 p-4">
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg font-bold text-gray-500">
+              <div className="w-10 h-10 rounded-full bg-[var(--esl-bg-muted)] flex items-center justify-center text-lg font-bold text-[var(--esl-text-secondary)]">
                 {m.user.name?.[0] || '?'}
               </div>
               <div className="flex-1">
                 <p className="font-medium text-sm">{m.user.name}</p>
-                <p className="text-xs text-gray-400">{m.user.email}</p>
+                <p className="text-xs text-[var(--esl-text-muted)]">{m.user.email}</p>
               </div>
               <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-medium flex items-center gap-1">
                 <Shield className="w-3 h-3" />
@@ -136,19 +136,19 @@ export default function TeamPage() {
       {/* Pending invites */}
       {invites.length > 0 && (
         <div className="mt-6">
-          <h2 className="text-sm font-medium text-gray-500 mb-2">Хүлээгдэж буй урилга</h2>
-          <div className="bg-white rounded-xl border divide-y">
+          <h2 className="text-sm font-medium text-[var(--esl-text-secondary)] mb-2">Хүлээгдэж буй урилга</h2>
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border divide-y">
             {invites.map((inv) => (
               <div key={inv.id} className="flex items-center gap-4 p-4">
-                <Mail className="w-5 h-5 text-gray-400" />
+                <Mail className="w-5 h-5 text-[var(--esl-text-muted)]" />
                 <div className="flex-1">
                   <p className="text-sm font-medium">{inv.email}</p>
-                  <p className="text-xs text-gray-400 flex items-center gap-1">
+                  <p className="text-xs text-[var(--esl-text-muted)] flex items-center gap-1">
                     <Clock className="w-3 h-3" /> {new Date(inv.expiresAt).toLocaleDateString('mn-MN')} хүртэл
                   </p>
                 </div>
-                <span className="text-xs text-gray-500">{ROLE_LABELS[inv.role as keyof typeof ROLE_LABELS] || inv.role}</span>
-                <button onClick={() => cancelInvite(inv.id)} className="text-gray-400 hover:text-red-600">
+                <span className="text-xs text-[var(--esl-text-secondary)]">{ROLE_LABELS[inv.role as keyof typeof ROLE_LABELS] || inv.role}</span>
+                <button onClick={() => cancelInvite(inv.id)} className="text-[var(--esl-text-muted)] hover:text-red-600">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -160,7 +160,7 @@ export default function TeamPage() {
       {/* Invite Modal */}
       {showInvite && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setShowInvite(false)}>
-          <div className="bg-white rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[var(--esl-bg-card)] rounded-xl p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-lg font-bold mb-4">Ажилтан урих</h2>
             <div className="space-y-4">
               <div>

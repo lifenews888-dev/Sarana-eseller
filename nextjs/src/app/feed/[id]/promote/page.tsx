@@ -132,7 +132,7 @@ export default function PromoteListingPage() {
               <p className="text-sm text-[var(--esl-text-secondary)]">Банкны аппаараа QR кодыг уншуулж <b>{invoice.amount.toLocaleString()}₮</b> төлнө үү.</p>
               {invoice.qrImage && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={`data:image/png;base64,${invoice.qrImage}`} alt="QPay QR код" className="mx-auto h-[220px] w-[220px] rounded-xl bg-white p-2" />
+                <img src={`data:image/png;base64,${invoice.qrImage}`} alt="QPay QR код" className="mx-auto h-[220px] w-[220px] rounded-xl bg-[var(--esl-bg-card)] p-2" />
               )}
               {(invoice.urls?.length ?? 0) > 0 && (
                 <div className="grid grid-cols-2 gap-2 text-left">

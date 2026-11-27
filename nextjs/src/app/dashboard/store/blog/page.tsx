@@ -112,7 +112,7 @@ export default function BlogPage() {
           <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Блог</h1>
           <p className="text-[var(--esl-text-secondary)] mt-1">Нийтлэл бичих, засах, удирдах</p>
         </div>
-        <button onClick={openAdd} className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-sm">
+        <button onClick={openAdd} className="px-5 py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors text-sm">
           + Шинэ нийтлэл
         </button>
       </div>
@@ -177,17 +177,17 @@ export default function BlogPage() {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Гарчиг *</label>
-                <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Агуулга *</label>
-                <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={8} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} rows={8} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Зурагны URL</label>
-                <input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
-              <button onClick={handleSave} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+              <button onClick={handleSave} className="w-full py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors">
                 {editingId ? 'Шинэчлэх' : 'Нэмэх'}
               </button>
             </div>

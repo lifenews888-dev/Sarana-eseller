@@ -161,7 +161,7 @@ export default function AdminDisputesPage() {
                       <span className={`px-2 py-0.5 text-xs rounded-full ${
                         d.status === 'OPEN' ? 'bg-yellow-100 text-yellow-700' :
                         d.status === 'RESOLVED' ? 'bg-green-100 text-green-700' :
-                        'bg-gray-100 text-gray-500'
+                        'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]'
                       }`}>
                         {d.status === 'OPEN' ? 'Нээлттэй' : d.status === 'RESOLVED' ? 'Шийдвэрлэсэн' : 'Татгалзсан'}
                       </span>

@@ -81,7 +81,7 @@ export default function InventoryPage() {
   if (!mounted || loading) {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#E8242C] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -152,7 +152,7 @@ export default function InventoryPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-[var(--esl-brand-bg)] flex items-center justify-center">
               <span className="text-lg">📦</span>
             </div>
             <div>
@@ -199,7 +199,7 @@ export default function InventoryPage() {
               onClick={() => setFilter(f.id)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
                 filter === f.id
-                  ? 'bg-indigo-600 text-white'
+                  ? 'bg-[#E8242C] text-white'
                   : 'bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)] hover:bg-[var(--esl-bg-card-hover)]'
               }`}
             >
@@ -252,7 +252,7 @@ export default function InventoryPage() {
                               type="number"
                               value={editValue}
                               onChange={(e) => setEditValue(e.target.value)}
-                              className="w-20 border border-[var(--esl-border-strong)] rounded-lg px-2 py-1 text-sm text-center focus:ring-2 focus:ring-indigo-500 outline-none"
+                              className="w-20 border border-[var(--esl-border-strong)] rounded-lg px-2 py-1 text-sm text-center focus:ring-2 focus:ring-[#E8242C]/40 outline-none"
                               autoFocus
                               onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleStockSave(item.product._id);
@@ -275,7 +275,7 @@ export default function InventoryPage() {
                         ) : (
                           <button
                             onClick={() => handleStockEdit(item.product._id, item.stock)}
-                            className="font-semibold text-[var(--esl-text-primary)] hover:text-indigo-600 hover:bg-indigo-50 px-3 py-1 rounded-lg transition"
+                            className="font-semibold text-[var(--esl-text-primary)] hover:text-[#C41E25] hover:bg-[var(--esl-brand-bg)] px-3 py-1 rounded-lg transition"
                             title="Дарж засах"
                           >
                             {item.stock}
@@ -287,7 +287,7 @@ export default function InventoryPage() {
                           type="number"
                           value={item.minThreshold}
                           onChange={(e) => handleThresholdChange(item.product._id, parseInt(e.target.value) || 0)}
-                          className="w-16 border border-[var(--esl-border)] rounded-lg px-2 py-1 text-sm text-center text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 outline-none"
+                          className="w-16 border border-[var(--esl-border)] rounded-lg px-2 py-1 text-sm text-center text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 outline-none"
                           min={0}
                         />
                       </td>

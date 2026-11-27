@@ -189,7 +189,7 @@ export default function ProductDetailClient({ product, relatedProducts = [] }: P
           </button>
           <Link href="/" className="hidden shrink-0 items-center gap-1 no-underline sm:flex">
             <span className="text-base font-black tracking-tight text-[var(--esl-text-primary)]">
-              eseller<span className="text-[#E31E24]">.mn</span>
+              eseller<span className="text-[#E8242C]">.mn</span>
             </span>
           </Link>
           <div className="min-w-0 flex-1">

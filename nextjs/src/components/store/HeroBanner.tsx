@@ -21,7 +21,7 @@ const DEMO_BANNERS = [
     title: 'Монголын дэлгүүрүүд нэг дор',
     subtitle: 'Бараа хайж, харьцуулж, QPay-ээр аюулгүй төлөөрэй',
     bgColor: '#E8242C',
-    gradient: 'from-[#E31E24] via-[#C41A1F] to-[#8B0000]',
+    gradient: 'from-[#E8242C] via-[#C41E25] to-[#8B0000]',
     linkUrl: '/shops',
     cta: 'Дэлгүүрүүд үзэх',
   },
@@ -138,7 +138,7 @@ export default function HeroBanner({ onSearch }: { onSearch: () => void }) {
               className="flex flex-wrap gap-3"
             >
               <button onClick={onSearch}
-                className="bg-[var(--esl-bg-card)] text-[#E31E24] font-bold px-7 py-3 rounded-xl border-none cursor-pointer text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2">
+                className="bg-[var(--esl-bg-card)] text-[#E8242C] font-bold px-7 py-3 rounded-xl border-none cursor-pointer text-sm hover:shadow-lg hover:-translate-y-0.5 transition-all flex items-center gap-2">
                 <Search className="w-4 h-4" /> Бараа хайх
               </button>
               <a href={current.linkUrl}

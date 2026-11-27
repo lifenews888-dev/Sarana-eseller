@@ -86,7 +86,7 @@ export default function AdminReturnsPage() {
             key={s}
             onClick={() => { setFilter(s); setPage(1); }}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition ${
-              filter === s ? 'bg-blue-900 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              filter === s ? 'bg-blue-900 text-white' : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)] hover:bg-[var(--esl-bg-hover)]'
             }`}
           >
             {s === '' ? 'Бүгд' : s === 'PENDING' ? 'Хүлээгдэж буй' : s === 'APPROVED' ? 'Зөвшөөрсөн' : 'Татгалзсан'}
@@ -95,9 +95,9 @@ export default function AdminReturnsPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl border overflow-hidden">
+      <div className="bg-[var(--esl-bg-card)] rounded-xl border overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-[var(--esl-bg-section)] border-b">
             <tr>
               <th className="text-left px-4 py-3 font-medium">Захиалга</th>
               <th className="text-left px-4 py-3 font-medium">Худалдан авагч</th>
@@ -109,30 +109,30 @@ export default function AdminReturnsPage() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Ачааллаж байна...</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-[var(--esl-text-muted)]">Ачааллаж байна...</td></tr>
             ) : returns.length === 0 ? (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Буцаалт байхгүй</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-[var(--esl-text-muted)]">Буцаалт байхгүй</td></tr>
             ) : (
               returns.map((r) => (
-                <tr key={r.id} className="border-b hover:bg-gray-50">
+                <tr key={r.id} className="border-b hover:bg-[var(--esl-bg-hover)]">
                   <td className="px-4 py-3">
                     <div className="font-medium">#{r.order?.orderNumber || r.orderId.slice(-6)}</div>
-                    <div className="text-xs text-gray-400">{r.order?.total?.toLocaleString()}₮</div>
+                    <div className="text-xs text-[var(--esl-text-muted)]">{r.order?.total?.toLocaleString()}₮</div>
                   </td>
                   <td className="px-4 py-3">
                     <div>{r.buyer?.name}</div>
-                    <div className="text-xs text-gray-400">{r.buyer?.phone}</div>
+                    <div className="text-xs text-[var(--esl-text-muted)]">{r.buyer?.phone}</div>
                   </td>
                   <td className="px-4 py-3">
                     <div>{REASON_LABELS[r.reason] || r.reason}</div>
-                    {r.description && <div className="text-xs text-gray-400 mt-0.5">{r.description}</div>}
+                    {r.description && <div className="text-xs text-[var(--esl-text-muted)] mt-0.5">{r.description}</div>}
                     {r.images.length > 0 && (
                       <button onClick={() => setViewImages(r.images)} className="text-xs text-blue-600 flex items-center gap-1 mt-1">
                         <Eye className="w-3 h-3" /> {r.images.length} зураг
                       </button>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-500">
+                  <td className="px-4 py-3 text-[var(--esl-text-secondary)]">
                     {new Date(r.createdAt).toLocaleDateString('mn-MN')}
                   </td>
                   <td className="px-4 py-3">
@@ -164,7 +164,7 @@ export default function AdminReturnsPage() {
                             >
                               <X className="w-3 h-3" /> Татгалзах
                             </button>
-                            <button onClick={() => setActionId(null)} className="text-xs text-gray-400">Болих</button>
+                            <button onClick={() => setActionId(null)} className="text-xs text-[var(--esl-text-muted)]">Болих</button>
                           </div>
                         </div>
                       ) : (
@@ -173,7 +173,7 @@ export default function AdminReturnsPage() {
                         </button>
                       )
                     )}
-                    {r.adminNote && <div className="text-xs text-gray-400 mt-1">{r.adminNote}</div>}
+                    {r.adminNote && <div className="text-xs text-[var(--esl-text-muted)] mt-1">{r.adminNote}</div>}
                   </td>
                 </tr>
               ))
@@ -198,10 +198,10 @@ export default function AdminReturnsPage() {
       {/* Image viewer modal */}
       {viewImages && (
         <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={() => setViewImages(null)}>
-          <div className="bg-white rounded-xl p-4 max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-[var(--esl-bg-card)] rounded-xl p-4 max-w-2xl w-full max-h-[80vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-3">
               <h3 className="font-medium">Буцаалтын зургууд</h3>
-              <button onClick={() => setViewImages(null)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+              <button onClick={() => setViewImages(null)} className="text-[var(--esl-text-muted)] hover:text-[var(--esl-text-secondary)]"><X className="w-5 h-5" /></button>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {viewImages.map((img, i) => (

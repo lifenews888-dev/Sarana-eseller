@@ -40,7 +40,7 @@ const STATUS_META: Record<string, { label: string; color: string; icon: typeof C
   ACTIVE:    { label: 'Идэвхтэй', color: 'text-blue-600 bg-blue-50', icon: CreditCard },
   COMPLETED: { label: 'Дууссан', color: 'text-green-600 bg-green-50', icon: CheckCircle },
   DEFAULTED: { label: 'Хугацаа хэтэрсэн', color: 'text-red-600 bg-red-50', icon: AlertTriangle },
-  REJECTED:  { label: 'Татгалзсан', color: 'text-gray-600 bg-gray-100', icon: AlertTriangle },
+  REJECTED:  { label: 'Татгалзсан', color: 'text-[var(--esl-text-secondary)] bg-[var(--esl-bg-muted)]', icon: AlertTriangle },
 };
 
 const PAYMENT_COLORS: Record<string, string> = {
@@ -96,15 +96,15 @@ export default function BNPLPage() {
           <CreditCard className="h-5 w-5 text-blue-600" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Зээлээр авах</h1>
-          <p className="text-sm text-gray-500">Таны BNPL хуваарь, төлбөрийн мэдээлэл</p>
+          <h1 className="text-xl font-bold text-[var(--esl-text-primary)]">Зээлээр авах</h1>
+          <p className="text-sm text-[var(--esl-text-secondary)]">Таны BNPL хуваарь, төлбөрийн мэдээлэл</p>
         </div>
       </div>
 
       {apps.length === 0 ? (
-        <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center">
-          <CreditCard className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-          <p className="text-sm text-gray-500">Танд одоогоор BNPL зээл байхгүй байна</p>
+        <div className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-8 text-center">
+          <CreditCard className="mx-auto mb-3 h-12 w-12 text-[var(--esl-text-muted)]" />
+          <p className="text-sm text-[var(--esl-text-secondary)]">Танд одоогоор BNPL зээл байхгүй байна</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -118,15 +118,15 @@ export default function BNPLPage() {
             return (
               <div
                 key={app.id}
-                className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                className="rounded-2xl border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-5 shadow-sm"
               >
                 {/* Status + Order info */}
                 <div className="mb-3 flex items-start justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-[var(--esl-text-primary)]">
                       Захиалга #{app.order.orderNumber || app.order.id.slice(-6)}
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-[var(--esl-text-secondary)]">
                       {app.bank} | {app.months} сар
                     </p>
                   </div>
@@ -139,32 +139,32 @@ export default function BNPLPage() {
                 </div>
 
                 {/* Amount info */}
-                <div className="mb-3 grid grid-cols-3 gap-3 rounded-xl bg-gray-50 p-3">
+                <div className="mb-3 grid grid-cols-3 gap-3 rounded-xl bg-[var(--esl-bg-section)] p-3">
                   <div>
-                    <p className="text-xs text-gray-500">Нийт</p>
+                    <p className="text-xs text-[var(--esl-text-secondary)]">Нийт</p>
                     <p className="text-sm font-semibold">{fmt(app.totalAmount)}₮</p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Сарын</p>
+                    <p className="text-xs text-[var(--esl-text-secondary)]">Сарын</p>
                     <p className="text-sm font-semibold text-blue-600">
                       {fmt(app.monthlyAmount)}₮
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-gray-500">Урьдчилгаа</p>
+                    <p className="text-xs text-[var(--esl-text-secondary)]">Урьдчилгаа</p>
                     <p className="text-sm font-semibold">{fmt(app.downPayment)}₮</p>
                   </div>
                 </div>
 
                 {/* Progress bar */}
                 <div className="mb-3">
-                  <div className="mb-1 flex justify-between text-xs text-gray-500">
+                  <div className="mb-1 flex justify-between text-xs text-[var(--esl-text-secondary)]">
                     <span>Төлбөрийн явц</span>
                     <span>
                       {app.progress.paid}/{app.progress.total} ({progressPct}%)
                     </span>
                   </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-gray-200">
+                  <div className="h-2 overflow-hidden rounded-full bg-[var(--esl-bg-elevated)]">
                     <div
                       className="h-full rounded-full bg-blue-600 transition-all"
                       style={{ width: `${progressPct}%` }}
@@ -178,7 +178,7 @@ export default function BNPLPage() {
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-blue-600" />
                       <div>
-                        <p className="text-xs text-gray-500">Дараагийн төлбөр</p>
+                        <p className="text-xs text-[var(--esl-text-secondary)]">Дараагийн төлбөр</p>
                         <p className="text-sm font-medium">
                           {fmtDate(app.nextPayment.dueDate)} — {fmt(app.nextPayment.amount)}₮
                         </p>
@@ -199,17 +199,17 @@ export default function BNPLPage() {
                   {app.payments.map((p, i) => (
                     <div
                       key={p.id}
-                      className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-gray-50"
+                      className="flex items-center justify-between rounded-lg px-3 py-2 text-sm hover:bg-[var(--esl-bg-hover)]"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-400">#{i + 1}</span>
-                        <span className="text-gray-700">{fmtDate(p.dueDate)}</span>
+                        <span className="text-xs text-[var(--esl-text-muted)]">#{i + 1}</span>
+                        <span className="text-[var(--esl-text-primary)]">{fmtDate(p.dueDate)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{fmt(p.amount)}₮</span>
                         <span
                           className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                            PAYMENT_COLORS[p.status] || 'bg-gray-100 text-gray-600'
+                            PAYMENT_COLORS[p.status] || 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]'
                           }`}
                         >
                           {PAYMENT_LABELS[p.status] || p.status}

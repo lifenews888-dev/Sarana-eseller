@@ -156,7 +156,7 @@ export default function AdminPartnersPage() {
                     <div className="text-xs text-[var(--esl-text-secondary)]">{p.contactName || '-'}</div>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-700">
+                    <span className="px-2 py-0.5 text-xs rounded-full bg-[var(--esl-brand-bg)] text-[#E8242C]">
                       {TYPE_LABELS[p.type] || p.type}
                     </span>
                   </td>
@@ -170,7 +170,7 @@ export default function AdminPartnersPage() {
                       {p.isVerified && (
                         <span className="px-2 py-0.5 text-xs rounded-full bg-green-100 text-green-700">Баталгаажсан</span>
                       )}
-                      <span className={`px-2 py-0.5 text-xs rounded-full ${p.isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`px-2 py-0.5 text-xs rounded-full ${p.isActive ? 'bg-blue-100 text-blue-700' : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]'}`}>
                         {p.isActive ? 'Идэвхтэй' : 'Зогссон'}
                       </span>
                     </div>

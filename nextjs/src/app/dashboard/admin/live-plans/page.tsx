@@ -41,7 +41,7 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  BASIC: "bg-gray-100 text-gray-700",
+  BASIC: "bg-[var(--esl-bg-muted)] text-[var(--esl-text-primary)]",
   STANDARD: "bg-blue-100 text-blue-700",
   PRO: "bg-purple-100 text-purple-700",
   ENTERPRISE: "bg-amber-100 text-amber-700",
@@ -109,8 +109,8 @@ export default function AdminLivePlansPage() {
 
       {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white border rounded-xl p-4">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+        <div className="bg-[var(--esl-bg-card)] border rounded-xl p-4">
+          <div className="flex items-center gap-2 text-[var(--esl-text-secondary)] text-sm mb-1">
             <DollarSign className="w-4 h-4" />
             Сарын орлого
           </div>
@@ -118,22 +118,22 @@ export default function AdminLivePlansPage() {
             {(revenue?.monthlyRevenue || 0).toLocaleString()}₮
           </p>
         </div>
-        <div className="bg-white border rounded-xl p-4">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+        <div className="bg-[var(--esl-bg-card)] border rounded-xl p-4">
+          <div className="flex items-center gap-2 text-[var(--esl-text-secondary)] text-sm mb-1">
             <Video className="w-4 h-4" />
             Идэвхтэй live
           </div>
           <p className="text-2xl font-bold text-red-600">{stats?.activeLives || 0}</p>
         </div>
-        <div className="bg-white border rounded-xl p-4">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+        <div className="bg-[var(--esl-bg-card)] border rounded-xl p-4">
+          <div className="flex items-center gap-2 text-[var(--esl-text-secondary)] text-sm mb-1">
             <Users className="w-4 h-4" />
             Нийт үзэгчид
           </div>
           <p className="text-2xl font-bold">{stats?.totalViewers || 0}</p>
         </div>
-        <div className="bg-white border rounded-xl p-4">
-          <div className="flex items-center gap-2 text-gray-500 text-sm mb-1">
+        <div className="bg-[var(--esl-bg-card)] border rounded-xl p-4">
+          <div className="flex items-center gap-2 text-[var(--esl-text-secondary)] text-sm mb-1">
             <Store className="w-4 h-4" />
             Нийт дэлгүүр
           </div>
@@ -144,43 +144,43 @@ export default function AdminLivePlansPage() {
       </div>
 
       {/* Plan distribution */}
-      <div className="bg-white border rounded-xl p-5 mb-8">
+      <div className="bg-[var(--esl-bg-card)] border rounded-xl p-5 mb-8">
         <h2 className="font-semibold text-lg mb-4">Багц тархалт</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {(["BASIC", "STANDARD", "PRO", "ENTERPRISE"] as const).map((key) => (
             <div key={key} className={`rounded-lg p-4 ${PLAN_COLORS[key].replace("text-", "bg-").split(" ")[0]}`}>
-              <p className="text-sm text-gray-600">{PLAN_LABELS[key]}</p>
+              <p className="text-sm text-[var(--esl-text-secondary)]">{PLAN_LABELS[key]}</p>
               <p className="text-3xl font-bold mt-1">{stats?.plans?.[key] || 0}</p>
-              <p className="text-xs text-gray-500 mt-1">дэлгүүр</p>
+              <p className="text-xs text-[var(--esl-text-secondary)] mt-1">дэлгүүр</p>
             </div>
           ))}
         </div>
       </div>
 
       {/* Shops table */}
-      <div className="bg-white border rounded-xl overflow-hidden">
+      <div className="bg-[var(--esl-bg-card)] border rounded-xl overflow-hidden">
         <div className="p-5 border-b">
           <h2 className="font-semibold text-lg">Дэлгүүрийн жагсаалт</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead className="bg-[var(--esl-bg-section)]">
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Дэлгүүр</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Одоогийн багц</th>
-                <th className="text-center px-4 py-3 font-medium text-gray-600">Энэ сарын live</th>
-                <th className="text-left px-4 py-3 font-medium text-gray-600">Багц өөрчлөх</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--esl-text-secondary)]">Дэлгүүр</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--esl-text-secondary)]">Одоогийн багц</th>
+                <th className="text-center px-4 py-3 font-medium text-[var(--esl-text-secondary)]">Энэ сарын live</th>
+                <th className="text-left px-4 py-3 font-medium text-[var(--esl-text-secondary)]">Багц өөрчлөх</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {(stats?.shops || []).map((shop) => (
-                <tr key={shop.id} className="hover:bg-gray-50">
+                <tr key={shop.id} className="hover:bg-[var(--esl-bg-hover)]">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {shop.logo ? (
                         <img src={shop.logo} alt="" className="w-8 h-8 rounded-full object-cover" />
                       ) : (
-                        <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-xs font-bold text-gray-500">
+                        <div className="w-8 h-8 rounded-full bg-[var(--esl-bg-elevated)] flex items-center justify-center text-xs font-bold text-[var(--esl-text-secondary)]">
                           {shop.name?.charAt(0)}
                         </div>
                       )}
@@ -211,7 +211,7 @@ export default function AdminLivePlansPage() {
               ))}
               {(stats?.shops || []).length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                  <td colSpan={4} className="px-4 py-8 text-center text-[var(--esl-text-muted)]">
                     Дэлгүүр олдсонгүй
                   </td>
                 </tr>

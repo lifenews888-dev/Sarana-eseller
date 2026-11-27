@@ -61,7 +61,7 @@ export default function PackagePage() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#E8242C] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -97,7 +97,7 @@ export default function PackagePage() {
       </div>
 
       {requested && (
-        <div id="plan-upgrade-help" role="status" className="rounded-xl border border-indigo-500/40 bg-indigo-500/10 p-5 mb-6 text-sm text-[var(--esl-text-primary)]">
+        <div id="plan-upgrade-help" role="status" className="rounded-xl border border-[#E8242C]/40 bg-[#E8242C]/10 p-5 mb-6 text-sm text-[var(--esl-text-primary)]">
           <p className="font-bold mb-1">
             {PLANS.find((p) => p.id === requested)?.name} багц идэвхжүүлэх
             ({formatPrice(yearly ? PLANS.find((p) => p.id === requested)?.yearlyPrice ?? 0 : PLANS.find((p) => p.id === requested)?.price ?? 0)}{yearly ? '/жил' : '/сар'})
@@ -150,7 +150,7 @@ export default function PackagePage() {
           <button
             onClick={() => setYearly(false)}
             className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors ${
-              !yearly ? 'bg-indigo-600 text-white' : 'text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]'
+              !yearly ? 'bg-[#E8242C] text-white' : 'text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]'
             }`}
           >
             Сарын
@@ -158,7 +158,7 @@ export default function PackagePage() {
           <button
             onClick={() => setYearly(true)}
             className={`px-5 py-2 rounded-lg text-sm font-semibold transition-colors flex items-center gap-2 ${
-              yearly ? 'bg-indigo-600 text-white' : 'text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]'
+              yearly ? 'bg-[#E8242C] text-white' : 'text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]'
             }`}
           >
             Жилийн
@@ -267,7 +267,7 @@ export default function PackagePage() {
                       : isAIPro
                       ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:from-pink-600 hover:to-purple-700 shadow-md'
                       : p.id === 'standard'
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700'
+                      ? 'bg-[#E8242C] text-white hover:bg-[#C41E25]'
                       : p.id === 'ultimate'
                       ? 'bg-amber-600 text-white hover:bg-amber-700'
                       : 'bg-[var(--esl-text-primary)] text-[var(--esl-bg-card)] hover:opacity-80'

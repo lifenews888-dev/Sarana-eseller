@@ -334,7 +334,7 @@ export default function CheckoutPage() {
                   </div>
                 ) : qpayInfo?.qrImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`data:image/png;base64,${qpayInfo.qrImage}`} alt="QPay QR код" className="mx-auto w-[220px] h-[220px] rounded-xl bg-white p-2" />
+                  <img src={`data:image/png;base64,${qpayInfo.qrImage}`} alt="QPay QR код" className="mx-auto w-[220px] h-[220px] rounded-xl bg-[var(--esl-bg-card)] p-2" />
                 ) : (
                   <div className="mx-auto w-[200px] h-[200px] rounded-xl bg-[var(--esl-bg-elevated)] border border-[var(--esl-border)] flex items-center justify-center text-center px-4">
                     <span className="text-[var(--esl-text-muted)] font-medium text-sm">QR код үүсгэж чадсангүй. «Төлбөр шалгах» дарж дахин оролдоно уу.</span>

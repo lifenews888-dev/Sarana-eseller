@@ -17,32 +17,32 @@ export default async function ShopAboutPage({ params }: Props) {
 
       <div className="space-y-6">
         {/* Contact Info */}
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6">
           <h2 className="text-lg font-semibold mb-4">Холбоо барих</h2>
           <div className="space-y-3 text-sm">
             {config.phone && (
               <div className="flex items-center gap-3">
-                <span className="text-gray-400">📞</span>
+                <span className="text-[var(--esl-text-muted)]">📞</span>
                 <a href={`tel:${config.phone}`} className="text-blue-600 no-underline">{config.phone}</a>
               </div>
             )}
             {config.address && (
               <div className="flex items-center gap-3">
-                <span className="text-gray-400">📍</span>
+                <span className="text-[var(--esl-text-muted)]">📍</span>
                 <span>{config.address}</span>
               </div>
             )}
             <div className="flex items-center gap-3">
-              <span className="text-gray-400">🌐</span>
+              <span className="text-[var(--esl-text-muted)]">🌐</span>
               <span>{config.slug}.eseller.mn</span>
             </div>
           </div>
         </div>
 
         {/* Plan badge */}
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6">
           <h2 className="text-lg font-semibold mb-2">Баталгаажсан дэлгүүр</h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-[var(--esl-text-secondary)]">
             Энэ дэлгүүр eseller.mn Enterprise ({config.plan}) багцын гишүүн юм.
             Бүх захиалга eseller.mn-ийн escrow системээр хамгаалагдсан.
           </p>

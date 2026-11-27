@@ -29,7 +29,7 @@ export default class ErrorBoundary extends Component<Props, State> {
             Хуудас ачааллахад алдаа гарлаа. Дахин оролдоно уу.
           </p>
           <button onClick={() => { this.setState({ hasError: false }); window.location.reload(); }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition border-none cursor-pointer">
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#E8242C] text-white rounded-xl text-sm font-semibold hover:bg-[#C41E25] transition border-none cursor-pointer">
             <RefreshCw className="w-4 h-4" /> Дахин оролдох
           </button>
         </div>

@@ -118,7 +118,7 @@ export default function AdminAgentsPage() {
                             <Shield size={10} /> Баталгаажсан
                           </span>
                         )}
-                        <span className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${a.isActive ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-500'}`}>
+                        <span className={`flex items-center gap-1 px-2 py-0.5 text-xs rounded-full ${a.isActive ? 'bg-blue-100 text-blue-700' : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]'}`}>
                           {a.isActive ? <CheckCircle size={10} /> : <XCircle size={10} />}
                           {a.isActive ? 'Идэвхтэй' : 'Зогссон'}
                         </span>

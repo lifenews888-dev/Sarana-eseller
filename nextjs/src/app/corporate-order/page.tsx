@@ -40,36 +40,36 @@ export default function CorporateOrderPage() {
 
   if (done) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--esl-bg-section)]">
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Хүсэлт илгээгдлээ!</h1>
-          <p className="text-gray-500">Бид тантай 24 цагийн дотор холбогдоно.</p>
+          <p className="text-[var(--esl-text-secondary)]">Бид тантай 24 цагийн дотор холбогдоно.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[var(--esl-bg-section)] py-8 px-4">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <Building2 className="w-7 h-7 text-blue-900" />
           <div>
             <h1 className="text-2xl font-bold">Байгууллагын захиалга</h1>
-            <p className="text-sm text-gray-500">B2B бөөний захиалга</p>
+            <p className="text-sm text-[var(--esl-text-secondary)]">B2B бөөний захиалга</p>
           </div>
         </div>
 
         {/* Progress */}
         <div className="flex gap-2 mb-6">
           {[1, 2, 3].map((s) => (
-            <div key={s} className={`h-1 flex-1 rounded-full ${s <= step ? 'bg-blue-900' : 'bg-gray-200'}`} />
+            <div key={s} className={`h-1 flex-1 rounded-full ${s <= step ? 'bg-blue-900' : 'bg-[var(--esl-bg-elevated)]'}`} />
           ))}
         </div>
 
         {step === 1 && (
-          <div className="bg-white rounded-xl border p-6 space-y-4">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6 space-y-4">
             <h2 className="font-semibold">Компанийн мэдээлэл</h2>
             <div>
               <label className="block text-sm font-medium mb-1">Компанийн нэр</label>
@@ -92,7 +92,7 @@ export default function CorporateOrderPage() {
         )}
 
         {step === 2 && (
-          <div className="bg-white rounded-xl border p-6 space-y-4">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6 space-y-4">
             <h2 className="font-semibold flex items-center gap-2"><Truck className="w-5 h-5" /> Хүргэлтийн мэдээлэл</h2>
             <div>
               <label className="block text-sm font-medium mb-1">Хүлээн авах хаяг</label>
@@ -119,7 +119,7 @@ export default function CorporateOrderPage() {
         )}
 
         {step === 3 && (
-          <div className="bg-white rounded-xl border p-6 space-y-4">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6 space-y-4">
             <h2 className="font-semibold flex items-center gap-2"><FileText className="w-5 h-5" /> Төлбөрийн мэдээлэл</h2>
             <div>
               <label className="block text-sm font-medium mb-2">Төлбөрийн арга</label>
@@ -143,11 +143,11 @@ export default function CorporateOrderPage() {
             </div>
 
             {/* Summary */}
-            <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-1">
-              <p><span className="text-gray-500">Компани:</span> {companyName}</p>
-              <p><span className="text-gray-500">Регистр:</span> {regNumber}</p>
-              <p><span className="text-gray-500">Хаяг:</span> {address}</p>
-              <p><span className="text-gray-500">Хуваарь:</span> 7 хоногт {schedule} удаа</p>
+            <div className="bg-[var(--esl-bg-section)] rounded-lg p-4 text-sm space-y-1">
+              <p><span className="text-[var(--esl-text-secondary)]">Компани:</span> {companyName}</p>
+              <p><span className="text-[var(--esl-text-secondary)]">Регистр:</span> {regNumber}</p>
+              <p><span className="text-[var(--esl-text-secondary)]">Хаяг:</span> {address}</p>
+              <p><span className="text-[var(--esl-text-secondary)]">Хуваарь:</span> 7 хоногт {schedule} удаа</p>
             </div>
 
             <div className="flex gap-2">

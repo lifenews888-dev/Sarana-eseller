@@ -11,10 +11,10 @@ import {
 const STATUS_CONFIG: Record<AppointmentStatus, { label: string; bg: string; text: string }> = {
   pending: { label: '⏳ Хүлээгдэж буй', bg: 'bg-amber-50', text: 'text-amber-600' },
   confirmed: { label: '✅ Баталгаажсан', bg: 'bg-blue-50', text: 'text-blue-600' },
-  in_progress: { label: '🔄 Явагдаж буй', bg: 'bg-indigo-50', text: 'text-indigo-600' },
+  in_progress: { label: '🔄 Явагдаж буй', bg: 'bg-[var(--esl-brand-bg)]', text: 'text-[#E8242C]' },
   completed: { label: '✓ Дууссан', bg: 'bg-emerald-50', text: 'text-emerald-600' },
   cancelled: { label: '✕ Цуцлагдсан', bg: 'bg-red-50', text: 'text-red-500' },
-  no_show: { label: '👤 Ирээгүй', bg: 'bg-slate-100', text: 'text-slate-500' },
+  no_show: { label: '👤 Ирээгүй', bg: 'bg-[var(--esl-bg-muted)]', text: 'text-[var(--esl-text-secondary)]' },
 };
 
 const FILTER_STATUSES = ['all', 'pending', 'confirmed', 'in_progress', 'completed', 'cancelled'] as const;
@@ -146,7 +146,7 @@ export default function AppointmentsPage() {
                           </>
                         )}
                         {a.status === 'confirmed' && (
-                          <button onClick={() => updateStatus(a._id, 'in_progress')} className="w-7 h-7 rounded-lg bg-indigo-50 border-none cursor-pointer flex items-center justify-center text-indigo-600 hover:bg-indigo-100 transition" title="Эхлүүлэх">
+                          <button onClick={() => updateStatus(a._id, 'in_progress')} className="w-7 h-7 rounded-lg bg-[var(--esl-brand-bg)] border-none cursor-pointer flex items-center justify-center text-[#E8242C] hover:bg-[var(--esl-brand-bg)] transition" title="Эхлүүлэх">
                             <Play className="w-3.5 h-3.5" />
                           </button>
                         )}

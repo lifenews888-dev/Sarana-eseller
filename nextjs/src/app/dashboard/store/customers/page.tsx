@@ -70,11 +70,11 @@ export default function CustomersPage() {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
         <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-8 mb-6">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-8 w-48 bg-[var(--esl-bg-elevated)] rounded animate-pulse mb-2" />
           <div className="h-4 w-72 bg-[var(--esl-bg-section)] rounded animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {[1, 2, 3].map((i) => <div key={i} className="h-28 bg-gray-200 rounded-2xl animate-pulse" />)}
+          {[1, 2, 3].map((i) => <div key={i} className="h-28 bg-[var(--esl-bg-elevated)] rounded-2xl animate-pulse" />)}
         </div>
       </div>
     );
@@ -102,7 +102,7 @@ export default function CustomersPage() {
           placeholder="Харилцагч хайх..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full max-w-md px-4 py-2.5 border border-[var(--esl-border)] rounded-lg bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full max-w-md px-4 py-2.5 border border-[var(--esl-border)] rounded-lg bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
         />
       </div>
 
@@ -133,7 +133,7 @@ export default function CustomersPage() {
                     <td className="p-4 text-sm text-[var(--esl-text-muted)]">{i + 1}</td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold">
+                        <div className="w-9 h-9 rounded-full bg-[var(--esl-brand-bg)] text-[#E8242C] flex items-center justify-center text-sm font-bold">
                           {c.name.charAt(0)}
                         </div>
                         <span className="text-sm font-medium text-[var(--esl-text-primary)]">{c.name}</span>

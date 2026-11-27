@@ -73,7 +73,7 @@ export default function PromotionsPage() {
           <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Урамшуулал</h1>
           <p className="text-[var(--esl-text-secondary)] mt-1">Хямдралын код үүсгэх, удирдах</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-sm">
+        <button onClick={() => setShowModal(true)} className="px-5 py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors text-sm">
           + Шинэ код
         </button>
       </div>
@@ -108,7 +108,7 @@ export default function PromotionsPage() {
               <tbody>
                 {promos.map((p) => (
                   <tr key={p.id} className="border-b border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]">
-                    <td className="p-4 font-mono text-sm font-bold text-indigo-600">{p.code}</td>
+                    <td className="p-4 font-mono text-sm font-bold text-[#E8242C]">{p.code}</td>
                     <td className="p-4 text-sm font-semibold text-[var(--esl-text-primary)]">{p.percentage}%</td>
                     <td className="p-4 text-sm text-[var(--esl-text-primary)]">{formatPrice(p.minOrder)}</td>
                     <td className="p-4 text-sm text-[var(--esl-text-secondary)]">{new Date(p.expiryDate).toLocaleDateString('mn-MN')}</td>
@@ -144,21 +144,21 @@ export default function PromotionsPage() {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Код</label>
-                <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="SUMMER20" className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] font-mono uppercase focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} placeholder="SUMMER20" className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] font-mono uppercase focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Хөнгөлөлт (%)</label>
-                <input type="number" value={form.percentage} onChange={(e) => setForm({ ...form, percentage: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" value={form.percentage} onChange={(e) => setForm({ ...form, percentage: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Хамгийн бага захиалга</label>
-                <input type="number" value={form.minOrder} onChange={(e) => setForm({ ...form, minOrder: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" value={form.minOrder} onChange={(e) => setForm({ ...form, minOrder: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Дуусах огноо</label>
-                <input type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
-              <button onClick={handleCreate} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+              <button onClick={handleCreate} className="w-full py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors">
                 Үүсгэх
               </button>
             </div>

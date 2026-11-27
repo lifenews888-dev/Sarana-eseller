@@ -161,7 +161,7 @@ export default function TryOnEditor({ product, onClose, onSaved }: Props) {
             {!!product.images?.length && (
               <div className="flex flex-wrap gap-2">
                 {product.images.slice(0, 6).map((u) => (
-                  <button key={u} type="button" onClick={() => loadImage(u)} className="h-14 w-14 cursor-pointer overflow-hidden rounded-lg border border-[var(--esl-border)] bg-white p-0" aria-label="Барааны зургаас сонгох">
+                  <button key={u} type="button" onClick={() => loadImage(u)} className="h-14 w-14 cursor-pointer overflow-hidden rounded-lg border border-[var(--esl-border)] bg-[var(--esl-bg-card)] p-0" aria-label="Барааны зургаас сонгох">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={u} alt="" className="h-full w-full object-cover" />
                   </button>

@@ -137,7 +137,7 @@ export default function ModalBody({ product, qty, setQty, onAddToCart, isAffilia
 
         {/* Price */}
         <div className="flex items-baseline gap-3 mb-4">
-          <span className="text-2xl font-black text-[#E31E24]">{formatPrice(basePrice)}</span>
+          <span className="text-2xl font-black text-[#E8242C]">{formatPrice(basePrice)}</span>
           {disc > 0 && <span className="text-sm text-[var(--esl-text-muted)] line-through">{formatPrice(product.price)}</span>}
         </div>
 
@@ -151,7 +151,7 @@ export default function ModalBody({ product, qty, setQty, onAddToCart, isAffilia
             <div className="flex items-center gap-1.5 mb-2">
               <span className="text-sm font-semibold text-[var(--esl-text-primary)]">{group.name}</span>
               {group.required
-                ? <span className="text-[10px] text-[#E31E24] font-semibold">• Заавал</span>
+                ? <span className="text-[10px] text-[#E8242C] font-semibold">• Заавал</span>
                 : <span className="text-[10px] text-[var(--esl-text-muted)]">• Сонголттой</span>}
               {group.multiple && <span className="text-[10px] text-[var(--esl-text-muted)]">• Олон сонгож болно</span>}
             </div>
@@ -161,7 +161,7 @@ export default function ModalBody({ product, qty, setQty, onAddToCart, isAffilia
                 return (
                   <button key={option.id} onClick={() => handleModifierSelect(group, option)}
                     className={cn('px-3.5 py-2 rounded-full text-sm font-medium border transition-all cursor-pointer',
-                      isSelected ? 'bg-[#E31E24] text-white border-[#E31E24]' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border-[var(--esl-border)] hover:border-[#E31E24]')}>
+                      isSelected ? 'bg-[#E8242C] text-white border-[#E8242C]' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border-[var(--esl-border)] hover:border-[#E8242C]')}>
                     {option.name}
                     {option.price > 0 && <span className="ml-1 text-xs opacity-75">+{formatPrice(option.price)}</span>}
                   </button>
@@ -181,17 +181,17 @@ export default function ModalBody({ product, qty, setQty, onAddToCart, isAffilia
                 return (
                   <div key={addon.id} onClick={() => !selected && handleAddOnToggle(addon)}
                     className={cn('shrink-0 w-24 p-2.5 rounded-xl border cursor-pointer transition-all text-center',
-                      selected ? 'border-[#E31E24] bg-red-50' : 'border-[var(--esl-border)] hover:border-[#E31E24] bg-[var(--esl-bg-card)]')}>
+                      selected ? 'border-[#E8242C] bg-red-50' : 'border-[var(--esl-border)] hover:border-[#E8242C] bg-[var(--esl-bg-card)]')}>
                     <div className="text-2xl mb-1">{addon.image ? '📦' : '🎁'}</div>
                     <p className="text-xs text-[var(--esl-text-secondary)] font-medium truncate">{addon.name}</p>
-                    <p className="text-xs text-[#E31E24] font-bold">+{formatPrice(addon.price)}</p>
+                    <p className="text-xs text-[#E8242C] font-bold">+{formatPrice(addon.price)}</p>
                     {selected && (
                       <div className="mt-1.5 flex items-center justify-center gap-1">
                         <button onClick={(e) => { e.stopPropagation(); updateAddOnQty(addon.id, -1); }}
-                          className="w-5 h-5 rounded-full bg-[#E31E24] text-white text-[10px] font-bold flex items-center justify-center border-none cursor-pointer">−</button>
+                          className="w-5 h-5 rounded-full bg-[#E8242C] text-white text-[10px] font-bold flex items-center justify-center border-none cursor-pointer">−</button>
                         <span className="text-xs font-bold min-w-[16px] text-center">{selected.qty}</span>
                         <button onClick={(e) => { e.stopPropagation(); updateAddOnQty(addon.id, 1); }}
-                          className="w-5 h-5 rounded-full bg-[#E31E24] text-white text-[10px] font-bold flex items-center justify-center border-none cursor-pointer">+</button>
+                          className="w-5 h-5 rounded-full bg-[#E8242C] text-white text-[10px] font-bold flex items-center justify-center border-none cursor-pointer">+</button>
                       </div>
                     )}
                   </div>
@@ -240,7 +240,7 @@ export default function ModalBody({ product, qty, setQty, onAddToCart, isAffilia
           onClick={() => canAdd && onAddToCart(selectedModifiers, selectedAddOns)}
           disabled={!canAdd}
           className={cn('w-full py-3.5 rounded-xl font-bold text-sm border-none cursor-pointer transition-all flex items-center justify-center gap-2',
-            canAdd ? 'bg-[#E31E24] text-white shadow-[0_4px_12px_rgba(227,30,36,.25)] hover:bg-[#C41A1F]' : 'bg-[#E2E8F0] text-[var(--esl-text-muted)] cursor-not-allowed')}
+            canAdd ? 'bg-[#E8242C] text-white shadow-[0_4px_12px_rgba(227,30,36,.25)] hover:bg-[#C41E25]' : 'bg-[#E2E8F0] text-[var(--esl-text-muted)] cursor-not-allowed')}
         >
           {canAdd ? <><ShoppingCart className="w-4 h-4" /> Сагсанд нэмэх — {formatPrice(grandTotal)}</> : 'Заавал сонголтоо хийнэ үү'}
         </button>

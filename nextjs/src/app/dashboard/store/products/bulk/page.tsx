@@ -68,7 +68,7 @@ export default function BulkUploadPage() {
           <p className="text-xs text-[var(--esl-text-muted)] mt-0.5">name, price, saleprice, description, images, stock, category, active</p>
         </div>
         <button onClick={downloadTemplate}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-indigo-600 text-white border-none cursor-pointer hover:bg-indigo-700 transition">
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#E8242C] text-white border-none cursor-pointer hover:bg-[#C41E25] transition">
           <Download size={14} /> Загвар татах
         </button>
       </div>

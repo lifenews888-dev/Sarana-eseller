@@ -189,7 +189,7 @@ export default function AIAnalyticsPage() {
           </div>
           <p className="text-3xl font-black text-[var(--esl-text-primary)]">14:00-18:00</p>
           <p className="text-sm text-[var(--esl-text-secondary)] mt-1">Захиалгын 65% энэ цагт ирдэг</p>
-          <div className="mt-3 bg-indigo-50 text-indigo-700 text-xs px-3 py-1.5 rounded-lg">
+          <div className="mt-3 bg-[var(--esl-brand-bg)] text-[#E8242C] text-xs px-3 py-1.5 rounded-lg">
             Зөвлөмж: Энэ цагт промо мэдэгдэл илгээ
           </div>
         </div>

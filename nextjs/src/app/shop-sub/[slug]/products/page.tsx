@@ -64,7 +64,7 @@ export default async function ShopProductsPage({ params, searchParams }: Props) 
         <div className="flex gap-2 flex-wrap">
           <Link
             href={`/shop-sub/${slug}/products`}
-            className={`px-3 py-1.5 rounded-lg text-sm no-underline ${!category ? 'text-white' : 'bg-gray-100 text-gray-600'}`}
+            className={`px-3 py-1.5 rounded-lg text-sm no-underline ${!category ? 'text-white' : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]'}`}
             style={!category ? { background: config.primaryColor } : undefined}
           >
             Бүгд
@@ -73,7 +73,7 @@ export default async function ShopProductsPage({ params, searchParams }: Props) 
             <Link
               key={cat}
               href={`/shop-sub/${slug}/products?category=${cat}`}
-              className={`px-3 py-1.5 rounded-lg text-sm no-underline ${category === cat ? 'text-white' : 'bg-gray-100 text-gray-600'}`}
+              className={`px-3 py-1.5 rounded-lg text-sm no-underline ${category === cat ? 'text-white' : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]'}`}
               style={category === cat ? { background: config.primaryColor } : undefined}
             >
               {cat}
@@ -84,16 +84,16 @@ export default async function ShopProductsPage({ params, searchParams }: Props) 
 
       {/* Products Grid */}
       {products.length === 0 ? (
-        <p className="text-center text-gray-400 py-16">Бараа олдсонгүй</p>
+        <p className="text-center text-[var(--esl-text-muted)] py-16">Бараа олдсонгүй</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {products.map((product) => (
             <Link
               key={product.id}
               href={`/shop-sub/${slug}/products/${product.id}`}
-              className="bg-white rounded-xl border overflow-hidden hover:shadow-lg transition group no-underline"
+              className="bg-[var(--esl-bg-card)] rounded-xl border overflow-hidden hover:shadow-lg transition group no-underline"
             >
-              <div className="aspect-square bg-gray-100 overflow-hidden">
+              <div className="aspect-square bg-[var(--esl-bg-muted)] overflow-hidden">
                 {product.images?.[0] ? (
                   <SafeImage src={product.images[0]} alt={product.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition" />
@@ -104,7 +104,7 @@ export default async function ShopProductsPage({ params, searchParams }: Props) 
                 )}
               </div>
               <div className="p-3">
-                <p className="text-sm font-medium text-gray-900 line-clamp-2">{product.name}</p>
+                <p className="text-sm font-medium text-[var(--esl-text-primary)] line-clamp-2">{product.name}</p>
                 <span className="text-base font-bold" style={{ color: config.accentColor }}>
                   {(product.salePrice || product.price).toLocaleString()}₮
                 </span>

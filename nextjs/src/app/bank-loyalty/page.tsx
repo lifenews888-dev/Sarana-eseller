@@ -64,13 +64,13 @@ export default function BankLoyaltyPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[var(--esl-bg-section)] py-8 px-4">
       <div className="max-w-lg mx-auto">
         <div className="flex items-center gap-3 mb-6">
           <Building2 className="w-7 h-7 text-blue-900" />
           <div>
             <h1 className="text-2xl font-bold">Банкны оноо хөрвүүлэх</h1>
-            <p className="text-sm text-gray-500">Банкны оноогоо eseller оноо болго</p>
+            <p className="text-sm text-[var(--esl-text-secondary)]">Банкны оноогоо eseller оноо болго</p>
           </div>
         </div>
 
@@ -81,17 +81,17 @@ export default function BankLoyaltyPage() {
               key={b.id}
               onClick={() => { setBank(b.id); setBankPoints(null); setResult(null); }}
               className={`p-4 rounded-xl border-2 transition text-left ${
-                bank === b.id ? 'border-blue-900 bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'
+                bank === b.id ? 'border-blue-900 bg-blue-50' : 'border-[var(--esl-border)] bg-[var(--esl-bg-card)] hover:border-[var(--esl-border)]'
               }`}
             >
               <div className="font-semibold text-sm">{b.name}</div>
-              <div className="text-xs text-gray-400 mt-1">1 оноо = {b.rate} eseller</div>
+              <div className="text-xs text-[var(--esl-text-muted)] mt-1">1 оноо = {b.rate} eseller</div>
             </button>
           ))}
         </div>
 
         {bank && (
-          <div className="bg-white rounded-xl border p-6 mb-4">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6 mb-4">
             <label className="block text-sm font-medium mb-2">Картын дугаар</label>
             <div className="flex gap-2">
               <input
@@ -113,15 +113,15 @@ export default function BankLoyaltyPage() {
         )}
 
         {bankPoints !== null && selectedBank && (
-          <div className="bg-white rounded-xl border p-6 mb-4">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6 mb-4">
             <div className="text-center mb-4">
-              <p className="text-sm text-gray-500">{selectedBank.name} оноо</p>
+              <p className="text-sm text-[var(--esl-text-secondary)]">{selectedBank.name} оноо</p>
               <p className="text-3xl font-bold" style={{ color: selectedBank.color }}>
                 {bankPoints.toLocaleString()}
               </p>
             </div>
 
-            <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3 mb-4 p-3 bg-[var(--esl-bg-section)] rounded-lg">
               <div className="text-center flex-1">
                 <input
                   value={convertAmount}
@@ -129,14 +129,14 @@ export default function BankLoyaltyPage() {
                   placeholder="0"
                   className="w-full text-center text-2xl font-bold border-none bg-transparent outline-none"
                 />
-                <p className="text-xs text-gray-400">{selectedBank.name} оноо</p>
+                <p className="text-xs text-[var(--esl-text-muted)]">{selectedBank.name} оноо</p>
               </div>
-              <ArrowRight className="w-5 h-5 text-gray-400" />
+              <ArrowRight className="w-5 h-5 text-[var(--esl-text-muted)]" />
               <div className="text-center flex-1">
                 <p className="text-2xl font-bold text-green-600">
                   {Math.floor((parseInt(convertAmount) || 0) * selectedBank.rate).toLocaleString()}
                 </p>
-                <p className="text-xs text-gray-400">eseller оноо</p>
+                <p className="text-xs text-[var(--esl-text-muted)]">eseller оноо</p>
               </div>
             </div>
 

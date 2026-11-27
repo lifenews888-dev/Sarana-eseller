@@ -84,7 +84,7 @@ export default function HerderLandingPage() {
           <div className="flex flex-wrap gap-4">
             <Link
               href="#products"
-              className="inline-flex items-center gap-2 bg-white text-emerald-800 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition-colors"
+              className="inline-flex items-center gap-2 bg-[var(--esl-bg-card)] text-emerald-800 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition-colors"
             >
               <Search className="w-5 h-5" />
               Бүтээгдэхүүн үзэх
@@ -101,7 +101,7 @@ export default function HerderLandingPage() {
       </section>
 
       {/* ═══ Trust badges ═══ */}
-      <section className="bg-white border-b">
+      <section className="bg-[var(--esl-bg-card)] border-b">
         <div className="max-w-6xl mx-auto px-4 py-6 flex flex-wrap justify-center gap-8 text-sm text-stone-600">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-emerald-600" />
@@ -147,7 +147,7 @@ export default function HerderLandingPage() {
             <Link
               key={prov.code}
               href={`/herder/${prov.code}`}
-              className="group bg-white border border-stone-200 rounded-xl p-4 hover:border-emerald-400 hover:shadow-md transition-all"
+              className="group bg-[var(--esl-bg-card)] border border-stone-200 rounded-xl p-4 hover:border-emerald-400 hover:shadow-md transition-all"
             >
               <div className="flex items-center gap-2 mb-1">
                 <MapPin className="w-4 h-4 text-emerald-600" />
@@ -170,7 +170,7 @@ export default function HerderLandingPage() {
             className={`flex items-center gap-2 px-5 py-2.5 rounded-full border font-medium transition-all ${
               !selectedCategory
                 ? 'bg-emerald-600 text-white border-emerald-600'
-                : 'bg-white text-stone-700 border-stone-200 hover:border-emerald-400'
+                : 'bg-[var(--esl-bg-card)] text-stone-700 border-stone-200 hover:border-emerald-400'
             }`}
           >
             Бүгд
@@ -182,7 +182,7 @@ export default function HerderLandingPage() {
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full border font-medium capitalize transition-all ${
                 selectedCategory === cat
                   ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white text-stone-700 border-stone-200 hover:border-emerald-400'
+                  : 'bg-[var(--esl-bg-card)] text-stone-700 border-stone-200 hover:border-emerald-400'
               }`}
             >
               {CATEGORY_ICONS[cat]}
@@ -211,7 +211,7 @@ export default function HerderLandingPage() {
             {featured.map(product => (
               <div
                 key={product.id}
-                className="bg-white rounded-xl border border-stone-200 overflow-hidden hover:shadow-lg transition-shadow"
+                className="bg-[var(--esl-bg-card)] rounded-xl border border-stone-200 overflow-hidden hover:shadow-lg transition-shadow"
               >
                 {/* Product image */}
                 <div className="aspect-square bg-stone-100 relative">
@@ -286,7 +286,7 @@ export default function HerderLandingPage() {
           </p>
           <Link
             href="/become-seller"
-            className="inline-flex items-center gap-2 bg-white text-emerald-800 px-8 py-4 rounded-xl font-bold text-lg hover:bg-emerald-50 transition-colors"
+            className="inline-flex items-center gap-2 bg-[var(--esl-bg-card)] text-emerald-800 px-8 py-4 rounded-xl font-bold text-lg hover:bg-emerald-50 transition-colors"
           >
             Бүртгүүлэх
             <ChevronRight className="w-5 h-5" />

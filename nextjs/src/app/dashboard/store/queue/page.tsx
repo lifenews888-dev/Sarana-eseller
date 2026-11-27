@@ -22,7 +22,7 @@ const STATUS_CLASS: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
   confirmed: 'bg-green-100 text-green-700',
   ready: 'bg-blue-100 text-blue-700',
-  cancelled: 'bg-gray-100 text-gray-600',
+  cancelled: 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]',
 };
 
 export default function QueuePage() {
@@ -50,21 +50,21 @@ export default function QueuePage() {
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-6">Захиалгын дараалал</h1>
       {loading ? (
-        <div className="animate-pulse h-40 bg-gray-100 rounded-xl" />
+        <div className="animate-pulse h-40 bg-[var(--esl-bg-muted)] rounded-xl" />
       ) : orders.length === 0 ? (
-        <div className="text-center py-20 text-gray-400">
+        <div className="text-center py-20 text-[var(--esl-text-muted)]">
           <p className="text-lg">Одоогоор захиалга байхгүй байна</p>
         </div>
       ) : (
         <div className="space-y-3">
           {orders.map((order) => (
-            <div key={order._id} className="bg-white rounded-xl border p-4 flex items-center justify-between">
+            <div key={order._id} className="bg-[var(--esl-bg-card)] rounded-xl border p-4 flex items-center justify-between">
               <div>
                 <p className="font-semibold">{order.customerName}</p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--esl-text-secondary)]">
                   {order.product} — {order.quantity}ш
                 </p>
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-[var(--esl-text-muted)]">
                   {new Date(order.createdAt).toLocaleDateString('mn-MN')}
                 </p>
               </div>

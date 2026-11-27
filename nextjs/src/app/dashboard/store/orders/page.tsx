@@ -34,7 +34,7 @@ const LIGHT_STATUS: Record<string, string> = {
   pending: 'bg-amber-100 text-amber-700',
   confirmed: 'bg-green-100 text-green-700',
   preparing: 'bg-orange-100 text-orange-700',
-  ready: 'bg-indigo-100 text-indigo-700',
+  ready: 'bg-[var(--esl-brand-bg)] text-[#E8242C]',
   delivering: 'bg-blue-100 text-blue-700',
   shipped: 'bg-blue-100 text-blue-700',
   delivered: 'bg-emerald-100 text-emerald-700',
@@ -188,7 +188,7 @@ export default function OrdersPage() {
                     className="border-b border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)] cursor-pointer transition-colors"
                     onClick={() => setSelectedOrder(order)}
                   >
-                    <td className="p-4 font-mono text-sm font-semibold text-indigo-600">
+                    <td className="p-4 font-mono text-sm font-semibold text-[#E8242C]">
                       {order.orderNumber || order._id.slice(-6).toUpperCase()}
                     </td>
                     <td className="p-4 text-sm text-[var(--esl-text-primary)]">{order.user?.name || order.buyer?.name || 'Хэрэглэгч'}</td>
@@ -212,7 +212,7 @@ export default function OrdersPage() {
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order._id, e.target.value)}
-                        className="text-xs border border-[var(--esl-border)] rounded-lg px-2 py-1.5 bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="text-xs border border-[var(--esl-border)] rounded-lg px-2 py-1.5 bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
                       >
                         <option value="pending">⏳ Хүлээгдэж буй</option>
                         <option value="confirmed">✅ Баталгаажсан</option>
@@ -278,9 +278,9 @@ export default function OrdersPage() {
               </div>
 
               {/* Total */}
-              <div className="flex justify-between items-center bg-indigo-50 rounded-lg p-4">
+              <div className="flex justify-between items-center bg-[var(--esl-brand-bg)] rounded-lg p-4">
                 <span className="font-semibold text-[var(--esl-text-primary)]">Нийт дүн</span>
-                <span className="text-xl font-bold text-indigo-600">{formatPrice(selectedOrder.total || 0)}</span>
+                <span className="text-xl font-bold text-[#E8242C]">{formatPrice(selectedOrder.total || 0)}</span>
               </div>
 
               {/* Referral */}
@@ -298,7 +298,7 @@ export default function OrdersPage() {
                   <select
                     value={selectedOrder.status}
                     onChange={(e) => handleStatusChange(selectedOrder._id, e.target.value)}
-                    className="flex-1 border border-[var(--esl-border)] rounded-lg px-3 py-2 text-sm bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="flex-1 border border-[var(--esl-border)] rounded-lg px-3 py-2 text-sm bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
                   >
                     <option value="pending">⏳ Хүлээгдэж буй</option>
                     <option value="confirmed">✅ Баталгаажсан</option>

@@ -249,7 +249,7 @@ function EntityFields({ item, meta, entityType }: { item: EntityItem; meta: Reco
       <div className="space-y-0.5">
         <div className={fieldStyle}>{Number(meta.pricePerSqm)?.toLocaleString() || '—'}₮/м²</div>
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+          <div className="flex-1 h-1 bg-[var(--esl-bg-elevated)] rounded-full overflow-hidden">
             <div className="h-full rounded-full bg-[#E8242C]" style={{ width: `${(sold / total) * 100}%` }} />
           </div>
           <span className="text-[10px] text-[var(--esl-text-secondary)]">{sold}/{total}</span>
@@ -264,7 +264,7 @@ function EntityFields({ item, meta, entityType }: { item: EntityItem; meta: Reco
     return (
       <div className="space-y-0.5">
         <div className="flex items-center gap-2">
-          <div className="flex-1 h-1 bg-gray-200 rounded-full overflow-hidden">
+          <div className="flex-1 h-1 bg-[var(--esl-bg-elevated)] rounded-full overflow-hidden">
             <div className="h-full rounded-full bg-[#D97706]" style={{ width: `${Math.min(100, (current / min) * 100)}%` }} />
           </div>
           <span className="text-[10px] text-[var(--esl-text-secondary)]">{current}/{min}</span>

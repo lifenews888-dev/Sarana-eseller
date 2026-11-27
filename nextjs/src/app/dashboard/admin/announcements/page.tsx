@@ -47,13 +47,13 @@ export default function AnnouncementsPage() {
         </div>
         <button onClick={handleSave}
           className={cn('flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold border-none cursor-pointer transition',
-            saved ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700')}>
+            saved ? 'bg-green-600 text-white' : 'bg-[#E8242C] text-white hover:bg-[#C41E25]')}>
           {saved ? <><Check className="w-4 h-4" /> Хадгалсан</> : <><Save className="w-4 h-4" /> Хадгалах</>}
         </button>
       </div>
 
       {/* Current items */}
-      <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-2xl overflow-hidden divide-y divide-gray-100">
+      <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-2xl overflow-hidden divide-y divide-[var(--esl-border)]">
         {items.map((item) => (
           <div key={item.id} className={cn('flex items-center gap-3 px-4 py-3 transition', !item.isActive && 'opacity-50')}>
             <GripVertical className="w-4 h-4 text-[var(--esl-text-muted)] cursor-grab shrink-0" />
@@ -77,7 +77,7 @@ export default function AnnouncementsPage() {
             {EMOJIS.map((e) => (
               <button key={e} onClick={() => setNewIcon(e)}
                 className={cn('w-8 h-8 rounded-lg text-base flex items-center justify-center cursor-pointer border transition',
-                  newIcon === e ? 'bg-indigo-50 border-indigo-300' : 'bg-[var(--esl-bg-section)] border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]')}>
+                  newIcon === e ? 'bg-[var(--esl-brand-bg)] border-[var(--esl-brand-border)]' : 'bg-[var(--esl-bg-section)] border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]')}>
                 {e}
               </button>
             ))}
@@ -85,10 +85,10 @@ export default function AnnouncementsPage() {
         </div>
         <div className="flex gap-2">
           <input type="text" value={newText} onChange={(e) => setNewText(e.target.value)} placeholder="Мэдэгдлийн текст..."
-            className="flex-1 px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="flex-1 px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
             onKeyDown={(e) => e.key === 'Enter' && addItem()} />
           <button onClick={addItem} disabled={!newText.trim()}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-indigo-600 text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-indigo-700 transition disabled:opacity-50">
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-[#E8242C] text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-[#C41E25] transition disabled:opacity-50">
             <Plus className="w-4 h-4" /> Нэмэх
           </button>
         </div>

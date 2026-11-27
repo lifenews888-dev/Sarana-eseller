@@ -90,7 +90,7 @@ export default function GalleryPage() {
       <div className="mb-6 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">Гэрэл зургийн цомог</h1>
-          <p className="text-sm text-gray-500">Дэлгүүрийн нүүр, бүтээгдэхүүн, төслийн зургууд</p>
+          <p className="text-sm text-[var(--esl-text-secondary)]">Дэлгүүрийн нүүр, бүтээгдэхүүн, төслийн зургууд</p>
         </div>
         <label className="flex cursor-pointer items-center gap-2 rounded-xl bg-black px-4 py-2 text-sm text-white">
           <Upload className="h-4 w-4" />
@@ -108,11 +108,11 @@ export default function GalleryPage() {
       {loading ? (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="aspect-square animate-pulse rounded-xl bg-gray-100" />
+            <div key={i} className="aspect-square animate-pulse rounded-xl bg-[var(--esl-bg-muted)]" />
           ))}
         </div>
       ) : images.length === 0 ? (
-        <div className="py-20 text-center text-gray-400">
+        <div className="py-20 text-center text-[var(--esl-text-muted)]">
           <p>Одоогоор зураг байхгүй</p>
           <p className="mt-1 text-sm">Дээрх товч дарж зураг нэмнэ үү</p>
         </div>

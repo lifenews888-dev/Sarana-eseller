@@ -40,12 +40,12 @@ export default async function ShopProductDetailPage({ params }: Props) {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
-      <div className="text-sm text-gray-400 mb-4">
-        <Link href={`/shop-sub/${slug}`} className="hover:text-gray-600 no-underline text-gray-400">Нүүр</Link>
+      <div className="text-sm text-[var(--esl-text-muted)] mb-4">
+        <Link href={`/shop-sub/${slug}`} className="hover:text-[var(--esl-text-secondary)] no-underline text-[var(--esl-text-muted)]">Нүүр</Link>
         {' / '}
-        <Link href={`/shop-sub/${slug}/products`} className="hover:text-gray-600 no-underline text-gray-400">Бараа</Link>
+        <Link href={`/shop-sub/${slug}/products`} className="hover:text-[var(--esl-text-secondary)] no-underline text-[var(--esl-text-muted)]">Бараа</Link>
         {' / '}
-        <span className="text-gray-600">{product.name}</span>
+        <span className="text-[var(--esl-text-secondary)]">{product.name}</span>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -54,7 +54,7 @@ export default async function ShopProductDetailPage({ params }: Props) {
           {product.images?.[0] ? (
             <SafeImage src={product.images[0]} alt={product.name} className="w-full rounded-xl object-cover aspect-square" />
           ) : (
-            <div className="w-full aspect-square bg-gray-100 rounded-xl flex items-center justify-center text-6xl">
+            <div className="w-full aspect-square bg-[var(--esl-bg-muted)] rounded-xl flex items-center justify-center text-6xl">
               {product.emoji || '📦'}
             </div>
           )}
@@ -76,21 +76,21 @@ export default async function ShopProductDetailPage({ params }: Props) {
               {(product.salePrice || product.price).toLocaleString()}₮
             </span>
             {product.salePrice && product.salePrice < product.price && (
-              <span className="text-lg text-gray-400 line-through">
+              <span className="text-lg text-[var(--esl-text-muted)] line-through">
                 {product.price.toLocaleString()}₮
               </span>
             )}
           </div>
 
           {/* Stock */}
-          <p className="text-sm text-gray-500 mb-4">
+          <p className="text-sm text-[var(--esl-text-secondary)] mb-4">
             {(product.stock ?? 0) > 0
               ? `✅ Нөөцөд ${product.stock} ширхэг`
               : '❌ Дууссан'}
           </p>
 
           {product.description && (
-            <p className="text-gray-600 leading-relaxed mb-6">{product.description}</p>
+            <p className="text-[var(--esl-text-secondary)] leading-relaxed mb-6">{product.description}</p>
           )}
 
           {/* Wholesale prices */}
@@ -117,11 +117,11 @@ export default async function ShopProductDetailPage({ params }: Props) {
           </button>
 
           {/* Shop info */}
-          <div className="mt-6 p-4 bg-gray-50 rounded-xl flex items-center gap-3">
+          <div className="mt-6 p-4 bg-[var(--esl-bg-section)] rounded-xl flex items-center gap-3">
             {config.logoUrl && <SafeImage src={config.logoUrl} className="w-10 h-10 rounded object-cover" alt="" />}
             <div>
               <p className="font-medium text-sm">{config.name}</p>
-              {config.phone && <p className="text-xs text-gray-400">{config.phone}</p>}
+              {config.phone && <p className="text-xs text-[var(--esl-text-muted)]">{config.phone}</p>}
             </div>
           </div>
         </div>

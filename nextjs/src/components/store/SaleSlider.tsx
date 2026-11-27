@@ -30,9 +30,9 @@ export default function SaleSlider({ products, quickAdd, findProduct, setSelProd
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 4, height: 24, borderRadius: 4, background: '#E31E24' }} />
+            <div style={{ width: 4, height: 24, borderRadius: 4, background: '#E8242C' }} />
             <h2 style={{ fontSize: 20, fontWeight: 900, color: '#FFF', margin: 0 }}>Хямдралтай бараа</h2>
-            <span style={{ background: '#E31E24', color: '#FFF', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' }}>Sale</span>
+            <span style={{ background: '#E8242C', color: '#FFF', fontSize: 10, fontWeight: 800, padding: '2px 8px', borderRadius: 4, textTransform: 'uppercase' }}>Sale</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button onClick={() => scroll('left')} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--esl-bg-card)', border: '1px solid #3D3D3D', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
@@ -41,7 +41,7 @@ export default function SaleSlider({ products, quickAdd, findProduct, setSelProd
             <button onClick={() => scroll('right')} style={{ width: 36, height: 36, borderRadius: 8, background: 'var(--esl-bg-card)', border: '1px solid #3D3D3D', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#A0A0A0' }}>
               <ChevronRight size={18} />
             </button>
-            <button onClick={onViewDeals} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E31E24', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
+            <button onClick={onViewDeals} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#E8242C', fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginLeft: 8 }}>
               Бүгд <ChevronRight size={16} />
             </button>
           </div>

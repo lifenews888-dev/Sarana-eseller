@@ -51,7 +51,7 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
     <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] overflow-hidden animate-pulse">
       <div className="h-10 bg-[var(--esl-bg-section)] border-b border-[var(--esl-border)]" />
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-gray-50">
+        <div key={i} className="flex items-center gap-4 px-4 py-3 border-b border-[var(--esl-border)]">
           <div className="w-8 h-8 bg-[var(--esl-bg-section)] rounded-lg shrink-0" />
           <div className="flex-1 space-y-1.5">
             <div className="h-3 bg-[var(--esl-bg-section)] rounded-full w-1/3" />

@@ -72,25 +72,25 @@ export default function EnterpriseSetupPage() {
   if (enterprise) {
     return (
       <div className="max-w-3xl mx-auto p-6 space-y-6">
-        <div className="bg-white rounded-xl border p-6">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6">
           <div className="flex items-center gap-3 mb-4">
             <Globe className="w-6 h-6 text-green-600" />
             <h1 className="text-xl font-bold">Enterprise идэвхтэй</h1>
           </div>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between py-2 border-b">
-              <span className="text-gray-500">Subdomain</span>
+              <span className="text-[var(--esl-text-secondary)]">Subdomain</span>
               <a href={`https://${enterprise.subdomain}.eseller.mn`} target="_blank" rel="noreferrer"
                 className="text-blue-600 flex items-center gap-1">
                 {enterprise.subdomain}.eseller.mn <ExternalLink className="w-3 h-3" />
               </a>
             </div>
             <div className="flex justify-between py-2 border-b">
-              <span className="text-gray-500">Багц</span>
+              <span className="text-[var(--esl-text-secondary)]">Багц</span>
               <span className="font-medium">{enterprise.plan}</span>
             </div>
             <div className="flex justify-between py-2 border-b">
-              <span className="text-gray-500">Үндсэн өнгө</span>
+              <span className="text-[var(--esl-text-secondary)]">Үндсэн өнгө</span>
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded" style={{ background: enterprise.primaryColor }} />
                 {enterprise.primaryColor}
@@ -100,8 +100,8 @@ export default function EnterpriseSetupPage() {
         </div>
 
         {/* Live Preview */}
-        <div className="bg-white rounded-xl border overflow-hidden">
-          <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl border overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b bg-[var(--esl-bg-section)]">
             <span className="text-sm font-medium flex items-center gap-2">
               <Eye className="w-4 h-4" /> Дэлгүүрийн preview
             </span>
@@ -124,12 +124,12 @@ export default function EnterpriseSetupPage() {
   // ═══ Setup form ═══
   return (
     <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-white rounded-xl border p-6">
+      <div className="bg-[var(--esl-bg-card)] rounded-xl border p-6">
         <div className="flex items-center gap-3 mb-6">
           <Globe className="w-6 h-6 text-blue-900" />
           <div>
             <h1 className="text-xl font-bold">Enterprise тохиргоо</h1>
-            <p className="text-sm text-gray-500">Өөрийн subdomain + брэнд үүсгэх</p>
+            <p className="text-sm text-[var(--esl-text-secondary)]">Өөрийн subdomain + брэнд үүсгэх</p>
           </div>
         </div>
 
@@ -137,7 +137,7 @@ export default function EnterpriseSetupPage() {
         <div className="mb-6">
           <label className="block text-sm font-medium mb-1">Subdomain</label>
           <div className="flex items-center gap-2">
-            <div className="flex items-center bg-gray-50 border rounded-lg overflow-hidden flex-1">
+            <div className="flex items-center bg-[var(--esl-bg-section)] border rounded-lg overflow-hidden flex-1">
               <input
                 value={subdomain}
                 onChange={(e) => {
@@ -148,9 +148,9 @@ export default function EnterpriseSetupPage() {
                 placeholder="nomin"
                 className="flex-1 px-3 py-2 text-sm outline-none bg-transparent"
               />
-              <span className="text-sm text-gray-400 px-2">.eseller.mn</span>
+              <span className="text-sm text-[var(--esl-text-muted)] px-2">.eseller.mn</span>
             </div>
-            {checking && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
+            {checking && <Loader2 className="w-4 h-4 animate-spin text-[var(--esl-text-muted)]" />}
             {!checking && available === true && <Check className="w-5 h-5 text-green-500" />}
             {!checking && available === false && <X className="w-5 h-5 text-red-500" />}
           </div>
@@ -198,15 +198,15 @@ export default function EnterpriseSetupPage() {
               <span className="text-white text-xs">🛒</span>
             </div>
           </div>
-          <div className="p-6 bg-gray-50">
+          <div className="p-6 bg-[var(--esl-bg-section)]">
             <div className="text-center py-4" style={{ background: `linear-gradient(135deg, ${primaryColor}, ${primaryColor}dd)`, borderRadius: 8 }}>
               <p className="text-white font-bold text-lg">{subdomain || 'Таны дэлгүүр'}</p>
             </div>
             <div className="grid grid-cols-3 gap-3 mt-4">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="bg-white rounded-lg p-3 border">
-                  <div className="aspect-square bg-gray-100 rounded mb-2" />
-                  <div className="h-2 bg-gray-200 rounded mb-1 w-3/4" />
+                <div key={i} className="bg-[var(--esl-bg-card)] rounded-lg p-3 border">
+                  <div className="aspect-square bg-[var(--esl-bg-muted)] rounded mb-2" />
+                  <div className="h-2 bg-[var(--esl-bg-elevated)] rounded mb-1 w-3/4" />
                   <div className="h-3 rounded w-1/2" style={{ background: accentColor, opacity: 0.7 }} />
                 </div>
               ))}

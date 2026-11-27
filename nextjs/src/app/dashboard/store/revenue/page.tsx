@@ -51,11 +51,11 @@ export default function RevenuePage() {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
         <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-8 mb-6">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-8 w-48 bg-[var(--esl-bg-elevated)] rounded animate-pulse mb-2" />
           <div className="h-4 w-72 bg-[var(--esl-bg-section)] rounded animate-pulse" />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 bg-gray-200 rounded-2xl animate-pulse" />)}
+          {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 bg-[var(--esl-bg-elevated)] rounded-2xl animate-pulse" />)}
         </div>
       </div>
     );
@@ -124,9 +124,9 @@ export default function RevenuePage() {
                 {formatPrice(revenueHistory.length ? Math.round(revenueHistory.reduce((s, o) => s + (o.total || 0), 0) / revenueHistory.length) : 0)}
               </p>
             </div>
-            <div className="p-4 bg-indigo-50 rounded-lg">
-              <p className="text-xs text-indigo-600 font-medium">Хүргэгдсэн захиалга</p>
-              <p className="text-xl font-bold text-indigo-700">{orders.filter((o) => o.status === 'delivered').length}</p>
+            <div className="p-4 bg-[var(--esl-brand-bg)] rounded-lg">
+              <p className="text-xs text-[#E8242C] font-medium">Хүргэгдсэн захиалга</p>
+              <p className="text-xl font-bold text-[#E8242C]">{orders.filter((o) => o.status === 'delivered').length}</p>
             </div>
             <div className="p-4 bg-amber-50 rounded-lg">
               <p className="text-xs text-amber-600 font-medium">Хүлээгдэж буй</p>

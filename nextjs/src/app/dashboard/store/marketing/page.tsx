@@ -78,14 +78,14 @@ export default function MarketingPage() {
             <button
               onClick={() => copyToClipboard(referralUrl, 'Реферал линк')}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                copied === 'Реферал линк' ? 'bg-green-500 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                copied === 'Реферал линк' ? 'bg-green-500 text-white' : 'bg-[#E8242C] text-white hover:bg-[#C41E25]'
               }`}
             >
               {copied === 'Реферал линк' ? '✓ Хуулсан' : 'Хуулах'}
             </button>
           </div>
-          <div className="mt-4 p-3 bg-indigo-50 rounded-lg">
-            <p className="text-xs text-indigo-700">
+          <div className="mt-4 p-3 bg-[var(--esl-brand-bg)] rounded-lg">
+            <p className="text-xs text-[#E8242C]">
               <Lightbulb className="w-3.5 h-3.5 inline shrink-0" /> Реферал линкээр орсон хэрэглэгчийн захиалгад таны шимтгэл тооцогдоно
             </p>
           </div>
@@ -157,7 +157,7 @@ export default function MarketingPage() {
                 <input
                   value={bannerText}
                   onChange={(e) => setBannerText(e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
                 />
               </div>
               <div>
@@ -177,7 +177,7 @@ export default function MarketingPage() {
                 onClick={() => {
                   copyToClipboard(bannerText, 'Баннер текст');
                 }}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+                className="px-4 py-2 bg-[#E8242C] text-white rounded-lg text-sm font-medium hover:bg-[#C41E25] transition-colors"
               >
                 Текст хуулах
               </button>

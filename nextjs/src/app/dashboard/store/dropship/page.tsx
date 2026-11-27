@@ -206,7 +206,7 @@ export default function DropshipPage() {
                         <Plus size={13} /> {importing === p.supplierId ? 'Нэмж байна...' : 'Нэмэх'}
                       </button>
                       <a href={p.supplierUrl} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-center w-9 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition no-underline">
+                        className="flex items-center justify-center w-9 py-2 rounded-lg bg-[#E8242C] text-white hover:bg-[#C41E25] transition no-underline">
                         <ExternalLink size={13} />
                       </a>
                     </div>
@@ -231,7 +231,7 @@ export default function DropshipPage() {
           <div className="flex items-center justify-between">
             <p className="text-sm text-[var(--esl-text-muted)]">{myProducts.length} dropship бараа</p>
             <button onClick={syncAll} disabled={syncing}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-indigo-600 text-white border-none cursor-pointer hover:bg-indigo-700 transition disabled:opacity-50">
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#E8242C] text-white border-none cursor-pointer hover:bg-[#C41E25] transition disabled:opacity-50">
               <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
               {syncing ? 'Sync хийж байна...' : 'Бүгдийг sync хийх'}
             </button>

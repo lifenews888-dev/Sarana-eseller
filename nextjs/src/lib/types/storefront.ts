@@ -110,7 +110,7 @@ export const MOOD_FONTS: Record<Mood, { display: FontFamily; body: FontFamily }>
 
 export const MOOD_COLORS: Record<Mood, { primary: string; accent: string; bg: string; text: string }> = {
   elegant: { primary: '#1A1A2E', accent: '#C9A96E', bg: '#FAFAF8', text: '#2D2D2D' },
-  bold: { primary: '#E31E24', accent: '#FF6B35', bg: '#FFFFFF', text: '#1A1A1A' },
+  bold: { primary: '#E8242C', accent: '#FF6B35', bg: '#FFFFFF', text: '#1A1A1A' },
   minimal: { primary: '#111111', accent: '#555555', bg: '#FFFFFF', text: '#333333' },
   playful: { primary: '#6C5CE7', accent: '#FD79A8', bg: '#FEFEFE', text: '#2D3436' },
   earthy: { primary: '#5C4033', accent: '#8B6914', bg: '#FAF5EF', text: '#3E2723' },

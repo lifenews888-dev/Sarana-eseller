@@ -177,7 +177,7 @@ export default function AdminEntitiesPage() {
                       <div className="text-[10px] text-[var(--esl-text-muted)]">/{e.slug}</div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-[10px] font-semibold bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded-full">
+                      <span className="text-[10px] font-semibold bg-[var(--esl-brand-bg)] text-[#E8242C] px-2 py-0.5 rounded-full">
                         {info?.label || e.type}
                       </span>
                     </td>
