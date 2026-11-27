@@ -7,44 +7,40 @@ import { ShareModal } from '@/components/shared/ShareModal';
 import EntityCard from '@/components/cards/EntityCard';
 import StartSellingModal from '@/components/seller/StartSellingModal';
 
-/* ═══ Demo Data ═══ */
-const DEMO_SELLER = {
-  username: 'bayaraa',
-  displayName: 'Б. Баяраа',
-  bio: 'Электроник, гоо сайхны бүтээгдэхүүн борлуулагч. Найдвартай бараа, хурдан хүргэлт.',
-  avatar: null,
-  isVerified: true,
-  commissionRate: 15,
-  totalSales: 142,
-  totalEarned: 4250000,
+/* ═══ Types ═══ */
+type SellerInfo = {
+  username: string;
+  displayName: string;
+  bio?: string | null;
+  avatar?: string | null;
+  isVerified: boolean;
+  commissionRate: number;
+  totalSales: number;
 };
-
-const DEMO_PRODUCTS = [
-  { id: 'sp1', name: 'iPhone 15 Pro 256GB', price: 3800000, image: 'https://picsum.photos/seed/eseller-400/400', store: 'TechUB', rating: 4.8 },
-  { id: 'sp2', name: 'Cashmere цамц', price: 89000, salePrice: 65000, image: 'https://picsum.photos/seed/eseller-400/400', store: 'Gobi Store', rating: 4.6 },
-  { id: 'sp3', name: 'Yoga mat pro', price: 55000, image: 'https://picsum.photos/seed/eseller-400/400', store: 'SportsMN', rating: 4.9 },
-  { id: 'sp4', name: 'Гоо сайхны багц', price: 45000, image: 'https://picsum.photos/seed/eseller-400/400', store: 'Beauty Lab', rating: 4.7 },
-  { id: 'sp5', name: 'Wireless earbuds', price: 65000, image: 'https://picsum.photos/seed/eseller-400/400', store: 'TechUB', rating: 4.5 },
-  { id: 'sp6', name: 'Ажлын ширээ', price: 185000, image: 'https://picsum.photos/seed/eseller-400/400', store: 'Home Deco', rating: 4.4 },
-];
+type SellerItem = { id: string; name: string; price: number; salePrice?: number; image: string; rating?: number };
 
 export default function SellerPage() {
-  const [seller, setSeller] = useState(DEMO_SELLER);
-  const [products, setProducts] = useState(DEMO_PRODUCTS);
+  const [seller, setSeller] = useState<SellerInfo | null>(null);
+  const [products, setProducts] = useState<SellerItem[]>([]);
+  const [status, setStatus] = useState<'loading' | 'ok' | 'missing'>('loading');
   const [copied, setCopied] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
-  const [sellingItem, setSellingItem] = useState<typeof DEMO_PRODUCTS[0] | null>(null);
-  const shareUrl = `https://eseller.mn/seller/${seller.username}`;
+  const [sellingItem, setSellingItem] = useState<{ id: string; name?: string; price?: number; images?: string[] } | null>(null);
+  const shareUrl = seller ? `https://eseller.mn/seller/${seller.username}` : '';
 
-  // Fetch real seller data, fallback to demo
+  // Бодит борлуулагчийн мэдээлэл — зохиомол (demo) мэдээлэл харуулахгүй
   useEffect(() => {
-    const username = window.location.pathname.split('/').pop();
-    if (username) {
-      fetch(`/api/seller/${username}`).then(r => r.json()).then(data => {
-        if (data.seller) setSeller(data.seller);
-        if (data.products?.length) setProducts(data.products);
-      }).catch(() => {});
-    }
+    const username = window.location.pathname.split('/').pop() || '';
+    fetch(`/api/seller-page/${encodeURIComponent(decodeURIComponent(username))}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (data?.seller) {
+          setSeller(data.seller);
+          setProducts(Array.isArray(data.products) ? data.products : []);
+          setStatus('ok');
+        } else setStatus('missing');
+      })
+      .catch(() => setStatus('missing'));
   }, []);
 
   const handleCopy = () => {
@@ -52,6 +48,22 @@ export default function SellerPage() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  if (status !== 'ok' || !seller) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--esl-bg-page)' }}>
+        {status === 'loading' ? (
+          <div className="w-8 h-8 rounded-full border-2 border-[#E8242C] border-t-transparent animate-spin" />
+        ) : (
+          <div className="text-center max-w-sm">
+            <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--esl-text-primary)' }}>Борлуулагч олдсонгүй</h1>
+            <p className="text-sm mb-5" style={{ color: 'var(--esl-text-muted)' }}>Энэ холбоос буруу эсвэл борлуулагчийн хуудас идэвхгүй байна.</p>
+            <Link href="/store" className="inline-block rounded-xl bg-[#E8242C] px-5 py-2.5 text-sm font-bold text-white no-underline">Дэлгүүр үзэх</Link>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--esl-bg-page)' }}>
@@ -72,7 +84,7 @@ export default function SellerPage() {
             )}
           </div>
 
-          <p className="text-white/80 text-sm mb-6 max-w-md mx-auto">{seller.bio}</p>
+          <p className="text-white/80 text-sm mb-6 max-w-md mx-auto">{seller.bio || ''}</p>
 
           {/* Stats */}
           <div className="flex justify-center gap-8 mb-6">
@@ -112,6 +124,11 @@ export default function SellerPage() {
           Миний бараа бүтээгдэхүүн
         </h2>
 
+        {products.length === 0 && (
+          <p className="text-sm py-10 text-center rounded-2xl border" style={{ color: 'var(--esl-text-muted)', borderColor: 'var(--esl-border)' }}>
+            Энэ борлуулагч одоогоор бараа нэмээгүй байна.
+          </p>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {products.map((p) => (
             <EntityCard
@@ -121,7 +138,7 @@ export default function SellerPage() {
                 name: p.name,
                 price: p.salePrice || p.price,
                 originalPrice: p.salePrice ? p.price : undefined,
-                images: [p.image],
+                images: p.image ? [p.image] : [],
                 rating: p.rating,
                 allowAffiliate: true,
                 metadata: { orderCount: '—' },

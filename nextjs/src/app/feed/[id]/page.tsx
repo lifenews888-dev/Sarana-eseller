@@ -727,12 +727,8 @@ function toClientPost(item: FeedItemData) {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  if (!isValidObjectId(id)) {
-    const post = getDemoPost(id);
-    return post
-      ? { title: `${post.title} — eseller.mn`, description: post.description?.slice(0, 160) || post.title }
-      : { title: 'Олдсонгүй' };
-  }
+  // Зохиомол (demo) зар харуулахгүй — зөвхөн өгөгдлийн сангийн бодит зар.
+  if (!isValidObjectId(id)) return { title: 'Олдсонгүй' };
   let post;
   try {
     post = await prisma.feedItem.findUnique({ where: { id }, select: { title: true, description: true, images: true } });
@@ -751,11 +747,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function FeedDetailPage({ params }: Props) {
   const { id } = await params;
-  if (!isValidObjectId(id)) {
-    const demoPost = getDemoPost(id);
-    if (!demoPost) notFound();
-    return <FeedDetailClient post={toClientPost(demoPost)} />;
-  }
+  if (!isValidObjectId(id)) notFound();
 
   let post;
   let relatedPosts: Array<{

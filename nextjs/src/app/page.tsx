@@ -1,7 +1,8 @@
 import { prisma } from '@/lib/prisma';
 import { isPublicShopName, isSellableProduct, normalizePublicPricing, publicProductWhere } from '@/lib/product-visibility';
 import { getEffectiveUnitPrice } from '@/lib/utils';
-import { Truck, RefreshCw, Lock, Star } from 'lucide-react';
+import { categoryLabel } from '@/lib/marketplaceCategories';
+import { Lock, Megaphone, Store } from 'lucide-react';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
 import MobileNav from '@/components/shared/MobileNav';
@@ -88,7 +89,7 @@ async function getHomeData() {
       price: p.price,
       district: p.district,
       media: p.media,
-      category: p.category ? { name: p.category } : null,
+      category: p.category ? { name: categoryLabel(p.category) } : null,
     }));
 
     // Дэлгүүр бүрийн бодит барааны тоо — 0 бараатай, тест нэртэй дэлгүүрийг
@@ -306,11 +307,11 @@ export default async function HomePage() {
 }
 
 function TrustBadges() {
+  // Зөвхөн бодитоор ажиллаж буй зүйлсийг амлана (хүргэлт/буцаалтын бодлого батлагдаагүй).
   const badges = [
-    { icon: <Truck className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: '50,000₮+ үнэгүй хүргэлт' },
-    { icon: <RefreshCw className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: '48 цагийн буцаалт' },
     { icon: <Lock className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: 'QPay аюулгүй төлбөр' },
-    { icon: <Star className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: 'Баталгаат бараа' },
+    { icon: <Megaphone className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: 'Үнэгүй зар байршуулах' },
+    { icon: <Store className="w-5 h-5 text-[var(--esl-accent,#E8242C)]" />, text: 'Олон дэлгүүр нэг дор' },
   ];
   return (
     <div className="bg-[var(--esl-bg-card)] border-y border-[var(--esl-border)]">

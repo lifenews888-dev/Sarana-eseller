@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { AffiliateAPI, ProductsAPI, type Product } from '@/lib/api';
-import { formatPrice, DEMO_PRODUCTS, getInitials, cn, discountPercent } from '@/lib/utils';
+import { formatPrice, getInitials, cn, discountPercent } from '@/lib/utils';
 import { useCartStore } from '@/lib/cart';
 import CartDrawer from '@/components/store/CartDrawer';
 import EsellerLogo from '@/components/shared/EsellerLogo';
@@ -45,9 +45,9 @@ export default function MicroStorefront() {
       ]);
       setProfile(p);
       const prodList = (prods as any)?.products || [];
-      setProducts(prodList.length ? prodList : (DEMO_PRODUCTS as unknown as Product[]));
+      setProducts(prodList);
     } catch {
-      setProducts(DEMO_PRODUCTS as unknown as Product[]);
+      setProducts([]);
     } finally {
       setLoading(false);
     }
