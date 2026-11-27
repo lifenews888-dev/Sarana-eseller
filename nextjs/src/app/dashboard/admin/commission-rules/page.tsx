@@ -77,7 +77,10 @@ export default function CommissionRulesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchSettings(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchSettings(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const handleSave = async () => {
     setSaving(true);

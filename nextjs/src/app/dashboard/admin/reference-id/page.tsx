@@ -59,7 +59,7 @@ export default function ReferenceIdPage() {
       .replace(/\{SEQ\}/g, String(format.seqStart).padStart(format.seqLength, '0'))
       .replace(/\{YR\}/g, '26')
       .replace(/\{MO\}/g, '04')
-      .replace(/\{RND\}/g, Math.random().toString(36).substring(2, 6).toUpperCase());
+      .replace(/\{RND\}/g, 'K7Q2'); // жишээ санамсаргүй хэсэг (бодит ID-д санамсаргүй үүснэ)
     id += parts;
     return format.caseStyle === 'upper' ? id.toUpperCase() : id.toLowerCase();
   };

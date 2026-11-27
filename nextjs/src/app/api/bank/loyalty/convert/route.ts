@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
       message: `${points} ${bank} оноо → ${result.esellerPoints} eseller оноо болголоо!`,
       esellerPoints: result.esellerPoints,
     });
-  } catch (err: any) {
-    return errorJson(err.message || 'Хөрвүүлэхэд алдаа гарлаа', 500);
+  } catch (err: unknown) {
+    return errorJson((err instanceof Error ? err.message : String(err)) || 'Хөрвүүлэхэд алдаа гарлаа', 500);
   }
 }

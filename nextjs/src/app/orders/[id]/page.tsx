@@ -23,7 +23,7 @@ interface OrderData {
   statusHistory?: { status: string; timestamp: string; note?: string }[];
   estimatedMinutes?: number;
   total?: number;
-  items?: any[];
+  items?: { name?: string; price?: number; quantity?: number; image?: string }[];
   createdAt: string;
 }
 

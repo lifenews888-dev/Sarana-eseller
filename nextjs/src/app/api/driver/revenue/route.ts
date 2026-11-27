@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     select: { total: true, createdAt: true, delivery: true },
   });
   // Filter by driverId from delivery JSON
-  const allDelivered = allOrders.filter(o => (o.delivery as any)?.driverId === user.id);
+  const allDelivered = allOrders.filter(o => (o.delivery as { driverId?: string } | null)?.driverId === user.id);
 
   const todayRevenue = allDelivered.filter(o => o.createdAt >= today).reduce((s, o) => s + (o.total || 0) * 0.1, 0);
   const monthRevenue = allDelivered.filter(o => o.createdAt >= monthStart).reduce((s, o) => s + (o.total || 0) * 0.1, 0);

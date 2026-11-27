@@ -6,6 +6,8 @@ import { timeAgo } from '@/lib/utils';
 import StatCard from '@/components/dashboard/StatCard';
 import { Star, FileText, Trophy, MessageCircle } from 'lucide-react';
 
+type RawReview = { id?: string; _id?: string; buyerName?: string; customerName?: string; productName?: string; productEmoji?: string; rating: number; comment?: string; reply?: string; createdAt: string }
+
 interface Review {
   id: string;
   customerName?: string;
@@ -44,8 +46,8 @@ export default function ReviewsPage() {
         const res = await fetch('/api/reviews?storeOwner=true');
         if (res.ok) {
           const data = await res.json();
-          setReviews((data.reviews || []).map((r: any) => ({
-            id: r.id || r._id,
+          setReviews(((data.reviews || []) as RawReview[]).map((r) => ({
+            id: r.id || r._id || '',
             customerName: r.buyerName || r.customerName || 'Хэрэглэгч',
             productName: r.productName || '',
             productEmoji: r.productEmoji || '',

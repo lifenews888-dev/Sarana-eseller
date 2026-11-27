@@ -3,6 +3,8 @@ import { json, requireSeller, getShopForUser } from '@/lib/api-auth';
 import { prisma } from '@/lib/prisma';
 
 // GET /api/seller/analytics?period=7d|30d|90d
+type OrderLineItem = { productId?: string; id?: string; name?: string; price?: number; quantity?: number };
+
 export async function GET(req: NextRequest) {
   const auth = requireSeller(req);
   if (auth instanceof Response) return auth;
@@ -49,7 +51,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Track product sales
-    const items = order.items as any[];
+    const items = (order.items || []) as OrderLineItem[];
     for (const item of items) {
       const pid = item.productId || item.id || 'unknown';
       const existing = productSales.get(pid) || { name: item.name || 'Бараа', sold: 0, revenue: 0 };

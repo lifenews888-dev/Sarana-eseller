@@ -18,7 +18,7 @@ async function handleCallback(req: NextRequest): Promise<NextResponse> {
     const sp = req.nextUrl.searchParams;
 
     // 2. Body (хэрэв POST бол)
-    let body: Record<string, any> = {};
+    let body: Record<string, string | undefined> & { body?: Record<string, string | undefined> } = {};
     if (req.method === 'POST') {
       try {
         body = await req.json();

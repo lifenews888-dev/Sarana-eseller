@@ -93,7 +93,7 @@ function PartnerForm() {
           <div key={f.key}>
             <label style={labelStyle}>{f.label}</label>
             <input
-              value={(form as any)[f.key]}
+              value={form[f.key as keyof typeof form]}
               onChange={e => setForm({ ...form, [f.key]: e.target.value })}
               placeholder={f.ph}
               required

@@ -60,22 +60,25 @@ export default function InventoryPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    const savedThresholds = loadThresholds();
-    const savedStocks = loadStocks();
-    setThresholds(savedThresholds);
-    setStocks(savedStocks);
+    const deferred = window.setTimeout(() => {
+      setMounted(true);
+      const savedThresholds = loadThresholds();
+      const savedStocks = loadStocks();
+      setThresholds(savedThresholds);
+      setStocks(savedStocks);
 
-    ProductsAPI.list()
-      .then((res) => {
-        const prods = res.products ?? [];
-        setProducts(prods);
-        setLoading(false);
-      })
-      .catch(() => {
-        setProducts([]);
-        setLoading(false);
-      });
+      ProductsAPI.list()
+        .then((res) => {
+          const prods = res.products ?? [];
+          setProducts(prods);
+          setLoading(false);
+        })
+        .catch(() => {
+          setProducts([]);
+          setLoading(false);
+        });
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   if (!mounted || loading) {
@@ -88,7 +91,7 @@ export default function InventoryPage() {
 
   function getStock(productId: string, defaultStock?: number): number {
     if (stocks[productId] !== undefined) return stocks[productId];
-    return defaultStock ?? Math.floor(Math.random() * 50);
+    return defaultStock ?? 0; // үлдэгдэл тодорхойгүй бол 0 (санамсаргүй тоо харуулахгүй)
   }
 
   function getThreshold(productId: string): number {

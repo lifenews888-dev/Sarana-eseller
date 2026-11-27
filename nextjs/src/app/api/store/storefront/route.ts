@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       config: shop.storefrontConfig || null,
       slug: shop.storefrontSlug || shop.slug,
-      isPublished: !!(shop.storefrontConfig as any)?.isPublished,
+      isPublished: !!(shop.storefrontConfig as { isPublished?: boolean } | null)?.isPublished,
     });
   } catch (e) {
     console.error('[storefront GET]', (e as Error).message);

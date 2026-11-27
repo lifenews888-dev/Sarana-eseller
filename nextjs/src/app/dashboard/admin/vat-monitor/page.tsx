@@ -44,7 +44,10 @@ export default function VatMonitorPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchData(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const handleNotify = async (shopId: string) => {
     setSending(shopId);

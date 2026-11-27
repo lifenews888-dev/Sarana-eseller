@@ -217,10 +217,16 @@ export default function AdminBannersPage() {
       .finally(() => setLoading(false));
   }, [statusFilter, slotFilter, search, page]);
 
-  useEffect(() => { fetchBanners(); }, [fetchBanners]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchBanners(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [fetchBanners]);
 
   // Reset page on filter change
-  useEffect(() => { setPage(1); }, [statusFilter, slotFilter, search]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { setPage(1); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [statusFilter, slotFilter, search]);
 
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 

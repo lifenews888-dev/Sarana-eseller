@@ -24,23 +24,30 @@ export default function DomainPage() {
     sslEnabled: true,
   });
   const [editing, setEditing] = useState(false);
+  const [verifyToken] = useState(() => Date.now().toString(36).slice(-6));
   const [subInput, setSubInput] = useState('');
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(DOMAIN_KEY);
-      if (saved) {
-        setConfig(JSON.parse(saved));
-      } else {
-        const defaultSub = (user?.store?.name || user?.name || 'store').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
-        setConfig((prev) => ({ ...prev, subdomain: defaultSub }));
-        setSubInput(defaultSub);
-      }
-    } catch {}
+    const deferred = window.setTimeout(() => {
+      try {
+        const saved = localStorage.getItem(DOMAIN_KEY);
+        if (saved) {
+          setConfig(JSON.parse(saved));
+        } else {
+          const defaultSub = (user?.store?.name || user?.name || 'store').toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+          setConfig((prev) => ({ ...prev, subdomain: defaultSub }));
+          setSubInput(defaultSub);
+        }
+      } catch {}
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [user]);
 
   useEffect(() => {
-    setSubInput(config.subdomain);
+    const deferred = window.setTimeout(() => {
+      setSubInput(config.subdomain);
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [config.subdomain]);
 
   const save = (updates: Partial<DomainConfig>) => {
@@ -197,7 +204,7 @@ export default function DomainPage() {
                     <tr>
                       <td className="py-2 px-3 font-mono font-bold">TXT</td>
                       <td className="py-2 px-3 font-mono">_eseller-verify</td>
-                      <td className="py-2 px-3 font-mono text-brand">{config.subdomain}-verify-{Date.now().toString(36).slice(-6)}</td>
+                      <td className="py-2 px-3 font-mono text-brand">{config.subdomain}-verify-{verifyToken}</td>
                     </tr>
                   </tbody>
                 </table>

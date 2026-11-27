@@ -36,16 +36,19 @@ export default function AnalyticsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const apiPeriod = PERIOD_MAP[period];
-    setLoading(true);
-    fetch(`/api/seller/analytics?period=${apiPeriod}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then((r) => r.json())
-      .then((data) => setStats({ ...FALLBACK, ...data }))
-      .catch(() => setStats(FALLBACK))
-      .finally(() => setLoading(false));
+    const deferred = window.setTimeout(() => {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      const apiPeriod = PERIOD_MAP[period];
+      setLoading(true);
+      fetch(`/api/seller/analytics?period=${apiPeriod}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then((r) => r.json())
+        .then((data) => setStats({ ...FALLBACK, ...data }))
+        .catch(() => setStats(FALLBACK))
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [period]);
 
   const weeklyRevenue = stats.daily.slice(-7).map((d) => d.revenue);

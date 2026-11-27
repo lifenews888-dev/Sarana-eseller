@@ -9,6 +9,9 @@ import {
   Megaphone, Copy, Upload, Rss, Zap, Link,
 } from 'lucide-react'
 
+type Integration = { apiKey?: string; apiSecret?: string; feedUrl?: string | null; feedType?: string; feedInterval?: number; lastSyncAt?: string | null; syncStatus?: string; syncError?: string | null; totalImported?: number; totalSynced?: number }
+type ScrapedProduct = { name?: string; description?: string; price?: number; images?: string[]; sourceType?: string }
+
 // ═══════════════════════════════════════════════════════
 // Platform Integrations (existing)
 // ═══════════════════════════════════════════════════════
@@ -87,20 +90,19 @@ export default function IntegrationsPage() {
 // ═══════════════════════════════════════════════════════
 
 function ImportSection() {
-  const [integration, setIntegration] = useState<any>(null)
+  const [integration, setIntegration] = useState<Integration | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<'api' | 'url' | 'feed'>('api')
   const [urlInput, setUrlInput] = useState('')
   const [feedUrl, setFeedUrl] = useState('')
   const [feedType, setFeedType] = useState('xml')
   const [feedInterval, setFeedInterval] = useState(60)
-  const [scraped, setScraped] = useState<any>(null)
+  const [scraped, setScraped] = useState<ScrapedProduct | null>(null)
   const [importing, setImporting] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [copied, setCopied] = useState('')
   const [msg, setMsg] = useState('')
 
-  useEffect(() => { fetchIntegration() }, [])
 
   const fetchIntegration = async () => {
     setLoading(true)
@@ -116,6 +118,11 @@ function ImportSection() {
     } catch {}
     setLoading(false)
   }
+
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchIntegration() }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [])
 
   const copyText = (text: string, key: string) => {
     navigator.clipboard.writeText(text)
@@ -194,7 +201,7 @@ function ImportSection() {
             <div className="flex gap-2 items-center mb-3">
               <input readOnly value={integration?.apiKey || ''}
                 className="flex-1 bg-[var(--esl-bg-section)] border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm font-mono text-[var(--esl-text-primary)] outline-none" />
-              <button onClick={() => copyText(integration?.apiKey, 'key')}
+              <button onClick={() => copyText(integration?.apiKey || '', 'key')}
                 className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-[#E8242C] text-white border-none cursor-pointer hover:bg-[#C41E25] transition">
                 <Copy size={13} /> {copied === 'key' ? 'Хуулагдлаа!' : 'Хуулах'}
               </button>
@@ -208,7 +215,7 @@ function ImportSection() {
             <div className="flex gap-2 items-center mb-4">
               <input readOnly value={integration?.apiSecret ? '••••••••' + integration.apiSecret.slice(-8) : ''}
                 className="flex-1 bg-[var(--esl-bg-section)] border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm font-mono text-[var(--esl-text-primary)] outline-none" />
-              <button onClick={() => copyText(integration?.apiSecret, 'secret')}
+              <button onClick={() => copyText(integration?.apiSecret || '', 'secret')}
                 className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-[#E8242C] text-white border-none cursor-pointer hover:bg-[#C41E25] transition">
                 <Copy size={13} /> {copied === 'secret' ? 'Хуулагдлаа!' : 'Хуулах'}
               </button>

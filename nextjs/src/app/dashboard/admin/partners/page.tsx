@@ -60,7 +60,10 @@ export default function AdminPartnersPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchPartners(); }, []);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchPartners(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, []);
 
   const handleCreate = async () => {
     const token = localStorage.getItem('token');

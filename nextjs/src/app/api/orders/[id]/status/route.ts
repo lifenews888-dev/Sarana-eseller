@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth } from '@/lib/api-auth';
@@ -34,13 +35,13 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     }
 
     const historyEntry = { status, timestamp: new Date().toISOString(), note: note || undefined };
-    const currentHistory = (order.statusHistory as any[]) || [];
+    const currentHistory = (order.statusHistory as Prisma.JsonArray | null) || [];
 
     const updated = await prisma.order.update({
       where: { id },
       data: {
         status,
-        statusHistory: [...currentHistory, historyEntry],
+        statusHistory: [...currentHistory, historyEntry] as Prisma.InputJsonValue[],
         ...(estimatedMinutes !== undefined && { estimatedMinutes }),
       },
     });

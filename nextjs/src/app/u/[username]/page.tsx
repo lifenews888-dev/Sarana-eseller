@@ -18,7 +18,7 @@ import SafeImage from '@/components/ui/SafeImage';
 export default function MicroStorefront() {
   const params = useParams();
   const username = params.username as string;
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<{ name?: string } | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [cartOpen, setCartOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function MicroStorefront() {
         ProductsAPI.list({ limit: '20' }).catch(() => ({ products: [] })),
       ]);
       setProfile(p);
-      const prodList = (prods as any)?.products || [];
+      const prodList = ((prods as { products?: Product[] } | null)?.products) || [];
       setProducts(prodList);
     } catch {
       setProducts([]);
@@ -60,7 +60,7 @@ export default function MicroStorefront() {
 
   const heroProduct = products[0];
   const crossSellProducts = products.slice(1);
-  const displayName = (profile as any)?.name || username;
+  const displayName = profile?.name || username;
 
   return (
     <div className="min-h-screen bg-[var(--esl-bg-section)]">

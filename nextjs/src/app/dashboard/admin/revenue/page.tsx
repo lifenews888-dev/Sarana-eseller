@@ -39,15 +39,18 @@ export default function RevenueDashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    const token = localStorage.getItem('token');
-    fetch(`/api/admin/revenue?period=${period}`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    })
-      .then(r => r.json())
-      .then(d => setData(d))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    const deferred = window.setTimeout(() => {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      fetch(`/api/admin/revenue?period=${period}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+        .then(r => r.json())
+        .then(d => setData(d))
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [period]);
 
   const sources = data ? Object.entries(data.bySource).sort((a, b) => b[1].amount - a[1].amount) : [];
@@ -174,7 +177,7 @@ export default function RevenueDashboardPage() {
                   </Pie>
                   <Tooltip
                     contentStyle={{ background: '#1E1E2E', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12 }}
-                    formatter={(value: any) => formatMNT(Number(value))}
+                    formatter={(value) => formatMNT(Number(value))}
                   />
                   <Legend
                     verticalAlign="bottom"

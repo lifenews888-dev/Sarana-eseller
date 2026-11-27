@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getUserDistrict, type Coordinates } from '@/lib/location/userLocation';
+import { getUserDistrict, UB_DISTRICTS, type Coordinates } from '@/lib/location/userLocation';
 
 interface LocationState {
   location: Coordinates | null;
@@ -83,11 +83,13 @@ export function useUserLocation(): LocationState {
   }, []);
 
   useEffect(() => {
-    detectLocation();
+    const deferred = window.setTimeout(() => {
+      detectLocation();
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [detectLocation]);
 
   const setManualDistrict = useCallback((key: string) => {
-    const { UB_DISTRICTS } = require('@/lib/location/userLocation');
     const d = UB_DISTRICTS[key];
     if (d) {
       const coords = { lat: d.lat, lng: d.lng };

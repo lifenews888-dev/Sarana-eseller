@@ -166,7 +166,7 @@ export async function POST(req: Request) {
     });
 
     return res;
-  } catch (e: any) {
-    return fail(e.message || 'Бүртгэл үүсгэхэд алдаа гарлаа', 500);
+  } catch (e: unknown) {
+    return fail((e instanceof Error ? e.message : String(e)) || 'Бүртгэл үүсгэхэд алдаа гарлаа', 500);
   }
 }

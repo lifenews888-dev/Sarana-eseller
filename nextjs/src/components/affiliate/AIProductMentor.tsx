@@ -74,7 +74,8 @@ export default function AIProductMentor({ product, onClose, onStartSelling, user
   const sendMessage = (text: string) => {
     if (!text.trim()) return;
 
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text, timestamp: new Date() };
+    const now = new Date();
+    const userMsg: Message = { id: `u${now.getTime()}`, role: 'user', content: text, timestamp: now };
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setTyping(true);
@@ -82,14 +83,14 @@ export default function AIProductMentor({ product, onClose, onStartSelling, user
     // Simulate AI response
     setTimeout(() => {
       const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `a${now.getTime()}`,
         role: 'ai',
         content: getAIResponse(product, text),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiResponse]);
       setTyping(false);
-    }, 800 + Math.random() * 1200);
+    }, 1200);
   };
 
   const disc = discountPercent(product.price, product.salePrice);

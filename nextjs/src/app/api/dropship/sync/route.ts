@@ -64,10 +64,10 @@ export async function POST(req: NextRequest) {
       })
 
       synced++
-    } catch (e: any) {
+    } catch (e: unknown) {
       await prisma.dropshipProduct.update({
         where: { id: d.id },
-        data: { syncStatus: 'error', syncError: e.message },
+        data: { syncStatus: 'error', syncError: (e instanceof Error ? e.message : String(e)) },
       })
       errors++
     }

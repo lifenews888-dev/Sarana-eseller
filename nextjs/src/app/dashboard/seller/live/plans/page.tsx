@@ -1,4 +1,5 @@
 "use client";
+import Link from 'next/link';
 
 import { useState, useEffect } from "react";
 import { Check, X, Crown, Zap, Star, Shield } from "lucide-react";
@@ -193,12 +194,12 @@ export default function LivePlansPage() {
 
               {/* Action button */}
               {plan.key === "ENTERPRISE" ? (
-                <a
+                <Link
                   href="/contact"
                   className="block text-center bg-amber-600 hover:bg-amber-700 text-white py-2.5 rounded-lg font-medium text-sm transition"
                 >
                   Холбоо барих
-                </a>
+                </Link>
               ) : isCurrent ? (
                 <button
                   disabled

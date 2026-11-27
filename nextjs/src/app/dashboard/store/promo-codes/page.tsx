@@ -116,7 +116,7 @@ export default function PromoCodesPage() {
         <div className="py-16 text-center rounded-xl" style={{ background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)' }}>
           <Tag className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--esl-text-muted)' }} />
           <p className="text-sm font-semibold" style={{ color: 'var(--esl-text-primary)' }}>Купон байхгүй</p>
-          <p className="text-xs mt-1" style={{ color: 'var(--esl-text-muted)' }}>"Купон үүсгэх" товч дарна уу</p>
+          <p className="text-xs mt-1" style={{ color: 'var(--esl-text-muted)' }}>&ldquo;Купон үүсгэх&rdquo; товч дарна уу</p>
         </div>
       ) : (
         <div className="space-y-3">

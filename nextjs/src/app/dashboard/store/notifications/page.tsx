@@ -28,15 +28,18 @@ export default function NotificationsPage() {
   const toast = useToast();
 
   useEffect(() => {
-    const saved = localStorage.getItem('eseller_notification_settings');
-    if (saved) {
-      try {
-        setSettings(JSON.parse(saved));
-      } catch {
-        // ignore
+    const deferred = window.setTimeout(() => {
+      const saved = localStorage.getItem('eseller_notification_settings');
+      if (saved) {
+        try {
+          setSettings(JSON.parse(saved));
+        } catch {
+          // ignore
+        }
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   function toggle(key: string, type: 'email' | 'push') {

@@ -45,6 +45,8 @@ function formatFee(fee: number): string {
   return fee.toLocaleString('mn-MN') + '₮';
 }
 
+type RawProvince = { code: string; name: string; fee: number; deliveryDays?: string | number; isFree?: boolean; isActive?: boolean };
+
 export function ProvinceSelector({ onSelect, selected }: ProvinceSelectorProps) {
   const [open, setOpen] = useState(false);
   const [provinces, setProvinces] = useState<ProvinceOption[]>(PROVINCES);
@@ -57,8 +59,8 @@ export function ProvinceSelector({ onSelect, selected }: ProvinceSelectorProps) 
         if (res.success && Array.isArray(res.data) && res.data.length > 0) {
           setProvinces(
             res.data
-              .filter((p: any) => p.isActive !== false)
-              .map((p: any) => ({
+              .filter((p: RawProvince) => p.isActive !== false)
+              .map((p: RawProvince) => ({
                 code: p.code,
                 name: p.name,
                 fee: p.fee,

@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 import { sanitizeImageUrls } from '@/lib/image-url'
 
 // PUT — Feed URL тохируулах
+type FeedProductRow = { name?: string; title?: string; description?: string; price?: string | number; image?: string; images?: string[] }
+
 export async function PUT(req: NextRequest) {
   const auth = requireSeller(req)
   if (auth instanceof NextResponse) return auth
@@ -46,7 +48,7 @@ export async function POST(req: NextRequest) {
     const res = await fetch(integration.feedUrl!, { signal: AbortSignal.timeout(30000) })
     const content = await res.text()
 
-    let products: any[] = []
+    let products: FeedProductRow[] = []
 
     if (integration.feedType === 'json') {
       const data = JSON.parse(content)
@@ -108,11 +110,11 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json({ success: true, synced, total: products.length })
-  } catch (e: any) {
+  } catch (e: unknown) {
     await prisma.storeIntegration.update({
       where: { id: integration.id },
-      data: { syncStatus: 'error', syncError: e.message },
+      data: { syncStatus: 'error', syncError: (e instanceof Error ? e.message : String(e)) },
     })
-    return NextResponse.json({ error: e.message }, { status: 500 })
+    return NextResponse.json({ error: (e instanceof Error ? e.message : String(e)) }, { status: 500 })
   }
 }

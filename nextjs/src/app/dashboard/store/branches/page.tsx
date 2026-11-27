@@ -44,8 +44,11 @@ export default function BranchesPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    setBranches(loadBranches());
+    const deferred = window.setTimeout(() => {
+      setMounted(true);
+      setBranches(loadBranches());
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, []);
 
   if (!mounted) {

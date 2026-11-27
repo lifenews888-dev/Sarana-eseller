@@ -1,4 +1,5 @@
 'use client';
+import Link from 'next/link';
 
 import { useState, useEffect, useCallback } from 'react';
 import { useShopTypeStore, type ShopType } from '@/lib/shop-type-store';
@@ -649,13 +650,13 @@ export default function ShopTypeWizard() {
                   <ExternalLink className="w-4 h-4" />
                   Live хуудас харах
                 </a>
-                <a
+                <Link
                   href="/dashboard/store"
                   className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-semibold bg-[var(--esl-bg-elevated)] text-[var(--esl-text-primary)] border border-[var(--esl-border)] hover:bg-[#3D3D3D] transition no-underline"
                 >
                   <LayoutDashboard className="w-4 h-4" />
                   Dashboard руу орох
-                </a>
+                </Link>
               </div>
             </div>
           );

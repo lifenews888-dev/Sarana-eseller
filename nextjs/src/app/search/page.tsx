@@ -47,22 +47,25 @@ function SearchPage() {
   const entityType = searchParams.get('entityType') || '';
 
   useEffect(() => {
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (q) params.set('q', q);
-    if (category) params.set('category', category);
-    if (sort) params.set('sort', sort);
-    if (page > 1) params.set('page', String(page));
-    if (minPrice) params.set('minPrice', minPrice);
-    if (maxPrice) params.set('maxPrice', maxPrice);
-    if (district) params.set('district', district);
-    if (entityType) params.set('entityType', entityType);
+    const deferred = window.setTimeout(() => {
+      setLoading(true);
+      const params = new URLSearchParams();
+      if (q) params.set('q', q);
+      if (category) params.set('category', category);
+      if (sort) params.set('sort', sort);
+      if (page > 1) params.set('page', String(page));
+      if (minPrice) params.set('minPrice', minPrice);
+      if (maxPrice) params.set('maxPrice', maxPrice);
+      if (district) params.set('district', district);
+      if (entityType) params.set('entityType', entityType);
 
-    fetch(`/api/search?${params}`)
-      .then(r => r.json())
-      .then(d => { setProducts(d.products || []); setTotal(d.total || 0); })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      fetch(`/api/search?${params}`)
+        .then(r => r.json())
+        .then(d => { setProducts(d.products || []); setTotal(d.total || 0); })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, 0);
+    return () => window.clearTimeout(deferred);
   }, [q, category, sort, page, minPrice, maxPrice, district, entityType]);
 
   const updateFilter = (key: string, value: string) => {
@@ -81,7 +84,7 @@ function SearchPage() {
           <SearchBar placeholder="Бараа, дэлгүүр хайх..." size="md" />
           <div className="flex items-center justify-between mt-3">
             <p className="text-xs" style={{ color: 'var(--esl-text-muted)' }}>
-              {q && <><span className="font-bold" style={{ color: 'var(--esl-text-primary)' }}>"{q}"</span> — </>}
+              {q && <><span className="font-bold" style={{ color: 'var(--esl-text-primary)' }}>&ldquo;{q}&rdquo;</span> — </>}
               {total} үр дүн
             </p>
             <div className="flex items-center gap-2">

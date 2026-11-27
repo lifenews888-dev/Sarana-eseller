@@ -19,7 +19,7 @@ async function scrapeProduct(url: string) {
   }
 
   // JSON-LD structured data
-  let jsonLd: Record<string, any> = {}
+  let jsonLd: { name?: string; description?: string; price?: string | number; offers?: { price?: string | number } } = {}
   const ldMatch = html.match(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/i)
   if (ldMatch) {
     try { jsonLd = JSON.parse(ldMatch[1]) } catch {}
@@ -103,15 +103,15 @@ export async function POST(req: NextRequest) {
 
     await prisma.importedUrl.update({
       where: { id: imported.id },
-      data: { status: 'success', rawData: scraped as any, sourceType: scraped.sourceType },
+      data: { status: 'success', rawData: JSON.parse(JSON.stringify(scraped)), sourceType: scraped.sourceType },
     })
 
     return NextResponse.json({ success: true, data: scraped, importId: imported.id })
-  } catch (e: any) {
+  } catch (e: unknown) {
     await prisma.importedUrl.update({
       where: { id: imported.id },
-      data: { status: 'failed', error: e.message },
+      data: { status: 'failed', error: (e instanceof Error ? e.message : String(e)) },
     })
-    return NextResponse.json({ error: e.message }, { status: 422 })
+    return NextResponse.json({ error: (e instanceof Error ? e.message : String(e)) }, { status: 422 })
   }
 }

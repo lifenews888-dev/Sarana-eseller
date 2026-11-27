@@ -28,6 +28,8 @@ import AIProductMentor from '@/components/affiliate/AIProductMentor';
 import AIMarketingStudio from '@/components/affiliate/AIMarketingStudio';
 import StartSellingModal from '@/components/seller/StartSellingModal';
 
+type Commission = { id: string; orderId?: string; productName?: string; orderAmount?: number; commissionAmount?: number; commissionRate?: number; status: string; createdAt: string };
+
 type Tab = 'dashboard' | 'products' | 'commissions' | 'earnings' | 'wallet' | 'toolkit';
 
 interface Earning {
@@ -93,7 +95,7 @@ const COMM_STATUS: Record<string, { label: string; color: string; bg: string }> 
 
 function CommissionsTab() {
   const [filter, setFilter] = useState<string>('all');
-  const [commissions, setCommissions] = useState<any[]>([]);
+  const [commissions, setCommissions] = useState<Commission[]>([]);
   const [commLoading, setCommLoading] = useState(true);
 
   useEffect(() => {
@@ -105,9 +107,9 @@ function CommissionsTab() {
       .finally(() => setCommLoading(false));
   }, []);
 
-  const filtered = filter === 'all' ? commissions : commissions.filter((c: any) => c.status === filter);
-  const totalEarned = commissions.reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
-  const pendingAmount = commissions.filter((c: any) => c.status === 'pending').reduce((s: number, c: any) => s + (c.commissionAmount || 0), 0);
+  const filtered = filter === 'all' ? commissions : commissions.filter((c: Commission) => c.status === filter);
+  const totalEarned = commissions.reduce((s: number, c: Commission) => s + (c.commissionAmount || 0), 0);
+  const pendingAmount = commissions.filter((c: Commission) => c.status === 'pending').reduce((s: number, c: Commission) => s + (c.commissionAmount || 0), 0);
 
   return (
     <div className="space-y-6">
@@ -116,7 +118,7 @@ function CommissionsTab() {
         <StatCard icon={<Wallet className="w-6 h-6" />} label="Нийт комисс" value={formatPrice(totalEarned)} gradient="indigo" />
         <StatCard icon={<Clock className="w-6 h-6" />} label="Хүлээгдэж буй" value={formatPrice(pendingAmount)} gradient="amber" />
         <StatCard icon={<Target className="w-6 h-6" />} label="Борлуулалт" value={commissions.length} gradient="green" />
-        <StatCard icon={<BarChart3 className="w-6 h-6" />} label="Дундаж комисс" value={commissions.length ? `${Math.round(commissions.reduce((s: number, c: any) => s + (c.commissionRate || 0), 0) / commissions.length)}%` : '—'} gradient="pink" />
+        <StatCard icon={<BarChart3 className="w-6 h-6" />} label="Дундаж комисс" value={commissions.length ? `${Math.round(commissions.reduce((s: number, c: Commission) => s + (c.commissionRate || 0), 0) / commissions.length)}%` : '—'} gradient="pink" />
       </div>
 
       {/* Filter */}

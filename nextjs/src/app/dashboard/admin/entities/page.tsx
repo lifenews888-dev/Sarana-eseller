@@ -63,7 +63,10 @@ export default function AdminEntitiesPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchEntities(); }, [statusFilter, typeFilter]);
+  useEffect(() => {
+    const deferred = window.setTimeout(() => { fetchEntities(); }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [statusFilter, typeFilter]);
 
   const handleAction = async (id: string, table: string, action: 'approve' | 'suspend' | 'reject') => {
     setActing(id);

@@ -1,3 +1,4 @@
+import { haversineDistance } from './userLocation';
 /**
  * Mongolia locations — UB 9 districts + 21 provinces
  */
@@ -67,7 +68,6 @@ export function getAllLocations(): { key: string; name: string; type: 'district'
 
 /** Find nearest location from coordinates */
 export function findNearestLocation(lat: number, lng: number): { key: string; name: string; type: string; distance: number } {
-  const { haversineDistance } = require('./userLocation');
   const all = getAllLocations();
   let nearest = { key: '', name: '', type: '', distance: Infinity };
 

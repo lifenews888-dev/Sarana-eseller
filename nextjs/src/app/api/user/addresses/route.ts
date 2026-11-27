@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json } from '@/lib/api-auth';
@@ -9,7 +10,7 @@ export async function GET(req: NextRequest) {
   if (user instanceof Response) return user;
 
   const u = await prisma.user.findUnique({ where: { id: user.id }, select: { store: true } });
-  const addresses = (u?.store as any)?.addresses || [];
+  const addresses = (u?.store as { addresses?: unknown[] } | null)?.addresses || [];
 
   return json(addresses);
 }
@@ -22,11 +23,12 @@ export async function POST(req: NextRequest) {
   const { addresses } = await req.json();
 
   const u = await prisma.user.findUnique({ where: { id: user.id }, select: { store: true } });
-  const store = (u?.store || {}) as any;
+  const store = (u?.store || {}) as Record<string, unknown>;
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { store: { ...store, addresses } },
+    // TODO: StoreInfo төрөлд addresses талбар байхгүй — хаяг хадгалах загварыг тусад нь шийдэх
+    data: { store: { ...store, addresses } as unknown as Prisma.UserUpdateInput['store'] },
   });
 
   return json({ message: 'Хадгалагдлаа' });

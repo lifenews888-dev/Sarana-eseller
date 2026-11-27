@@ -27,8 +27,8 @@ export async function POST(req: NextRequest) {
     });
 
     return json({ published: true, subdomain, url: `${subdomain}.eseller.mn` });
-  } catch (err: any) {
-    if (err.code === 'P2002') return errorJson('Энэ subdomain ашиглагдсан байна');
+  } catch (err: unknown) {
+    if ((err as { code?: string })?.code === 'P2002') return errorJson('Энэ subdomain ашиглагдсан байна');
     return errorJson('Алдаа гарлаа');
   }
 }

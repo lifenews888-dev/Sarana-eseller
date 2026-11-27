@@ -6,6 +6,8 @@ import { sendOrderConfirmation, sendDeliveryUpdate } from '@/lib/email';
 import { smsDelivered } from '@/lib/sms';
 
 // POST /api/orders/[id]/confirm — buyer confirms receipt
+type OrderLineItem = { productId?: string; id?: string; name?: string; price?: number; quantity?: number };
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = requireAuth(req);
   if (user instanceof Response) return user;
@@ -40,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
   // --- еБаримт ---
   try {
-    const items = (order.items as any[]).map((item: any) => ({
+    const items = ((order.items || []) as OrderLineItem[]).map((item) => ({
       name: item.name || 'Бараа',
       qty: item.quantity || 1,
       unitPrice: item.price || 0,

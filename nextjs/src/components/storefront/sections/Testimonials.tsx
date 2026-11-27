@@ -27,7 +27,7 @@ export default function Testimonials({ section, theme }: { section: Section; the
                   <Star key={j} className="w-4 h-4" fill={j < r.rating ? theme.accentColor : '#E5E7EB'} stroke="none" />
                 ))}
               </div>
-              <p className="text-sm mb-3 leading-relaxed" style={{ color: theme.textColor + 'CC', fontFamily: 'var(--sf-font-body)' }}>"{r.text}"</p>
+              <p className="text-sm mb-3 leading-relaxed" style={{ color: theme.textColor + 'CC', fontFamily: 'var(--sf-font-body)' }}>&ldquo;{r.text}&rdquo;</p>
               <p className="text-xs font-bold" style={{ color: theme.textColor }}>— {r.name}</p>
             </div>
           ))}

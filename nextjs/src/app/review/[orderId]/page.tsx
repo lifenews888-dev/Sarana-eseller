@@ -13,7 +13,7 @@ function authHeaders(): Record<string, string> {
 export default function ReviewPage() {
   const { orderId } = useParams<{ orderId: string }>();
   const router = useRouter();
-  const [order, setOrder] = useState<any>(null);
+  const [order, setOrder] = useState<{ items?: { productId?: string; id?: string }[] } | null>(null);
   const [loading, setLoading] = useState(true);
   const [rating, setRating] = useState(0);
   const [hovered, setHovered] = useState(0);

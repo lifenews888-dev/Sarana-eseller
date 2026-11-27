@@ -15,8 +15,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       data: { userId: auth.id, productId },
     });
     return json({ wishlisted: true });
-  } catch (err: any) {
-    if (err.code === 'P2002') return json({ wishlisted: true }); // already exists
+  } catch (err: unknown) {
+    if ((err as { code?: string })?.code === 'P2002') return json({ wishlisted: true }); // already exists
     return errorJson('Алдаа');
   }
 }

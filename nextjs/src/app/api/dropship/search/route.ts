@@ -38,6 +38,16 @@ async function searchCJDropshipping(keyword: string) {
   return res.json()
 }
 
+type AliItem = {
+  itemId?: string | number; title?: string; subject?: string; price?: string | number;
+  sku?: { def?: { promotionPrice?: string | number; price?: string | number } };
+  image?: string; itemUrl?: string; quantity?: number; averageStarRate?: number; averageStar?: number;
+  sales?: number; totalOrders?: number;
+}
+type AliEntry = AliItem & { item?: AliItem; delivery?: { deliveryDays?: string } }
+type CjItem = { pid?: string; productName?: string; sellPrice?: string | number; productImage?: string; inventory?: number; logisticsTime?: string }
+type DropshipSearchItem = Record<string, unknown>
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const q = searchParams.get('q') || ''
@@ -47,7 +57,7 @@ export async function GET(req: NextRequest) {
   if (!q) return NextResponse.json({ error: 'Хайлтын үг оруулна уу' }, { status: 400 })
 
   try {
-    let products: any[] = []
+    let products: DropshipSearchItem[] = []
 
     if (source === 'aliexpress') {
       const data = await searchAliExpress(q, page)
@@ -69,17 +79,17 @@ export async function GET(req: NextRequest) {
         console.log('first item sample:', JSON.stringify(items[0]).slice(0, 400))
       }
 
-      products = items.map((entry: any) => {
+      products = (items as AliEntry[]).map((entry) => {
         const item = entry.item || entry
         const delivery = entry.delivery || {}
         return {
           supplierId: String(item.itemId || ''),
           supplierName: 'aliexpress',
           name: item.title || item.subject || '',
-          supplierPrice: parseFloat(
+          supplierPrice: parseFloat(String(
             item.sku?.def?.promotionPrice ||
             item.sku?.def?.price ||
-            item.price || 0
+            item.price || 0)
           ),
           supplierCurrency: 'USD',
           images: item.image
@@ -97,11 +107,11 @@ export async function GET(req: NextRequest) {
 
     } else if (source === 'cj') {
       const data = await searchCJDropshipping(q)
-      products = (data.data?.list || []).map((item: any) => ({
+      products = ((data.data?.list || []) as CjItem[]).map((item) => ({
         supplierId: item.pid,
         supplierName: 'cj',
         name: item.productName,
-        supplierPrice: parseFloat(item.sellPrice || 0),
+        supplierPrice: parseFloat(String(item.sellPrice || 0)),
         supplierCurrency: 'USD',
         images: item.productImage ? [item.productImage] : [],
         supplierUrl: `https://cjdropshipping.com/product/${item.pid}.html`,
@@ -112,8 +122,8 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ products, source, query: q })
 
-  } catch (err: any) {
-    console.error('Dropship search error:', err.message)
+  } catch (err: unknown) {
+    console.error('Dropship search error:', (err instanceof Error ? err.message : String(err)))
     // Fallback demo data
     const demo = Array.from({ length: 8 }, (_, i) => ({
       supplierId: `demo-${i + 1}`,

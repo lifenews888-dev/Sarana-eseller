@@ -6,6 +6,9 @@ import {
   Search, Plus, RefreshCw, ExternalLink, TrendingUp, Package,
 } from 'lucide-react'
 
+type SupplierProduct = { supplierId: string; supplierName?: string; name: string; supplierPrice: number; supplierCurrency?: string; images?: string[]; supplierUrl?: string; supplierStock?: number; orders: number; shipping?: string; rating?: number }
+type MyDropship = { id: string; supplierPrice: number; supplierCurrency?: string; supplierUrl?: string; syncStatus?: string; product?: { name?: string; price?: number; images?: string[] } | null }
+
 const SOURCES = [
   { id: 'aliexpress', label: 'AliExpress', flag: '🇨🇳', color: '#E8242C' },
   { id: 'cj', label: 'CJ Dropship', flag: '📦', color: '#FF6B00' },
@@ -18,17 +21,14 @@ export default function DropshipPage() {
   const [tab, setTab] = useState<'search' | 'my'>('search')
   const [source, setSource] = useState('aliexpress')
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<any[]>([])
-  const [myProducts, setMyProducts] = useState<any[]>([])
+  const [results, setResults] = useState<SupplierProduct[]>([])
+  const [myProducts, setMyProducts] = useState<MyDropship[]>([])
   const [loading, setLoading] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [importing, setImporting] = useState<string | null>(null)
   const [margin, setMargin] = useState(40)
   const [msg, setMsg] = useState('')
 
-  useEffect(() => {
-    if (tab === 'my') fetchMyProducts()
-  }, [tab])
 
   const search = async () => {
     if (!query.trim()) return
@@ -45,7 +45,7 @@ export default function DropshipPage() {
     setLoading(false)
   }
 
-  const importProduct = async (p: any) => {
+  const importProduct = async (p: SupplierProduct) => {
     setImporting(p.supplierId)
     try {
       const r = await fetch('/api/dropship/import', {
@@ -72,6 +72,13 @@ export default function DropshipPage() {
       setMyProducts(d.products || [])
     } catch {}
   }
+
+  useEffect(() => {
+    const deferred = window.setTimeout(() => {
+      if (tab === 'my') fetchMyProducts()
+    }, 0);
+    return () => window.clearTimeout(deferred);
+  }, [tab])
 
   const syncAll = async () => {
     setSyncing(true)
@@ -251,7 +258,7 @@ export default function DropshipPage() {
             </div>
           ) : (
             <div className="space-y-2.5">
-              {myProducts.map((d: any) => {
+              {myProducts.map((d) => {
                 const costMnt = Math.round(d.supplierPrice * (d.supplierCurrency === 'USD' ? USD_RATE : 1))
                 const profit = (d.product?.price || 0) - costMnt
                 const pctMargin = costMnt > 0 ? Math.round((profit / costMnt) * 100) : 0
