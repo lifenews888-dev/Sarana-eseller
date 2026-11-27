@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { isSmsConfigured, sendSms } from '@/lib/smsGateway';
 
 type Ctx = { params: Promise<{ id: string }> };
 const isValidObjectId = (id: string) => /^[a-f\d]{24}$/i.test(id);
@@ -37,7 +38,11 @@ export async function GET(req: NextRequest, ctx: Ctx) {
       feedItemId: chat.feedItemId,
       title: chat.title,
       role: iAmBuyer ? 'buyer' : 'seller',
-      otherName: other?.name || (iAmBuyer ? 'Зарын эзэн' : 'Худалдан авагч'),
+      otherName: !iAmBuyer && chat.guestName
+        ? `${chat.guestName} (зочин)`
+        : other?.name || (iAmBuyer ? 'Зарын эзэн' : 'Худалдан авагч'),
+      // Зочин бүртгэлгүй тул зарын эзэнд утсыг нь харуулна (залгаж эсвэл SMS-ээр хариулж болно)
+      guestPhone: !iAmBuyer ? chat.guestPhone || null : null,
     },
     messages: messages.map((m) => ({ id: m.id, text: m.text, mine: m.senderId === auth.id, createdAt: m.createdAt })),
   });
@@ -65,5 +70,13 @@ export async function POST(req: NextRequest, ctx: Ctx) {
       ...(iAmBuyer ? { sellerUnread: { increment: 1 } } : { buyerUnread: { increment: 1 } }),
     },
   });
+  // Зочинд хариулсан бол SMS-ээр мэдэгдэнэ (SMS тохируулсан үед). Холбоос нь чат руу шууд оруулна.
+  if (!iAmBuyer && chat.guestPhone && isSmsConfigured()) {
+    const seller = await prisma.user.findUnique({ where: { id: auth.id }, select: { name: true } }).catch(() => null);
+    const preview = text.length > 60 ? `${text.slice(0, 60)}…` : text;
+    sendSms(chat.guestPhone, `eseller.mn: ${seller?.name || 'Зарын эзэн'} хариулав: "${preview}" Чат: eseller.mn/messages?guest=${chat.id}`)
+      .catch(() => null);
+  }
+
   return json({ id: message.id, text: message.text, mine: true, createdAt: message.createdAt });
 }

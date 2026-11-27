@@ -25,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
           text: m.text,
           createdAt: m.createdAt,
           side: m.senderId === chat.sellerId ? 'seller' : 'buyer',
-          senderName: names[m.senderId] || (m.senderId === chat.sellerId ? 'Зарын эзэн' : 'Худалдан авагч'),
+          senderName: names[m.senderId] || (m.senderId === chat.sellerId ? 'Зарын эзэн' : chat.guestName ? `${chat.guestName} (зочин)` : 'Худалдан авагч'),
         })),
       });
     }

@@ -2722,6 +2722,10 @@ model ListingChat {
   lastAt       DateTime @default(now())
   buyerUnread  Int      @default(0)
   sellerUnread Int      @default(0)
+  // Зочин (бүртгэлгүй) чат: buyerId нь санамсаргүй ID, хандалт нь токеноор (hash хадгална)
+  guestName      String?
+  guestPhone     String?
+  guestTokenHash String?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -2730,6 +2734,7 @@ model ListingChat {
   @@unique([feedItemId, buyerId])
   @@index([buyerId])
   @@index([sellerId])
+  @@index([guestPhone])
   @@map("listing_chats")
 }
 

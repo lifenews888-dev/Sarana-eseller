@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
       const chats = rows.map((r) => ({
         id: r.id,
         shopId: r.feedItemId,
-        customer: um[r.buyerId] || { id: r.buyerId, name: 'Хэрэглэгч', role: 'buyer' },
+        customer: um[r.buyerId] || (r.guestName ? { id: r.buyerId, name: `${r.guestName} (зочин)`, email: r.guestPhone || undefined, role: 'guest' } : { id: r.buyerId, name: 'Хэрэглэгч', role: 'buyer' }),
         context: `Зар: ${r.title || ''} → ${um[r.sellerId]?.name || 'Зарын эзэн'}`,
         lastMessage: r.lastMessage,
         lastAt: r.lastAt,
