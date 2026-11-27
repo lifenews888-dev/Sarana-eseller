@@ -18,6 +18,7 @@ import SafeImage from '@/components/ui/SafeImage';
 import MediaCarousel, { type MediaItem } from './MediaCarousel';
 import ShareWishlistBar from './ShareWishlistBar';
 import ListingContactActions from './ListingContactActions';
+import LoanCalculator from './LoanCalculator';
 import StartSellingButton from './StartSellingButton';
 
 type FeedMetadata = Record<string, unknown>;
@@ -162,6 +163,10 @@ export default function FeedDetailClient({ post: rawPost }: { post: FeedPost }) 
         ) : null}
 
         <DetailedSpecs et={et} meta={meta} post={post} />
+
+        {loanKind(et, post) ? (
+          <LoanCalculator price={post.price as number} kind={loanKind(et, post)!} accent={config.color} />
+        ) : null}
 
         {post.owner ? (
           <div className="flex items-center gap-4 p-4 rounded-xl bg-[var(--esl-bg-card)] border border-[var(--esl-border)]">
@@ -733,6 +738,18 @@ function detailQualityProfile(category: string | undefined, et: DetailEntityType
     recommendedImages: 5,
     evidenceKeys: ['includedItems', 'checks', 'features', 'deliveryOptions', 'warranty'],
   };
+}
+
+// Машин, үл хөдлөх (худалдах) зарт зээлийн тооцоолуур харуулна — түрээс, бартер, жижиг үнэд биш
+function loanKind(et: DetailEntityType, post: FeedPost): 'auto' | 'home' | null {
+  if (typeof post.price !== 'number' || post.price < 3_000_000) return null;
+  const listingType = String(post.metadata?.listingType || '');
+  if (listingType && listingType !== 'Худалдах') return null;
+  const text = `${post.category || ''} ${post.subcategory || ''} ${post.title || ''}`.toLowerCase();
+  if (/түрээс|rent|хөлс/.test(text)) return null;
+  if (et === 'AUTO') return 'auto';
+  if (et === 'REAL_ESTATE' || et === 'CONSTRUCTION') return 'home';
+  return null;
 }
 
 function resolveFeedDetailType(entityType: string, category?: string): DetailEntityType {
