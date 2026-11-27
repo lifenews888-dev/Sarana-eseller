@@ -80,8 +80,8 @@ export default function AchievementsPage() {
 
       {/* Header */}
       <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-gray-900">Амжилтууд</h1>
-        <p className="mt-1 text-gray-500">Амжилтуудаа цуглуулж, оноо авна уу</p>
+        <h1 className="text-3xl font-bold text-[var(--esl-text-primary)]">Амжилтууд</h1>
+        <p className="mt-1 text-[var(--esl-text-secondary)]">Амжилтуудаа цуглуулж, оноо авна уу</p>
       </div>
 
       {/* Stats cards */}
@@ -120,13 +120,13 @@ export default function AchievementsPage() {
               className={`relative rounded-xl border-2 p-5 transition-all ${
                 ach.earned
                   ? 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-amber-50 shadow-md'
-                  : 'border-gray-200 bg-gray-50 opacity-70'
+                  : 'border-[var(--esl-border)] bg-[var(--esl-bg-section)] opacity-70'
               }`}
             >
               {/* Icon */}
               <div
                 className={`mb-3 flex h-12 w-12 items-center justify-center rounded-full ${
-                  ach.earned ? 'bg-yellow-400 text-white' : 'bg-gray-200 text-gray-400'
+                  ach.earned ? 'bg-yellow-400 text-white' : 'bg-[var(--esl-bg-elevated)] text-[var(--esl-text-muted)]'
                 }`}
               >
                 {ach.earned ? (
@@ -137,16 +137,16 @@ export default function AchievementsPage() {
               </div>
 
               {/* Text */}
-              <h3 className={`font-semibold ${ach.earned ? 'text-gray-900' : 'text-gray-500'}`}>
+              <h3 className={`font-semibold ${ach.earned ? 'text-[var(--esl-text-primary)]' : 'text-[var(--esl-text-secondary)]'}`}>
                 {ach.name}
               </h3>
-              <p className={`mt-1 text-sm ${ach.earned ? 'text-gray-600' : 'text-gray-400'}`}>
+              <p className={`mt-1 text-sm ${ach.earned ? 'text-[var(--esl-text-secondary)]' : 'text-[var(--esl-text-muted)]'}`}>
                 {ach.description}
               </p>
 
               {/* Points */}
               <div className="mt-3 flex items-center justify-between">
-                <span className={`text-sm font-medium ${ach.earned ? 'text-yellow-700' : 'text-gray-400'}`}>
+                <span className={`text-sm font-medium ${ach.earned ? 'text-yellow-700' : 'text-[var(--esl-text-muted)]'}`}>
                   +{ach.points.toLocaleString()} оноо
                 </span>
                 {ach.earned && (
@@ -169,7 +169,7 @@ export default function AchievementsPage() {
       </div>
 
       {achievements.length === 0 && (
-        <div className="py-16 text-center text-gray-400">
+        <div className="py-16 text-center text-[var(--esl-text-muted)]">
           <Trophy className="mx-auto mb-3 h-12 w-12" />
           <p>Амжилтууд олдсонгүй. Seed хийнэ үү.</p>
         </div>

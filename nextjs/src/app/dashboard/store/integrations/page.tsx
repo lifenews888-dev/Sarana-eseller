@@ -195,7 +195,7 @@ function ImportSection() {
               <input readOnly value={integration?.apiKey || ''}
                 className="flex-1 bg-[var(--esl-bg-section)] border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm font-mono text-[var(--esl-text-primary)] outline-none" />
               <button onClick={() => copyText(integration?.apiKey, 'key')}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white border-none cursor-pointer hover:bg-indigo-700 transition">
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-[#E8242C] text-white border-none cursor-pointer hover:bg-[#C41E25] transition">
                 <Copy size={13} /> {copied === 'key' ? 'Хуулагдлаа!' : 'Хуулах'}
               </button>
               <button onClick={regenerateKey}
@@ -209,7 +209,7 @@ function ImportSection() {
               <input readOnly value={integration?.apiSecret ? '••••••••' + integration.apiSecret.slice(-8) : ''}
                 className="flex-1 bg-[var(--esl-bg-section)] border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm font-mono text-[var(--esl-text-primary)] outline-none" />
               <button onClick={() => copyText(integration?.apiSecret, 'secret')}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white border-none cursor-pointer hover:bg-indigo-700 transition">
+                className="flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-xs font-semibold bg-[#E8242C] text-white border-none cursor-pointer hover:bg-[#C41E25] transition">
                 <Copy size={13} /> {copied === 'secret' ? 'Хуулагдлаа!' : 'Хуулах'}
               </button>
             </div>
@@ -353,7 +353,7 @@ function ImportSection() {
 
           <div className="flex gap-2">
             <button onClick={saveFeed}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-indigo-600 text-white border-none cursor-pointer hover:bg-indigo-700 transition">
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-lg text-sm font-semibold bg-[#E8242C] text-white border-none cursor-pointer hover:bg-[#C41E25] transition">
               Хадгалах
             </button>
             <button onClick={syncFeed} disabled={syncing || !feedUrl}
@@ -428,13 +428,13 @@ function PlatformsSection() {
           {PLATFORM_CATEGORIES.map(c => (
             <button key={c.key} onClick={() => setCatFilter(c.key)}
               className={cn('px-3.5 py-2 rounded-xl text-xs font-semibold border-none cursor-pointer transition',
-                catFilter === c.key ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]')}>
+                catFilter === c.key ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]')}>
               {'icon' in c && c.icon} {c.label}
             </button>
           ))}
         </div>
         <div className="text-sm text-[var(--esl-text-secondary)] bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl px-4 py-2">
-          <Link2 className="w-4 h-4 inline mr-1.5 text-indigo-500" />
+          <Link2 className="w-4 h-4 inline mr-1.5 text-[#E8242C]" />
           <span className="font-bold text-[var(--esl-text-primary)]">{connectedCount}</span>/{integrations.length} холбогдсон
         </div>
       </div>
@@ -490,7 +490,7 @@ function PlatformsSection() {
                   className={cn('flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold border-none cursor-pointer transition',
                     connectingId === intg.id ? 'bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]' :
                     intg.tier === 'pro' ? 'bg-amber-50 text-amber-700 hover:bg-amber-100' :
-                    'bg-indigo-600 text-white hover:bg-indigo-700')}>
+                    'bg-[#E8242C] text-white hover:bg-[#C41E25]')}>
                   {connectingId === intg.id
                     ? <><RefreshCw className="w-3.5 h-3.5 animate-spin" /> Холбогдож байна...</>
                     : intg.tier === 'pro'
@@ -503,8 +503,8 @@ function PlatformsSection() {
         ))}
       </div>
 
-      <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex items-start gap-3">
-        <Shield className="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" />
+      <div className="bg-[var(--esl-brand-bg)] border border-[var(--esl-brand-border)] rounded-xl p-4 flex items-start gap-3">
+        <Shield className="w-5 h-5 text-[#E8242C] shrink-0 mt-0.5" />
         <div>
           <h4 className="text-sm font-bold text-[var(--esl-text-primary)]">Аюулгүй холболт</h4>
           <p className="text-xs text-[var(--esl-text-secondary)] mt-0.5">Бүх холболт OAuth 2.0 стандартаар хийгдэнэ. Таны нууц үг хадгалагдахгүй.</p>

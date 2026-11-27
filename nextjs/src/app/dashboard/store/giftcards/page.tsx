@@ -84,7 +84,7 @@ export default function GiftCardsPage() {
           <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Бэлгийн карт</h1>
           <p className="text-[var(--esl-text-secondary)] mt-1">Бэлгийн карт үүсгэх, удирдах</p>
         </div>
-        <button onClick={() => { setForm({ ...form, code: generateCode() }); setShowModal(true); }} className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-sm">
+        <button onClick={() => { setForm({ ...form, code: generateCode() }); setShowModal(true); }} className="px-5 py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors text-sm">
           + Шинэ бэлгийн карт
         </button>
       </div>
@@ -107,8 +107,8 @@ export default function GiftCardsPage() {
           {cards.map((card) => {
             const [cls, label] = STATUS_STYLES[card.status];
             return (
-              <div key={card.id} className={`bg-white rounded-xl border border-[var(--esl-border)] overflow-hidden ${card.status !== 'active' ? 'opacity-70' : ''}`}>
-                <div className="bg-gradient-to-r from-indigo-500 to-purple-500 p-5 text-white">
+              <div key={card.id} className={`bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] overflow-hidden ${card.status !== 'active' ? 'opacity-70' : ''}`}>
+                <div className="bg-gradient-to-r from-[#E8242C] to-purple-500 p-5 text-white">
                   <div className="flex justify-between items-start">
                     <Gift className="w-6 h-6" />
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${card.status === 'active' ? 'bg-white/20 text-white' : 'bg-black/10 text-white/70'}`}>
@@ -160,7 +160,7 @@ export default function GiftCardsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Дүн (₮)</label>
-                <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="number" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                 <div className="flex gap-2 mt-2">
                   {[10000, 25000, 50000, 100000].map((v) => (
                     <button key={v} onClick={() => setForm({ ...form, amount: String(v) })} className="px-3 py-1 text-xs bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)] rounded-lg hover:bg-[var(--esl-bg-card-hover)] transition-colors">
@@ -171,9 +171,9 @@ export default function GiftCardsPage() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Дуусах огноо</label>
-                <input type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="date" value={form.expiresAt} onChange={(e) => setForm({ ...form, expiresAt: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
-              <button onClick={handleCreate} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+              <button onClick={handleCreate} className="w-full py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors">
                 Үүсгэх
               </button>
             </div>

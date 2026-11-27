@@ -25,7 +25,7 @@ interface Pagination {
 
 const STATUS_LABELS: Record<string, { label: string; color: string }> = {
   OPEN: { label: 'Нээлттэй', color: 'bg-green-100 text-green-700' },
-  CLOSED: { label: 'Хаагдсан', color: 'bg-gray-100 text-gray-600' },
+  CLOSED: { label: 'Хаагдсан', color: 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]' },
   AWARDED: { label: 'Шалгарсан', color: 'bg-blue-100 text-blue-700' },
 };
 
@@ -137,8 +137,8 @@ export default function TendersPage() {
             onClick={() => { setFilter(f.value); setPage(1); }}
             className={`px-4 py-1.5 rounded-full text-sm font-medium border transition cursor-pointer ${
               filter === f.value
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border-[var(--esl-border)] hover:border-indigo-300'
+                ? 'bg-[#E8242C] text-white border-[#E8242C]'
+                : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border-[var(--esl-border)] hover:border-[var(--esl-brand-border)]'
             }`}
           >
             {f.label}
@@ -173,8 +173,8 @@ export default function TendersPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <span className="text-xs font-medium text-indigo-600">{t.agencyName}</span>
+                    <Building2 className="w-4 h-4 text-[#E8242C] shrink-0" />
+                    <span className="text-xs font-medium text-[#E8242C]">{t.agencyName}</span>
                   </div>
                   <h3 className="text-base font-bold text-[var(--esl-text-primary)] leading-snug">
                     {t.title}
@@ -192,7 +192,7 @@ export default function TendersPage() {
                   {t.requirements.map((r, i) => (
                     <span
                       key={i}
-                      className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs"
+                      className="px-2 py-0.5 bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)] rounded text-xs"
                     >
                       {r}
                     </span>
@@ -216,7 +216,7 @@ export default function TendersPage() {
                 {t.status === 'OPEN' && !expired && (
                   <button
                     onClick={() => { setBidModal(t.id); setBidError(''); setBidSuccess(''); }}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-indigo-700 transition"
+                    className="flex items-center gap-1.5 px-4 py-2 bg-[#E8242C] text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-[#C41E25] transition"
                   >
                     <Send className="w-3.5 h-3.5" /> Санал гаргах
                   </button>
@@ -236,8 +236,8 @@ export default function TendersPage() {
               onClick={() => setPage(p)}
               className={`w-9 h-9 rounded-lg text-sm font-medium border transition cursor-pointer ${
                 page === p
-                  ? 'bg-indigo-600 text-white border-indigo-600'
-                  : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border-[var(--esl-border)] hover:border-indigo-300'
+                  ? 'bg-[#E8242C] text-white border-[#E8242C]'
+                  : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border-[var(--esl-border)] hover:border-[var(--esl-brand-border)]'
               }`}
             >
               {p}
@@ -273,7 +273,7 @@ export default function TendersPage() {
                 value={bidPrice}
                 onChange={(e) => setBidPrice(e.target.value)}
                 placeholder="0"
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               />
             </div>
 
@@ -286,21 +286,21 @@ export default function TendersPage() {
                 onChange={(e) => setBidNote(e.target.value)}
                 rows={3}
                 placeholder="Нэмэлт тайлбар..."
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 resize-none"
               />
             </div>
 
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => { setBidModal(null); setBidError(''); setBidSuccess(''); }}
-                className="px-4 py-2 text-sm text-[var(--esl-text-secondary)] bg-[var(--esl-bg-section)] rounded-lg border border-[var(--esl-border)] cursor-pointer hover:bg-gray-100 transition"
+                className="px-4 py-2 text-sm text-[var(--esl-text-secondary)] bg-[var(--esl-bg-section)] rounded-lg border border-[var(--esl-border)] cursor-pointer hover:bg-[var(--esl-bg-hover)] transition"
               >
                 Болих
               </button>
               <button
                 onClick={submitBid}
                 disabled={bidLoading || !bidPrice}
-                className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-indigo-700 transition disabled:opacity-50"
+                className="px-5 py-2 bg-[#E8242C] text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-[#C41E25] transition disabled:opacity-50"
               >
                 {bidLoading ? 'Илгээж байна...' : 'Илгээх'}
               </button>

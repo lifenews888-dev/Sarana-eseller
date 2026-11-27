@@ -7,7 +7,7 @@ const TIERS = [
   { name: 'Хүрэл', min: 0, max: 100000, color: '#92400E', bg: 'from-amber-700 to-amber-800', icon: Star },
   { name: 'Мөнгөн', min: 100000, max: 300000, color: '#64748B', bg: 'from-slate-400 to-slate-500', icon: Gem },
   { name: 'Алтан', min: 300000, max: 700000, color: '#D97706', bg: 'from-amber-400 to-yellow-500', icon: Crown },
-  { name: 'Платинум', min: 700000, max: 1500000, color: '#6366F1', bg: 'from-indigo-500 to-violet-600', icon: Trophy },
+  { name: 'Платинум', min: 700000, max: 1500000, color: '#6366F1', bg: 'from-[#E8242C] to-violet-600', icon: Trophy },
 ];
 
 interface TierProgressProps {

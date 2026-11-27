@@ -63,9 +63,9 @@ export default function DomainPage() {
       <div className="p-8 max-w-3xl space-y-6">
 
         {/* Current Domain */}
-        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-2xl p-6">
+        <div className="bg-gradient-to-br from-[#E8242C] to-blue-50 border border-[var(--esl-brand-border)] rounded-2xl p-6">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] shadow-sm flex items-center justify-center"><Globe className="w-5 h-5 text-indigo-500" /></div>
+            <div className="w-10 h-10 rounded-xl bg-[var(--esl-bg-card)] shadow-sm flex items-center justify-center"><Globe className="w-5 h-5 text-[#E8242C]" /></div>
             <div>
               <div className="text-xs text-[var(--esl-text-secondary)] font-semibold">Одоогийн хаяг</div>
               <div className="text-lg font-black text-[var(--esl-text-primary)]">
@@ -230,7 +230,7 @@ export default function DomainPage() {
                 onChange={(e) => save({ sslEnabled: e.target.checked })}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-brand/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[var(--esl-border-strong)] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500" />
+              <div className="w-11 h-6 bg-[var(--esl-bg-elevated)] peer-focus:ring-2 peer-focus:ring-brand/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-[var(--esl-border-strong)] after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500" />
             </label>
           </div>
         </div>

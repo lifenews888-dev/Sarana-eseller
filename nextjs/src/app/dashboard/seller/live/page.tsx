@@ -166,7 +166,7 @@ export default function SellerLivePage() {
         );
       default:
         return (
-          <span className="bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+          <span className="bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)] text-xs font-medium px-2 py-0.5 rounded-full">
             Дууссан
           </span>
         );
@@ -183,7 +183,7 @@ export default function SellerLivePage() {
         <div className="flex items-center gap-3">
           <a
             href="/dashboard/seller/live/plans"
-            className="flex items-center gap-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg font-medium hover:bg-gray-50 transition text-sm"
+            className="flex items-center gap-2 border border-[var(--esl-border)] text-[var(--esl-text-primary)] px-4 py-2 rounded-lg font-medium hover:bg-[var(--esl-bg-hover)] transition text-sm"
           >
             Багц удирдах
           </a>
@@ -200,19 +200,19 @@ export default function SellerLivePage() {
       {/* Create modal */}
       {showCreate && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="p-5 border-b flex items-center justify-between">
               <h2 className="text-lg font-bold">Шинэ Live үүсгэх</h2>
               <button
                 onClick={() => setShowCreate(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-[var(--esl-text-muted)] hover:text-[var(--esl-text-secondary)]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-5 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">
                   Гарчиг *
                 </label>
                 <input
@@ -224,7 +224,7 @@ export default function SellerLivePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">
                   Тайлбар
                 </label>
                 <textarea
@@ -237,7 +237,7 @@ export default function SellerLivePage() {
               </div>
               {/* Embed type selector */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-2">
                   Embed төрөл
                 </label>
                 <div className="flex gap-2">
@@ -253,7 +253,7 @@ export default function SellerLivePage() {
                       className={`flex-1 px-3 py-2 text-sm rounded-lg border transition ${
                         embedType === opt.key
                           ? 'bg-red-50 border-red-500 text-red-700 font-medium'
-                          : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                          : 'border-[var(--esl-border)] text-[var(--esl-text-secondary)] hover:border-[var(--esl-border)]'
                       }`}
                     >
                       {opt.label}
@@ -265,7 +265,7 @@ export default function SellerLivePage() {
               {/* YouTube URL */}
               {embedType === 'YOUTUBE' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">
                     YouTube Live URL
                   </label>
                   <input
@@ -275,14 +275,14 @@ export default function SellerLivePage() {
                     placeholder="https://youtube.com/live/xxxxx"
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
-                  <p className="text-xs text-gray-400 mt-1">YouTube Studio-оос Live URL-г хуулна уу</p>
+                  <p className="text-xs text-[var(--esl-text-muted)] mt-1">YouTube Studio-оос Live URL-г хуулна уу</p>
                 </div>
               )}
 
               {/* Facebook URL */}
               {embedType === 'FACEBOOK' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">
                     Facebook Live URL
                   </label>
                   <input
@@ -292,12 +292,12 @@ export default function SellerLivePage() {
                     placeholder="https://facebook.com/xxx/videos/xxxxx"
                     className="w-full border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Facebook-ийн Live видео URL-г хуулна уу</p>
+                  <p className="text-xs text-[var(--esl-text-muted)] mt-1">Facebook-ийн Live видео URL-г хуулна уу</p>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">
                   <Calendar className="w-4 h-4 inline mr-1" />
                   Товлосон огноо
                 </label>
@@ -309,11 +309,11 @@ export default function SellerLivePage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">
                   Бүтээгдэхүүн сонгох
                 </label>
                 {products.length === 0 ? (
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-[var(--esl-text-muted)]">
                     Бүтээгдэхүүн олдсонгүй
                   </p>
                 ) : (
@@ -321,7 +321,7 @@ export default function SellerLivePage() {
                     {products.map((p) => (
                       <label
                         key={p.id}
-                        className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer"
+                        className="flex items-center gap-3 px-3 py-2 hover:bg-[var(--esl-bg-hover)] cursor-pointer"
                       >
                         <input
                           type="checkbox"
@@ -330,7 +330,7 @@ export default function SellerLivePage() {
                           className="accent-red-600"
                         />
                         <span className="text-sm flex-1">{p.name}</span>
-                        <span className="text-sm text-gray-500">
+                        <span className="text-sm text-[var(--esl-text-secondary)]">
                           {p.price.toLocaleString()}₮
                         </span>
                       </label>
@@ -342,7 +342,7 @@ export default function SellerLivePage() {
             <div className="p-5 border-t flex gap-3 justify-end">
               <button
                 onClick={() => setShowCreate(false)}
-                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+                className="px-4 py-2 text-sm text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]"
               >
                 Болих
               </button>
@@ -378,9 +378,9 @@ export default function SellerLivePage() {
           <div className="animate-spin w-8 h-8 border-4 border-red-500 border-t-transparent rounded-full" />
         </div>
       ) : streams.length === 0 ? (
-        <div className="text-center py-20 bg-gray-50 rounded-xl">
-          <Video className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Танд live дамжуулалт байхгүй байна</p>
+        <div className="text-center py-20 bg-[var(--esl-bg-section)] rounded-xl">
+          <Video className="w-12 h-12 text-[var(--esl-text-muted)] mx-auto mb-3" />
+          <p className="text-[var(--esl-text-secondary)]">Танд live дамжуулалт байхгүй байна</p>
           <button
             onClick={() => setShowCreate(true)}
             className="mt-3 text-red-600 hover:text-red-700 font-medium text-sm"
@@ -405,7 +405,7 @@ export default function SellerLivePage() {
             return (
               <div
                 key={s.id}
-                className="bg-white border rounded-xl p-5 hover:shadow-sm transition"
+                className="bg-[var(--esl-bg-card)] border rounded-xl p-5 hover:shadow-sm transition"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
@@ -414,11 +414,11 @@ export default function SellerLivePage() {
                       {getStatusBadge(s.status)}
                     </div>
                     {s.description && (
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-[var(--esl-text-secondary)] mt-1">
                         {s.description}
                       </p>
                     )}
-                    <div className="flex items-center gap-4 mt-3 text-sm text-gray-500">
+                    <div className="flex items-center gap-4 mt-3 text-sm text-[var(--esl-text-secondary)]">
                       <span className="flex items-center gap-1">
                         <Users className="w-4 h-4" />
                         {s.viewerCount} үзэгч
@@ -456,14 +456,14 @@ export default function SellerLivePage() {
 
                 {/* Stream key */}
                 {s.status !== "ENDED" && s.streamKey && (
-                  <div className="mt-3 bg-gray-50 rounded-lg px-3 py-2 flex items-center gap-2">
-                    <span className="text-xs text-gray-500">OBS Stream Key:</span>
-                    <code className="text-xs bg-gray-200 px-2 py-0.5 rounded flex-1 truncate">
+                  <div className="mt-3 bg-[var(--esl-bg-section)] rounded-lg px-3 py-2 flex items-center gap-2">
+                    <span className="text-xs text-[var(--esl-text-secondary)]">OBS Stream Key:</span>
+                    <code className="text-xs bg-[var(--esl-bg-elevated)] px-2 py-0.5 rounded flex-1 truncate">
                       {s.streamKey}
                     </code>
                     <button
                       onClick={() => copyKey(s.streamKey)}
-                      className="text-gray-400 hover:text-gray-600"
+                      className="text-[var(--esl-text-muted)] hover:text-[var(--esl-text-secondary)]"
                     >
                       {copiedKey === s.streamKey ? (
                         <Check className="w-4 h-4 text-green-500" />
@@ -475,7 +475,7 @@ export default function SellerLivePage() {
                 )}
 
                 {/* Date info */}
-                <div className="mt-2 text-xs text-gray-400">
+                <div className="mt-2 text-xs text-[var(--esl-text-muted)]">
                   {s.scheduledAt && (
                     <span>
                       Товлосон: {new Date(s.scheduledAt).toLocaleString("mn-MN")}

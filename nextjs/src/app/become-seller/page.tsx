@@ -253,7 +253,7 @@ export default function BecomeSellerPage() {
         <div className="max-w-3xl mx-auto w-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 no-underline">
             <EsellerLogo size={22} />
-            <span className="text-base font-black text-[var(--esl-text-primary)]">eseller<span className="text-[#E31E24]">.mn</span></span>
+            <span className="text-base font-black text-[var(--esl-text-primary)]">eseller<span className="text-[#E8242C]">.mn</span></span>
           </Link>
           <span className="text-xs text-[var(--esl-text-muted)]">Дэлгүүр нээх</span>
         </div>

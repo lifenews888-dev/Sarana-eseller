@@ -57,8 +57,8 @@ export default function EnterprisePricingPage() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
       <div className="text-center py-16 px-4">
-        <h1 className="text-4xl font-extrabold text-gray-900 mb-4">Enterprise багцууд</h1>
-        <p className="text-lg text-gray-500 max-w-xl mx-auto">
+        <h1 className="text-4xl font-extrabold text-[var(--esl-text-primary)] mb-4">Enterprise багцууд</h1>
+        <p className="text-lg text-[var(--esl-text-secondary)] max-w-xl mx-auto">
           Бизнесийн хэмжээндээ тохирсон багц сонгоод дэлгүүрээ дараагийн түвшинд гаргаарай
         </p>
       </div>
@@ -69,8 +69,8 @@ export default function EnterprisePricingPage() {
           {PLANS.map((plan) => (
             <div
               key={plan.name}
-              className={`relative bg-white rounded-2xl border-2 p-8 flex flex-col ${
-                plan.popular ? 'border-blue-900 shadow-xl scale-105' : 'border-gray-200'
+              className={`relative bg-[var(--esl-bg-card)] rounded-2xl border-2 p-8 flex flex-col ${
+                plan.popular ? 'border-blue-900 shadow-xl scale-105' : 'border-[var(--esl-border)]'
               }`}
             >
               {plan.popular && (
@@ -78,17 +78,17 @@ export default function EnterprisePricingPage() {
                   <Star className="w-3 h-3 fill-white" /> Хамгийн их сонгогддог
                 </div>
               )}
-              <h3 className="text-xl font-bold text-gray-900">{plan.name}</h3>
-              <p className="text-sm text-gray-500 mt-1 mb-4">{plan.description}</p>
+              <h3 className="text-xl font-bold text-[var(--esl-text-primary)]">{plan.name}</h3>
+              <p className="text-sm text-[var(--esl-text-secondary)] mt-1 mb-4">{plan.description}</p>
               <div className="mb-6">
-                <span className="text-3xl font-extrabold text-gray-900">{plan.price}</span>
-                <span className="text-gray-400">{plan.period}</span>
+                <span className="text-3xl font-extrabold text-[var(--esl-text-primary)]">{plan.price}</span>
+                <span className="text-[var(--esl-text-muted)]">{plan.period}</span>
               </div>
               <ul className="space-y-3 flex-1 mb-8">
                 {plan.features.map((f, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
                     <Check className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
-                    <span className="text-gray-600">{f}</span>
+                    <span className="text-[var(--esl-text-secondary)]">{f}</span>
                   </li>
                 ))}
               </ul>
@@ -97,7 +97,7 @@ export default function EnterprisePricingPage() {
                 className={`block text-center py-3 rounded-xl font-semibold text-sm transition no-underline ${
                   plan.popular
                     ? 'bg-blue-900 text-white hover:bg-blue-800'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-primary)] hover:bg-[var(--esl-bg-hover)]'
                 }`}
               >
                 {plan.name === 'Corporate' ? 'Холбоо барих' : 'Эхлэх'}
@@ -115,12 +115,12 @@ export default function EnterprisePricingPage() {
               { q: 'Комисс хэрхэн тооцоолох вэ?', a: 'Борлуулалтын дүнгээс хувиар тооцоолно. Enterprise багц авсан тохиолдолд хамгийн бага комисс хэмжээ хэрэглэнэ.' },
               { q: 'Custom домайн тохируулах боломжтой юу?', a: 'Corporate багцад өөрийн домайн (жнь: shop.company.mn) тохируулах боломжтой.' },
             ].map((faq, i) => (
-              <details key={i} className="bg-white rounded-xl border p-4 group">
+              <details key={i} className="bg-[var(--esl-bg-card)] rounded-xl border p-4 group">
                 <summary className="font-medium cursor-pointer list-none flex items-center justify-between">
                   {faq.q}
-                  <span className="text-gray-400 group-open:rotate-180 transition">▼</span>
+                  <span className="text-[var(--esl-text-muted)] group-open:rotate-180 transition">▼</span>
                 </summary>
-                <p className="text-sm text-gray-500 mt-3">{faq.a}</p>
+                <p className="text-sm text-[var(--esl-text-secondary)] mt-3">{faq.a}</p>
               </details>
             ))}
           </div>

@@ -82,7 +82,7 @@ export default function AffiliateSettings({ value, onChange, entityType }: Affil
               step={1}
               value={value.affiliateCommission}
               onChange={(e) => update({ affiliateCommission: +e.target.value })}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#E8242C]"
+              className="w-full h-2 bg-[var(--esl-bg-elevated)] rounded-lg appearance-none cursor-pointer accent-[#E8242C]"
             />
             <div className="flex justify-between text-xs text-[var(--esl-text-disabled)]">
               <span>{limits.min}%</span>

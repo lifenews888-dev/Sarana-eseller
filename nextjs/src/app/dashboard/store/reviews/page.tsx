@@ -98,7 +98,7 @@ export default function ReviewsPage() {
         <button
           onClick={() => setFilterRating(null)}
           className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-            !filterRating ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
+            !filterRating ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
           }`}
         >
           Бүгд
@@ -108,7 +108,7 @@ export default function ReviewsPage() {
             key={r}
             onClick={() => setFilterRating(r)}
             className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-              filterRating === r ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
+              filterRating === r ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
             }`}
           >
             {r} &#9733;
@@ -132,7 +132,7 @@ export default function ReviewsPage() {
             <div key={review.id} className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-5">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold flex-shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-[var(--esl-brand-bg)] text-[#E8242C] flex items-center justify-center text-sm font-bold flex-shrink-0">
                     {(review.customerName || 'Х').charAt(0)}
                   </div>
                   <div>
@@ -149,9 +149,9 @@ export default function ReviewsPage() {
 
                     {/* Reply */}
                     {review.reply && (
-                      <div className="mt-3 bg-indigo-50 rounded-lg p-3 border-l-3 border-indigo-400">
-                        <p className="text-xs text-indigo-600 font-medium mb-1">Таны хариу:</p>
-                        <p className="text-sm text-indigo-700">{review.reply}</p>
+                      <div className="mt-3 bg-[var(--esl-brand-bg)] rounded-lg p-3 border-l-3 border-[#E8242C]">
+                        <p className="text-xs text-[#E8242C] font-medium mb-1">Таны хариу:</p>
+                        <p className="text-sm text-[#E8242C]">{review.reply}</p>
                       </div>
                     )}
 
@@ -163,10 +163,10 @@ export default function ReviewsPage() {
                           onChange={(e) => setReplyText(e.target.value)}
                           placeholder="Хариу бичих..."
                           rows={2}
-                          className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
                         />
                         <div className="flex gap-2">
-                          <button onClick={() => handleReply(review.id)} className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700">
+                          <button onClick={() => handleReply(review.id)} className="px-4 py-1.5 bg-[#E8242C] text-white rounded-lg text-xs font-medium hover:bg-[#C41E25]">
                             Илгээх
                           </button>
                           <button onClick={() => { setReplyingTo(null); setReplyText(''); }} className="px-4 py-1.5 bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)] rounded-lg text-xs font-medium hover:bg-[var(--esl-bg-card-hover)]">

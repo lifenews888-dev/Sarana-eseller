@@ -33,7 +33,7 @@ interface Tender {
 
 const STATUS_MAP: Record<string, { label: string; color: string }> = {
   OPEN: { label: 'Нээлттэй', color: 'bg-green-100 text-green-700' },
-  CLOSED: { label: 'Хаагдсан', color: 'bg-gray-100 text-gray-600' },
+  CLOSED: { label: 'Хаагдсан', color: 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]' },
   AWARDED: { label: 'Шалгарсан', color: 'bg-blue-100 text-blue-700' },
 };
 
@@ -207,7 +207,7 @@ export default function AdminTendersPage() {
         </div>
         <button
           onClick={() => { setShowForm(true); resetForm(); }}
-          className="flex items-center gap-1.5 px-5 py-2.5 bg-indigo-600 text-white rounded-xl text-sm font-semibold border-none cursor-pointer hover:bg-indigo-700 transition"
+          className="flex items-center gap-1.5 px-5 py-2.5 bg-[#E8242C] text-white rounded-xl text-sm font-semibold border-none cursor-pointer hover:bg-[#C41E25] transition"
         >
           <Plus className="w-4 h-4" /> Тендер нэмэх
         </button>
@@ -241,8 +241,8 @@ export default function AdminTendersPage() {
               <div className="p-4 flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <Building2 className="w-4 h-4 text-indigo-500 shrink-0" />
-                    <span className="text-xs text-indigo-600 font-medium">{t.agencyName}</span>
+                    <Building2 className="w-4 h-4 text-[#E8242C] shrink-0" />
+                    <span className="text-xs text-[#E8242C] font-medium">{t.agencyName}</span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${st.color}`}>
                       {st.label}
                     </span>
@@ -259,14 +259,14 @@ export default function AdminTendersPage() {
                   {t.status === 'OPEN' && (
                     <button
                       onClick={() => updateTenderStatus(t.id, 'CLOSED')}
-                      className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg border-none cursor-pointer hover:bg-gray-200 transition"
+                      className="px-3 py-1.5 text-xs font-medium text-[var(--esl-text-secondary)] bg-[var(--esl-bg-muted)] rounded-lg border-none cursor-pointer hover:bg-[var(--esl-bg-hover)] transition"
                     >
                       Хаах
                     </button>
                   )}
                   <button
                     onClick={() => toggleBids(t.id)}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--esl-bg-section)] border border-[var(--esl-border)] cursor-pointer hover:bg-gray-100 transition"
+                    className="w-8 h-8 rounded-lg flex items-center justify-center bg-[var(--esl-bg-section)] border border-[var(--esl-border)] cursor-pointer hover:bg-[var(--esl-bg-hover)] transition"
                   >
                     {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
@@ -370,7 +370,7 @@ export default function AdminTendersPage() {
                 value={fAgency}
                 onChange={(e) => setFAgency(e.target.value)}
                 placeholder="Жишээ: Сангийн яам"
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               />
             </div>
 
@@ -383,7 +383,7 @@ export default function AdminTendersPage() {
                 value={fTitle}
                 onChange={(e) => setFTitle(e.target.value)}
                 placeholder="Тендерийн гарчиг"
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
               />
             </div>
 
@@ -396,7 +396,7 @@ export default function AdminTendersPage() {
                 onChange={(e) => setFDesc(e.target.value)}
                 rows={3}
                 placeholder="Дэлгэрэнгүй тайлбар"
-                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 resize-none"
               />
             </div>
 
@@ -410,7 +410,7 @@ export default function AdminTendersPage() {
                   value={fBudget}
                   onChange={(e) => setFBudget(e.target.value)}
                   placeholder="0"
-                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
                 />
               </div>
               <div>
@@ -421,7 +421,7 @@ export default function AdminTendersPage() {
                   type="datetime-local"
                   value={fDeadline}
                   onChange={(e) => setFDeadline(e.target.value)}
-                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
                 />
               </div>
             </div>
@@ -437,14 +437,14 @@ export default function AdminTendersPage() {
                   value={fReqInput}
                   onChange={(e) => setFReqInput(e.target.value)}
                   placeholder="Шаардлага нэмэх..."
-                  className="flex-1 px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="flex-1 px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); addReq(); } }}
                 />
                 <button
                   type="button"
                   onClick={addReq}
                   disabled={!fReqInput.trim()}
-                  className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm border-none cursor-pointer hover:bg-gray-200 transition disabled:opacity-50"
+                  className="px-3 py-2 bg-[var(--esl-bg-muted)] text-[var(--esl-text-primary)] rounded-lg text-sm border-none cursor-pointer hover:bg-[var(--esl-bg-hover)] transition disabled:opacity-50"
                 >
                   <Tag className="w-4 h-4" />
                 </button>
@@ -454,12 +454,12 @@ export default function AdminTendersPage() {
                   {fReqs.map((r, i) => (
                     <span
                       key={i}
-                      className="flex items-center gap-1 px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-full text-xs font-medium"
+                      className="flex items-center gap-1 px-2.5 py-1 bg-[var(--esl-brand-bg)] text-[#E8242C] rounded-full text-xs font-medium"
                     >
                       {r}
                       <button
                         onClick={() => removeReq(i)}
-                        className="bg-transparent border-none cursor-pointer p-0 text-indigo-400 hover:text-indigo-700"
+                        className="bg-transparent border-none cursor-pointer p-0 text-[#E8242C] hover:text-[#C41E25]"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -472,14 +472,14 @@ export default function AdminTendersPage() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowForm(false)}
-                className="px-4 py-2 text-sm text-[var(--esl-text-secondary)] bg-[var(--esl-bg-section)] rounded-lg border border-[var(--esl-border)] cursor-pointer hover:bg-gray-100 transition"
+                className="px-4 py-2 text-sm text-[var(--esl-text-secondary)] bg-[var(--esl-bg-section)] rounded-lg border border-[var(--esl-border)] cursor-pointer hover:bg-[var(--esl-bg-hover)] transition"
               >
                 Болих
               </button>
               <button
                 onClick={createTender}
                 disabled={formLoading}
-                className="px-5 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-indigo-700 transition disabled:opacity-50"
+                className="px-5 py-2 bg-[#E8242C] text-white rounded-lg text-sm font-semibold border-none cursor-pointer hover:bg-[#C41E25] transition disabled:opacity-50"
               >
                 {formLoading ? 'Хадгалж байна...' : 'Хадгалах'}
               </button>

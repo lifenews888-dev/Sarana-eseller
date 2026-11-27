@@ -12,7 +12,7 @@ import {
 const STATUS_MAP: Record<AppointmentStatus, { label: string; style: string }> = {
   pending:     { label: 'Хүлээгдэж буй', style: 'bg-amber-100 text-amber-700' },
   confirmed:   { label: 'Баталгаажсан',  style: 'bg-blue-100 text-blue-700' },
-  in_progress: { label: 'Явагдаж буй',   style: 'bg-indigo-100 text-indigo-700' },
+  in_progress: { label: 'Явагдаж буй',   style: 'bg-[var(--esl-brand-bg)] text-[#E8242C]' },
   completed:   { label: 'Дууссан',        style: 'bg-green-100 text-green-700' },
   cancelled:   { label: 'Цуцлагдсан',    style: 'bg-red-100 text-red-700' },
   no_show:     { label: 'Ирээгүй',       style: 'bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)]' },
@@ -84,15 +84,15 @@ export default function BookingsPage() {
           <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--esl-text-muted)]" />
             <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Хэрэглэгч, утас, үйлчилгээ..."
-              className="w-full pl-10 pr-4 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+              className="w-full pl-10 pr-4 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 transition" />
           </div>
           {/* Date range */}
           <div className="flex items-center gap-2">
             <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-              className="px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-[var(--esl-bg-card)] cursor-pointer" />
+              className="px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 transition bg-[var(--esl-bg-card)] cursor-pointer" />
             <span className="text-[var(--esl-text-muted)] text-sm">—</span>
             <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-              className="px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500 transition bg-[var(--esl-bg-card)] cursor-pointer" />
+              className="px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 transition bg-[var(--esl-bg-card)] cursor-pointer" />
           </div>
         </div>
 
@@ -101,7 +101,7 @@ export default function BookingsPage() {
           {FILTER_TABS.map((t) => (
             <button key={t.key} onClick={() => setFilterStatus(t.key)}
               className={cn('shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold border-none cursor-pointer transition',
-                filterStatus === t.key ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)] hover:bg-[var(--esl-bg-section)]')}>
+                filterStatus === t.key ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-section)] text-[var(--esl-text-secondary)] hover:bg-[var(--esl-bg-section)]')}>
               {t.label}
               {t.key === 'pending' && pendingCount > 0 && (
                 <span className="ml-1 bg-white/20 text-white px-1.5 py-0.5 rounded-full text-[10px]">{pendingCount}</span>
@@ -132,7 +132,7 @@ export default function BookingsPage() {
                   <th className="px-4 py-3 font-medium text-right">Үйлдэл</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[var(--esl-border)]">
                 {filtered.map((a) => {
                   const st = STATUS_MAP[a.status];
                   return (

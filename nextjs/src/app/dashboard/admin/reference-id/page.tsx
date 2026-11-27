@@ -94,7 +94,7 @@ export default function ReferenceIdPage() {
           </button>
           <button onClick={handleSave}
             className={cn('px-4 py-2 rounded-xl text-xs font-semibold border-none cursor-pointer transition',
-              saved ? 'bg-green-600 text-white' : 'bg-indigo-600 text-white hover:bg-indigo-700')}>
+              saved ? 'bg-green-600 text-white' : 'bg-[#E8242C] text-white hover:bg-[#C41E25]')}>
             {saved ? <><Check className="w-3 h-3 inline mr-1" /> Хадгалсан</> : 'Тохиргоо хадгалах'}
           </button>
         </div>
@@ -130,7 +130,7 @@ export default function ReferenceIdPage() {
                 {OBJECT_TYPES.map((obj) => (
                   <button key={obj.key} onClick={() => setSelectedObj(obj.key)}
                     className={cn('px-3 py-1.5 rounded-full text-xs font-semibold border cursor-pointer transition',
-                      selectedObj === obj.key ? 'bg-indigo-600 text-white border-indigo-600' : obj.active ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)] border-[var(--esl-border)]')}>
+                      selectedObj === obj.key ? 'bg-[#E8242C] text-white border-[#E8242C]' : obj.active ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)] border-[var(--esl-border)]')}>
                     {obj.label}
                   </button>
                 ))}
@@ -153,14 +153,14 @@ export default function ReferenceIdPage() {
           <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-5 space-y-4">
             <div className="flex justify-between items-center">
               <h3 className="text-sm font-bold text-[var(--esl-text-primary)]">Форматын тохиргоо</h3>
-              <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">Бараа · {format.prefix}</span>
+              <span className="text-xs font-semibold text-[#E8242C] bg-[var(--esl-brand-bg)] px-2 py-0.5 rounded">Бараа · {format.prefix}</span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] text-[var(--esl-text-muted)] block mb-1">Угтвар (prefix)</label>
                 <input type="text" value={format.prefix} onChange={(e) => setFormat({ ...format, prefix: e.target.value.toUpperCase().slice(0, 6) })}
-                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
                 <span className="text-[10px] text-[var(--esl-text-muted)]">2–6 үсэг, том үсгээр</span>
               </div>
               <div>
@@ -191,17 +191,17 @@ export default function ReferenceIdPage() {
               <div>
                 <label className="text-[10px] text-[var(--esl-text-muted)] block mb-1">Дараалал эхлэх тоо</label>
                 <input type="number" value={format.seqStart} onChange={(e) => setFormat({ ...format, seqStart: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="text-[10px] text-[var(--esl-text-muted)] block mb-1">Дугаарын урт</label>
                 <input type="number" value={format.seqLength} onChange={(e) => setFormat({ ...format, seqLength: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="text-[10px] text-[var(--esl-text-muted)] block mb-1">Нэмэгдэх алхам</label>
                 <input type="number" value={format.seqStep} onChange={(e) => setFormat({ ...format, seqStep: Number(e.target.value) })}
-                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                  className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
               </div>
             </div>
 
@@ -236,7 +236,7 @@ export default function ReferenceIdPage() {
               <div className="flex items-center justify-center gap-1 mt-3">
                 {previewId.split(format.separator).map((part, i) => (
                   <span key={i} className={cn('text-[10px] font-mono font-bold px-2 py-0.5 rounded',
-                    i === 0 ? 'bg-indigo-500/30 text-indigo-300' : i === 1 ? 'bg-amber-500/30 text-amber-300' : 'bg-green-500/30 text-green-300')}>
+                    i === 0 ? 'bg-[#E8242C]/30 text-[#E8242C]' : i === 1 ? 'bg-amber-500/30 text-amber-300' : 'bg-green-500/30 text-green-300')}>
                     {part}
                   </span>
                 ))}

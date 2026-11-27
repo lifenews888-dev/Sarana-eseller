@@ -64,7 +64,7 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] p-6">
         <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-8 mb-6">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse mb-2" />
+          <div className="h-8 w-48 bg-[var(--esl-bg-elevated)] rounded animate-pulse mb-2" />
           <div className="h-4 w-72 bg-[var(--esl-bg-section)] rounded animate-pulse" />
         </div>
       </div>
@@ -108,7 +108,7 @@ export default function NotificationsPage() {
               <div className="flex justify-center">
                 <button
                   onClick={() => toggle(setting.key, 'email')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${setting.email ? 'bg-indigo-500' : 'bg-gray-300'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${setting.email ? 'bg-[#E8242C]' : 'bg-gray-300'}`}
                 >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-[var(--esl-bg-card)] transition-transform ${setting.email ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
@@ -116,7 +116,7 @@ export default function NotificationsPage() {
               <div className="flex justify-center">
                 <button
                   onClick={() => toggle(setting.key, 'push')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${setting.push ? 'bg-indigo-500' : 'bg-gray-300'}`}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${setting.push ? 'bg-[#E8242C]' : 'bg-gray-300'}`}
                 >
                   <span className={`inline-block h-4 w-4 transform rounded-full bg-[var(--esl-bg-card)] transition-transform ${setting.push ? 'translate-x-6' : 'translate-x-1'}`} />
                 </button>
@@ -128,7 +128,7 @@ export default function NotificationsPage() {
         <div className="mt-6">
           <button
             onClick={handleSave}
-            className="px-8 py-3 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition-colors"
+            className="px-8 py-3 bg-[#E8242C] text-white rounded-xl font-semibold hover:bg-[#C41E25] transition-colors"
           >
             Хадгалах
           </button>

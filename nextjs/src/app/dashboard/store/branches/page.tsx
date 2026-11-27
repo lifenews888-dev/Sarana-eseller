@@ -51,7 +51,7 @@ export default function BranchesPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#E8242C] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -141,7 +141,7 @@ export default function BranchesPage() {
       <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-6 mb-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <Store className="w-7 h-7 text-indigo-600" />
+            <Store className="w-7 h-7 text-[#E8242C]" />
             <div>
               <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Салбар удирдлага</h1>
               <p className="text-[var(--esl-text-secondary)] text-sm">Дэлгүүрийн салбаруудыг удирдах ({branches.length}/{plan.limits.maxBranches === -1 ? '∞' : plan.limits.maxBranches})</p>
@@ -149,7 +149,7 @@ export default function BranchesPage() {
           </div>
           <button
             onClick={openAddModal}
-            className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition flex items-center gap-2"
+            className="bg-[#E8242C] text-white px-4 py-2.5 rounded-xl font-semibold text-sm hover:bg-[#C41E25] transition flex items-center gap-2"
           >
             + Салбар нэмэх
           </button>
@@ -164,7 +164,7 @@ export default function BranchesPage() {
           <p className="text-[var(--esl-text-secondary)] text-sm mb-4">Эхний салбараа нэмнэ үү</p>
           <button
             onClick={openAddModal}
-            className="bg-indigo-600 text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition"
+            className="bg-[#E8242C] text-white px-5 py-2.5 rounded-xl font-semibold text-sm hover:bg-[#C41E25] transition"
           >
             + Салбар нэмэх
           </button>
@@ -174,7 +174,7 @@ export default function BranchesPage() {
           {branches.map((branch) => (
             <div
               key={branch.id}
-              className={`bg-white rounded-xl border overflow-hidden transition ${
+              className={`bg-[var(--esl-bg-card)] rounded-xl border overflow-hidden transition ${
                 branch.active ? 'border-[var(--esl-border)]' : 'border-[var(--esl-border)] opacity-60'
               }`}
             >
@@ -217,7 +217,7 @@ export default function BranchesPage() {
                       </button>
                       <button
                         onClick={() => openEditModal(branch)}
-                        className="text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg text-xs font-medium transition"
+                        className="text-[#E8242C] hover:bg-[var(--esl-brand-bg)] px-3 py-1.5 rounded-lg text-xs font-medium transition"
                       >
                         Засах
                       </button>
@@ -272,7 +272,7 @@ export default function BranchesPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Салбарын нэр"
-                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 focus:border-[#E8242C] outline-none"
                 />
               </div>
               <div>
@@ -282,7 +282,7 @@ export default function BranchesPage() {
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                   placeholder="Дүүрэг, хороо, гудамж"
-                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 focus:border-[#E8242C] outline-none"
                 />
               </div>
               <div>
@@ -292,7 +292,7 @@ export default function BranchesPage() {
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="9911-2233"
-                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 focus:border-[#E8242C] outline-none"
                 />
               </div>
               <div>
@@ -302,7 +302,7 @@ export default function BranchesPage() {
                   value={manager}
                   onChange={(e) => setManager(e.target.value)}
                   placeholder="Менежерийн нэр"
-                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 focus:border-[#E8242C] outline-none"
                 />
               </div>
               <div>
@@ -312,7 +312,7 @@ export default function BranchesPage() {
                   value={workingHours}
                   onChange={(e) => setWorkingHours(e.target.value)}
                   placeholder="09:00-18:00"
-                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+                  className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 focus:border-[#E8242C] outline-none"
                 />
               </div>
             </div>
@@ -325,7 +325,7 @@ export default function BranchesPage() {
               </button>
               <button
                 onClick={handleSave}
-                className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition"
+                className="flex-1 bg-[#E8242C] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#C41E25] transition"
               >
                 {editingId ? 'Хадгалах' : 'Нэмэх'}
               </button>

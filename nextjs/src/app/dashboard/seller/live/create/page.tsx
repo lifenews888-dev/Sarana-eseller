@@ -160,7 +160,7 @@ export default function CreateLivePage() {
     <div className="p-6 max-w-3xl mx-auto">
       <button
         onClick={() => (step > 1 ? setStep(step - 1) : router.push("/dashboard/seller/live"))}
-        className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 mb-4"
+        className="flex items-center gap-1 text-sm text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)] mb-4"
       >
         <ArrowLeft className="w-4 h-4" />
         {step > 1 ? "Өмнөх алхам" : "Буцах"}
@@ -181,15 +181,15 @@ export default function CreateLivePage() {
                   ? "bg-red-600 text-white"
                   : s < step
                   ? "bg-green-500 text-white"
-                  : "bg-gray-200 text-gray-500"
+                  : "bg-[var(--esl-bg-elevated)] text-[var(--esl-text-secondary)]"
               }`}
             >
               {s}
             </div>
-            <span className="text-sm text-gray-600 hidden sm:inline">
+            <span className="text-sm text-[var(--esl-text-secondary)] hidden sm:inline">
               {s === 1 ? "Төрөл" : s === 2 ? "Тохиргоо" : "Баталгаажуулах"}
             </span>
-            {s < 3 && <ChevronRight className="w-4 h-4 text-gray-300" />}
+            {s < 3 && <ChevronRight className="w-4 h-4 text-[var(--esl-text-muted)]" />}
           </div>
         ))}
       </div>
@@ -197,7 +197,7 @@ export default function CreateLivePage() {
       {/* Step 1: Scope selector */}
       {step === 1 && (
         <div className="space-y-4">
-          <p className="text-gray-600 mb-4">Live дамжуулалтын төрлөө сонгоно уу</p>
+          <p className="text-[var(--esl-text-secondary)] mb-4">Live дамжуулалтын төрлөө сонгоно уу</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {(["PUBLIC", "SHOP", "PRODUCT"] as Scope[]).map((s) => {
               const info = SCOPE_INFO[s];
@@ -213,16 +213,16 @@ export default function CreateLivePage() {
                     scope === s && available
                       ? "border-red-500 bg-red-50"
                       : available
-                      ? "border-gray-200 hover:border-gray-300"
-                      : "border-gray-100 bg-gray-50 opacity-60 cursor-not-allowed"
+                      ? "border-[var(--esl-border)] hover:border-[var(--esl-border)]"
+                      : "border-[var(--esl-border)] bg-[var(--esl-bg-section)] opacity-60 cursor-not-allowed"
                   }`}
                 >
                   {!available && (
-                    <Lock className="absolute top-3 right-3 w-4 h-4 text-gray-400" />
+                    <Lock className="absolute top-3 right-3 w-4 h-4 text-[var(--esl-text-muted)]" />
                   )}
-                  <Icon className={`w-8 h-8 mb-3 ${scope === s && available ? "text-red-600" : "text-gray-400"}`} />
-                  <h3 className="font-semibold text-gray-900">{info.label}</h3>
-                  <p className="text-xs text-gray-500 mt-1">{info.desc}</p>
+                  <Icon className={`w-8 h-8 mb-3 ${scope === s && available ? "text-red-600" : "text-[var(--esl-text-muted)]"}`} />
+                  <h3 className="font-semibold text-[var(--esl-text-primary)]">{info.label}</h3>
+                  <p className="text-xs text-[var(--esl-text-secondary)] mt-1">{info.desc}</p>
                   {!available && (
                     <p className="text-xs text-orange-600 mt-2 font-medium">
                       {info.minPlan} багц шаардлагатай
@@ -248,7 +248,7 @@ export default function CreateLivePage() {
       {step === 2 && (
         <div className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Гарчиг *</label>
+            <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Гарчиг *</label>
             <input
               type="text"
               value={title}
@@ -259,7 +259,7 @@ export default function CreateLivePage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Тайлбар</label>
+            <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Тайлбар</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -271,7 +271,7 @@ export default function CreateLivePage() {
 
           {/* Embed type */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Embed төрөл</label>
+            <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-2">Embed төрөл</label>
             <div className="flex gap-2">
               {[
                 { key: "YOUTUBE", label: "YouTube Live" },
@@ -285,7 +285,7 @@ export default function CreateLivePage() {
                   className={`flex-1 px-3 py-2 text-sm rounded-lg border transition ${
                     embedType === opt.key
                       ? "bg-red-50 border-red-500 text-red-700 font-medium"
-                      : "border-gray-200 text-gray-600 hover:border-gray-300"
+                      : "border-[var(--esl-border)] text-[var(--esl-text-secondary)] hover:border-[var(--esl-border)]"
                   }`}
                 >
                   {opt.label}
@@ -296,7 +296,7 @@ export default function CreateLivePage() {
 
           {embedType === "YOUTUBE" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">YouTube Live URL</label>
+              <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">YouTube Live URL</label>
               <input
                 type="url"
                 value={youtubeUrl}
@@ -309,7 +309,7 @@ export default function CreateLivePage() {
 
           {embedType === "FACEBOOK" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Facebook Live URL</label>
+              <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Facebook Live URL</label>
               <input
                 type="url"
                 value={facebookUrl}
@@ -321,7 +321,7 @@ export default function CreateLivePage() {
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">
               <Calendar className="w-4 h-4 inline mr-1" />
               Товлосон огноо
             </label>
@@ -336,9 +336,9 @@ export default function CreateLivePage() {
           {/* Product scope selector */}
           {scope === "PRODUCT" && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Live барааг сонгох *</label>
+              <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Live барааг сонгох *</label>
               <div className="relative mb-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--esl-text-muted)]" />
                 <input
                   type="text"
                   value={productSearch}
@@ -348,14 +348,14 @@ export default function CreateLivePage() {
                 />
               </div>
               {loadingProducts ? (
-                <p className="text-sm text-gray-400">Ачаалж байна...</p>
+                <p className="text-sm text-[var(--esl-text-muted)]">Ачаалж байна...</p>
               ) : (
                 <div className="max-h-48 overflow-y-auto border rounded-lg divide-y">
                   {filteredProducts.map((p) => (
                     <label
                       key={p.id}
                       className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition ${
-                        scopeProductId === p.id ? "bg-red-50" : "hover:bg-gray-50"
+                        scopeProductId === p.id ? "bg-red-50" : "hover:bg-[var(--esl-bg-hover)]"
                       }`}
                     >
                       <input
@@ -366,11 +366,11 @@ export default function CreateLivePage() {
                         className="accent-red-600"
                       />
                       <span className="text-sm flex-1">{p.name}</span>
-                      <span className="text-sm text-gray-500">{p.price.toLocaleString()}₮</span>
+                      <span className="text-sm text-[var(--esl-text-secondary)]">{p.price.toLocaleString()}₮</span>
                     </label>
                   ))}
                   {filteredProducts.length === 0 && (
-                    <p className="text-sm text-gray-400 p-3">Бараа олдсонгүй</p>
+                    <p className="text-sm text-[var(--esl-text-muted)] p-3">Бараа олдсонгүй</p>
                   )}
                 </div>
               )}
@@ -379,15 +379,15 @@ export default function CreateLivePage() {
 
           {/* General product selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Зарах бүтээгдэхүүнүүд</label>
+            <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Зарах бүтээгдэхүүнүүд</label>
             {loadingProducts ? (
-              <p className="text-sm text-gray-400">Ачаалж байна...</p>
+              <p className="text-sm text-[var(--esl-text-muted)]">Ачаалж байна...</p>
             ) : products.length === 0 ? (
-              <p className="text-sm text-gray-400">Бүтээгдэхүүн олдсонгүй</p>
+              <p className="text-sm text-[var(--esl-text-muted)]">Бүтээгдэхүүн олдсонгүй</p>
             ) : (
               <div className="max-h-40 overflow-y-auto border rounded-lg divide-y">
                 {products.map((p) => (
-                  <label key={p.id} className="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 cursor-pointer">
+                  <label key={p.id} className="flex items-center gap-3 px-3 py-2 hover:bg-[var(--esl-bg-hover)] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={selectedProductIds.includes(p.id)}
@@ -399,7 +399,7 @@ export default function CreateLivePage() {
                       className="accent-red-600"
                     />
                     <span className="text-sm flex-1">{p.name}</span>
-                    <span className="text-sm text-gray-500">{p.price.toLocaleString()}₮</span>
+                    <span className="text-sm text-[var(--esl-text-secondary)]">{p.price.toLocaleString()}₮</span>
                   </label>
                 ))}
               </div>
@@ -409,7 +409,7 @@ export default function CreateLivePage() {
           <div className="flex justify-between mt-6">
             <button
               onClick={() => setStep(1)}
-              className="text-gray-600 hover:text-gray-800 px-4 py-2.5 text-sm"
+              className="text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)] px-4 py-2.5 text-sm"
             >
               Буцах
             </button>
@@ -430,15 +430,15 @@ export default function CreateLivePage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-orange-100 rounded-full mb-4">
             <AlertTriangle className="w-8 h-8 text-orange-500" />
           </div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Багц шинэчлэх шаардлагатай</h2>
-          <p className="text-gray-600 mb-6 max-w-md mx-auto">{planError}</p>
+          <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-2">Багц шинэчлэх шаардлагатай</h2>
+          <p className="text-[var(--esl-text-secondary)] mb-6 max-w-md mx-auto">{planError}</p>
           <div className="flex items-center justify-center gap-3">
             <button
               onClick={() => {
                 setPlanError("");
                 setStep(2);
               }}
-              className="text-gray-600 hover:text-gray-800 px-4 py-2.5 text-sm"
+              className="text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)] px-4 py-2.5 text-sm"
             >
               Буцах
             </button>

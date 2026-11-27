@@ -33,7 +33,7 @@ const SHARE_CHANNELS: { name: string; icon: LucideIcon; color: string; url: stri
 
 const CREATIVE_POSTERS = [
   { id: 1, title: 'Хямдрал зар', emoji: '🔥', bg: 'from-red-500 to-orange-500', desc: 'Хямдралтай бараа сурталчлах' },
-  { id: 2, title: 'Шинэ бараа', emoji: '✨', bg: 'from-indigo-500 to-purple-600', desc: 'Шинэ ирэлт танилцуулах' },
+  { id: 2, title: 'Шинэ бараа', emoji: '✨', bg: 'from-[#E8242C] to-purple-600', desc: 'Шинэ ирэлт танилцуулах' },
   { id: 3, title: 'Flash Sale', emoji: '⚡', bg: 'from-amber-500 to-red-500', desc: 'Цаг хугацаатай хямдрал' },
   { id: 4, title: 'Бүтээгдэхүүн', emoji: '📦', bg: 'from-emerald-500 to-teal-600', desc: 'Бүтээгдэхүүний танилцуулга' },
   { id: 5, title: 'Ам сайн хүн', emoji: '💬', bg: 'from-blue-500 to-cyan-500', desc: 'Сэтгэгдэл харуулах' },

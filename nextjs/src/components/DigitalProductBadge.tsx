@@ -25,7 +25,7 @@ export default function DigitalProductBadge({ fileType, fileSize }: DigitalProdu
   const config = FILE_TYPE_CONFIG[fileType.toLowerCase()] || {
     icon: File,
     label: fileType.toUpperCase(),
-    color: 'text-gray-500',
+    color: 'text-[var(--esl-text-secondary)]',
   };
   const Icon = config.icon;
 
@@ -35,13 +35,13 @@ export default function DigitalProductBadge({ fileType, fileSize }: DigitalProdu
         <Download className="h-4 w-4 text-blue-600" />
         <span className="text-sm font-semibold text-blue-700">Дижитал бараа</span>
       </div>
-      <div className="flex items-center gap-2 text-xs text-gray-600">
+      <div className="flex items-center gap-2 text-xs text-[var(--esl-text-secondary)]">
         <Icon className={`h-3.5 w-3.5 ${config.color}`} />
         <span>{config.label}</span>
-        <span className="text-gray-400">|</span>
+        <span className="text-[var(--esl-text-muted)]">|</span>
         <span>{formatFileSize(fileSize)}</span>
       </div>
-      <p className="text-[11px] text-gray-500">
+      <p className="text-[11px] text-[var(--esl-text-secondary)]">
         Худалдан авсны дараа шууд татна
       </p>
     </div>

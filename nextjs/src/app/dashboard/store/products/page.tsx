@@ -216,7 +216,7 @@ export default function ProductsPage() {
               <div className="h-32 bg-[var(--esl-bg-section)] flex items-center justify-center relative">
                 {p.images?.[0] ? <img loading="lazy" src={p.images[0]} alt="" className="w-full h-full object-cover" /> : <span className="text-4xl">{p.emoji || '📦'}</span>}
                 <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition">
-                  <button onClick={() => openEdit(p)} className="w-7 h-7 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[var(--esl-text-muted)] hover:text-indigo-600"><Edit3 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => openEdit(p)} className="w-7 h-7 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[var(--esl-text-muted)] hover:text-[#C41E25]"><Edit3 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => handleDelete(p._id)} className="w-7 h-7 rounded-lg bg-[var(--esl-bg-card)] shadow border border-[var(--esl-border)] flex items-center justify-center cursor-pointer text-[var(--esl-text-muted)] hover:text-red-500"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
                 {p.salePrice && p.salePrice < p.price && <span className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded">SALE</span>}
@@ -225,7 +225,7 @@ export default function ProductsPage() {
                 <button type="button" onClick={() => setTryonFor(p)} className="mb-2 w-full h-8 rounded-lg border border-[var(--esl-border)] bg-transparent text-xs font-bold text-[var(--esl-text-primary)] cursor-pointer hover:border-[#E8242C] hover:text-[#E8242C]">3D шоурум · өмсөж үзэх</button>
                 <h3 className="text-sm font-bold text-[var(--esl-text-primary)] truncate">{p.name}</h3>
                 <div className="flex items-baseline gap-2 mt-1">
-                  <span className="text-base font-extrabold text-indigo-600">{formatPrice(p.salePrice || p.price)}</span>
+                  <span className="text-base font-extrabold text-[#E8242C]">{formatPrice(p.salePrice || p.price)}</span>
                   {p.salePrice && <span className="text-xs text-[var(--esl-text-muted)] line-through">{formatPrice(p.price)}</span>}
                 </div>
                 <div className="flex items-center justify-between mt-2 text-xs text-[var(--esl-text-muted)]">
@@ -254,7 +254,7 @@ export default function ProductsPage() {
               {TABS.map((t) => (
                 <button key={t.key} onClick={() => setModalTab(t.key)}
                   className={cn('flex items-center gap-1.5 px-3 py-2.5 text-xs font-semibold border-b-2 transition cursor-pointer bg-transparent border-none -mb-px',
-                    modalTab === t.key ? 'border-b-indigo-600 text-indigo-600' : 'border-transparent text-[var(--esl-text-muted)] hover:text-[var(--esl-text-secondary)]')}>
+                    modalTab === t.key ? 'border-b-indigo-600 text-[#E8242C]' : 'border-transparent text-[var(--esl-text-muted)] hover:text-[var(--esl-text-secondary)]')}>
                   <t.icon className="w-3.5 h-3.5" /> {t.label}
                 </button>
               ))}
@@ -271,7 +271,7 @@ export default function ProductsPage() {
                       {EMOJIS.map((e) => (
                         <button key={e} onClick={() => setForm({ ...form, emoji: e })}
                           className={cn('w-9 h-9 rounded-lg text-lg flex items-center justify-center cursor-pointer border transition',
-                            form.emoji === e ? 'bg-indigo-100 ring-2 ring-indigo-500 border-transparent' : 'bg-[var(--esl-bg-section)] border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]')}>
+                            form.emoji === e ? 'bg-[var(--esl-brand-bg)] ring-2 ring-[#E8242C]/40 border-transparent' : 'bg-[var(--esl-bg-section)] border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]')}>
                           {e}
                         </button>
                       ))}
@@ -280,7 +280,7 @@ export default function ProductsPage() {
                   <div>
                     <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Нэр *</label>
                     <input type="text" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Бүтээгдэхүүний нэр"
-                      className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                   </div>
                   <div>
                     <CategorySelector
@@ -310,7 +310,7 @@ export default function ProductsPage() {
                   <div>
                     <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Видео (заавал биш)</label>
                     <input type="url" value={form.videoUrl} onChange={(e) => setForm({ ...form, videoUrl: e.target.value })} placeholder="https://youtube.com/watch?v=..."
-                      className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                      className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                   </div>
                 </>
               )}
@@ -322,7 +322,7 @@ export default function ProductsPage() {
                     <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Тайлбар</label>
                     <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={6}
                       placeholder="Бүтээгдэхүүний дэлгэрэнгүй тайлбар..."
-                      className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none" />
+                      className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 resize-none" />
                     <div className="text-[10px] text-[var(--esl-text-muted)] text-right">{form.description.length} тэмдэгт</div>
                   </div>
 
@@ -333,13 +333,13 @@ export default function ProductsPage() {
                       {form.specs.map((spec, i) => (
                         <div key={i} className="flex gap-2">
                           <input placeholder="Нэр (жш: Жин)" value={spec.key} onChange={(e) => updateSpec(i, 'key', e.target.value)}
-                            className="flex-1 px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                            className="flex-1 px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
                           <input placeholder="Утга (жш: 0.5 кг)" value={spec.value} onChange={(e) => updateSpec(i, 'value', e.target.value)}
-                            className="flex-1 px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                            className="flex-1 px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
                           <button onClick={() => removeSpec(i)} className="text-red-400 hover:text-red-600 bg-transparent border-none cursor-pointer px-2">✕</button>
                         </div>
                       ))}
-                      <button onClick={addSpec} className="text-sm text-indigo-600 font-semibold bg-transparent border-none cursor-pointer hover:underline">
+                      <button onClick={addSpec} className="text-sm text-[#E8242C] font-semibold bg-transparent border-none cursor-pointer hover:underline">
                         + Үзүүлэлт нэмэх
                       </button>
                     </div>
@@ -354,12 +354,12 @@ export default function ProductsPage() {
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Үнэ (₮) *</label>
                       <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="0"
-                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Хямдрал үнэ (₮)</label>
                       <input type="number" value={form.salePrice} onChange={(e) => setForm({ ...form, salePrice: e.target.value })} placeholder="Хоосон = хямдралгүй"
-                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                     </div>
                   </div>
                   {form.salePrice && Number(form.salePrice) < Number(form.price) && (
@@ -371,12 +371,12 @@ export default function ProductsPage() {
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Нөөц (ширхэг)</label>
                       <input type="number" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Комисс (%)</label>
                       <input type="number" value={form.commission} onChange={(e) => setForm({ ...form, commission: e.target.value })} min="1" max="50"
-                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                     </div>
                   </div>
                 </>
@@ -389,17 +389,17 @@ export default function ProductsPage() {
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Хүргэлтийн төлбөр (₮)</label>
                       <input type="number" value={form.deliveryFee} onChange={(e) => setForm({ ...form, deliveryFee: e.target.value })} placeholder="0 = үнэгүй"
-                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                     </div>
                     <div>
                       <label className="text-xs font-semibold text-[var(--esl-text-secondary)] mb-1.5 block">Хүргэлтийн хугацаа (мин)</label>
                       <input type="number" value={form.estimatedMins} onChange={(e) => setForm({ ...form, estimatedMins: e.target.value })} placeholder="30"
-                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                        className="w-full px-3 py-2.5 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
                     </div>
                   </div>
-                  <div className="bg-indigo-50 rounded-xl p-4">
-                    <h4 className="text-xs font-bold text-indigo-700 mb-2">Модификатор & Нэмэлт</h4>
-                    <p className="text-xs text-indigo-600">Бараа хадгалсны дараа Modifier бүлэг, Add-on нэмж болно. Бараагаа засах товч дарж нэмнэ үү.</p>
+                  <div className="bg-[var(--esl-brand-bg)] rounded-xl p-4">
+                    <h4 className="text-xs font-bold text-[#E8242C] mb-2">Модификатор & Нэмэлт</h4>
+                    <p className="text-xs text-[#E8242C]">Бараа хадгалсны дараа Modifier бүлэг, Add-on нэмж болно. Бараагаа засах товч дарж нэмнэ үү.</p>
                   </div>
                 </>
               )}

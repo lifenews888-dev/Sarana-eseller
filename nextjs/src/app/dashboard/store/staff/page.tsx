@@ -82,7 +82,7 @@ export default function StaffPage() {
           <h1 className="text-2xl font-bold text-[var(--esl-text-primary)]">Ажилтнууд</h1>
           <p className="text-[var(--esl-text-secondary)] mt-1">Дэлгүүрийн ажилтан нэмэх, удирдах</p>
         </div>
-        <button onClick={() => setShowModal(true)} className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors text-sm">
+        <button onClick={() => setShowModal(true)} className="px-5 py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors text-sm">
           + Ажилтан нэмэх
         </button>
       </div>
@@ -120,7 +120,7 @@ export default function StaffPage() {
                     <tr key={s.id} className="border-b border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]">
                       <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-sm font-bold">
+                          <div className="w-9 h-9 rounded-full bg-[var(--esl-brand-bg)] text-[#E8242C] flex items-center justify-center text-sm font-bold">
                             {s.name.charAt(0)}
                           </div>
                           <span className="text-sm font-medium text-[var(--esl-text-primary)]">{s.name}</span>
@@ -164,22 +164,22 @@ export default function StaffPage() {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Нэр</label>
-                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Имэйл</label>
-                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-[var(--esl-text-primary)] mb-1">Эрх</label>
-                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as StaffMember['role'] })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <select value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as StaffMember['role'] })} className="w-full px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm text-[var(--esl-text-primary)] focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40">
                   <option value="manager">Менежер</option>
                   <option value="editor">Засварлагч</option>
                   <option value="viewer">Үзэгч</option>
                 </select>
                 <p className="text-xs text-[var(--esl-text-muted)] mt-1">{ROLE_DESCRIPTIONS[form.role]}</p>
               </div>
-              <button onClick={handleAdd} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+              <button onClick={handleAdd} className="w-full py-2.5 bg-[#E8242C] text-white rounded-lg font-medium hover:bg-[#C41E25] transition-colors">
                 Нэмэх
               </button>
             </div>

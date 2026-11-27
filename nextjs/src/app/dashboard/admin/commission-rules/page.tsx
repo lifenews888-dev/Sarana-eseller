@@ -48,7 +48,7 @@ function SliderField({ label, value, onChange, min, max, step = 0.5, suffix = '%
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(+e.target.value)}
-        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#E8242C]"
+        className="w-full h-2 bg-[var(--esl-bg-elevated)] rounded-lg appearance-none cursor-pointer accent-[#E8242C]"
       />
       <div className="flex justify-between text-xs text-[var(--esl-text-disabled)]">
         <span>{min.toLocaleString()}{suffix}</span>

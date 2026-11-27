@@ -20,7 +20,7 @@ interface EntShop {
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  STARTER: 'bg-gray-100 text-gray-700',
+  STARTER: 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-primary)]',
   BUSINESS: 'bg-blue-100 text-blue-700',
   CORPORATE: 'bg-purple-100 text-purple-700',
 };
@@ -63,17 +63,17 @@ export default function AdminEnterprisePage() {
       <div className="flex items-center gap-3 mb-6">
         <Building2 className="w-6 h-6 text-blue-900" />
         <h1 className="text-2xl font-bold">Enterprise дэлгүүрүүд</h1>
-        <span className="text-sm text-gray-400 ml-2">{shops.length} дэлгүүр</span>
+        <span className="text-sm text-[var(--esl-text-muted)] ml-2">{shops.length} дэлгүүр</span>
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-gray-400"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
+        <div className="text-center py-12 text-[var(--esl-text-muted)]"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></div>
       ) : shops.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">Enterprise дэлгүүр байхгүй</div>
+        <div className="text-center py-12 text-[var(--esl-text-muted)]">Enterprise дэлгүүр байхгүй</div>
       ) : (
-        <div className="bg-white rounded-xl border overflow-hidden">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl border overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b">
+            <thead className="bg-[var(--esl-bg-section)] border-b">
               <tr>
                 <th className="text-left px-4 py-3 font-medium">Дэлгүүр</th>
                 <th className="text-left px-4 py-3 font-medium">Subdomain</th>
@@ -85,13 +85,13 @@ export default function AdminEnterprisePage() {
             </thead>
             <tbody>
               {shops.map((s) => (
-                <tr key={s.id} className="border-b hover:bg-gray-50">
+                <tr key={s.id} className="border-b hover:bg-[var(--esl-bg-hover)]">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {s.shop.logo ? (
                         <img src={s.shop.logo} alt="" className="w-8 h-8 rounded" />
                       ) : (
-                        <div className="w-8 h-8 rounded bg-gray-100 flex items-center justify-center text-sm">🏪</div>
+                        <div className="w-8 h-8 rounded bg-[var(--esl-bg-muted)] flex items-center justify-center text-sm">🏪</div>
                       )}
                       <span className="font-medium">{s.shop.name}</span>
                     </div>
@@ -102,7 +102,7 @@ export default function AdminEnterprisePage() {
                       {s.subdomain}.eseller.mn <ExternalLink className="w-3 h-3" />
                     </a>
                     {s.customDomain && (
-                      <div className="text-xs text-gray-400 mt-0.5">{s.customDomain}</div>
+                      <div className="text-xs text-[var(--esl-text-muted)] mt-0.5">{s.customDomain}</div>
                     )}
                   </td>
                   <td className="px-4 py-3">
@@ -121,7 +121,7 @@ export default function AdminEnterprisePage() {
                       {s.isActive ? 'Идэвхтэй' : 'Идэвхгүй'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td className="px-4 py-3 text-[var(--esl-text-secondary)] text-xs">
                     {new Date(s.createdAt).toLocaleDateString('mn-MN')}
                   </td>
                   <td className="px-4 py-3">

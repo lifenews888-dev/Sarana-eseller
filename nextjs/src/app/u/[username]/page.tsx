@@ -71,7 +71,7 @@ export default function MicroStorefront() {
         <div className="max-w-3xl mx-auto h-14 flex items-center px-4 gap-3">
           <Link href="/" className="flex items-center gap-2 no-underline shrink-0">
             <EsellerLogo size={22} />
-            <span className="text-base font-black text-[#0F172A] tracking-tight">eseller<span className="text-[#E31E24]">.mn</span></span>
+            <span className="text-base font-black text-[#0F172A] tracking-tight">eseller<span className="text-[#E8242C]">.mn</span></span>
           </Link>
           <div className="flex-1" />
           <Link href="/store" className="text-xs font-semibold text-[var(--esl-text-secondary)] no-underline hover:text-[#6366F1] transition hidden sm:inline">
@@ -79,11 +79,11 @@ export default function MicroStorefront() {
           </Link>
           <button
             onClick={() => setCartOpen(true)}
-            className="relative w-9 h-9 rounded-lg hover:bg-[var(--esl-bg-section)] border-none cursor-pointer bg-transparent flex items-center justify-center text-[var(--esl-text-secondary)] hover:text-[#E31E24] transition"
+            className="relative w-9 h-9 rounded-lg hover:bg-[var(--esl-bg-section)] border-none cursor-pointer bg-transparent flex items-center justify-center text-[var(--esl-text-secondary)] hover:text-[#E8242C] transition"
           >
             <ShoppingCart className="w-5 h-5" />
             {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] rounded-full bg-[#E31E24] text-white text-[9px] font-bold flex items-center justify-center px-1">
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] rounded-full bg-[#E8242C] text-white text-[9px] font-bold flex items-center justify-center px-1">
                 {cartCount}
               </span>
             )}
@@ -128,7 +128,7 @@ export default function MicroStorefront() {
                 <Package className="w-20 h-20" style={{ color: 'var(--esl-text-muted)' }} />
               )}
               {heroProduct.salePrice && heroProduct.salePrice < heroProduct.price && (
-                <span className="absolute top-4 left-4 bg-[#E31E24] text-white text-sm font-bold px-3 py-1.5 rounded-xl shadow-md">
+                <span className="absolute top-4 left-4 bg-[#E8242C] text-white text-sm font-bold px-3 py-1.5 rounded-xl shadow-md">
                   -{discountPercent(heroProduct.price, heroProduct.salePrice)}% ХЯМДРАЛ
                 </span>
               )}
@@ -155,7 +155,7 @@ export default function MicroStorefront() {
               )}
 
               <div className="flex items-baseline gap-3 mb-4">
-                <span className="text-3xl font-black text-[#E31E24]">{formatPrice(heroProduct.salePrice || heroProduct.price)}</span>
+                <span className="text-3xl font-black text-[#E8242C]">{formatPrice(heroProduct.salePrice || heroProduct.price)}</span>
                 {heroProduct.salePrice && heroProduct.salePrice < heroProduct.price && (
                   <span className="text-base text-[var(--esl-text-muted)] line-through">{formatPrice(heroProduct.price)}</span>
                 )}
@@ -180,7 +180,7 @@ export default function MicroStorefront() {
 
               <button
                 onClick={() => handleAdd(heroProduct)}
-                className="w-full bg-[#E31E24] text-white py-4 rounded-xl font-bold text-base border-none cursor-pointer shadow-[0_4px_16px_rgba(227,30,36,.25)] hover:bg-[#C41A1F] transition-all flex items-center justify-center gap-2"
+                className="w-full bg-[#E8242C] text-white py-4 rounded-xl font-bold text-base border-none cursor-pointer shadow-[0_4px_16px_rgba(227,30,36,.25)] hover:bg-[#C41E25] transition-all flex items-center justify-center gap-2"
               >
                 <ShoppingCart className="w-5 h-5" />
                 Сагсанд нэмэх — {formatPrice(heroProduct.salePrice || heroProduct.price)}
@@ -209,13 +209,13 @@ export default function MicroStorefront() {
                         <Package className="w-8 h-8 group-hover:scale-110 transition-transform" style={{ color: 'var(--esl-text-muted)' }} />
                       )}
                       {disc > 0 && (
-                        <span className="absolute top-2 left-2 bg-[#E31E24] text-white text-[9px] font-bold px-2 py-0.5 rounded-md">-{disc}%</span>
+                        <span className="absolute top-2 left-2 bg-[#E8242C] text-white text-[9px] font-bold px-2 py-0.5 rounded-md">-{disc}%</span>
                       )}
                     </div>
                     <div className="p-3">
                       <div className="text-xs font-bold text-[#0F172A] line-clamp-2 leading-snug mb-1.5">{p.name}</div>
                       <div className="flex items-baseline gap-1.5 mb-2">
-                        <span className="text-sm font-black text-[#E31E24]">{formatPrice(p.salePrice || p.price)}</span>
+                        <span className="text-sm font-black text-[#E8242C]">{formatPrice(p.salePrice || p.price)}</span>
                         {disc > 0 && <span className="text-[10px] text-[var(--esl-text-muted)] line-through">{formatPrice(p.price)}</span>}
                       </div>
                       <button

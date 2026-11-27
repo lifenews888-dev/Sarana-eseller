@@ -129,7 +129,7 @@ export default function PromoCodesPage() {
                 <div className="flex items-center gap-2">
                   <span className="font-mono text-sm font-bold" style={{ color: 'var(--esl-text-primary)' }}>{c.code}</span>
                   <button onClick={() => copyCode(c.code)} className="border-none bg-transparent cursor-pointer" style={{ color: 'var(--esl-text-muted)' }}><Copy className="w-3.5 h-3.5" /></button>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${c.isActive ? 'bg-green-100 text-green-700' : 'bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)]'}`}>
                     {c.isActive ? 'Идэвхтэй' : 'Идэвхгүй'}
                   </span>
                 </div>

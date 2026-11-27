@@ -60,16 +60,16 @@ export default async function ShopHomePage({ params }: Props) {
         <h2 className="text-xl font-bold mb-6">Бүтээгдэхүүн ({products.length})</h2>
 
         {products.length === 0 ? (
-          <p className="text-center text-gray-400 py-16">Бараа байхгүй байна</p>
+          <p className="text-center text-[var(--esl-text-muted)] py-16">Бараа байхгүй байна</p>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {products.map((product) => (
               <Link
                 key={product.id}
                 href={`/shop-sub/${slug}/products/${product.id}`}
-                className="bg-white rounded-xl border overflow-hidden hover:shadow-lg transition group no-underline"
+                className="bg-[var(--esl-bg-card)] rounded-xl border overflow-hidden hover:shadow-lg transition group no-underline"
               >
-                <div className="aspect-square bg-gray-100 overflow-hidden">
+                <div className="aspect-square bg-[var(--esl-bg-muted)] overflow-hidden">
                   {product.images?.[0] ? (
                     <SafeImage
                       src={product.images[0]}
@@ -83,13 +83,13 @@ export default async function ShopHomePage({ params }: Props) {
                   )}
                 </div>
                 <div className="p-3">
-                  <p className="text-sm font-medium text-gray-900 line-clamp-2">{product.name}</p>
+                  <p className="text-sm font-medium text-[var(--esl-text-primary)] line-clamp-2">{product.name}</p>
                   <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-base font-bold" style={{ color: config.accentColor }}>
                       {(product.salePrice || product.price).toLocaleString()}₮
                     </span>
                     {product.salePrice && product.salePrice < product.price && (
-                      <span className="text-xs text-gray-400 line-through">
+                      <span className="text-xs text-[var(--esl-text-muted)] line-through">
                         {product.price.toLocaleString()}₮
                       </span>
                     )}

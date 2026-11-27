@@ -76,9 +76,9 @@ export default function OrderTrackingPage() {
         <div className="max-w-2xl mx-auto w-full flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 no-underline">
             <EsellerLogo size={22} />
-            <span className="text-base font-black text-[var(--esl-text-primary)]">eseller<span className="text-[#E31E24]">.mn</span></span>
+            <span className="text-base font-black text-[var(--esl-text-primary)]">eseller<span className="text-[#E8242C]">.mn</span></span>
           </Link>
-          <button onClick={fetchOrder} className="text-xs text-[var(--esl-text-muted)] hover:text-indigo-600 bg-transparent border-none cursor-pointer flex items-center gap-1">
+          <button onClick={fetchOrder} className="text-xs text-[var(--esl-text-muted)] hover:text-[#C41E25] bg-transparent border-none cursor-pointer flex items-center gap-1">
             <RefreshCw className="w-3 h-3" /> Шинэчлэх
           </button>
         </div>
@@ -94,7 +94,7 @@ export default function OrderTrackingPage() {
               <h1 className="text-xl font-black text-[var(--esl-text-primary)]">Захиалгын явц</h1>
               <p className="text-sm text-[var(--esl-text-secondary)] mt-1 font-mono">{order.orderNumber || order.id}</p>
               {order.estimatedMinutes && order.status !== 'delivered' && order.status !== 'cancelled' && (
-                <div className="inline-flex items-center gap-1.5 bg-indigo-50 text-indigo-700 text-xs font-semibold px-3 py-1.5 rounded-full mt-3">
+                <div className="inline-flex items-center gap-1.5 bg-[var(--esl-brand-bg)] text-[#E8242C] text-xs font-semibold px-3 py-1.5 rounded-full mt-3">
                   <Clock className="w-3.5 h-3.5" />
                   ~{order.estimatedMinutes} мин
                 </div>
@@ -123,12 +123,12 @@ export default function OrderTrackingPage() {
                         {/* Circle + line */}
                         <div className="flex flex-col items-center">
                           <div className={cn('w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all',
-                            isCompleted ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]',
-                            isCurrent && 'ring-4 ring-indigo-100 animate-pulse')}>
+                            isCompleted ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-section)] text-[var(--esl-text-muted)]',
+                            isCurrent && 'ring-4 ring-[#E8242C]/40 animate-pulse')}>
                             <StepIcon className="w-4 h-4" />
                           </div>
                           {i < STEPS.length - 1 && (
-                            <div className={cn('w-0.5 h-10', isCompleted && i < currentStepIdx ? 'bg-indigo-600' : 'bg-gray-200')} />
+                            <div className={cn('w-0.5 h-10', isCompleted && i < currentStepIdx ? 'bg-[#E8242C]' : 'bg-[var(--esl-bg-elevated)]')} />
                           )}
                         </div>
 

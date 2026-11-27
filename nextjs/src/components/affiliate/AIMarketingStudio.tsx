@@ -17,7 +17,7 @@ interface AIMarketingStudioProps {
 
 const TEMPLATES = [
   { id: 'sale', name: 'Хямдрал', gradient: 'from-red-500 to-orange-500', layout: 'center' },
-  { id: 'new', name: 'Шинэ ирэлт', gradient: 'from-indigo-500 to-purple-600', layout: 'left' },
+  { id: 'new', name: 'Шинэ ирэлт', gradient: 'from-[#E8242C] to-purple-600', layout: 'left' },
   { id: 'flash', name: 'Flash Sale', gradient: 'from-amber-500 to-red-500', layout: 'center' },
   { id: 'minimal', name: 'Минимал', gradient: 'from-slate-800 to-slate-900', layout: 'center' },
   { id: 'lifestyle', name: 'Lifestyle', gradient: 'from-emerald-400 to-cyan-500', layout: 'left' },

@@ -150,7 +150,7 @@ export default function StoreSettingsPage() {
         {activeTab === 'general' && (
           <div className="space-y-6">
             {/* Store Preview Card */}
-            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 rounded-2xl p-6">
+            <div className="bg-gradient-to-br from-[#E8242C] to-purple-50 border border-[var(--esl-brand-border)] rounded-2xl p-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-[var(--esl-bg-card)] shadow-sm border border-[var(--esl-border)] flex items-center justify-center text-2xl overflow-hidden">
                   {config.logo ? (

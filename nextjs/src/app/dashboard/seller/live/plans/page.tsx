@@ -82,7 +82,7 @@ const PLANS: PlanInfo[] = [
 ];
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string; badge: string }> = {
-  gray: { bg: "bg-gray-50", border: "border-gray-200", text: "text-gray-700", badge: "bg-gray-100 text-gray-700" },
+  gray: { bg: "bg-[var(--esl-bg-section)]", border: "border-[var(--esl-border)]", text: "text-[var(--esl-text-primary)]", badge: "bg-[var(--esl-bg-muted)] text-[var(--esl-text-primary)]" },
   blue: { bg: "bg-blue-50", border: "border-blue-300", text: "text-blue-700", badge: "bg-blue-100 text-blue-700" },
   purple: { bg: "bg-purple-50", border: "border-purple-300", text: "text-purple-700", badge: "bg-purple-100 text-purple-700" },
   amber: { bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-700", badge: "bg-amber-100 text-amber-700" },
@@ -139,8 +139,8 @@ export default function LivePlansPage() {
   return (
     <div className="p-6 max-w-5xl mx-auto">
       <h1 className="text-2xl font-bold mb-2">Live багц удирдах</h1>
-      <p className="text-gray-500 mb-6">
-        Таны одоогийн багц: <span className="font-semibold text-gray-900">{PLANS.find((p) => p.key === currentPlan)?.name}</span>
+      <p className="text-[var(--esl-text-secondary)] mb-6">
+        Таны одоогийн багц: <span className="font-semibold text-[var(--esl-text-primary)]">{PLANS.find((p) => p.key === currentPlan)?.name}</span>
         {" | "}
         Энэ сарын live: <span className="font-semibold">{liveCount}</span>
         {monthlyLimit > 0 ? ` / ${monthlyLimit}` : " (хязгааргүй)"}
@@ -157,7 +157,7 @@ export default function LivePlansPage() {
             <div
               key={plan.key}
               className={`rounded-xl border-2 p-5 flex flex-col transition ${
-                isCurrent ? `${colors.border} ${colors.bg}` : "border-gray-200 bg-white"
+                isCurrent ? `${colors.border} ${colors.bg}` : "border-[var(--esl-border)] bg-[var(--esl-bg-card)]"
               }`}
             >
               {/* Header */}
@@ -174,7 +174,7 @@ export default function LivePlansPage() {
               {/* Price */}
               <div className="mb-4">
                 <span className="text-2xl font-bold">{plan.price === 0 ? "Үнэгүй" : `${plan.price.toLocaleString()}₮`}</span>
-                {plan.price > 0 && <span className="text-sm text-gray-500"> / сар</span>}
+                {plan.price > 0 && <span className="text-sm text-[var(--esl-text-secondary)]"> / сар</span>}
               </div>
 
               {/* Features */}
@@ -184,9 +184,9 @@ export default function LivePlansPage() {
                     {f.included ? (
                       <Check className="w-4 h-4 text-green-500 flex-shrink-0" />
                     ) : (
-                      <X className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                      <X className="w-4 h-4 text-[var(--esl-text-muted)] flex-shrink-0" />
                     )}
-                    <span className={f.included ? "text-gray-700" : "text-gray-400"}>{f.label}</span>
+                    <span className={f.included ? "text-[var(--esl-text-primary)]" : "text-[var(--esl-text-muted)]"}>{f.label}</span>
                   </li>
                 ))}
               </ul>
@@ -202,7 +202,7 @@ export default function LivePlansPage() {
               ) : isCurrent ? (
                 <button
                   disabled
-                  className="bg-gray-100 text-gray-500 py-2.5 rounded-lg font-medium text-sm cursor-not-allowed"
+                  className="bg-[var(--esl-bg-muted)] text-[var(--esl-text-secondary)] py-2.5 rounded-lg font-medium text-sm cursor-not-allowed"
                 >
                   Одоогийн багц
                 </button>

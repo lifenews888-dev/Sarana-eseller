@@ -49,7 +49,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
         <div className="flex gap-6 p-4 rounded-xl" style={{ background: 'var(--esl-bg-card)', border: '1px solid var(--esl-border)' }}>
           <div className="text-center">
             <div className="text-3xl font-black" style={{ color: 'var(--esl-text-primary)' }}>{stats.avg.toFixed(1)}</div>
-            <div className="flex gap-0.5 mt-1">{[1,2,3,4,5].map(s => <Star key={s} size={14} className={s <= Math.round(stats.avg) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />)}</div>
+            <div className="flex gap-0.5 mt-1">{[1,2,3,4,5].map(s => <Star key={s} size={14} className={s <= Math.round(stats.avg) ? 'text-amber-400 fill-amber-400' : 'text-[var(--esl-text-muted)]'} />)}</div>
             <p className="text-xs mt-1" style={{ color: 'var(--esl-text-muted)' }}>{stats.count} үнэлгээ</p>
           </div>
           <div className="flex-1 space-y-1">
@@ -82,7 +82,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
             {[1,2,3,4,5].map(s => (
               <button key={s} onClick={() => setRating(s)} onMouseEnter={() => setHover(s)} onMouseLeave={() => setHover(0)}
                 className="border-none bg-transparent cursor-pointer p-0.5">
-                <Star size={28} className={(hover || rating) >= s ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                <Star size={28} className={(hover || rating) >= s ? 'text-amber-400 fill-amber-400' : 'text-[var(--esl-text-muted)]'} />
               </button>
             ))}
           </div>
@@ -110,7 +110,7 @@ export default function ReviewSection({ productId }: { productId: string }) {
                     <span className="text-sm font-semibold" style={{ color: 'var(--esl-text-primary)' }}>{r.buyerName || 'Хэрэглэгч'}</span>
                     {r.isVerified && <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-100 text-green-700">✓ Худалдан авсан</span>}
                   </div>
-                  <div className="flex items-center gap-1">{[1,2,3,4,5].map(s => <Star key={s} size={10} className={s <= r.rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />)}</div>
+                  <div className="flex items-center gap-1">{[1,2,3,4,5].map(s => <Star key={s} size={10} className={s <= r.rating ? 'text-amber-400 fill-amber-400' : 'text-[var(--esl-text-muted)]'} />)}</div>
                 </div>
                 <span className="text-[10px] ml-auto" style={{ color: 'var(--esl-text-muted)' }}>{new Date(r.createdAt).toLocaleDateString('mn-MN')}</span>
               </div>

@@ -79,7 +79,7 @@ export default function AIDescriptionPage() {
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-[#E8242C] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -92,7 +92,7 @@ export default function AIDescriptionPage() {
   if (!aiCheck.allowed) {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] p-4 md:p-6">
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-8 text-center text-white mb-6">
+        <div className="bg-gradient-to-r from-blue-600 to-[#C41E25] rounded-xl p-8 text-center text-white mb-6">
           <span className="text-4xl mb-3 block"><FileText className="w-10 h-10 mx-auto" /></span>
           <h1 className="text-2xl font-bold">AI Тайлбар бичигч</h1>
           <p className="opacity-90 mt-1">Бүтээгдэхүүний тайлбар автоматаар бич</p>
@@ -101,7 +101,7 @@ export default function AIDescriptionPage() {
           <span className="text-5xl block mb-4"><Lock className="w-12 h-12 mx-auto" /></span>
           <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-2">AI боломж хязгаарлагдсан</h2>
           <p className="text-[var(--esl-text-secondary)] mb-4">Энэ боломжийг ашиглахын тулд Стандарт эсвэл дээш багц руу шилжинэ үү.</p>
-          <a href="/dashboard/store/package" className="inline-block bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
+          <a href="/dashboard/store/package" className="inline-block bg-gradient-to-r from-blue-500 to-[#C41E25] text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
             Багц шинэчлэх
           </a>
         </div>
@@ -138,7 +138,7 @@ export default function AIDescriptionPage() {
   return (
     <div className="min-h-screen bg-[var(--esl-bg-section)] p-4 md:p-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl p-6 mb-6 text-white">
+      <div className="bg-gradient-to-r from-blue-600 to-[#C41E25] rounded-xl p-6 mb-6 text-white">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2"><FileText className="w-7 h-7" /> AI Тайлбар бичигч</h1>
@@ -162,7 +162,7 @@ export default function AIDescriptionPage() {
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
               placeholder="Жишээ: Premium цагаан цамц"
-              className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
+              className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 focus:border-[#E8242C] outline-none"
             />
           </div>
 
@@ -173,7 +173,7 @@ export default function AIDescriptionPage() {
               onChange={(e) => setFeatures(e.target.value)}
               rows={4}
               placeholder={"100% цэвэр хөвөн\nS, M, L, XL хэмжээтэй\nМонгол үйлдвэрлэл"}
-              className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none resize-none"
+              className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2.5 text-sm text-[var(--esl-text-primary)] focus:ring-2 focus:ring-[#E8242C]/40 focus:border-[#E8242C] outline-none resize-none"
             />
           </div>
 
@@ -186,7 +186,7 @@ export default function AIDescriptionPage() {
                   onClick={() => setTone(t.id)}
                   className={`p-3 rounded-lg border-2 text-sm font-medium transition-all ${
                     tone === t.id
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      ? 'border-[#E8242C] bg-[var(--esl-brand-bg)] text-[#E8242C]'
                       : 'border-[var(--esl-border)] text-[var(--esl-text-primary)] hover:border-[var(--esl-border-strong)]'
                   }`}
                 >
@@ -205,7 +205,7 @@ export default function AIDescriptionPage() {
                   onClick={() => setLang(l.id)}
                   className={`flex-1 p-3 rounded-lg border-2 text-sm font-medium transition-all ${
                     lang === l.id
-                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      ? 'border-[#E8242C] bg-[var(--esl-brand-bg)] text-[#E8242C]'
                       : 'border-[var(--esl-border)] text-[var(--esl-text-primary)] hover:border-[var(--esl-border-strong)]'
                   }`}
                 >
@@ -218,7 +218,7 @@ export default function AIDescriptionPage() {
           <button
             onClick={handleGenerate}
             disabled={generating || !productName.trim()}
-            className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-blue-500 to-[#C41E25] text-white py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {generating ? (
               <>
@@ -249,7 +249,7 @@ export default function AIDescriptionPage() {
                 </button>
                 <button
                   onClick={handleApply}
-                  className="flex-1 bg-indigo-600 text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition flex items-center justify-center gap-2"
+                  className="flex-1 bg-[#E8242C] text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-[#C41E25] transition flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="w-4 h-4" /> Бараанд хэрэгжүүлэх
                 </button>

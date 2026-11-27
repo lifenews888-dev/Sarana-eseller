@@ -76,7 +76,7 @@ export default async function EnterpriseDemoPage({ params }: Props) {
   if (!demo) notFound();
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--esl-bg-page)]">
       {/* Hero */}
       <div className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${demo.color}, ${demo.color}cc)` }}>
         <div className="max-w-5xl mx-auto px-6 py-20 text-white relative z-10">
@@ -88,7 +88,7 @@ export default async function EnterpriseDemoPage({ params }: Props) {
           <h1 className="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">{demo.tagline}</h1>
           <p className="text-white/70 text-lg max-w-2xl mb-8">{demo.description}</p>
           <div className="flex gap-4">
-            <Link href="/contact" className="bg-white text-gray-900 px-6 py-3 rounded-xl font-semibold text-sm no-underline hover:bg-gray-100">
+            <Link href="/contact" className="bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)] px-6 py-3 rounded-xl font-semibold text-sm no-underline hover:bg-[var(--esl-bg-hover)]">
               Уулзалт товлох
             </Link>
             <Link href="/enterprise/pricing" className="border border-white/30 text-white px-6 py-3 rounded-xl font-semibold text-sm no-underline hover:bg-white/10">
@@ -102,9 +102,9 @@ export default async function EnterpriseDemoPage({ params }: Props) {
       <div className="max-w-5xl mx-auto px-6 -mt-10 relative z-20">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {demo.stats.map((s) => (
-            <div key={s.label} className="bg-white rounded-xl border shadow-sm p-5 text-center">
+            <div key={s.label} className="bg-[var(--esl-bg-card)] rounded-xl border shadow-sm p-5 text-center">
               <p className="text-2xl font-extrabold" style={{ color: demo.color }}>{s.value}</p>
-              <p className="text-sm text-gray-500 mt-1">{s.label}</p>
+              <p className="text-sm text-[var(--esl-text-secondary)] mt-1">{s.label}</p>
             </div>
           ))}
         </div>
@@ -115,7 +115,7 @@ export default async function EnterpriseDemoPage({ params }: Props) {
         <h2 className="text-2xl font-bold mb-8">{demo.name}-д зориулсан давуу талууд</h2>
         <div className="grid md:grid-cols-2 gap-4">
           {demo.benefits.map((b, i) => (
-            <div key={i} className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl">
+            <div key={i} className="flex items-start gap-3 p-4 bg-[var(--esl-bg-section)] rounded-xl">
               <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span className="text-sm">{b}</span>
             </div>
@@ -124,9 +124,9 @@ export default async function EnterpriseDemoPage({ params }: Props) {
       </div>
 
       {/* CTA */}
-      <div className="text-center py-16 bg-gray-50">
+      <div className="text-center py-16 bg-[var(--esl-bg-section)]">
         <h2 className="text-2xl font-bold mb-3">Бэлэн үү?</h2>
-        <p className="text-gray-500 mb-6">2 долоо хоногт {demo.name}-ийн онлайн дэлгүүрийг ажиллуулна</p>
+        <p className="text-[var(--esl-text-secondary)] mb-6">2 долоо хоногт {demo.name}-ийн онлайн дэлгүүрийг ажиллуулна</p>
         <Link href="/contact" className="inline-flex items-center gap-2 bg-blue-900 text-white px-8 py-3 rounded-xl font-semibold no-underline">
           Эхлэх <ArrowRight className="w-4 h-4" />
         </Link>

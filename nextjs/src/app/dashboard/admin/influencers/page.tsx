@@ -150,7 +150,7 @@ export default function AdminInfluencersPage() {
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
                         {a.instagram && <a href={a.instagram} target="_blank" rel="noopener noreferrer" className="text-pink-500"><ExternalLink size={13} /></a>}
-                        {a.tiktok && <a href={a.tiktok} target="_blank" rel="noopener noreferrer" className="text-gray-600"><ExternalLink size={13} /></a>}
+                        {a.tiktok && <a href={a.tiktok} target="_blank" rel="noopener noreferrer" className="text-[var(--esl-text-secondary)]"><ExternalLink size={13} /></a>}
                         {a.facebook && <a href={a.facebook} target="_blank" rel="noopener noreferrer" className="text-blue-600"><ExternalLink size={13} /></a>}
                         {a.youtube && <a href={a.youtube} target="_blank" rel="noopener noreferrer" className="text-red-500"><ExternalLink size={13} /></a>}
                       </div>
@@ -207,7 +207,7 @@ export default function AdminInfluencersPage() {
             {/* Social links */}
             <div className="flex gap-2 mb-4">
               {detail.instagram && <a href={detail.instagram} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1 bg-pink-50 text-pink-600 rounded-lg flex items-center gap-1"><ExternalLink size={10} /> Instagram</a>}
-              {detail.tiktok && <a href={detail.tiktok} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1 bg-gray-100 text-gray-700 rounded-lg flex items-center gap-1"><ExternalLink size={10} /> TikTok</a>}
+              {detail.tiktok && <a href={detail.tiktok} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1 bg-[var(--esl-bg-muted)] text-[var(--esl-text-primary)] rounded-lg flex items-center gap-1"><ExternalLink size={10} /> TikTok</a>}
               {detail.facebook && <a href={detail.facebook} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1 bg-blue-50 text-blue-600 rounded-lg flex items-center gap-1"><ExternalLink size={10} /> Facebook</a>}
               {detail.youtube && <a href={detail.youtube} target="_blank" rel="noopener noreferrer" className="text-xs px-3 py-1 bg-red-50 text-red-600 rounded-lg flex items-center gap-1"><ExternalLink size={10} /> YouTube</a>}
             </div>

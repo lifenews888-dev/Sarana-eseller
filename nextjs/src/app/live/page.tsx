@@ -40,7 +40,7 @@ export default function LiveListingPage() {
   const scheduledStreams = streams.filter((s) => s.status === "SCHEDULED");
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--esl-bg-section)]">
       {/* Header */}
       <div className="bg-gradient-to-r from-red-600 to-pink-600 text-white px-6 py-8">
         <div className="max-w-6xl mx-auto">
@@ -74,7 +74,7 @@ export default function LiveListingPage() {
             {/* Live Now */}
             {liveStreams.length > 0 && (
               <section className="mb-10">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-4 flex items-center gap-2">
                   <span className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500" />
@@ -92,7 +92,7 @@ export default function LiveListingPage() {
             {/* Scheduled */}
             {scheduledStreams.length > 0 && (
               <section className="mb-10">
-                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-4 flex items-center gap-2">
                   <Clock className="w-5 h-5 text-blue-500" />
                   Товлогдсон
                 </h2>
@@ -106,11 +106,11 @@ export default function LiveListingPage() {
 
             {streams.length === 0 && (
               <div className="text-center py-20">
-                <Video className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500 text-lg">
+                <Video className="w-16 h-16 text-[var(--esl-text-muted)] mx-auto mb-4" />
+                <p className="text-[var(--esl-text-secondary)] text-lg">
                   Одоогоор live дамжуулалт байхгүй байна
                 </p>
-                <p className="text-gray-400 mt-1">Удахгүй эхлэнэ!</p>
+                <p className="text-[var(--esl-text-muted)] mt-1">Удахгүй эхлэнэ!</p>
               </div>
             )}
           </>
@@ -128,7 +128,7 @@ function StreamCard({ stream }: { stream: LiveStreamCard }) {
 
   return (
     <Link href={`/live/${stream.id}`} className="group">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition">
+      <div className="bg-[var(--esl-bg-card)] rounded-xl shadow-sm border border-[var(--esl-border)] overflow-hidden hover:shadow-md transition">
         {/* Thumbnail area */}
         <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
           {hasRealThumbnail ? (
@@ -138,7 +138,7 @@ function StreamCard({ stream }: { stream: LiveStreamCard }) {
               className="w-full h-full object-cover"
             />
           ) : (
-            <Video className="w-12 h-12 text-gray-600" />
+            <Video className="w-12 h-12 text-[var(--esl-text-secondary)]" />
           )}
 
           {/* Platform badge */}
@@ -170,10 +170,10 @@ function StreamCard({ stream }: { stream: LiveStreamCard }) {
 
         {/* Info */}
         <div className="p-4">
-          <h3 className="font-semibold text-gray-900 group-hover:text-red-600 transition line-clamp-1">
+          <h3 className="font-semibold text-[var(--esl-text-primary)] group-hover:text-red-600 transition line-clamp-1">
             {stream.title}
           </h3>
-          <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+          <div className="flex items-center gap-2 mt-2 text-sm text-[var(--esl-text-secondary)]">
             <span>{stream.shop.name}</span>
             <span>&middot;</span>
             <span className="flex items-center gap-1">

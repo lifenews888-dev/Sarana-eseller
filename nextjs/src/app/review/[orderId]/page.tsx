@@ -83,7 +83,7 @@ export default function ReviewPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--esl-text-muted)]" />
       </div>
     );
   }
@@ -94,7 +94,7 @@ export default function ReviewPage() {
         <div className="text-center">
           <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-2xl font-bold mb-2">Баярлалаа!</h1>
-          <p className="text-gray-500 mb-6">Таны үнэлгээ амжилттай бүртгэгдлээ.</p>
+          <p className="text-[var(--esl-text-secondary)] mb-6">Таны үнэлгээ амжилттай бүртгэгдлээ.</p>
           <button onClick={() => router.push('/dashboard/orders')} className="bg-blue-900 text-white px-6 py-2 rounded-lg">
             Захиалгууд руу
           </button>
@@ -104,13 +104,13 @@ export default function ReviewPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8 px-4">
+    <div className="min-h-screen bg-[var(--esl-bg-section)] py-8 px-4">
       <div className="max-w-lg mx-auto">
         <h1 className="text-2xl font-bold mb-1">Үнэлгээ өгөх</h1>
-        <p className="text-gray-500 mb-6">Захиалга #{orderId?.slice(-6)}</p>
+        <p className="text-[var(--esl-text-secondary)] mb-6">Захиалга #{orderId?.slice(-6)}</p>
 
         {/* Star rating */}
-        <div className="bg-white rounded-xl p-6 mb-4 border">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl p-6 mb-4 border">
           <p className="font-medium mb-3">Бараагаа хэрхэн үнэлэх вэ?</p>
           <div className="flex gap-2 justify-center">
             {[1, 2, 3, 4, 5].map((n) => (
@@ -125,13 +125,13 @@ export default function ReviewPage() {
                   className={`w-10 h-10 transition-colors ${
                     n <= (hovered || rating)
                       ? 'fill-yellow-400 text-yellow-400'
-                      : 'text-gray-300'
+                      : 'text-[var(--esl-text-muted)]'
                   }`}
                 />
               </button>
             ))}
           </div>
-          <p className="text-center text-sm text-gray-400 mt-2">
+          <p className="text-center text-sm text-[var(--esl-text-muted)] mt-2">
             {rating === 1 && 'Маш муу'}
             {rating === 2 && 'Муу'}
             {rating === 3 && 'Дунд'}
@@ -141,7 +141,7 @@ export default function ReviewPage() {
         </div>
 
         {/* Comment */}
-        <div className="bg-white rounded-xl p-6 mb-4 border">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl p-6 mb-4 border">
           <label className="font-medium block mb-2">Сэтгэгдэл</label>
           <textarea
             value={comment}
@@ -153,7 +153,7 @@ export default function ReviewPage() {
         </div>
 
         {/* Photo upload */}
-        <div className="bg-white rounded-xl p-6 mb-4 border">
+        <div className="bg-[var(--esl-bg-card)] rounded-xl p-6 mb-4 border">
           <label className="font-medium block mb-2">Зураг (5 хүртэл)</label>
           <div className="flex gap-2 flex-wrap">
             {images.map((img, i) => (
@@ -170,9 +170,9 @@ export default function ReviewPage() {
             {images.length < 5 && (
               <label className="w-20 h-20 border-2 border-dashed rounded-lg flex items-center justify-center cursor-pointer hover:border-blue-400 transition">
                 {uploading ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+                  <Loader2 className="w-5 h-5 animate-spin text-[var(--esl-text-muted)]" />
                 ) : (
-                  <Camera className="w-5 h-5 text-gray-400" />
+                  <Camera className="w-5 h-5 text-[var(--esl-text-muted)]" />
                 )}
                 <input type="file" accept="image/*" multiple onChange={handleImageUpload} className="hidden" />
               </label>

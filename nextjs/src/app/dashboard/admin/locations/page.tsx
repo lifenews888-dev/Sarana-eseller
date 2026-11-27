@@ -200,7 +200,7 @@ export default function AdminLocationsPage() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--esl-text-muted)]" />
                 <input type="text" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Байршил хайх..."
-                  className="w-full pl-10 pr-4 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                  className="w-full pl-10 pr-4 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 transition" />
               </div>
               <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
                 className="px-3 py-2 border border-[var(--esl-border)] rounded-lg text-sm bg-[var(--esl-bg-card)] cursor-pointer focus:outline-none">
@@ -227,16 +227,16 @@ export default function AdminLocationsPage() {
                     <th className="px-4 py-2.5 font-medium">Шалгасан</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-[var(--esl-border)]">
                   {paginated.map((loc) => {
                     const check = validateCoords(loc.lat, loc.lng);
                     const isActive = selected?.id === loc.id;
                     return (
                       <tr key={loc.id} onClick={() => selectLoc(loc)}
-                        className={cn('cursor-pointer transition', isActive ? 'bg-indigo-50' : 'hover:bg-[var(--esl-bg-section)]/50')}>
+                        className={cn('cursor-pointer transition', isActive ? 'bg-[var(--esl-brand-bg)]' : 'hover:bg-[var(--esl-bg-section)]/50')}>
                         <td className="px-4 py-3">
                           <div className="font-semibold text-[var(--esl-text-primary)]">{loc.name}</div>
-                          {loc.isPrimary && <span className="text-[9px] text-indigo-500 font-bold">ҮНДСЭН</span>}
+                          {loc.isPrimary && <span className="text-[9px] text-[#E8242C] font-bold">ҮНДСЭН</span>}
                         </td>
                         <td className="px-4 py-3">
                           <div className="text-xs text-[var(--esl-text-primary)]">{loc.district}</div>
@@ -353,12 +353,12 @@ export default function AdminLocationsPage() {
                     <div>
                       <label className="text-[10px] text-[var(--esl-text-muted)] block mb-1">Өргөрөг (lat)</label>
                       <input type="text" value={editLat} onChange={(e) => setEditLat(e.target.value)} placeholder="47.9077..."
-                        className="w-full px-2.5 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                        className="w-full px-2.5 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
                     </div>
                     <div>
                       <label className="text-[10px] text-[var(--esl-text-muted)] block mb-1">Уртраг (lng)</label>
                       <input type="text" value={editLng} onChange={(e) => setEditLng(e.target.value)} placeholder="106.8832..."
-                        className="w-full px-2.5 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                        className="w-full px-2.5 py-2 border border-[var(--esl-border)] rounded-lg text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
                     </div>
                   </div>
 
@@ -374,7 +374,7 @@ export default function AdminLocationsPage() {
                   <div>
                     <label className="text-[10px] text-[var(--esl-text-muted)] block mb-1">Хороо</label>
                     <input type="text" value={editKhoroo} onChange={(e) => setEditKhoroo(e.target.value)} placeholder="1-р хороо"
-                      className="w-full px-2.5 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+                      className="w-full px-2.5 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-1 focus:ring-[#E8242C]/40" />
                   </div>
 
                   <button onClick={handleSave} disabled={saving}

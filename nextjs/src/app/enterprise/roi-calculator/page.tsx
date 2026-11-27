@@ -34,11 +34,11 @@ export default function ROICalculatorPage() {
         <div className="text-center mb-10">
           <Calculator className="w-10 h-10 text-blue-900 mx-auto mb-3" />
           <h1 className="text-3xl font-extrabold">ROI тооцоолуур</h1>
-          <p className="text-gray-500 mt-2">eseller.mn-д шилжихэд таны бизнес хэр хэмнэхийг тооцоол</p>
+          <p className="text-[var(--esl-text-secondary)] mt-2">eseller.mn-д шилжихэд таны бизнес хэр хэмнэхийг тооцоол</p>
         </div>
 
         {/* Inputs */}
-        <div className="bg-white rounded-2xl border p-6 mb-6">
+        <div className="bg-[var(--esl-bg-card)] rounded-2xl border p-6 mb-6">
           <h2 className="font-bold mb-4">Таны одоогийн байдал</h2>
           <div className="space-y-4">
             <div>
@@ -69,17 +69,17 @@ export default function ROICalculatorPage() {
         </div>
 
         {/* Plan selector */}
-        <div className="bg-white rounded-2xl border p-6 mb-6">
+        <div className="bg-[var(--esl-bg-card)] rounded-2xl border p-6 mb-6">
           <h2 className="font-bold mb-4">eseller багц</h2>
           <div className="grid grid-cols-3 gap-3">
             {ESELLER_PLANS.map((p, i) => (
               <button key={p.name} onClick={() => setSelectedPlan(i)}
                 className={`p-3 rounded-xl border-2 text-center transition ${
-                  selectedPlan === i ? 'border-blue-900 bg-blue-50' : 'border-gray-200'
+                  selectedPlan === i ? 'border-blue-900 bg-blue-50' : 'border-[var(--esl-border)]'
                 }`}>
                 <p className="font-bold text-sm">{p.name}</p>
-                <p className="text-xs text-gray-500">{p.commission}% комисс</p>
-                <p className="text-xs text-gray-500">{formatMNT(p.monthly)}/сар</p>
+                <p className="text-xs text-[var(--esl-text-secondary)]">{p.commission}% комисс</p>
+                <p className="text-xs text-[var(--esl-text-secondary)]">{formatMNT(p.monthly)}/сар</p>
               </button>
             ))}
           </div>

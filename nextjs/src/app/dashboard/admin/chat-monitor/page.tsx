@@ -174,7 +174,7 @@ export default function ChatMonitorPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--esl-text-muted)]" />
               <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Хэрэглэгч, мессеж хайх..."
-                className="w-full pl-10 pr-4 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-[var(--esl-bg-card)]" />
+                className="w-full pl-10 pr-4 py-2 border border-[var(--esl-border)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#E8242C]/40 bg-[var(--esl-bg-card)]" />
             </div>
           </div>
 
@@ -201,10 +201,10 @@ export default function ChatMonitorPage() {
                     const isActive = selected?.id === chat.id;
                     return (
                       <tr key={chat.id} onClick={() => openChat(chat)}
-                        className={cn('cursor-pointer transition', isActive ? 'bg-indigo-500/10' : 'hover:bg-[var(--esl-bg-section)]/50')}>
+                        className={cn('cursor-pointer transition', isActive ? 'bg-[#E8242C]/10' : 'hover:bg-[var(--esl-bg-section)]/50')}>
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-600">
+                            <div className="w-7 h-7 rounded-full bg-[var(--esl-brand-bg)] flex items-center justify-center text-xs font-bold text-[#E8242C]">
                               {(chat.customer?.name || '?').charAt(0)}
                             </div>
                             <div>
@@ -228,7 +228,7 @@ export default function ChatMonitorPage() {
                           <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded-lg',
                             chat.status === 'active' ? 'bg-green-500/15 text-green-400' :
                             chat.status === 'blocked' ? 'bg-red-500/15 text-red-400' :
-                            'bg-gray-500/15 text-gray-400'
+                            'bg-gray-500/15 text-[var(--esl-text-muted)]'
                           )}>{chat.status === 'active' ? 'Идэвхтэй' : chat.status === 'blocked' ? 'Блок' : 'Архив'}</span>
                         </td>
                         <td className="px-4 py-3 text-xs text-[var(--esl-text-muted)]">
@@ -267,7 +267,7 @@ export default function ChatMonitorPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-sm font-bold text-indigo-600">
+                  <div className="w-10 h-10 rounded-full bg-[var(--esl-brand-bg)] flex items-center justify-center text-sm font-bold text-[#E8242C]">
                     {(selected.customer?.name || '?').charAt(0)}
                   </div>
                   <div>
@@ -318,7 +318,7 @@ export default function ChatMonitorPage() {
                   ) : (
                     thread.map((m) => (
                       <div key={m.id} className={cn('flex', m.side === 'seller' ? 'justify-end' : 'justify-start')}>
-                        <div className={cn('max-w-[85%] rounded-xl px-3 py-2 text-xs', m.side === 'seller' ? 'bg-indigo-500/20 text-[var(--esl-text-primary)]' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)]')}>
+                        <div className={cn('max-w-[85%] rounded-xl px-3 py-2 text-xs', m.side === 'seller' ? 'bg-[#E8242C]/20 text-[var(--esl-text-primary)]' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-primary)]')}>
                           <div className="mb-0.5 text-[10px] font-bold text-[var(--esl-text-muted)]">{m.senderName} · {new Date(m.createdAt).toLocaleString('mn-MN')}</div>
                           <p className="whitespace-pre-wrap break-words">{m.text}</p>
                         </div>
@@ -355,7 +355,7 @@ export default function ChatMonitorPage() {
                     <span className="block text-[10px] text-[var(--esl-text-muted)]">{t.hint}</span>
                   </div>
                   <button onClick={() => toggleMod(t.key)} disabled={modSaving} className="bg-transparent border-none cursor-pointer p-0 disabled:opacity-50" aria-label={t.label}>
-                    {mod[t.key] ? <ToggleRight className="w-6 h-6 text-indigo-600" /> : <ToggleLeft className="w-6 h-6 text-[var(--esl-text-muted)]" />}
+                    {mod[t.key] ? <ToggleRight className="w-6 h-6 text-[#E8242C]" /> : <ToggleLeft className="w-6 h-6 text-[var(--esl-text-muted)]" />}
                   </button>
                 </div>
               ))

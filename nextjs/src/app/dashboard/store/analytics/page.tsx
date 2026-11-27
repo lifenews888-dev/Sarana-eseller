@@ -68,7 +68,7 @@ export default function AnalyticsPage() {
             key={key}
             onClick={() => setPeriod(key)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              period === key ? 'bg-indigo-600 text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
+              period === key ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-card)] text-[var(--esl-text-secondary)] border border-[var(--esl-border)] hover:bg-[var(--esl-bg-section)]'
             }`}
           >
             {label}
@@ -98,7 +98,7 @@ export default function AnalyticsPage() {
                 <div key={i} className="flex-1 flex flex-col items-center gap-1">
                   <span className="text-xs text-[var(--esl-text-secondary)] font-medium">{(val / 1000).toFixed(0)}k</span>
                   <div
-                    className="w-full bg-indigo-500 rounded-t-md hover:bg-indigo-600 transition-colors"
+                    className="w-full bg-[#E8242C] rounded-t-md hover:bg-[#C41E25] transition-colors"
                     style={{ height: `${(val / maxRevenue) * 160}px` }}
                   />
                   <span className="text-[10px] text-[var(--esl-text-muted)]">{DAYS[i % 7].slice(0, 2)}</span>

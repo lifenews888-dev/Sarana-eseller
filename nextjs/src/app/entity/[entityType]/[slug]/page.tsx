@@ -845,7 +845,7 @@ export default function EntityProfilePage() {
         <div className="max-w-6xl mx-auto h-14 flex items-center px-4 gap-3">
           <Link href="/feed" className="flex items-center gap-2 no-underline shrink-0">
             <EsellerLogo size={22} />
-            <span className="text-base font-black text-white hidden sm:block">eseller<span className="text-[#E31E24]">.mn</span></span>
+            <span className="text-base font-black text-white hidden sm:block">eseller<span className="text-[#E8242C]">.mn</span></span>
           </Link>
           <div className="flex-1" />
           <Link href="/feed" className="text-xs font-semibold text-[var(--esl-text-muted)] no-underline hover:text-[var(--esl-text-primary)] transition">Зарын булан</Link>

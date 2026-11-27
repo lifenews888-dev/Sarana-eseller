@@ -82,7 +82,7 @@ export default function AILogoPage() {
   if (!aiCheck.allowed) {
     return (
       <div className="min-h-screen bg-[var(--esl-bg-section)] p-4 md:p-6">
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-8 text-center text-white mb-6">
+        <div className="bg-gradient-to-r from-purple-600 to-[#C41E25] rounded-xl p-8 text-center text-white mb-6">
           <span className="text-4xl mb-3 block"><Sparkles className="w-10 h-10 mx-auto" /></span>
           <h1 className="text-2xl font-bold">AI Лого үүсгэгч</h1>
           <p className="opacity-90 mt-1">Бизнесийнхээ лого автоматаар үүсгэ</p>
@@ -91,7 +91,7 @@ export default function AILogoPage() {
           <span className="text-5xl block mb-4"><Lock className="w-12 h-12 mx-auto" /></span>
           <h2 className="text-xl font-bold text-[var(--esl-text-primary)] mb-2">AI боломж хязгаарлагдсан</h2>
           <p className="text-[var(--esl-text-secondary)] mb-4">Энэ боломжийг ашиглахын тулд Стандарт эсвэл дээш багц руу шилжинэ үү.</p>
-          <a href="/dashboard/store/package" className="inline-block bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
+          <a href="/dashboard/store/package" className="inline-block bg-gradient-to-r from-purple-500 to-[#C41E25] text-white px-6 py-3 rounded-xl font-semibold hover:opacity-90 transition">
             Багц шинэчлэх
           </a>
         </div>
@@ -134,7 +134,7 @@ export default function AILogoPage() {
   return (
     <div className="min-h-screen bg-[var(--esl-bg-section)] p-4 md:p-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-6 mb-6 text-white">
+      <div className="bg-gradient-to-r from-purple-600 to-[#C41E25] rounded-xl p-6 mb-6 text-white">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-2xl font-bold flex items-center gap-2"><Sparkles className="w-7 h-7" /> AI Лого үүсгэгч</h1>
@@ -225,7 +225,7 @@ export default function AILogoPage() {
           <button
             onClick={handleGenerate}
             disabled={generating || !businessName.trim()}
-            className="w-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-purple-500 to-[#C41E25] text-white py-3 rounded-xl font-semibold hover:opacity-90 transition disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {generating ? (
               <>

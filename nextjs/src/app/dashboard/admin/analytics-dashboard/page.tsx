@@ -115,7 +115,7 @@ export default function AnalyticsDashboardPage() {
         {/* Daily Chart */}
         <div className="lg:col-span-2 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-5">
           <h3 className="text-sm font-bold text-[var(--esl-text-primary)] mb-4 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-indigo-500" /> Өдөр тутмын идэвхжил (30 хоног)
+            <BarChart3 className="w-4 h-4 text-[#E8242C]" /> Өдөр тутмын идэвхжил (30 хоног)
           </h3>
           {data.dailyChart.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
@@ -136,7 +136,7 @@ export default function AnalyticsDashboardPage() {
         {/* Role Distribution Pie */}
         <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-5">
           <h3 className="text-sm font-bold text-[var(--esl-text-primary)] mb-4 flex items-center gap-2">
-            <Users className="w-4 h-4 text-indigo-500" /> Хэрэглэгчийн бүтэц
+            <Users className="w-4 h-4 text-[#E8242C]" /> Хэрэглэгчийн бүтэц
           </h3>
           {data.roleDistribution.length > 0 ? (
             <ResponsiveContainer width="100%" height={260}>
@@ -160,7 +160,7 @@ export default function AnalyticsDashboardPage() {
         {/* Top Products */}
         <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-5">
           <h3 className="text-sm font-bold text-[var(--esl-text-primary)] mb-4 flex items-center gap-2">
-            <Eye className="w-4 h-4 text-indigo-500" /> Шилдэг бараа (сэтгэгдлээр)
+            <Eye className="w-4 h-4 text-[#E8242C]" /> Шилдэг бараа (сэтгэгдлээр)
           </h3>
           {data.topProducts.length > 0 ? (
             <div className="space-y-2">
@@ -172,7 +172,7 @@ export default function AnalyticsDashboardPage() {
                     <span className="text-xs text-[var(--esl-text-primary)] flex-1 truncate">{p.name}</span>
                     <span className="text-xs font-bold text-[var(--esl-text-primary)]">{p.reviewCount.toLocaleString()}</span>
                     <div className="w-16 h-1.5 bg-[var(--esl-bg-section)] rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500 rounded-full" style={{ width: `${(p.reviewCount / maxViews) * 100}%` }} />
+                      <div className="h-full bg-[#E8242C] rounded-full" style={{ width: `${(p.reviewCount / maxViews) * 100}%` }} />
                     </div>
                   </div>
                 );
@@ -187,7 +187,7 @@ export default function AnalyticsDashboardPage() {
         <div className="space-y-4">
           <div className="bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl p-5">
             <h3 className="text-sm font-bold text-[var(--esl-text-primary)] mb-4 flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4 text-indigo-500" /> Conversion funnel
+              <ShoppingCart className="w-4 h-4 text-[#E8242C]" /> Conversion funnel
             </h3>
             {funnelData.length > 0 ? (
               <ResponsiveContainer width="100%" height={180}>

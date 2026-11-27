@@ -249,11 +249,11 @@ export default function SocialPage() {
   const displayedPosts = activeTab === "trending" ? trending : posts;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--esl-bg-section)]">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white border-b border-gray-200 px-4 py-3">
+      <div className="sticky top-0 z-40 bg-[var(--esl-bg-card)] border-b border-[var(--esl-border)] px-4 py-3">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">Нийгмийн худалдаа</h1>
+          <h1 className="text-xl font-bold text-[var(--esl-text-primary)]">Нийгмийн худалдаа</h1>
           <button
             onClick={() => setShowCreate(true)}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
@@ -266,14 +266,14 @@ export default function SocialPage() {
 
       {/* Stories bar */}
       {stories.length > 0 && (
-        <div className="bg-white border-b border-gray-200">
+        <div className="bg-[var(--esl-bg-card)] border-b border-[var(--esl-border)]">
           <div className="max-w-6xl mx-auto overflow-x-auto">
             <div className="flex gap-3 p-3 min-w-max">
               <button className="flex flex-col items-center gap-1 flex-shrink-0">
                 <div className="w-14 h-14 rounded-full border-2 border-dashed border-orange-500 bg-orange-50 flex items-center justify-center">
                   <Plus className="w-5 h-5 text-orange-500" />
                 </div>
-                <span className="text-[10px] text-gray-500">Минийх</span>
+                <span className="text-[10px] text-[var(--esl-text-secondary)]">Минийх</span>
               </button>
               {stories.map((story) => (
                 <button
@@ -298,7 +298,7 @@ export default function SocialPage() {
                       </div>
                     )}
                   </div>
-                  <span className="text-[10px] text-gray-500 max-w-[56px] truncate">
+                  <span className="text-[10px] text-[var(--esl-text-secondary)] max-w-[56px] truncate">
                     {story.user.name}
                   </span>
                 </button>
@@ -309,7 +309,7 @@ export default function SocialPage() {
       )}
 
       {/* Tab switcher */}
-      <div className="bg-white border-b border-gray-200 sticky top-[56px] z-30">
+      <div className="bg-[var(--esl-bg-card)] border-b border-[var(--esl-border)] sticky top-[56px] z-30">
         <div className="max-w-6xl mx-auto flex px-4">
           {([
             { key: "all" as const, label: "Бүгд", icon: null },
@@ -323,7 +323,7 @@ export default function SocialPage() {
               className={`flex items-center gap-1.5 px-4 py-3 border-b-2 text-sm font-medium transition-colors ${
                 activeTab === tab.key
                   ? "border-blue-600 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700"
+                  : "border-transparent text-[var(--esl-text-secondary)] hover:text-[var(--esl-text-primary)]"
               }`}
             >
               {tab.icon}
@@ -351,8 +351,8 @@ export default function SocialPage() {
               <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
             </div>
           ) : displayedPosts.length === 0 ? (
-            <div className="text-center py-20 text-gray-500">
-              <MessageCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <div className="text-center py-20 text-[var(--esl-text-secondary)]">
+              <MessageCircle className="w-12 h-12 mx-auto mb-3 text-[var(--esl-text-muted)]" />
               <p className="text-lg font-medium">Одоогоор пост байхгүй байна</p>
               <p className="text-sm mt-1">Эхний постоо нэмээрэй!</p>
             </div>
@@ -372,7 +372,7 @@ export default function SocialPage() {
                 <button
                   onClick={loadMore}
                   disabled={loadingMore}
-                  className="w-full py-3 bg-white border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2 font-medium"
+                  className="w-full py-3 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-xl text-[var(--esl-text-secondary)] hover:bg-[var(--esl-bg-hover)] transition-colors flex items-center justify-center gap-2 font-medium"
                 >
                   {loadingMore ? <Loader2 className="w-4 h-4 animate-spin" /> : <ChevronDown className="w-4 h-4" />}
                   Цааш үзэх
@@ -385,13 +385,13 @@ export default function SocialPage() {
         {/* Right: Trending sidebar (desktop only) */}
         <aside className="hidden lg:block w-80 flex-shrink-0 space-y-4">
           {/* Trending products */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <Flame className="w-4 h-4 text-orange-500" />
-              <h3 className="font-bold text-sm text-gray-900">Хамгийн их like</h3>
+              <h3 className="font-bold text-sm text-[var(--esl-text-primary)]">Хамгийн их like</h3>
             </div>
             {trending.length === 0 ? (
-              <p className="text-xs text-gray-400">Одоохондоо байхгүй</p>
+              <p className="text-xs text-[var(--esl-text-muted)]">Одоохондоо байхгүй</p>
             ) : (
               <div className="space-y-2">
                 {trending.slice(0, 5).map((p) => {
@@ -399,14 +399,14 @@ export default function SocialPage() {
                   if (!prod) return null;
                   return (
                     <div key={p.id} className="flex items-center gap-2">
-                      <SafeImage src={prod.images?.[0] || ""} alt="" className="w-10 h-10 rounded object-cover bg-gray-100" />
+                      <SafeImage src={prod.images?.[0] || ""} alt="" className="w-10 h-10 rounded object-cover bg-[var(--esl-bg-muted)]" />
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{prod.name}</p>
                         <p className="text-xs text-blue-600 font-bold">
                           {(prod.salePrice || prod.price).toLocaleString()}₮
                         </p>
                       </div>
-                      <span className="text-[10px] text-gray-400">❤️ {p._count.likes}</span>
+                      <span className="text-[10px] text-[var(--esl-text-muted)]">❤️ {p._count.likes}</span>
                     </div>
                   );
                 })}
@@ -416,10 +416,10 @@ export default function SocialPage() {
 
           {/* Active group buys */}
           {groupBuys.length > 0 && (
-            <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-4 h-4 text-orange-500" />
-                <h3 className="font-bold text-sm text-gray-900">Идэвхтэй хамтралт</h3>
+                <h3 className="font-bold text-sm text-[var(--esl-text-primary)]">Идэвхтэй хамтралт</h3>
               </div>
               <div className="space-y-3">
                 {groupBuys.slice(0, 3).map((gb) => {
@@ -427,10 +427,10 @@ export default function SocialPage() {
                   return (
                     <div key={gb.id}>
                       <p className="text-xs font-medium truncate">{gb.product.name}</p>
-                      <div className="h-1.5 bg-gray-100 rounded-full my-1 overflow-hidden">
+                      <div className="h-1.5 bg-[var(--esl-bg-muted)] rounded-full my-1 overflow-hidden">
                         <div className="h-full bg-orange-500" style={{ width: `${progress}%` }} />
                       </div>
-                      <p className="text-[10px] text-gray-500">
+                      <p className="text-[10px] text-[var(--esl-text-secondary)]">
                         {gb.currentCount}/{gb.targetCount} хүн · {Math.round(gb.discount * 100)}% хямд
                       </p>
                     </div>
@@ -441,12 +441,12 @@ export default function SocialPage() {
           )}
 
           {/* Live section placeholder */}
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
+          <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] p-4">
             <div className="flex items-center gap-2 mb-3">
               <Radio className="w-4 h-4 text-red-500" />
-              <h3 className="font-bold text-sm text-gray-900">Одоо live</h3>
+              <h3 className="font-bold text-sm text-[var(--esl-text-primary)]">Одоо live</h3>
             </div>
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-[var(--esl-text-muted)]">
               <a href="/live" className="text-blue-600 hover:underline">Бүгдийг харах →</a>
             </p>
           </div>
@@ -514,27 +514,27 @@ function GroupBuyCardWeb({ groupBuy }: { groupBuy: GroupBuy }) {
   }
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] overflow-hidden">
       <div className="bg-yellow-50 px-4 py-2 text-xs font-semibold text-yellow-800">
         👥 Хамтарч авах — {Math.round(groupBuy.discount * 100)}% хямд
       </div>
       <div className="p-4 flex gap-3">
-        <SafeImage src={groupBuy.product.images?.[0] || ""} alt="" className="w-20 h-20 rounded-xl object-cover bg-gray-100" />
+        <SafeImage src={groupBuy.product.images?.[0] || ""} alt="" className="w-20 h-20 rounded-xl object-cover bg-[var(--esl-bg-muted)]" />
         <div className="flex-1">
           <p className="text-sm font-semibold line-clamp-2">{groupBuy.product.name}</p>
           <div className="flex items-baseline gap-2 mt-1">
             <span className="text-lg font-bold text-blue-900">{discounted.toLocaleString()}₮</span>
-            <span className="text-xs text-gray-400 line-through">{base.toLocaleString()}₮</span>
+            <span className="text-xs text-[var(--esl-text-muted)] line-through">{base.toLocaleString()}₮</span>
           </div>
           <p className="text-[11px] text-orange-600 mt-1">⏰ {hours}ц {minutes}мин үлдлээ</p>
         </div>
       </div>
       <div className="px-4 pb-2">
-        <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div className="h-1.5 bg-[var(--esl-bg-muted)] rounded-full overflow-hidden">
           <div className="h-full bg-orange-500 rounded-full" style={{ width: `${progress}%` }} />
         </div>
         <div className="flex justify-between text-[11px] mt-1">
-          <span className="text-gray-600">{count}/{groupBuy.targetCount} хүн нэгдсэн</span>
+          <span className="text-[var(--esl-text-secondary)]">{count}/{groupBuy.targetCount} хүн нэгдсэн</span>
           <span className="text-orange-600 font-semibold">{remaining} хүн дутуу</span>
         </div>
       </div>
@@ -593,8 +593,8 @@ function StoryViewer({
         </div>
       )}
       {story.product && (
-        <div className="absolute bottom-6 left-4 right-4 bg-white rounded-2xl p-3 flex items-center gap-3">
-          <SafeImage src={story.product.images?.[0] || ""} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-100" />
+        <div className="absolute bottom-6 left-4 right-4 bg-[var(--esl-bg-card)] rounded-2xl p-3 flex items-center gap-3">
+          <SafeImage src={story.product.images?.[0] || ""} alt="" className="w-14 h-14 rounded-lg object-cover bg-[var(--esl-bg-muted)]" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold truncate">{story.product.name}</p>
             <p className="text-base font-bold text-blue-900">{story.product.price.toLocaleString()}₮</p>
@@ -627,7 +627,7 @@ function PostCard({
   onQuickBuy?: (product: { id: string; name: string; price: number; images: string[] }) => void;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div className="bg-[var(--esl-bg-card)] rounded-xl border border-[var(--esl-border)] overflow-hidden">
       {/* User header */}
       <div className="flex items-center gap-3 p-4 pb-2">
         {post.user.avatar ? (
@@ -642,16 +642,16 @@ function PostCard({
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-gray-900 text-sm truncate">
+          <p className="font-semibold text-[var(--esl-text-primary)] text-sm truncate">
             {post.user.name}
           </p>
-          <p className="text-xs text-gray-500">{timeAgo(post.createdAt)}</p>
+          <p className="text-xs text-[var(--esl-text-secondary)]">{timeAgo(post.createdAt)}</p>
         </div>
       </div>
 
       {/* Content */}
       {post.content && (
-        <p className="px-4 pb-3 text-gray-800 text-sm whitespace-pre-wrap">
+        <p className="px-4 pb-3 text-[var(--esl-text-primary)] text-sm whitespace-pre-wrap">
           {post.content}
         </p>
       )}
@@ -697,15 +697,15 @@ function PostCard({
 
       {/* Tagged products */}
       {post.products.length > 0 && (
-        <div className="px-4 py-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500 mb-2 font-medium">
+        <div className="px-4 py-3 border-t border-[var(--esl-border)]">
+          <p className="text-xs text-[var(--esl-text-secondary)] mb-2 font-medium">
             Бүтээгдэхүүнүүд
           </p>
           <div className="flex gap-3 overflow-x-auto pb-1">
             {post.products.map((pp) => (
               <div
                 key={pp.id}
-                className="flex-shrink-0 w-40 border border-gray-200 rounded-lg overflow-hidden"
+                className="flex-shrink-0 w-40 border border-[var(--esl-border)] rounded-lg overflow-hidden"
               >
                 {pp.product.images.length > 0 && (
                   <SafeImage
@@ -715,7 +715,7 @@ function PostCard({
                   />
                 )}
                 <div className="p-2">
-                  <p className="text-xs font-medium text-gray-900 truncate">
+                  <p className="text-xs font-medium text-[var(--esl-text-primary)] truncate">
                     {pp.product.name}
                   </p>
                   <div className="flex items-center gap-1 mt-1">
@@ -724,12 +724,12 @@ function PostCard({
                         <span className="text-xs font-bold text-red-600">
                           {formatPrice(pp.product.salePrice)}
                         </span>
-                        <span className="text-[10px] text-gray-400 line-through">
+                        <span className="text-[10px] text-[var(--esl-text-muted)] line-through">
                           {formatPrice(pp.product.price)}
                         </span>
                       </>
                     ) : (
-                      <span className="text-xs font-bold text-gray-900">
+                      <span className="text-xs font-bold text-[var(--esl-text-primary)]">
                         {formatPrice(pp.product.price)}
                       </span>
                     )}
@@ -757,13 +757,13 @@ function PostCard({
       )}
 
       {/* Action bar */}
-      <div className="flex items-center border-t border-gray-100 px-2">
+      <div className="flex items-center border-t border-[var(--esl-border)] px-2">
         <button
           onClick={() => onLike(post.id)}
           className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium transition-colors ${
             post.liked
               ? "text-red-500"
-              : "text-gray-500 hover:text-red-500"
+              : "text-[var(--esl-text-secondary)] hover:text-red-500"
           }`}
         >
           <Heart
@@ -775,7 +775,7 @@ function PostCard({
         </button>
         <button
           onClick={() => onToggleComments(post.id)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-gray-500 hover:text-blue-500 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-[var(--esl-text-secondary)] hover:text-blue-500 transition-colors"
         >
           <MessageCircle className="w-4 h-4" />
           {(post.commentCount ?? 0) > 0 && (
@@ -784,7 +784,7 @@ function PostCard({
         </button>
         <button
           onClick={() => onShare(post.id)}
-          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-gray-500 hover:text-green-500 transition-colors"
+          className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium text-[var(--esl-text-secondary)] hover:text-green-500 transition-colors"
         >
           <Share2 className="w-4 h-4" />
           {post.shares > 0 && <span>{post.shares}</span>}
@@ -847,15 +847,15 @@ function CommentsSection({ postId }: { postId: string }) {
   };
 
   return (
-    <div className="border-t border-gray-100 bg-gray-50">
+    <div className="border-t border-[var(--esl-border)] bg-[var(--esl-bg-section)]">
       {loading ? (
         <div className="flex justify-center py-4">
-          <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
+          <Loader2 className="w-4 h-4 animate-spin text-[var(--esl-text-muted)]" />
         </div>
       ) : (
         <div className="max-h-60 overflow-y-auto px-4 py-2 space-y-2">
           {comments.length === 0 && (
-            <p className="text-xs text-gray-400 text-center py-2">
+            <p className="text-xs text-[var(--esl-text-muted)] text-center py-2">
               Сэтгэгдэл байхгүй
             </p>
           )}
@@ -868,22 +868,22 @@ function CommentsSection({ postId }: { postId: string }) {
                   className="w-7 h-7 rounded-full object-cover flex-shrink-0"
                 />
               ) : (
-                <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
-                  <User className="w-3.5 h-3.5 text-gray-500" />
+                <div className="w-7 h-7 rounded-full bg-[var(--esl-bg-elevated)] flex items-center justify-center flex-shrink-0">
+                  <User className="w-3.5 h-3.5 text-[var(--esl-text-secondary)]" />
                 </div>
               )}
-              <div className="bg-white rounded-lg px-3 py-1.5 flex-1">
-                <p className="text-xs font-semibold text-gray-900">
+              <div className="bg-[var(--esl-bg-card)] rounded-lg px-3 py-1.5 flex-1">
+                <p className="text-xs font-semibold text-[var(--esl-text-primary)]">
                   {c.user.name}
                 </p>
-                <p className="text-xs text-gray-700">{c.content}</p>
+                <p className="text-xs text-[var(--esl-text-primary)]">{c.content}</p>
               </div>
             </div>
           ))}
         </div>
       )}
       {/* Add comment */}
-      <div className="flex items-center gap-2 px-4 py-2 border-t border-gray-200">
+      <div className="flex items-center gap-2 px-4 py-2 border-t border-[var(--esl-border)]">
         <input
           type="text"
           value={text}
@@ -892,12 +892,12 @@ function CommentsSection({ postId }: { postId: string }) {
             if (e.key === "Enter") submit();
           }}
           placeholder="Сэтгэгдэл бичих..."
-          className="flex-1 text-sm border border-gray-200 rounded-full px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+          className="flex-1 text-sm border border-[var(--esl-border)] rounded-full px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--esl-bg-input)]"
         />
         <button
           onClick={submit}
           disabled={submitting || !text.trim()}
-          className="p-1.5 text-blue-600 disabled:text-gray-300 hover:bg-blue-50 rounded-full transition-colors"
+          className="p-1.5 text-blue-600 disabled:text-[var(--esl-text-muted)] hover:bg-blue-50 rounded-full transition-colors"
         >
           <Send className="w-4 h-4" />
         </button>
@@ -1012,15 +1012,15 @@ function CreatePostModal({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--esl-bg-card)] rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-900">Шинэ пост</h2>
+        <div className="flex items-center justify-between p-4 border-b border-[var(--esl-border)]">
+          <h2 className="text-lg font-bold text-[var(--esl-text-primary)]">Шинэ пост</h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-1 hover:bg-[var(--esl-bg-hover)] rounded-full transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="w-5 h-5 text-[var(--esl-text-secondary)]" />
           </button>
         </div>
 
@@ -1031,12 +1031,12 @@ function CreatePostModal({
             onChange={(e) => setContent(e.target.value)}
             placeholder="Юу бодож байна?"
             rows={4}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
           />
 
           {/* Image URLs */}
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">
+            <label className="text-xs font-medium text-[var(--esl-text-secondary)] mb-1 block">
               Зураг нэмэх (URL)
             </label>
             <div className="flex gap-2">
@@ -1051,13 +1051,13 @@ function CreatePostModal({
                   }
                 }}
                 placeholder="https://..."
-                className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 border border-[var(--esl-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 onClick={addImage}
-                className="px-3 py-1.5 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                className="px-3 py-1.5 bg-[var(--esl-bg-muted)] rounded-lg hover:bg-[var(--esl-bg-hover)] transition-colors"
               >
-                <ImageIcon className="w-4 h-4 text-gray-600" />
+                <ImageIcon className="w-4 h-4 text-[var(--esl-text-secondary)]" />
               </button>
             </div>
             {images.length > 0 && (
@@ -1083,7 +1083,7 @@ function CreatePostModal({
 
           {/* Product selector */}
           <div>
-            <label className="text-xs font-medium text-gray-600 mb-1 block">
+            <label className="text-xs font-medium text-[var(--esl-text-secondary)] mb-1 block">
               Бүтээгдэхүүн холбох
             </label>
             <div className="relative">
@@ -1092,18 +1092,18 @@ function CreatePostModal({
                 value={productSearch}
                 onChange={(e) => searchProducts(e.target.value)}
                 placeholder="Бүтээгдэхүүн хайх..."
-                className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-[var(--esl-border)] rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {searching && (
-                <Loader2 className="absolute right-3 top-2 w-4 h-4 animate-spin text-gray-400" />
+                <Loader2 className="absolute right-3 top-2 w-4 h-4 animate-spin text-[var(--esl-text-muted)]" />
               )}
               {productResults.length > 0 && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-[var(--esl-bg-card)] border border-[var(--esl-border)] rounded-lg shadow-lg max-h-40 overflow-y-auto">
                   {productResults.map((p) => (
                     <button
                       key={p.id}
                       onClick={() => selectProduct(p)}
-                      className="w-full text-left px-3 py-2 hover:bg-gray-50 text-sm flex items-center gap-2"
+                      className="w-full text-left px-3 py-2 hover:bg-[var(--esl-bg-hover)] text-sm flex items-center gap-2"
                     >
                       {p.images[0] && (
                         <SafeImage
@@ -1114,7 +1114,7 @@ function CreatePostModal({
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="truncate font-medium">{p.name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-[var(--esl-text-secondary)]">
                           {formatPrice(p.price)}
                         </p>
                       </div>
@@ -1142,7 +1142,7 @@ function CreatePostModal({
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-[var(--esl-border)]">
           <button
             onClick={submit}
             disabled={

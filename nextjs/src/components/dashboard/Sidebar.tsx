@@ -131,7 +131,7 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
           {storeInfo.plan && (
             <div className="flex items-center gap-2 mt-2">
               <div className="flex-1 h-1 bg-[var(--esl-bg-elevated)] rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-500 rounded-full" style={{ width: '100%' }} />
+                <div className="h-full bg-gradient-to-r from-[#E8242C] to-violet-500 rounded-full" style={{ width: '100%' }} />
               </div>
               <span className="text-[10px] font-semibold text-[#E8242C] bg-[rgba(232,36,44,0.12)] px-1.5 py-0.5 rounded">
                 {storeInfo.planBadge || storeInfo.plan}
@@ -199,7 +199,7 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
                           </span>
                         )}
                         {item.isNew && (
-                          <span className="text-[9px] font-bold bg-gradient-to-r from-indigo-500 to-violet-500 text-white px-1.5 py-px rounded uppercase">
+                          <span className="text-[9px] font-bold bg-gradient-to-r from-[#E8242C] to-violet-500 text-white px-1.5 py-px rounded uppercase">
                             new
                           </span>
                         )}
@@ -223,7 +223,7 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
         <div className="mx-3 mb-2">
           <Link
             href="/dashboard/store/package"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#E8242C] to-[#C41E25] text-white text-[12px] font-semibold no-underline shadow-sm hover:shadow-md hover:from-indigo-700 hover:to-violet-700 transition-all"
+            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-[#E8242C] to-[#C41E25] text-white text-[12px] font-semibold no-underline shadow-sm hover:shadow-md hover:from-[#E8242C] hover:to-violet-700 transition-all"
           >
             <Crown className="w-3.5 h-3.5" />
             Багц шинэчлэх
@@ -271,7 +271,7 @@ export default function Sidebar({ sections, storeInfo }: SidebarProps) {
       {/* ═══ Collapse Toggle ═══ */}
       <button
         onClick={toggle}
-        className="absolute top-4 -right-3 w-6 h-6 rounded-full bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-disabled)] hover:text-[#E8242C] hover:border-indigo-200 cursor-pointer text-[10px] transition-all z-50 shadow-xs"
+        className="absolute top-4 -right-3 w-6 h-6 rounded-full bg-[var(--esl-bg-section)] border border-[var(--esl-border)] flex items-center justify-center text-[var(--esl-text-disabled)] hover:text-[#E8242C] hover:border-[var(--esl-brand-border)] cursor-pointer text-[10px] transition-all z-50 shadow-xs"
       >
         {collapsed ? '→' : '←'}
       </button>

@@ -140,7 +140,7 @@ export default function HerderProvincePage(
               placeholder="Бүтээгдэхүүн хайх..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              className="w-full pl-10 pr-4 py-2.5 bg-[var(--esl-bg-card)] border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
             />
           </div>
         </div>
@@ -152,7 +152,7 @@ export default function HerderProvincePage(
             className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium transition-all ${
               !category
                 ? 'bg-emerald-600 text-white border-emerald-600'
-                : 'bg-white text-stone-600 border-stone-200 hover:border-emerald-400'
+                : 'bg-[var(--esl-bg-card)] text-stone-600 border-stone-200 hover:border-emerald-400'
             }`}
           >
             Бүгд
@@ -164,7 +164,7 @@ export default function HerderProvincePage(
               className={`flex items-center gap-1.5 px-4 py-2 rounded-full border text-sm font-medium capitalize transition-all ${
                 category === cat
                   ? 'bg-emerald-600 text-white border-emerald-600'
-                  : 'bg-white text-stone-600 border-stone-200 hover:border-emerald-400'
+                  : 'bg-[var(--esl-bg-card)] text-stone-600 border-stone-200 hover:border-emerald-400'
               }`}
             >
               {CATEGORY_ICONS[cat]}
@@ -190,7 +190,7 @@ export default function HerderProvincePage(
               {products.map(product => (
                 <div
                   key={product.id}
-                  className="bg-white rounded-xl border border-stone-200 overflow-hidden hover:shadow-lg transition-shadow"
+                  className="bg-[var(--esl-bg-card)] rounded-xl border border-stone-200 overflow-hidden hover:shadow-lg transition-shadow"
                 >
                   {/* Image */}
                   <div className="aspect-square bg-stone-100 relative">
@@ -263,7 +263,7 @@ export default function HerderProvincePage(
                     className={`w-10 h-10 rounded-lg font-medium text-sm transition-all ${
                       page === p
                         ? 'bg-emerald-600 text-white'
-                        : 'bg-white text-stone-600 border border-stone-200 hover:border-emerald-400'
+                        : 'bg-[var(--esl-bg-card)] text-stone-600 border border-stone-200 hover:border-emerald-400'
                     }`}
                   >
                     {p}

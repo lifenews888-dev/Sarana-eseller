@@ -108,7 +108,7 @@ export default function MegaMenu({ open, onClose, onSelectCategory, onSelectType
                 {/* ═══ НЭГДСЭН АНГИЛАЛ — Left column ═══ */}
                 <div className="col-span-8">
                   <div className="flex items-center gap-2 mb-3">
-                    <Package className="w-4 h-4 text-[#E31E24]" />
+                    <Package className="w-4 h-4 text-[#E8242C]" />
                     <h3 className="text-sm font-bold text-[var(--esl-text-primary)] uppercase tracking-wider">Нэгдсэн ангилал</h3>
                     <span className="rounded-full bg-[var(--esl-bg-section)] px-2 py-0.5 text-[10px] font-bold text-[var(--esl-text-muted)]">
                       {UNIFIED_CATEGORIES.length} үндсэн
@@ -127,24 +127,24 @@ export default function MegaMenu({ open, onClose, onSelectCategory, onSelectType
                       >
                         <div className={cn(
                           'w-8 h-8 rounded-lg flex items-center justify-center text-base transition-colors shrink-0',
-                          hoveredCat === cat.key ? 'bg-[#E31E24] text-white' : 'bg-[var(--esl-bg-section)]'
+                          hoveredCat === cat.key ? 'bg-[#E8242C] text-white' : 'bg-[var(--esl-bg-section)]'
                         )}>
                           {hoveredCat === cat.key ? <cat.Icon className="w-4 h-4" /> : cat.emoji}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-xs font-semibold text-[var(--esl-text-primary)] group-hover:text-[#E31E24] transition-colors">{cat.shortLabel || cat.label}</div>
+                          <div className="text-xs font-semibold text-[var(--esl-text-primary)] group-hover:text-[#E8242C] transition-colors">{cat.shortLabel || cat.label}</div>
                           <div className="mt-0.5 line-clamp-1 text-[10px] text-[var(--esl-text-muted)]">
                             {subcategoryPreview(cat, 3)}
                           </div>
                         </div>
                         {cat.count ? <span className="text-[10px] text-[var(--esl-text-muted)] font-medium">{cat.count}+</span> : null}
-                        <ChevronRight className="w-3.5 h-3.5 text-[var(--esl-text-muted)] group-hover:text-[#E31E24] transition-colors" />
+                        <ChevronRight className="w-3.5 h-3.5 text-[var(--esl-text-muted)] group-hover:text-[#E8242C] transition-colors" />
                       </button>
                     ))}
                   </div>
                   <button
                     onClick={() => handleType('all')}
-                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-[#E31E24] bg-red-50 hover:bg-red-100 border-none cursor-pointer transition"
+                    className="mt-2 w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-[#E8242C] bg-red-50 hover:bg-red-100 border-none cursor-pointer transition"
                   >
                     Бүх ангилал харах <ArrowRight className="w-3 h-3" />
                   </button>
@@ -153,7 +153,7 @@ export default function MegaMenu({ open, onClose, onSelectCategory, onSelectType
                 {/* ═══ RIGHT COLUMN — Featured + Promo ═══ */}
                 <div className="col-span-4 space-y-5">
                   {/* Promo banner */}
-                  <div className="bg-gradient-to-br from-[#E31E24] to-[#8B0000] rounded-2xl p-5 text-white relative overflow-hidden">
+                  <div className="bg-gradient-to-br from-[#E8242C] to-[#8B0000] rounded-2xl p-5 text-white relative overflow-hidden">
                     <div className="absolute top-[-20px] right-[-20px] w-24 h-24 rounded-full bg-white/10" />
                     <div className="relative z-10">
                       <div className="flex items-center gap-1.5 mb-2">
@@ -164,7 +164,7 @@ export default function MegaMenu({ open, onClose, onSelectCategory, onSelectType
                       <p className="text-xs text-white/70 mb-3">50% хүртэл хямдрал бүх ангилалд</p>
                       <button
                         onClick={() => { onSelectCategory('all'); onClose(); }}
-                        className="bg-[var(--esl-bg-card)] text-[#E31E24] text-xs font-bold px-4 py-2 rounded-lg border-none cursor-pointer hover:bg-white/90 transition"
+                        className="bg-[var(--esl-bg-card)] text-[#E8242C] text-xs font-bold px-4 py-2 rounded-lg border-none cursor-pointer hover:bg-white/90 transition"
                       >
                         Үзэх →
                       </button>
