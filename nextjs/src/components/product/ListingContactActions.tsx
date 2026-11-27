@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Phone, MessageCircle, Heart, Flag, Send, X, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/lib/auth';
@@ -44,6 +44,7 @@ export default function ListingContactActions({
   const [chatOpen, setChatOpen] = useState(false);
   const [text, setText] = useState('');
   const [sending, setSending] = useState(false);
+  const sendingRef = useRef(false); // давхар дарахад 2 удаа илгээхгүй
   const [sentChatId, setSentChatId] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -112,6 +113,8 @@ export default function ListingContactActions({
       router.push(`/login?redirect=${encodeURIComponent(`/feed/${feedItemId}`)}&reason=chat`);
       return;
     }
+    if (sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
     setError('');
     try {
@@ -122,13 +125,15 @@ export default function ListingContactActions({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Алдаа гарлаа');
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   };
 
   // Бүртгэлгүй (зочин) илгээх — нэр, утас шаардлагатай
   const sendAsGuest = async () => {
-    if (!text.trim() || sending) return;
+    if (!text.trim() || sending || sendingRef.current) return;
+    sendingRef.current = true;
     setSending(true);
     setError('');
     try {
@@ -160,6 +165,7 @@ export default function ListingContactActions({
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Алдаа гарлаа');
     } finally {
+      sendingRef.current = false;
       setSending(false);
     }
   };

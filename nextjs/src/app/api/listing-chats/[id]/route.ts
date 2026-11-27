@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { findRecentDuplicate } from '@/lib/listingChatDedupe';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
 import { isSmsConfigured, sendSms } from '@/lib/smsGateway';
 
@@ -61,6 +62,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   if (!text) return errorJson('Мессеж хоосон байна', 400);
 
   const iAmBuyer = chat.buyerId === auth.id;
+  const dup = await findRecentDuplicate(chat.id, auth.id, text);
+  if (dup) return json({ id: dup.id, text: dup.text, mine: true, createdAt: dup.createdAt });
   const message = await prisma.listingChatMessage.create({ data: { chatId: chat.id, senderId: auth.id, text } });
   await prisma.listingChat.update({
     where: { id: chat.id },

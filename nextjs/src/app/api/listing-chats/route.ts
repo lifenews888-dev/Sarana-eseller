@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { findRecentDuplicate } from '@/lib/listingChatDedupe';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
 import { resolveFeedOwnerUserId } from '@/lib/feedOwnership';
 
@@ -66,6 +67,12 @@ export async function POST(req: NextRequest) {
   const sellerId = await resolveFeedOwnerUserId(item);
   if (!sellerId) return errorJson('Зарын эзэнтэй холбогдох боломжгүй байна', 409);
   if (sellerId === auth.id) return errorJson('Өөрийн зарт мессеж бичих боломжгүй', 400);
+
+  const existing = await prisma.listingChat.findUnique({
+    where: { feedItemId_buyerId: { feedItemId, buyerId: auth.id } },
+    select: { id: true },
+  });
+  if (existing && (await findRecentDuplicate(existing.id, auth.id, text))) return json({ chatId: existing.id });
 
   const chat = await prisma.listingChat.upsert({
     where: { feedItemId_buyerId: { feedItemId, buyerId: auth.id } },

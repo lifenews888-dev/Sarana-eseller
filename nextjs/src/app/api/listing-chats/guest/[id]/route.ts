@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { findRecentDuplicate } from '@/lib/listingChatDedupe';
 import { json, errorJson } from '@/lib/api-auth';
 import { guestTokenMatches, ipLimited, looksLikeSpam } from '@/lib/guestChat';
 
@@ -42,6 +43,8 @@ export async function POST(req: NextRequest, ctx: Ctx) {
   if (!text) return errorJson('Мессеж хоосон байна', 400);
   if (looksLikeSpam(text)) return errorJson('Мессежийг илгээх боломжгүй (холбоос хэт олон).', 400);
 
+  const dup = await findRecentDuplicate(chat.id, chat.buyerId, text);
+  if (dup) return json({ id: dup.id, text: dup.text, mine: true, createdAt: dup.createdAt });
   const message = await prisma.listingChatMessage.create({ data: { chatId: chat.id, senderId: chat.buyerId, text } });
   await prisma.listingChat.update({
     where: { id: chat.id },
