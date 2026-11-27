@@ -23,10 +23,7 @@ const SLOT_STYLES: Record<string, { height: string; radius: string }> = {
 };
 
 const DEMO_BANNERS: Record<string, BannerData[]> = {
-  MID_PAGE: [{
-    id: 'mid1', title: 'Gold гишүүнчлэл — Үнэгүй хүргэлт + 2x оноо',
-    imageUrl: '', linkUrl: '/gold', bgColor: '#D97706', altText: 'Eseller Gold',
-  }],
+  // MID_PAGE: Gold-ийн амлалт (үнэгүй хүргэлт, 2x оноо) хэрэгжээгүй тул жишээ баннер харуулахгүй.
   // SIDEBAR_RIGHT, SECTION_SEPARATOR: админаас бодит баннер ороогүй бол юу ч харуулахгүй
   // (өмнө нь 600px өндөр нэг өнгийн хайрцаг, давхардсан итгэлийн текст гарч байсан).
 };

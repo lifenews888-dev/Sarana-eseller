@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import EsellerLogo from './EsellerLogo';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { profileHome, useAuth } from '@/lib/auth';
+import { useHydrated } from '@/lib/hooks/useHydrated';
 
 const NAV_LINKS = [
   { href: '/store', label: 'Дэлгүүр', show: 'hidden sm:inline-flex' },
@@ -24,7 +25,10 @@ function isActivePath(pathname: string, href: string) {
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
-  const { isLoggedIn, user } = useAuth();
+  const auth = useAuth();
+  const hydrated = useHydrated();
+  const isLoggedIn = hydrated && auth.isLoggedIn;
+  const user = hydrated ? auth.user : null;
   // Гол үйлдэл: зар нэмэх (дэлгүүр нээх нь цэсэнд байгаа). /feed/post нэвтрэлтийг өөрөө шалгана.
   const postCtaHref = '/feed/post';
   // Buyers → /dashboard (not /); sellers → store dashboard, etc.

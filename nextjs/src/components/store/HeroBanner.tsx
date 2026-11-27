@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Search, ChevronRight, ChevronLeft, Truck, Shield, Clock, Sparkles } from 'lucide-react';
+import { Search, ChevronRight, ChevronLeft, Shield, Sparkles, Store, Megaphone } from 'lucide-react';
 
+// Зөвхөн бодитоор ажилладаг зүйлс (хүргэлтийн хугацаа/үнэгүй хүргэлтийг дэлгүүр тус бүр тогтооно).
 const FEATURES = [
-  { icon: Truck, title: 'Үнэгүй хүргэлт', sub: '50,000₮-с дээш', color: '#059669' },
   { icon: Shield, title: 'Аюулгүй төлбөр', sub: 'QPay төлбөр', color: '#0891B2' },
-  { icon: Clock, title: 'Хурдан хүргэлт', sub: '2-4 цагийн дотор', color: '#D97706' },
-  { icon: Sparkles, title: 'Шинэ ирэлтүүд', sub: 'Долоо хоног бүр', color: '#7C3AED' },
+  { icon: Store, title: 'Олон дэлгүүр', sub: 'Нэг дороос харьцуулна', color: '#059669' },
+  { icon: Megaphone, title: 'Үнэгүй зар', sub: 'Зарын буланд', color: '#D97706' },
+  { icon: Sparkles, title: 'Шинэ ирэлтүүд', sub: 'Дэлгүүрүүдээс', color: '#7C3AED' },
 ];
 
 // Админаас баннер ороогүй үед харагдах үндсэн баннерууд.
@@ -21,17 +22,8 @@ const DEMO_BANNERS = [
     subtitle: 'Бараа хайж, харьцуулж, QPay-ээр аюулгүй төлөөрэй',
     bgColor: '#E8242C',
     gradient: 'from-[#E31E24] via-[#C41A1F] to-[#8B0000]',
-    linkUrl: '/store?deal=1',
-    cta: 'Хямдралтай бараа',
-  },
-  {
-    id: 'b2',
-    title: 'Eseller Gold гишүүнчлэл',
-    subtitle: 'Үнэгүй хүргэлт · 2x оноо · Онцгой хямдрал',
-    bgColor: '#D97706',
-    gradient: 'from-[#D97706] via-[#B45309] to-[#78350F]',
-    linkUrl: '/gold',
-    cta: 'Gold болох',
+    linkUrl: '/shops',
+    cta: 'Дэлгүүрүүд үзэх',
   },
   {
     id: 'b3',
