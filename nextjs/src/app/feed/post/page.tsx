@@ -931,13 +931,21 @@ export default function PostAdPage() {
     }, 1500);
   };
 
+  // Нэвтрэлтийн token-ийг cookie-оос гадна header-ээр давхар илгээнэ (cookie дууссан үед 401 гарахаас сэргийлнэ)
+  const authHeader = (): Record<string, string> => {
+    const t = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    return t ? { Authorization: `Bearer ${t}` } : {};
+  };
+
   const uploadMedia = async (media: MediaFile): Promise<{ type: MediaFile['type']; url: string }> => {
     const res = await fetch(`/api/upload?filename=${encodeURIComponent(media.file.name)}`, {
       method: 'POST',
       body: media.file,
-      headers: { 'Content-Type': media.file.type || 'application/octet-stream' },
+      credentials: 'include',
+      headers: { 'Content-Type': media.file.type || 'application/octet-stream', ...authHeader() },
     });
     const body = await res.json().catch(() => ({})) as { url?: string; error?: string };
+    if (res.status === 401) throw new Error('Нэвтэрч орсны дараа зар нийтлэх боломжтой.');
     if (!res.ok || !body.url) throw new Error(body.error || 'Медиа байршуулахад алдаа гарлаа');
     return { type: media.type, url: body.url };
   };
@@ -968,7 +976,8 @@ export default function PostAdPage() {
 
       const res = await fetch('/api/feed', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json', ...authHeader() },
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim(),
