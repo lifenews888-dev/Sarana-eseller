@@ -73,13 +73,9 @@ const PLATFORM_HOSTS = new Set([
 
 // Шинэ загварын хуудсууд (public/designs/*.html). Параметргүй үед л солигдоно —
 // ?q=, ?category=, ?entityType= гэх мэт шүүлтүүртэй хуучин хуудсууд хэвээр ажиллана.
-const DESIGN_PAGES: Record<string, string> = {
-  '/': '/designs/vertex.html',
-  '/store': '/designs/atelia.html',
-  '/feed': '/designs/krung.html',
-  '/looks': '/designs/nowhere.html',
-  '/try-on': '/designs/vell.html',
-};
+// 2026-11-27: Хуучин хуудсууд руу буцаасан — нэгдсэн дизайн хийгдэх хүртэл хоосон.
+// Загварууд /designs/*.html дээр лавлагаа болж үлдэнэ.
+const DESIGN_PAGES: Record<string, string> = {};
 function designRewrite(req: NextRequest): NextResponse | null {
   const target = DESIGN_PAGES[req.nextUrl.pathname];
   if (!target) return null;
