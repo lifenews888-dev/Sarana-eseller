@@ -7,7 +7,7 @@ import Footer from '@/components/shared/Footer';
 import { Banknote, Car, Megaphone, MessageSquare, Lock, BarChart3, Store, Clock } from 'lucide-react';
 
 const benefits = [
-  { icon: Banknote, title: 'Эхний 3 сар 0% комисс', desc: 'Орлогоо бүрэн авна' },
+  { icon: Banknote, title: 'Эхний 1 сар 0% комисс', desc: 'Орлогоо бүрэн авна' },
   { icon: Car, title: 'Өөрийн жолоочтой',      desc: 'Хүргэлт санаа зовохгүй' },
   { icon: Megaphone, title: 'Борлуулагч сүлжээ',      desc: 'Борлуулагчид тарааж өгнө' },
   { icon: MessageSquare, title: 'AI чат дэмжлэг',         desc: '24/7 хэрэглэгчийн асуулт' },
@@ -16,7 +16,7 @@ const benefits = [
 ];
 
 const faqs = [
-  { q: 'Хэдэн мөнгө төлөх вэ?', a: 'Бүртгэл болон ашиглалт бүрэн үнэгүй. Эхний 3 сарын дараа борлуулалтын 10% комисс авна.' },
+  { q: 'Хэдэн мөнгө төлөх вэ?', a: 'Бүртгэл болон ашиглалт бүрэн үнэгүй. Эхний 1 сарын дараа борлуулалтын 2% шимтгэл авна.' },
   { q: 'Хэдэн бараа нэмж болох вэ?', a: 'Хязгааргүй. Хүссэн хэдэн бараагаа нэмж болно.' },
   { q: 'Хүргэлтийг хэрхэн зохицуулах вэ?', a: 'Eseller.mn-ийн жолоочийн систем ашиглана. Захиалга орохоор автомат жолооч хуваарилна.' },
   { q: 'Төлбөрийг хэзээ авах вэ?', a: 'Хэрэглэгч бараа хүлээн авсны 3 өдрийн дараа дансанд орно (Дундын данс систем).' },
@@ -56,14 +56,14 @@ export default function OpenShopPage() {
           Дэлгүүрээ <span className="text-[#E8242C]">5 минутад</span> нээ
         </h1>
         <p className="text-[var(--esl-text-muted)] text-[17px] max-w-[480px] mx-auto">
-          Эхний 3 сар 0% комисс. Бараа нэмэх, захиалга хүлээн авах, жолоочоор хүргүүлэх — бүгд нэг дор.
+          Эхний 1 сар 0% комисс. Бараа нэмэх, захиалга хүлээн авах, жолоочоор хүргүүлэх — бүгд нэг дор.
         </p>
       </div>
 
       {/* Limited offer */}
       <div className="rounded-2xl p-7 mb-10 text-center border border-[rgba(232,36,44,0.3)]" style={{ background: 'linear-gradient(135deg, #0A0000, #1A0505)' }}>
         <p className="text-[#E8242C] font-extrabold text-[13px] tracking-[2px] mb-2 flex items-center justify-center gap-1.5"><Clock className="w-4 h-4" /> ХЯЗГААРЛАГДМАЛ САНАЛ</p>
-        <h2 className="text-white text-[26px] font-black mb-1.5">Эхний 3 сар — 0% комисс</h2>
+        <h2 className="text-white text-[26px] font-black mb-1.5">Эхний 1 сар — 0% комисс</h2>
         <p className="text-white/60 text-[15px]">Одоо бүртгүүлсэн дэлгүүрүүдэд автоматаар хамаарна</p>
       </div>
 
