@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "ES2020", "module": "esnext", "moduleResolution": "bundler", "esModuleInterop": true, "strict": false, "skipLibCheck": true, "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/lib/prisma": ["./fakes/prisma.ts"],
+      "@/lib/payment/qpay": ["./fakes/qpay.ts"],
+      "@/lib/notify": ["./fakes/notify.ts"],
+      "@/lib/ebarimt": ["./fakes/ebarimt.ts"],
+      "@/lib/email": ["./fakes/email.ts"],
+      "@/lib/sms": ["./fakes/sms.ts"],
+      "@/lib/marketing/EmailService": ["./fakes/email.ts"],
+      "@/lib/marketing/SMSService": ["./fakes/sms.ts"],
+      "@/lib/share/generateShareContent": ["./fakes/share.ts"],
+      "@/*": ["../../src/*"]
+    }
+  }
+}

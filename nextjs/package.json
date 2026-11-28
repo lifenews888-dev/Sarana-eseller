@@ -26,7 +26,8 @@
     "clean:images": "npx tsx scripts/clean-bad-image-urls.ts",
     "clean:images:dry": "npx tsx scripts/clean-bad-image-urls.ts --dry-run",
     "clean:audit-products": "npx tsx scripts/clean-audit-products.ts",
-    "clean:audit-products:dry": "npx tsx scripts/clean-audit-products.ts --dry-run"
+    "clean:audit-products:dry": "npx tsx scripts/clean-audit-products.ts --dry-run",
+    "test:money": "npx tsx --tsconfig scripts/e2e-money/tsconfig.json scripts/e2e-money/run.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.100.1",
