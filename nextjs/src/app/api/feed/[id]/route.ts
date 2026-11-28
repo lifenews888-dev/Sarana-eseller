@@ -187,7 +187,21 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
   // Админ хаасан, хугацаа дууссан зарыг нийтэд харуулахгүй (вэбийн хуудастай ижил)
   if (!item || (item.status && !['active', 'sold'].includes(item.status))) return errorJson('Зар олдсонгүй', 404);
   prisma.feedItem.update({ where: { id }, data: { viewCount: { increment: 1 } } }).catch(() => {});
-  return json(item);
+
+  // Зарын эзэн: байгууллага (агент, компани, авто, үйлчилгээ) эсвэл энгийн хэрэглэгч — вэбийн хуудастай ижил
+  const entity = item.agent || item.company || item.autoDealer || item.serviceProvider;
+  let ownerName = entity?.name || null;
+  if (!entity && isValidObjectId(item.entityId)) {
+    const shop = item.entityType === 'store'
+      ? await prisma.shop.findFirst({ where: { OR: [{ id: item.entityId }, { userId: item.entityId }] }, select: { name: true } }).catch(() => null)
+      : null;
+    const user = shop ? null : await prisma.user.findUnique({ where: { id: item.entityId }, select: { name: true } }).catch(() => null);
+    ownerName = shop?.name || user?.name || null;
+  }
+  const owner = ownerName
+    ? { name: ownerName, verified: Boolean(entity?.isVerified), ...(entity?.phone ? { phone: entity.phone } : {}) }
+    : null;
+  return json({ ...item, owner });
 }
 
 export async function DELETE(req: NextRequest, ctx: Ctx) {

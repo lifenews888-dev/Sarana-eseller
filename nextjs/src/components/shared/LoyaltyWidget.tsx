@@ -100,7 +100,7 @@ export function LoyaltyWidget({ context, userId }: Props) {
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <Star size={18} color={tierConfig.text} fill={tierConfig.text} />
-        <span style={{ fontSize: 14, fontWeight: 600, color: '#FFF' }}>Loyalty оноо</span>
+        <span style={{ fontSize: 14, fontWeight: 600, color: '#FFF' }}>Урамшууллын оноо</span>
         <span style={{
           fontSize: 10, fontWeight: 500, padding: '2px 8px', borderRadius: 99,
           background: tierConfig.bg, color: tierConfig.text, marginLeft: 'auto',

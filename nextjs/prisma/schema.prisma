@@ -1993,6 +1993,18 @@ model UserNotification {
   @@map("user_notifications")
 }
 
+// Мобайл аппын Google/ДАН нэвтрэлтийн нэг удаагийн код (токеныг URL-аар дамжуулахгүйн тулд)
+model AuthHandoff {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  codeHash  String    @unique
+  userId    String    @db.ObjectId
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("auth_handoffs")
+}
+
 model ScheduledNotification {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
   sendAt     DateTime

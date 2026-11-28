@@ -4,6 +4,7 @@ import { exchangeCode, getUserInfo } from '@/lib/dan';
 import { safeRelativeRedirect } from '@/lib/safe-redirect';
 import { signToken } from '@/lib/api-auth';
 import crypto from 'crypto';
+import { MOBILE_AUTH_COOKIE, mobileAuthError, mobileAuthSuccess } from '@/lib/mobileAuthHandoff';
 
 function getDanFallbackEmail(registerNumber: string, phone: string): string {
   const stableId = (registerNumber || phone).replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
@@ -17,20 +18,24 @@ export async function GET(request: NextRequest) {
     const state = request.nextUrl.searchParams.get('state');
     const redirectTarget = safeRelativeRedirect(request.cookies.get('dan_oauth_redirect')?.value);
     const storedState = request.cookies.get('dan_oauth_state')?.value;
+    const fromMobileApp = request.cookies.get(MOBILE_AUTH_COOKIE)?.value === '1';
 
     if (error) {
+      if (fromMobileApp) return mobileAuthError(`dan_${error}`);
       return NextResponse.redirect(
         new URL(`/login?error=dan_${error}`, request.url)
       );
     }
 
     if (!code) {
+      if (fromMobileApp) return mobileAuthError('dan_no_code');
       return NextResponse.redirect(
         new URL('/login?error=dan_no_code', request.url)
       );
     }
 
     if (!state || state !== storedState) {
+      if (fromMobileApp) return mobileAuthError('dan_invalid_state');
       return NextResponse.redirect(
         new URL('/login?error=dan_invalid_state', request.url)
       );
@@ -83,6 +88,13 @@ export async function GET(request: NextRequest) {
       entityType: user.entityType,
     };
 
+    if (fromMobileApp) {
+      const appRes = await mobileAuthSuccess(user.id);
+      appRes.cookies.delete('dan_oauth_state');
+      appRes.cookies.delete('dan_oauth_redirect');
+      return appRes;
+    }
+
     const redirectUrl = new URL('/login', request.url);
     if (redirectTarget) redirectUrl.searchParams.set('redirect', redirectTarget);
     redirectUrl.hash = `google_auth=${encodeURIComponent(JSON.stringify({ token, user: userData }))}`;
@@ -108,6 +120,7 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (error: unknown) {
     console.error('ДАН callback алдаа:', error);
+    if (request.cookies.get(MOBILE_AUTH_COOKIE)?.value === '1') return mobileAuthError('dan_failed');
     return NextResponse.redirect(
       new URL('/login?error=dan_failed', request.url)
     );
