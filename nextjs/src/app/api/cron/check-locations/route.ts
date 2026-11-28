@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { validateCoords } from '@/lib/location/validateCoords';
+import { isCronAuthorized } from '@/lib/cron-auth';
 
 // Vercel Cron: 7 хоног бүр Пүрэв гаригт 10:00-д ажиллана
 // vercel.json: { "crons": [{ "path": "/api/cron/check-locations", "schedule": "0 10 * * 4" }] }
 
 export async function GET(req: NextRequest) {
   // Cron secret шалгалт
-  const authHeader = req.headers.get('authorization');
   if (!process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'CRON_SECRET is not configured' }, { status: 503 });
   }
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

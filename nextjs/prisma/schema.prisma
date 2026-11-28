@@ -271,6 +271,8 @@ model Order {
   paymentMethod    String?          // qpay | card | cash
   deliveryAddress  String?
   sellerProfileId  String?  @db.ObjectId
+  couponCode        String?  // төлбөр баталгаажихад купоны usageCount нэмэгдэнэ
+  loyaltyPointsUsed Int?     @default(0) // төлбөр баталгаажихад онооноос хасагдана
 
   // Escrow
   escrowStatus     String?  // HOLDING | RELEASED | REFUNDED | DISPUTED

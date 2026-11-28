@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
       items: body.items,
       couponCode: body.couponCode,
       loyaltyPoints: body.loyaltyPoints,
+      userId: user.id,
     });
   } catch (error) {
     if (error instanceof OrderPricingError) {
@@ -91,13 +92,14 @@ export async function POST(req: NextRequest) {
   const items = priced.items;
   const total = priced.total;
 
-  const preferredShopId = typeof body.shopId === 'string' ? body.shopId : getPreferredShopId(req);
   const referral = await resolveReferral(req, user.id, body.referralCode).catch(() => null);
   const count = await prisma.order.count();
   const order = await prisma.order.create({
     data: {
       userId: user.id,
-      shopId: preferredShopId || null,
+      shopId: priced.shopId,
+      couponCode: priced.couponCode,
+      loyaltyPointsUsed: priced.loyaltyPoints,
       orderNumber: `ORD-${String(count + 1).padStart(6, '0')}`,
       items: items as unknown as Prisma.InputJsonValue[],
       total,

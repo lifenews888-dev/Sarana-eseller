@@ -5,12 +5,16 @@ import { resolveFeedOwnerUserId } from '@/lib/feedOwnership';
 import { normalizeMnPhone } from '@/lib/phoneOtp';
 import { checkNewChatText } from '@/lib/chatModeration';
 import { newGuestToken, hashGuestToken, randomObjectId, ipLimited, looksLikeSpam } from '@/lib/guestChat';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const MAX_NEW_CHATS_PER_PHONE_PER_DAY = 5;
 
 // POST /api/listing-chats/guest { feedItemId, name, phone, text, website? }
 // Бүртгэлгүй хэрэглэгч зарын эзэнд мессеж илгээнэ. Хариуг харах токен буцаана.
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   if (ipLimited(req)) return errorJson('Хэт олон оролдлого. Түр хүлээгээд дахин оролдоно уу.', 429);
 
   const body = await req.json().catch(() => ({}));

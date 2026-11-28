@@ -20,21 +20,22 @@ export async function POST(req: NextRequest) {
   const user = requireAuth(req);
   if (user instanceof Response) return user;
 
-  const { amount, bank, account } = await req.json();
-  if (!amount || amount <= 0) return errorJson('Дүн буруу', 400);
+  const { amount, bank, account } = await req.json().catch(() => ({}));
+  if (typeof amount !== 'number' || !Number.isInteger(amount) || amount < 10000) return errorJson('Хамгийн бага 10,000₮ гаргана', 400);
+  if (typeof bank !== 'string' || !bank.trim() || typeof account !== 'string' || !account.trim()) {
+    return errorJson('Банк болон дансны дугаар шаардлагатай', 400);
+  }
 
-  const wallet = await prisma.wallet.findUnique({ where: { userId: user.id } });
-  if (!wallet || wallet.balance < amount) return errorJson('Үлдэгдэл хүрэлцэхгүй', 400);
-
-  await prisma.wallet.update({
-    where: { userId: user.id },
+  const debited = await prisma.wallet.updateMany({
+    where: { userId: user.id, balance: { gte: amount } },
     data: {
       balance: { decrement: amount },
       history: {
-        push: { type: 'payout', amount, bank, account, status: 'pending', date: new Date().toISOString() },
+        push: { type: 'PAYOUT', amount: -amount, description: `${bank} ${account} руу шилжүүлэг`, status: 'PENDING', createdAt: new Date().toISOString() },
       },
     },
   });
+  if (debited.count === 0) return errorJson('Үлдэгдэл хүрэлцэхгүй', 400);
 
   return json({ message: 'Гаргалгааны хүсэлт илгээгдлээ. 24 цагийн дотор шилжүүлнэ.' });
 }

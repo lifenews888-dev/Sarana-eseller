@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const FALLBACKS: Record<string, string> = {
   sms: 'eseller.mn дээр өнөөдрийн онцгой санал эхэллээ. Шинэ бараа, хямдралтай бүтээгдэхүүнээ одоо үзээрэй.',
@@ -14,6 +15,9 @@ function fallbackText(message: string) {
 }
 
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   try {
     const { message = '', history = [] } = await req.json() as {
       message?: string;

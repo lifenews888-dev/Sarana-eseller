@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { publicProductWhere } from '@/lib/product-visibility';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 /**
  * eseller туслах — "Бараа" таб.
@@ -59,6 +60,9 @@ function budgetFromText(s: string): number | undefined {
 }
 
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   try {
     const body: ShopRequest = await req.json();
     const message = String(body?.message || '').trim().slice(0, 500);

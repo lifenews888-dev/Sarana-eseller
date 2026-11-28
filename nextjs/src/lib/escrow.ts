@@ -213,6 +213,18 @@ export async function refundEscrow(orderId: string, reason: string): Promise<boo
     });
   }
 
+  // Хөнгөлөлтөд ашигласан оноог буцаана
+  const pointsBack = await prisma.loyaltyTransaction.findFirst({
+    where: { refType: 'order', refId: orderId, type: 'REDEEM_DISCOUNT' },
+    select: { accountId: true, points: true },
+  });
+  if (pointsBack && pointsBack.points < 0) {
+    await prisma.loyaltyAccount.update({ where: { id: pointsBack.accountId }, data: { balance: { increment: -pointsBack.points } } });
+    await prisma.loyaltyTransaction.create({
+      data: { accountId: pointsBack.accountId, type: 'ADJUST', points: -pointsBack.points, description: `Захиалга #${label} буцаагдсан — оноо буцлаа`, refType: 'order_refund', refId: orderId },
+    });
+  }
+
   await getOrCreateWallet(escrow.buyerId);
   await prisma.wallet.update({
     where: { userId: escrow.buyerId },

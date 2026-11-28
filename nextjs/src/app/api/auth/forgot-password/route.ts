@@ -3,8 +3,12 @@ import { prisma } from '@/lib/prisma';
 import crypto from 'crypto';
 import { sendEmail, buildEmailTemplate } from '@/lib/marketing/EmailService';
 import { ok, fail } from '@/lib/api-envelope';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   try {
     const { email } = await req.json();
     if (!email) return fail('Email шаардлагатай', 400);

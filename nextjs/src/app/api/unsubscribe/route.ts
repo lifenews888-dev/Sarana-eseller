@@ -1,9 +1,13 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson } from '@/lib/api-auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST /api/unsubscribe — opt out of marketing communications
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   try {
     const body = await req.json();
     const { email, phone, channel, reason } = body;

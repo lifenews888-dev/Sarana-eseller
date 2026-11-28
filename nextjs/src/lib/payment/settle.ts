@@ -83,10 +83,15 @@ async function applyPaidEffects(tx: { orderId: string; metadata: unknown }) {
   }
 
   // Захиалга
-  const order = await prisma.order.findUnique({ where: { id: tx.orderId }, select: { id: true, status: true, userId: true } });
+  const order = await prisma.order.findUnique({
+    where: { id: tx.orderId },
+    select: { id: true, status: true, userId: true, couponCode: true, loyaltyPointsUsed: true, orderNumber: true },
+  });
   if (!order) return;
-  if (order.status === 'pending') {
-    await prisma.order.update({ where: { id: order.id }, data: { status: 'confirmed' } });
+  // pending → confirmed нэг л удаа: купон, оноо давхар хасагдахгүй
+  const confirmed = await prisma.order.updateMany({ where: { id: order.id, status: 'pending' }, data: { status: 'confirmed' } });
+  if (confirmed.count > 0) {
+    await applyOrderRedemptions(order).catch((e) => console.error('[settle] redemptions failed:', e));
   }
   await recordAffiliateCommission(order.id).catch((e) => console.error('[settle] commission failed:', e));
   // Төлбөр дундын дансанд хадгалагдана — хүргэгдэж, худалдан авагч баталгаажуулсны дараа дэлгүүрт шилжинэ
@@ -96,6 +101,35 @@ async function applyPaidEffects(tx: { orderId: string; metadata: unknown }) {
     title: '✅ Захиалга баталгаажлаа!',
     body: 'Таны төлбөр орж, захиалга хүлээн авагдлаа.',
     data: { orderId: order.id },
+  });
+}
+
+/** Төлөгдсөн захиалгын купоны хэрэглээг тоолж, ашигласан оноог хасна. */
+export async function applyOrderRedemptions(order: { id: string; userId: string; couponCode: string | null; loyaltyPointsUsed: number | null; orderNumber: string | null }) {
+  if (order.couponCode) {
+    await prisma.coupon.updateMany({ where: { code: order.couponCode }, data: { usageCount: { increment: 1 } } });
+  }
+  const points = Math.floor(order.loyaltyPointsUsed || 0);
+  if (points <= 0) return;
+  const account = await prisma.loyaltyAccount.findUnique({ where: { userId: order.userId }, select: { id: true, balance: true } });
+  if (!account) return;
+  // Үлдэгдэл хүрэлцэх үед л хасна (зэрэг зарцуулалтад сөрөг болохгүй)
+  const take = Math.min(points, Math.max(0, Math.floor(account.balance)));
+  if (take <= 0) return;
+  const r = await prisma.loyaltyAccount.updateMany({
+    where: { id: account.id, balance: { gte: take } },
+    data: { balance: { decrement: take }, lifetimeSpent: { increment: take } },
+  });
+  if (r.count === 0) return;
+  await prisma.loyaltyTransaction.create({
+    data: {
+      accountId: account.id,
+      type: 'REDEEM_DISCOUNT',
+      points: -take,
+      description: `Захиалга #${order.orderNumber || order.id.slice(-6).toUpperCase()} — ${take} оноогоор хөнгөлөлт`,
+      refType: 'order',
+      refId: order.id,
+    },
   });
 }
 

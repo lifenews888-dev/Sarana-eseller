@@ -3,9 +3,13 @@ import { json, errorJson, requireSeller, getShopForUser } from '@/lib/api-auth';
 import { generateStorefrontConfig } from '@/lib/ai/generateStorefrontConfig';
 import { checkShopLimit } from '@/lib/subscription-server';
 import type { GenerateStorefrontInput } from '@/lib/types/storefront';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST /api/ai/generate-storefront
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   const auth = requireSeller(req);
   if (auth instanceof Response) return auth;
 

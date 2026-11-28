@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   try {
     const { amount, bankName, bankAccount } = await req.json();
 
-    if (!amount || typeof amount !== 'number' || amount < 10000) {
+    if (!amount || typeof amount !== 'number' || !Number.isInteger(amount) || amount < 10000) {
       return errorJson('Хамгийн бага 10,000₮ гаргана', 400);
     }
     if (!bankName?.trim() || !bankAccount?.trim()) {
@@ -33,13 +33,16 @@ export async function POST(req: NextRequest) {
       createdAt: new Date().toISOString(),
     };
 
-    const updated = await prisma.wallet.update({
-      where: { userId: user.id },
+    // Үлдэгдэл хүрэлцэх үед л хасна — зэрэг илгээсэн хүсэлт давхар гаргахгүй
+    const debited = await prisma.wallet.updateMany({
+      where: { userId: user.id, balance: { gte: amount } },
       data: {
         balance: { decrement: amount },
         history: { push: entry as unknown as Prisma.InputJsonValue },
       },
     });
+    if (debited.count === 0) return errorJson('Үлдэгдэл хүрэлцэхгүй', 400);
+    const updated = (await prisma.wallet.findUnique({ where: { userId: user.id } }))!;
 
     // TODO: bank transfer API integration (Khan/Golomt/TDB)
     // await bankTransfer({ bankName, bankAccount, amount })

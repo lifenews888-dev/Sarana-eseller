@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 type ChatHistoryItem = {
   role: 'user' | 'assistant';
@@ -29,6 +30,9 @@ const SYSTEM_PROMPT = `Та eseller.mn Монголын нэгдсэн цахи�
 Шийдэж чадахгүй асуултад: "info@eseller.mn хаягаар холбогдоно уу" гэж хэл.`;
 
 export async function POST(req: Request) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   try {
     const { message = '', history = [] } = await req.json() as { message?: string; history?: ChatHistoryItem[] };
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { requireDriver, json, errorJson } from '@/lib/api-auth';
 import { notifyUser } from '@/lib/notify';
 
 // POST /api/driver/orders/[id]/accept
@@ -8,7 +8,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = requireAuth(req);
+  const user = await requireDriver(req);
   if (user instanceof NextResponse) return user;
 
   const { id } = await params;
@@ -18,10 +18,13 @@ export async function POST(
   });
   if (!order) return errorJson('Захиалга авах боломжгүй', 400);
 
-  const updated = await prisma.order.update({
-    where: { id },
+  // Хоёр жолооч зэрэг дарвал зөвхөн нэг нь авна
+  const taken = await prisma.order.updateMany({
+    where: { id, status: 'ready', driverId: null },
     data: { driverId: user.id, status: 'delivering' },
   });
+  if (taken.count === 0) return errorJson('Захиалгыг өөр жолооч авсан', 409);
+  const updated = (await prisma.order.findUnique({ where: { id } }))!;
 
   // Push buyer
   await notifyUser(order.userId, {
