@@ -31,6 +31,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       // 404 = хэрэглэгч устгагдсан: токен хүчинтэй ч данс байхгүй — бүрэн гаргана.
       if (res.status === 401 || res.status === 403 || res.status === 404) {
         clearAuth();
+        useCartStore.getState().load();
         setToken(null);
         setUser(null);
         fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }).catch(() => {});

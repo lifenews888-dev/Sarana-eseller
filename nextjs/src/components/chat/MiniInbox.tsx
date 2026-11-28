@@ -65,7 +65,8 @@ export default function MiniInbox({ initial }: { initial?: MiniChatTarget | null
         }
       }
     }
-    const guests = readGuestChats();
+    // Зочны (нэвтрээгүй үеийн) чатууд зөвхөн нэвтрээгүй үед харагдана
+    const guests = localStorage.getItem('token') ? [] : readGuestChats();
     if (guests.length) {
       const b = await fetch('/api/listing-chats/guest/unread', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
