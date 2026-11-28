@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
 import { openEscrow } from '@/lib/escrow';
+import { applyOrderRedemptions } from '@/lib/payment/settle';
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,14 +63,21 @@ export async function POST(req: NextRequest) {
 
     // If paid, update order status
     if (isPaid && payment.orderId) {
-      await prisma.order.update({
-        where: { id: payment.orderId },
+      const confirmed = await prisma.order.updateMany({
+        where: { id: payment.orderId, status: 'pending' },
         data: {
           status: 'confirmed',
           paymentMethod: 'socialpay',
           paymentId: invoice,
         },
       });
+      if (confirmed.count > 0) {
+        const paidOrder = await prisma.order.findUnique({
+          where: { id: payment.orderId },
+          select: { id: true, userId: true, couponCode: true, loyaltyPointsUsed: true, orderNumber: true },
+        });
+        if (paidOrder) await applyOrderRedemptions(paidOrder).catch((e) => console.error('[SocialPay Callback] redemptions:', e));
+      }
       await openEscrow(payment.orderId).catch((e) => console.error('[SocialPay Callback] escrow:', e));
     }
 

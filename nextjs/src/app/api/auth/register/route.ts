@@ -4,8 +4,12 @@ import { ok, fail } from '@/lib/api-envelope';
 import { signToken } from '@/lib/api-auth';
 import { isSmsConfigured } from '@/lib/smsGateway';
 import { normalizeMnPhone, verifyPhoneOtp } from '@/lib/phoneOtp';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 export async function POST(req: Request) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   try {
     const { name, email, phone, password, role: requestedRole, otp } = await req.json();
 

@@ -3,9 +3,13 @@ import { prisma } from '@/lib/prisma';
 import { signToken } from '@/lib/api-auth';
 import { ok, fail } from '@/lib/api-envelope';
 import { normalizeMnPhone, verifyPhoneOtp } from '@/lib/phoneOtp';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST /api/auth/otp/verify { phone, code } — утасны кодоор нэвтрэх (бүртгэлтэй хэрэглэгч)
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   const body = await req.json().catch(() => ({}));
   const phone = normalizeMnPhone(body?.phone);
   if (!phone || !body?.code) return fail('Утас, код оруулна уу', 400);

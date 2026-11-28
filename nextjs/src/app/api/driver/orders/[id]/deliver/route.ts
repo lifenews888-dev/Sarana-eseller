@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, json, errorJson } from '@/lib/api-auth';
+import { requireDriver, json, errorJson } from '@/lib/api-auth';
 import { notifyUser } from '@/lib/notify';
 import { markDelivered } from '@/lib/escrow';
 
@@ -9,7 +9,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const user = requireAuth(req);
+  const user = await requireDriver(req);
   if (user instanceof NextResponse) return user;
 
   const { id } = await params;

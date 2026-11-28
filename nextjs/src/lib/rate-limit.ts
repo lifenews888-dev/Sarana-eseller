@@ -33,6 +33,9 @@ const ROUTE_LIMITS: Record<string, RateLimitConfig> = {
   'POST:/api/orders': { windowMs: 60_000, max: 10 },       // Orders: 10/min
   'POST:/api/affiliate': { windowMs: 60_000, max: 20 },    // Affiliate: 20/min
   'POST:/api/ai': { windowMs: 60_000, max: 5 },            // AI: 5/min
+  'POST:/api/chat': { windowMs: 60_000, max: 20 },         // AI чат: 20/min
+  'POST:/api/listing-chats': { windowMs: 60_000, max: 20 }, // Зочны чат: 20/min
+  'POST:/api/unsubscribe': { windowMs: 60_000, max: 5 },
   'GET:/api/marketplace': { windowMs: 60_000, max: 60 },   // Marketplace: 60/min
   'DEFAULT': { windowMs: 60_000, max: 100 },               // Default: 100/min
 };
@@ -47,10 +50,10 @@ function getConfig(method: string, path: string): RateLimitConfig {
   return ROUTE_LIMITS.DEFAULT;
 }
 
-export function checkRateLimit(req: NextRequest): { limited: boolean; remaining: number; resetIn: number } {
+export function checkRateLimit(req: NextRequest | Request): { limited: boolean; remaining: number; resetIn: number } {
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0] || req.headers.get('x-real-ip') || 'unknown';
   const method = req.method;
-  const path = req.nextUrl.pathname;
+  const path = 'nextUrl' in req ? req.nextUrl.pathname : new URL(req.url).pathname;
   const config = getConfig(method, path);
 
   const key = `${ip}:${method}:${path.split('/').slice(0, 4).join('/')}`;

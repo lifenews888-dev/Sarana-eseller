@@ -183,3 +183,15 @@ export async function requireShopForRequest(
   if (!shopId) return errorJson('Дэлгүүр олдсонгүй', 404);
   return { user, shopId };
 }
+
+const DRIVER_ROLES = ['delivery', 'driver', 'admin', 'superadmin', 'super_admin'];
+
+/** Жолоочийн эрх шаардана (token-ий role хуучирсан байж болох тул DB-ээс давхар шалгана) */
+export async function requireDriver(req: NextRequest): Promise<AuthUser | NextResponse> {
+  const result = requireAuth(req);
+  if (result instanceof NextResponse) return result;
+  if (DRIVER_ROLES.includes(result.role)) return result;
+  const dbUser = await prisma.user.findUnique({ where: { id: result.id }, select: { role: true } }).catch(() => null);
+  if (dbUser && DRIVER_ROLES.includes(dbUser.role)) return { ...result, role: dbUser.role };
+  return errorJson('Зөвхөн жолооч хандах боломжтой', 403);
+}

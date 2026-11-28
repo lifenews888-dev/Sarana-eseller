@@ -36,6 +36,8 @@ export type PricedOrder = {
   pointsDiscount: number;
   loyaltyPoints: number;
   total: number;
+  /** Захиалгын бүх бараа нэг дэлгүүрийнх — мөнгө зөвхөн энэ дэлгүүрт очно */
+  shopId: string | null;
 };
 
 export class OrderPricingError extends Error {
@@ -86,6 +88,8 @@ export async function priceOrder(input: {
   items: unknown;
   couponCode?: unknown;
   loyaltyPoints?: unknown;
+  /** Худалдан авагч — оноогоо үлдэгдлээс илүү ашиглахгүй */
+  userId?: string;
 }): Promise<PricedOrder> {
   const rawItems = Array.isArray(input.items)
     ? input.items.filter((i): i is Record<string, unknown> => Boolean(i) && typeof i === 'object')
@@ -122,6 +126,19 @@ export async function priceOrder(input: {
     };
   });
 
+  // Дэлгүүрийг клиентээс биш, барааны бүртгэлээс тодорхойлно (хуучин бараанд эзний дэлгүүр)
+  for (const item of items) {
+    if (item.shopId) continue;
+    const ownerId = byId.get(item.productId)?.userId;
+    if (!ownerId) continue;
+    const shop = await prisma.shop.findFirst({ where: { userId: ownerId }, orderBy: { createdAt: 'asc' }, select: { id: true } });
+    item.shopId = shop?.id ?? null;
+  }
+  const shopIds = Array.from(new Set(items.map((i) => i.shopId).filter((s): s is string => !!s)));
+  if (shopIds.length > 1) {
+    throw new OrderPricingError('Сагсанд өөр өөр дэлгүүрийн бараа байна. Дэлгүүр тус бүрээр тусад нь захиална уу.');
+  }
+
   const subtotal = items.reduce((s, i) => s + i.price * i.quantity, 0);
   const deliveryFee = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : DELIVERY_FEE;
 
@@ -135,7 +152,12 @@ export async function priceOrder(input: {
     MAX_REDEEM_POINTS,
     Math.floor(((subtotal + deliveryFee) * MAX_REDEEM_PERCENT) / POINTS_TO_MNT),
   );
-  const loyaltyPoints = Math.min(requestedPoints, maxPoints);
+  let available = 0;
+  if (requestedPoints > 0 && input.userId) {
+    const account = await prisma.loyaltyAccount.findUnique({ where: { userId: input.userId }, select: { balance: true } });
+    available = Math.max(0, Math.floor(account?.balance || 0));
+  }
+  const loyaltyPoints = Math.min(requestedPoints, maxPoints, available);
   const pointsDiscount = loyaltyPoints * POINTS_TO_MNT;
 
   const total = Math.max(0, subtotal + deliveryFee - coupon.discount - pointsDiscount);
@@ -149,5 +171,6 @@ export async function priceOrder(input: {
     pointsDiscount,
     loyaltyPoints,
     total,
+    shopId: shopIds[0] ?? null,
   };
 }

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { collectSystemSnapshot, analyzeSystemWithClaude, saveInsights } from '@/lib/ai/analyzeSystem';
+import { isCronAuthorized } from '@/lib/cron-auth';
 
 // Cron: 7 хоног бүр Даваа гаригт 06:00-д ажиллана
 // vercel.json: { "path": "/api/cron/ai-analysis", "schedule": "0 6 * * 1" }
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
   if (!process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'CRON_SECRET is not configured' }, { status: 503 });
   }
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

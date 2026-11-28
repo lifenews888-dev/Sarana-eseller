@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { json, errorJson } from '@/lib/api-auth';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 // POST /api/ai/product-mentor { product: {...}, message, history? }
 // Борлуулагчид тухайн барааг хэрхэн санал болгох талаар зөвлөнө.
@@ -33,6 +34,9 @@ function fallback(p: P, msg: string) {
 }
 
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   const body = await req.json().catch(() => ({}));
   const product = (body?.product || {}) as P;
   const message = String(body?.message || '').trim().slice(0, 1000);

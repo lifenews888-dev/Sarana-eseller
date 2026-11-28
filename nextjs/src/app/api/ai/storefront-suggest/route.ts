@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { checkRateLimit } from '@/lib/rate-limit';
 
 const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY || '';
 
@@ -22,6 +23,9 @@ function getProductNames(products: unknown): string {
 }
 
 export async function POST(req: NextRequest) {
+  if (checkRateLimit(req).limited) {
+    return Response.json({ success: false, error: 'Хэт олон хүсэлт. Түр хүлээгээд дахин оролдоно уу.' }, { status: 429 });
+  }
   try {
     const { prompt, currentConfig, shopName, entityType, products } = await req.json();
 

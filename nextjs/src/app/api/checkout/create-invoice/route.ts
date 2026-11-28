@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
         items,
         couponCode: body.couponCode,
         loyaltyPoints: body.loyaltyPoints,
+        userId: authUser.id,
       });
     } catch (error) {
       if (error instanceof OrderPricingError) {
@@ -59,6 +60,9 @@ export async function POST(req: NextRequest) {
         platformAmount: platformFee,
         sellerAmount: sellerAmount,
         status: 'pending',
+        shopId: priced.shopId,
+        couponCode: priced.couponCode,
+        loyaltyPointsUsed: priced.loyaltyPoints,
         deliveryAddress: deliveryAddress || undefined,
         paymentMethod: 'qpay',
         sellerProfileId: referral?.sellerProfileId ?? undefined,
@@ -97,33 +101,16 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Notify seller of new pending order (derive shop from first product)
+    // Дэлгүүрт шинэ захиалгын мэдэгдэл
     try {
-      const firstProductId = normalizedItems[0]?.productId;
-      if (firstProductId) {
-        const product = await prisma.product.findUnique({
-          where: { id: firstProductId },
-          select: { userId: true },
+      const shop = priced.shopId ? await prisma.shop.findUnique({ where: { id: priced.shopId }, select: { userId: true } }) : null;
+      if (shop?.userId) {
+        await notifyUser(shop.userId, {
+          type: 'order_new',
+          title: '🛍️ Шинэ захиалга ирлээ!',
+          body: `${normalizedItems.length} бараа — ${amount.toLocaleString()}₮`,
+          data: { orderId: order.id, screen: 'seller-orders' },
         });
-        if (product?.userId) {
-          const shop = await prisma.shop.findFirst({
-            where: { userId: product.userId },
-            orderBy: { createdAt: 'asc' },
-            select: { id: true, userId: true },
-          });
-          if (shop?.id) {
-            await prisma.order.update({
-              where: { id: order.id },
-              data: { shopId: shop.id },
-            });
-          }
-          await notifyUser(product.userId, {
-            type: 'order_new',
-            title: '🛍️ Шинэ захиалга ирлээ!',
-            body: `${normalizedItems.length} бараа — ${amount.toLocaleString()}₮`,
-            data: { orderId: order.id, screen: 'seller-orders' },
-          });
-        }
       }
     } catch (e) {
       console.error('Seller notify failed:', e);
@@ -140,6 +127,7 @@ export async function POST(req: NextRequest) {
           status: 'PENDING',
           qrImage: invoice.qr_image || null,
           qrText: invoice.qr_text || null,
+          metadata: { kind: 'order' },
         },
       });
     } catch (e) {

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { requireAuth, json } from '@/lib/api-auth';
+import { requireDriver, json } from '@/lib/api-auth';
 
 // GET /api/driver/orders?type=available|mine
 export async function GET(req: NextRequest) {
-  const user = requireAuth(req);
+  const user = await requireDriver(req);
   if (user instanceof NextResponse) return user;
 
   const type = req.nextUrl.searchParams.get('type') || 'mine';

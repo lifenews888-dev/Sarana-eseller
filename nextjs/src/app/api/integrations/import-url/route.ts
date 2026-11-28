@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireSeller } from '@/lib/api-auth'
 import { prisma } from '@/lib/prisma'
+import { assertPublicHttpUrl } from '@/lib/safe-url'
 
 // URL-аас бараа мэдээлэл scrape хийх
 async function scrapeProduct(url: string) {
+  await assertPublicHttpUrl(url)
   const res = await fetch(url, {
     headers: { 'User-Agent': 'Mozilla/5.0 (compatible; EsellerBot/1.0)' },
     signal: AbortSignal.timeout(10000),
+    redirect: 'manual',
   })
   const html = await res.text()
 
@@ -79,8 +82,8 @@ export async function POST(req: NextRequest) {
   const { url } = await req.json()
   if (!url) return NextResponse.json({ error: 'URL шаардлагатай' }, { status: 400 })
 
-  try { new URL(url) } catch {
-    return NextResponse.json({ error: 'URL буруу байна' }, { status: 400 })
+  try { await assertPublicHttpUrl(String(url)) } catch (e) {
+    return NextResponse.json({ error: e instanceof Error ? e.message : 'URL буруу байна' }, { status: 400 })
   }
 
   const shop = await prisma.shop.findFirst({ where: { userId: auth.id } })

@@ -68,6 +68,7 @@ export class LoyaltyService {
 
   /** Redeem points */
   async redeem(userId: string, points: number, type: string, orderId?: string) {
+    if (typeof points !== 'number' || !Number.isInteger(points) || points <= 0) throw new Error('Оноо буруу');
     const account = await this.getOrCreate(userId);
 
     if (account.balance < points) throw new Error('Оноо хүрэлцэхгүй');
@@ -78,17 +79,19 @@ export class LoyaltyService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
+    // Оноог эхлээд атомаар хасна — зэрэг хүсэлт давхар зарцуулахгүй
+    const taken = await prisma.loyaltyAccount.updateMany({
+      where: { id: account.id, balance: { gte: points } },
+      data: { balance: { decrement: points }, lifetimeSpent: { increment: points } },
+    });
+    if (taken.count === 0) throw new Error('Оноо хүрэлцэхгүй');
+
     const redemption = await prisma.loyaltyRedemption.create({
       data: { accountId: account.id, userId, type, pointsUsed: points, valueAmount, couponCode, expiresAt, orderId },
     });
 
     await prisma.loyaltyTransaction.create({
       data: { accountId: account.id, type: 'REDEEM_DISCOUNT', points: -points, description: `${points} оноо зарцуулав (${valueAmount.toLocaleString()}₮)` },
-    });
-
-    await prisma.loyaltyAccount.update({
-      where: { id: account.id },
-      data: { balance: { increment: -points }, lifetimeSpent: { increment: points } },
     });
 
     return redemption;
@@ -110,14 +113,15 @@ export class LoyaltyService {
 
     const cashAmount = points * LOYALTY_CONFIG.redeem.pointValue;
 
-    // Decrement loyalty balance + record transaction
-    await prisma.loyaltyAccount.update({
-      where: { id: account.id },
+    // Decrement loyalty balance atomically (зэрэг хүсэлт давхар хасахгүй) + record transaction
+    const taken = await prisma.loyaltyAccount.updateMany({
+      where: { id: account.id, balance: { gte: points } },
       data: {
         balance: { decrement: points },
         lifetimeSpent: { increment: points },
       },
     });
+    if (taken.count === 0) throw new Error('Оноо хүрэлцэхгүй');
     await prisma.loyaltyTransaction.create({
       data: {
         accountId: account.id,

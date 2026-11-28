@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { loyaltyService } from '@/lib/loyalty/LoyaltyService';
+import { isCronAuthorized } from '@/lib/cron-auth';
 
 /**
  * GET /api/cron/points-birthday
@@ -17,8 +18,7 @@ const BIRTHDAY_BONUS: Record<string, number> = {
 };
 
 export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isCronAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
