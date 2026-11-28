@@ -13,5 +13,7 @@ export async function POST() {
   res.cookies.delete('dan_oauth_redirect');
   res.cookies.delete('google_oauth_state');
   res.cookies.delete('google_oauth_redirect');
+  // Олон дэлгүүрийн идэвхтэй дэлгүүрийн сонголт дараагийн хэрэглэгчид үлдэхгүй
+  res.cookies.delete('eseller-active-shop');
   return res;
 }

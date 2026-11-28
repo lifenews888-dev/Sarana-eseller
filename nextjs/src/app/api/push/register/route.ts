@@ -28,6 +28,12 @@ export async function POST(req: NextRequest) {
         create: { userId: auth.id, endpoint: body.token, type, subscription: JSON.stringify(body) },
         update: { subscription: JSON.stringify(body), type },
       });
+      // Нэг утас нэг л хэрэглэгчид мэдэгдэл авна: өмнө нь энэ утсаар нэвтэрсэн хүмүүсээс токеныг салгана
+      await prisma.user.updateMany({
+        where: { pushToken: body.token, NOT: { id: auth.id } },
+        data: { pushToken: null },
+      });
+      await prisma.pushSubscription.deleteMany({ where: { endpoint: body.token, NOT: { userId: auth.id } } });
       // Also write to User.pushToken so sendExpoPush() can find it
       await prisma.user.update({
         where: { id: auth.id },

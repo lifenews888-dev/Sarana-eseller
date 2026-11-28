@@ -133,7 +133,7 @@ export default function EsellerAssistant() {
           .then((r) => r.json()).catch(() => null);
         n += Number(b?.data?.count) || 0;
       }
-      const guests = readGuestChats();
+      const guests = t ? [] : readGuestChats();
       if (guests.length) {
         const b = await fetch('/api/listing-chats/guest/unread', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },

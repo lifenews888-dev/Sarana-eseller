@@ -44,7 +44,36 @@ export function getStoredToken(): string | null {
   return localStorage.getItem('token');
 }
 
+// Хэрэглэгч тус бүрийн хөтөч дэх өгөгдөл — хэрэглэгч солигдоход өмнөх хүнийх харагдахгүй байх ёстой
+const USER_SCOPED_KEYS = [
+  'eseller_shop_id',
+  'eseller_store_config',
+  'eseller_notification_settings',
+  'eseller_poster_history',
+  'eseller_logo_history',
+];
+const CART_KEY = 'eseller_cart';
+
+function storedUserId(): string | null {
+  try {
+    const raw = localStorage.getItem('user');
+    const u = raw ? JSON.parse(raw) : null;
+    return u?.id || u?._id || null;
+  } catch {
+    return null;
+  }
+}
+
+function clearUserScopedData(includeCart: boolean) {
+  for (const key of USER_SCOPED_KEYS) localStorage.removeItem(key);
+  if (includeCart) localStorage.removeItem(CART_KEY);
+}
+
 export function saveAuth(token: string, user: User) {
+  // Өөр хэрэглэгч нэвтэрвэл өмнөх хүний дэлгүүр, тохиргоо, сагсыг цэвэрлэнэ (зочноос нэвтрэхэд сагс үлдэнэ)
+  const previousId = storedUserId();
+  const nextId = (user as { id?: string; _id?: string })?.id || (user as { _id?: string })?._id || null;
+  if (previousId && nextId && previousId !== nextId) clearUserScopedData(true);
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
   // Do NOT set document.cookie auth-token here.
@@ -55,6 +84,7 @@ export function saveAuth(token: string, user: User) {
 export function clearAuth() {
   localStorage.removeItem('token');
   localStorage.removeItem('user');
+  clearUserScopedData(true);
   // Best-effort clear of any legacy non-httpOnly cookie leftovers
   const secure = window.location.protocol === 'https:' ? '; Secure' : '';
   document.cookie = `auth-token=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
