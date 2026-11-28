@@ -19,7 +19,7 @@ export async function POST(
       winner: body.winner,
       resolveNote: body.note,
       resolvedAt: new Date(),
-      resolvedBy: body.resolvedBy,
+      resolvedBy: admin.id,
     },
   })
 

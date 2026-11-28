@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma';
 import { HERDER_TRANSITIONS, fromHerderOrderStatus, getMyHerderShop, toMyHerderOrder } from '@/lib/herder';
 import { loadOrderContext } from '@/lib/herderOrders';
 import { notifyUser } from '@/lib/notify';
+import { ensureEscrow, markDelivered, refundEscrow } from '@/lib/escrow';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -38,11 +39,15 @@ export async function PUT(req: NextRequest, ctx: Ctx) {
       statusHistory: [...history, entry] as Prisma.InputJsonValue[],
     },
   });
+  // Дундын данс: хүргэгдсэн → 72ц хугацаа эхэлнэ; төлөгдсөн захиалга цуцлагдвал худалдан авагчид буцаана
+  if (next === 'delivered') await markDelivered(updated.id, { notifyBuyer: false }).catch((e) => console.error('[herder/status] escrow:', e));
+  if (next === 'cancelled') await ensureEscrow(updated.id).then(() => refundEscrow(updated.id, 'Малчин захиалгыг цуцалсан')).catch((e) => console.error('[herder/status] refund:', e));
+
   const HERDER_STATUS_MSG: Record<string, string> = {
     preparing: 'Малчин таны захиалгыг бэлтгэж байна',
     delivering: 'Таны захиалга илгээгдлээ',
-    delivered: 'Захиалга хүргэгдлээ. Хүлээн авсан бол баталгаажуулна уу',
-    cancelled: 'Малчин захиалгыг цуцаллаа',
+    delivered: 'Захиалга хүргэгдлээ. Хүлээн авсан бол баталгаажуулна уу — 72 цагийн дотор гомдол гаргаагүй бол төлбөр малчинд шилжинэ',
+    cancelled: 'Малчин захиалгыг цуцаллаа. Төлсөн мөнгө таны хэтэвчид буцаагдана',
   };
   if (HERDER_STATUS_MSG[next]) {
     await notifyUser(updated.userId, {

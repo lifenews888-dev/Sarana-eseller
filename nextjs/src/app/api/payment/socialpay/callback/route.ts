@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { prisma } from '@/lib/prisma';
+import { openEscrow } from '@/lib/escrow';
 
 export async function POST(req: NextRequest) {
   try {
@@ -69,6 +70,7 @@ export async function POST(req: NextRequest) {
           paymentId: invoice,
         },
       });
+      await openEscrow(payment.orderId).catch((e) => console.error('[SocialPay Callback] escrow:', e));
     }
 
     return NextResponse.json({ success: true });

@@ -16,6 +16,7 @@ import { prisma } from '@/lib/prisma';
 import { checkPayment, isDemoMode } from '@/lib/payment/qpay';
 import { recordAffiliateCommission } from '@/lib/affiliate-attribution';
 import { notifyUser } from '@/lib/notify';
+import { openEscrow } from '@/lib/escrow';
 
 export type SettleResult = {
   paid: boolean;
@@ -88,6 +89,8 @@ async function applyPaidEffects(tx: { orderId: string; metadata: unknown }) {
     await prisma.order.update({ where: { id: order.id }, data: { status: 'confirmed' } });
   }
   await recordAffiliateCommission(order.id).catch((e) => console.error('[settle] commission failed:', e));
+  // Төлбөр дундын дансанд хадгалагдана — хүргэгдэж, худалдан авагч баталгаажуулсны дараа дэлгүүрт шилжинэ
+  await openEscrow(order.id).catch((e) => console.error('[settle] escrow open failed:', e));
   await notifyUser(order.userId, {
     type: 'order_paid',
     title: '✅ Захиалга баталгаажлаа!',

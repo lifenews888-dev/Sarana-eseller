@@ -1,38 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import { releaseDueEscrows } from '@/lib/escrow';
 
+// Хүргэгдээд 72 цаг өнгөрсөн, гомдолгүй захиалгын төлбөрийг дэлгүүрт шилжүүлнэ
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const secret = process.env.CRON_SECRET;
+  if (!secret || req.headers.get('authorization') !== `Bearer ${secret}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
   try {
-    const overdueEscrows = await prisma.escrowTransaction.findMany({
-      where: { status: 'HOLDING', autoReleaseAt: { lte: new Date() } },
-    });
-
-    let released = 0;
-    for (const escrow of overdueEscrows) {
-      try {
-        await prisma.$transaction(async (tx) => {
-          await tx.escrowTransaction.update({
-            where: { id: escrow.id },
-            data: { status: 'RELEASED', releasedAt: new Date() },
-          });
-          await tx.order.update({
-            where: { id: escrow.orderId },
-            data: { status: 'delivered' },
-          });
-        });
-        released++;
-      } catch (e) {
-        console.error('Escrow release error:', e);
-      }
-    }
-
-    return NextResponse.json({ released, total: overdueEscrows.length });
-  } catch {
+    return NextResponse.json(await releaseDueEscrows());
+  } catch (e) {
+    console.error('[cron/escrow-release]', e);
     return NextResponse.json({ error: 'Cron алдаа' }, { status: 500 });
   }
 }

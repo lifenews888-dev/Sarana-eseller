@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
 import { notifyUser } from '@/lib/notify';
+import { markDelivered } from '@/lib/escrow';
 
 // POST /api/driver/orders/[id]/deliver
 export async function POST(
@@ -30,36 +31,18 @@ export async function POST(
   });
   if (marked.count === 0) return json({ success: true });
 
-  // Escrow release → seller wallet (платформын шимтгэлийг хассан дүн)
-  if (order.shopId && order.total) {
-    const shop = await prisma.shop.findUnique({
-      where: { id: order.shopId },
-      select: { userId: true, user: { select: { pushToken: true } } },
-    });
-    if (shop?.userId) {
-      const amount = Math.round(order.sellerAmount && order.sellerAmount > 0 ? order.sellerAmount : order.total * 0.98);
-      await prisma.wallet.upsert({
-        where: { userId: shop.userId },
-        update: { balance: { increment: amount } },
-        create: { userId: shop.userId, balance: amount },
-      });
-      // Push seller — wallet income
-      await notifyUser(shop.userId, {
-        type: 'wallet',
-        title: '💰 Орлого нэмэгдлээ!',
-        body: `${Math.floor(amount).toLocaleString()}₮ таны хэтэвчид орлоо`,
-        data: { screen: 'wallet' },
-      });
-    }
-  }
+  // Төлбөр дундын дансанд үлдэнэ: худалдан авагч баталгаажуулах эсвэл 72 цагийн дараа дэлгүүрт шилжинэ
+  await markDelivered(id).catch((e) => console.error('[driver/deliver] escrow:', e));
 
-  // Push buyer
-  await notifyUser(order.userId, {
-    type: 'delivery',
-    title: '📦 Захиалга хүргэгдлээ!',
-    body: 'Хүлээн авсан бол баталгаажуулна уу',
-    data: { orderId: id, action: 'confirm' },
-  });
+  const shop = order.shopId ? await prisma.shop.findUnique({ where: { id: order.shopId }, select: { userId: true } }) : null;
+  if (shop?.userId) {
+    await notifyUser(shop.userId, {
+      type: 'order_status',
+      title: '📦 Захиалга хүргэгдлээ',
+      body: 'Худалдан авагч баталгаажуулсны дараа (эсвэл 72 цагийн дотор) орлого хэтэвчид орно',
+      data: { orderId: id },
+    });
+  }
 
   return json({ success: true });
 }

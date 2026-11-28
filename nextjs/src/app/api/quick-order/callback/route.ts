@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { openEscrow } from '@/lib/escrow';
 import { checkPayment, isDemoMode } from '@/lib/payment/qpay';
 
 // POST /api/quick-order/callback — QPay webhook
@@ -50,9 +51,12 @@ export async function POST(req: NextRequest) {
 
     // Create real Order
     const amount = (quickOrder.product.salePrice || quickOrder.product.price) * quickOrder.quantity;
-    await prisma.order.create({
+    const created = await prisma.order.create({
       data: {
         userId: quickOrder.userId,
+        shopId: quickOrder.product.shopId || null,
+        platformAmount: Math.round(amount * 0.02),
+        sellerAmount: amount - Math.round(amount * 0.02),
         items: [{
           productId: quickOrder.productId,
           name: quickOrder.product.name,
@@ -65,6 +69,7 @@ export async function POST(req: NextRequest) {
         paymentId: invoiceId,
       },
     });
+    await openEscrow(created.id).catch((e) => console.error('[quick-order callback] escrow:', e));
 
     return NextResponse.json({ ok: true });
   } catch (err) {

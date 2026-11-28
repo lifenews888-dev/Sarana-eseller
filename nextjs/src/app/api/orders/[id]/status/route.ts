@@ -2,6 +2,7 @@ import type { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { json, errorJson, requireAuth } from '@/lib/api-auth';
+import { ensureEscrow, markDelivered, refundEscrow } from '@/lib/escrow';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -55,6 +56,11 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
         ...(estimatedMinutes !== undefined && { estimatedMinutes }),
       },
     });
+
+    if (status === 'delivered') await markDelivered(id).catch((e) => console.error('[orders/status] escrow:', e));
+    if (status === 'cancelled' && order.status !== 'pending') {
+      await ensureEscrow(id).then(() => refundEscrow(id, 'Захиалга цуцлагдсан')).catch((e) => console.error('[orders/status] refund:', e));
+    }
 
     return json(updated);
   } catch {

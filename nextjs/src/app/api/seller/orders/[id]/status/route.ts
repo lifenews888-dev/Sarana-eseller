@@ -4,6 +4,7 @@ import { requireSeller, errorJson } from '@/lib/api-auth';
 import { calculateOrderCommission } from '@/lib/commission';
 import { recordRevenue } from '@/lib/revenue';
 import { notifyUser } from '@/lib/notify';
+import { ensureEscrow, markDelivered, refundEscrow } from '@/lib/escrow';
 
 const STATUS_MSG: Record<string, { title: string; body: string }> = {
   preparing: {
@@ -79,6 +80,12 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
     });
 
     await recordRevenue('commission', comm.platformAmount, { orderId: id, shopId: order.shopId });
+    await markDelivered(id).catch((e) => console.error('[seller/status] escrow:', e));
+  }
+
+  // Төлөгдсөн захиалгыг дэлгүүр цуцалбал мөнгийг худалдан авагчид буцаана
+  if (status === 'cancelled' && order.status !== 'pending') {
+    await ensureEscrow(id).then(() => refundEscrow(id, 'Дэлгүүр захиалгыг цуцалсан')).catch((e) => console.error('[seller/status] refund:', e));
   }
 
   // Push buyer — status change

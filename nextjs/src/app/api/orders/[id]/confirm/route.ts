@@ -4,6 +4,7 @@ import { requireAuth, json, errorJson } from '@/lib/api-auth';
 import { createReceipt, calculateTax } from '@/lib/ebarimt';
 import { sendOrderConfirmation, sendDeliveryUpdate } from '@/lib/email';
 import { smsDelivered } from '@/lib/sms';
+import { markDelivered, releaseEscrow } from '@/lib/escrow';
 
 // POST /api/orders/[id]/confirm — buyer confirms receipt
 type OrderLineItem = { productId?: string; id?: string; name?: string; price?: number; quantity?: number };
@@ -19,27 +20,18 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (order.confirmedByBuyer) return json({ message: 'Аль хэдийн баталгаажсан' });
   if (['pending', 'cancelled', 'refunded'].includes(order.status)) return errorJson('Төлбөр төлөгдөөгүй эсвэл цуцлагдсан захиалга', 400);
 
-  // Update order
-  await prisma.order.update({
-    where: { id },
-    data: { confirmedByBuyer: true, confirmedAt: new Date(), status: 'delivered', escrowStatus: 'RELEASED' },
+  if (order.escrowStatus === 'DISPUTED') return errorJson('Буцаалтын хүсэлт шийдвэрлэгдэж байна', 400);
+
+  // Нэг л удаа баталгаажуулна (давхар дарсан ч дахин боловсруулахгүй)
+  const marked = await prisma.order.updateMany({
+    where: { id, confirmedByBuyer: { not: true } },
+    data: { confirmedByBuyer: true, confirmedAt: new Date(), status: 'delivered' },
   });
+  if (marked.count === 0) return json({ message: 'Аль хэдийн баталгаажсан' });
 
-  // Release escrow
-  const escrow = await prisma.escrowTransaction.findUnique({ where: { orderId: id } });
-  if (escrow) {
-    await prisma.escrowTransaction.update({
-      where: { id: escrow.id },
-      data: { status: 'RELEASED', releasedAt: new Date() },
-    });
-
-    // Add to seller wallet
-    const wallet = await prisma.wallet.findFirst({ where: { userId: escrow.sellerId } });
-    if (wallet) {
-      const sellerAmount = escrow.amount * 0.98; // 2% platform fee
-      await prisma.wallet.update({ where: { id: wallet.id }, data: { balance: { increment: sellerAmount } } });
-    }
-  }
+  // Дундын данснаас дэлгүүрт шилжүүлнэ (хуучин захиалгад escrow байхгүй бол эхлээд нээнэ)
+  await markDelivered(id).catch((e) => console.error('[confirm] markDelivered:', e));
+  await releaseEscrow(id, 'Худалдан авагч хүлээн авснаа баталгаажуулсан').catch((e) => console.error('[confirm] release:', e));
 
   // --- еБаримт ---
   try {
