@@ -198,7 +198,7 @@ export default function BuyerDashboard() {
               <span className="text-sm font-bold text-[var(--esl-text-primary)]">Дэлгүүр нээх</span>
             </div>
             <p className="text-xs leading-relaxed text-[var(--esl-text-secondary)]">
-              Эхний 3 сар 0% комисс. 5 минутад эхлээрэй.
+              Эхний 1 сар 0% комисс. 5 минутад эхлээрэй.
             </p>
             <span className="mt-3 inline-flex items-center gap-1 text-xs font-bold text-[#E8242C]">
               Эхлэх <ChevronRight size={14} />
