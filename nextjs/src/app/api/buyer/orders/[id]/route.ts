@@ -36,6 +36,14 @@ export async function GET(
     });
   }
 
+  // Дундын дансны төлөв — "Хүлээн авсан" товч, автомат шилжих хугацааг харуулна
+  const escrow = await prisma.escrowTransaction.findUnique({
+    where: { orderId: order.id },
+    select: { status: true, autoReleaseAt: true, amount: true },
+  });
+  const delivered = order.status === 'delivered';
+  const pendingReturn = await prisma.returnRequest.findFirst({ where: { orderId: order.id, status: 'PENDING' }, select: { id: true } });
+
   return json({
     order: {
       id: order.id,
@@ -53,6 +61,17 @@ export async function GET(
       createdAt: order.createdAt,
       driver,
       shop,
+      confirmedByBuyer: !!order.confirmedByBuyer,
+      escrow: escrow
+        ? {
+            status: escrow.status,
+            amount: escrow.amount,
+            autoReleaseAt: delivered && escrow.status === 'HOLDING' ? escrow.autoReleaseAt : null,
+          }
+        : null,
+      canConfirmReceipt: !order.confirmedByBuyer && ['delivering', 'delivered'].includes(order.status) && (!escrow || escrow.status === 'HOLDING'),
+      canRequestReturn: !pendingReturn && !['pending', 'cancelled', 'refunded'].includes(order.status) && (escrow ? escrow.status === 'HOLDING' : false),
+      returnPending: !!pendingReturn,
     },
   });
 }

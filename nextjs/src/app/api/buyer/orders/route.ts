@@ -21,5 +21,7 @@ export async function GET(req: NextRequest) {
     items: o.items,
     delivery: o.delivery,
     createdAt: o.createdAt,
+    escrowStatus: o.escrowStatus,
+    confirmedByBuyer: !!o.confirmedByBuyer,
   })));
 }

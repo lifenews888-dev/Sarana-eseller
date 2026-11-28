@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAdminDB as requireAdmin, json, errorJson } from '@/lib/api-auth';
 import { sendEmail, buildEmailTemplate } from '@/lib/marketing/EmailService';
 import { sendSMS } from '@/lib/marketing/SMSService';
+import { refundEscrow, releaseEscrow } from '@/lib/escrow';
 
 // PUT /api/admin/returns/[id] — approve or reject return
 export async function PUT(
@@ -33,32 +34,11 @@ export async function PUT(
   const buyer = await prisma.user.findUnique({ where: { id: ret.buyerId } });
 
   if (status === 'APPROVED' && order) {
-    // Refund via escrow → buyer wallet
-    const escrow = await prisma.escrowTransaction.findUnique({ where: { orderId: ret.orderId } });
-    if (escrow) {
-      await prisma.escrowTransaction.update({
-        where: { id: escrow.id },
-        data: { status: 'REFUNDED', releasedAt: new Date() },
-      });
-
-      // Add to buyer wallet
-      const wallet = await prisma.wallet.findFirst({ where: { userId: ret.buyerId } });
-      if (wallet) {
-        await prisma.wallet.update({
-          where: { id: wallet.id },
-          data: { balance: { increment: escrow.amount } },
-        });
-      } else {
-        await prisma.wallet.create({
-          data: { userId: ret.buyerId, balance: escrow.amount },
-        });
-      }
+    // Дундын данснаас худалдан авагчийн хэтэвчинд буцаана (нэг л удаа)
+    const refunded = await refundEscrow(ret.orderId, `Буцаалт зөвшөөрөгдсөн${adminNote ? `: ${adminNote}` : ''}`);
+    if (!refunded) {
+      await prisma.order.update({ where: { id: ret.orderId }, data: { status: 'cancelled' } });
     }
-
-    await prisma.order.update({
-      where: { id: ret.orderId },
-      data: { escrowStatus: 'REFUNDED', status: 'cancelled' },
-    });
 
     // Notify buyer
     if (buyer?.email) {
@@ -67,38 +47,18 @@ export async function PUT(
         'Буцаалт зөвшөөрөгдлөө',
         buildEmailTemplate(
           'Буцаалт зөвшөөрөгдлөө',
-          `<p>Таны захиалга ${order.orderNumber || order.id.slice(-6)}-н буцаалт зөвшөөрөгдөж, мөнгө таны wallet-д буцаагдлаа.</p>`,
+          `<p>Таны захиалга ${order.orderNumber || order.id.slice(-6)}-н буцаалт зөвшөөрөгдөж, мөнгө таны хэтэвчид буцаагдлаа.</p>`,
           'https://eseller.mn/dashboard/orders',
           'Захиалга харах'
         ),
       );
     }
     if (buyer?.phone) {
-      await sendSMS(buyer.phone, `eseller.mn: Буцаалт зөвшөөрөгдлөө. Мөнгө wallet-д буцаагдлаа.`);
+      await sendSMS(buyer.phone, `eseller.mn: Буцаалт зөвшөөрөгдлөө. Мөнгө хэтэвчид буцаагдлаа.`);
     }
   } else if (status === 'REJECTED' && order) {
-    // Release escrow to seller
-    const escrow = await prisma.escrowTransaction.findUnique({ where: { orderId: ret.orderId } });
-    if (escrow) {
-      await prisma.escrowTransaction.update({
-        where: { id: escrow.id },
-        data: { status: 'RELEASED', releasedAt: new Date() },
-      });
-
-      const wallet = await prisma.wallet.findFirst({ where: { userId: escrow.sellerId } });
-      if (wallet) {
-        const sellerAmount = escrow.amount * 0.98;
-        await prisma.wallet.update({
-          where: { id: wallet.id },
-          data: { balance: { increment: sellerAmount } },
-        });
-      }
-    }
-
-    await prisma.order.update({
-      where: { id: ret.orderId },
-      data: { escrowStatus: 'RELEASED' },
-    });
+    // Татгалзсан — дундын данснаас дэлгүүрт шилжүүлнэ
+    await releaseEscrow(ret.orderId, 'Буцаалт татгалзагдсан');
 
     if (buyer?.email) {
       await sendEmail(

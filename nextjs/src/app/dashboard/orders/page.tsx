@@ -29,7 +29,16 @@ interface Order {
   items: OrderItem[];
   delivery?: { address?: string; phone?: string; note?: string };
   createdAt: string;
+  escrowStatus?: string | null;
+  confirmedByBuyer?: boolean;
 }
+
+const ESCROW_LABEL: Record<string, string> = {
+  HOLDING: '🔒 Төлбөр дундын дансанд хадгалагдаж байна. Хүлээн авснаа баталгаажуулсны дараа дэлгүүрт шилжинэ.',
+  RELEASED: '✅ Төлбөр дэлгүүрт шилжсэн',
+  DISPUTED: '⏳ Буцаалтын хүсэлт шийдвэрлэгдэж байна — төлбөр дундын дансанд хадгалагдана',
+  REFUNDED: '↩️ Төлбөр таны хэтэвчид буцаагдсан',
+};
 
 type FilterTab = 'all' | 'pending' | 'delivered' | 'cancelled';
 
@@ -56,6 +65,31 @@ export default function BuyerOrdersPage() {
   const [error, setError] = useState('');
   const [tab, setTab] = useState<FilterTab>('all');
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
+
+  const confirmReceipt = async (id: string) => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    setConfirming(id);
+    try {
+      const res = await fetch(`/api/orders/${id}/confirm`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok || d.success === false) {
+        setError(d.error || 'Баталгаажуулахад алдаа гарлаа');
+        return;
+      }
+      setOrders((prev) => prev.map((o) => (o._id === id
+        ? { ...o, status: 'delivered', confirmedByBuyer: true, escrowStatus: o.escrowStatus === 'HOLDING' ? 'RELEASED' : o.escrowStatus }
+        : o)));
+    } catch {
+      setError('Сервертэй холбогдоход алдаа гарлаа');
+    } finally {
+      setConfirming(null);
+    }
+  };
 
   useEffect(() => {
     const deferred = window.setTimeout(() => {
@@ -211,6 +245,26 @@ export default function BuyerOrdersPage() {
                         {(o.total || 0).toLocaleString()}₮
                       </span>
                     </div>
+
+                    {o.escrowStatus && ESCROW_LABEL[o.escrowStatus] && (
+                      <p className="mt-3 rounded-xl bg-[var(--esl-bg-section)] p-3 text-xs text-[var(--esl-text-muted)]">
+                        {ESCROW_LABEL[o.escrowStatus]}
+                      </p>
+                    )}
+
+                    {!o.confirmedByBuyer && ['delivering', 'delivered'].includes(o.status) && o.escrowStatus !== 'DISPUTED' && o.escrowStatus !== 'REFUNDED' && (
+                      <button
+                        type="button"
+                        disabled={confirming === o._id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          void confirmReceipt(o._id);
+                        }}
+                        className="mt-3 flex h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl border-0 bg-[#E8242C] text-sm font-bold text-white transition hover:bg-[#C41E25] disabled:opacity-60"
+                      >
+                        <Check size={16} /> {confirming === o._id ? 'Баталгаажуулж байна…' : 'Бараагаа хүлээн авсан'}
+                      </button>
+                    )}
 
                     {o.status === 'delivered' && (
                       <button
