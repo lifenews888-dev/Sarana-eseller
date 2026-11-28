@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { fail } from '@/lib/api-envelope';
 import { safeRelativeRedirect } from '@/lib/safe-redirect';
+import { isMobileAuthRedirect, setMobileAuthCookie } from '@/lib/mobileAuthHandoff';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const VALID_ROLES = ['seller', 'affiliate', 'buyer', 'delivery'];
@@ -17,9 +18,9 @@ export async function GET(req: NextRequest) {
   // Role from query param (e.g. /api/auth/google?role=seller)
   const role = req.nextUrl.searchParams.get('role');
   const safeRole = role && VALID_ROLES.includes(role) ? role : 'buyer';
-  const redirectTarget = safeRelativeRedirect(
-    req.nextUrl.searchParams.get('redirect') || req.nextUrl.searchParams.get('next'),
-  );
+  const rawRedirect = req.nextUrl.searchParams.get('redirect') || req.nextUrl.searchParams.get('next');
+  const fromMobileApp = isMobileAuthRedirect(rawRedirect);
+  const redirectTarget = fromMobileApp ? '' : safeRelativeRedirect(rawRedirect);
 
   // Encode nonce + role into state
   const state = `${nonce}:${safeRole}`;
@@ -51,6 +52,8 @@ export async function GET(req: NextRequest) {
       path: '/',
     });
   }
+
+  if (fromMobileApp) setMobileAuthCookie(res);
 
   return res;
 }

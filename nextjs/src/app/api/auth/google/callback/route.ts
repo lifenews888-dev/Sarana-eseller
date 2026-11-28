@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { safeRelativeRedirect } from '@/lib/safe-redirect';
 import { signToken } from '@/lib/api-auth';
 import crypto from 'crypto';
+import { MOBILE_AUTH_COOKIE, mobileAuthError, mobileAuthSuccess } from '@/lib/mobileAuthHandoff';
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
@@ -14,20 +15,24 @@ export async function GET(req: NextRequest) {
     const state = searchParams.get('state');
     const error = searchParams.get('error');
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://eseller.mn';
+    // Мобайл апп эхлүүлсэн бол бүх хариуг апп руу буцаана
+    const fromMobileApp = req.cookies.get(MOBILE_AUTH_COOKIE)?.value === '1';
+    const failTo = (code: string) =>
+      fromMobileApp ? mobileAuthError(code) : NextResponse.redirect(`${baseUrl}/login?error=${code}`);
 
     if (error) {
-      return NextResponse.redirect(`${baseUrl}/login?error=google_denied`);
+      return failTo('google_denied');
     }
 
     if (!code) {
-      return NextResponse.redirect(`${baseUrl}/login?error=no_code`);
+      return failTo('no_code');
     }
 
     // Verify state (format: "nonce:role")
     const storedState = req.cookies.get('google_oauth_state')?.value;
     const [nonce, selectedRole] = (state || '').split(':');
     if (!nonce || nonce !== storedState) {
-      return NextResponse.redirect(`${baseUrl}/login?error=invalid_state`);
+      return failTo('invalid_state');
     }
 
     const VALID_ROLES = ['seller', 'affiliate', 'buyer', 'delivery'];
@@ -48,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     if (!tokenRes.ok) {
       console.error('Google token exchange failed:', await tokenRes.text());
-      return NextResponse.redirect(`${baseUrl}/login?error=token_failed`);
+      return failTo('token_failed');
     }
 
     const tokens = await tokenRes.json();
@@ -59,14 +64,14 @@ export async function GET(req: NextRequest) {
     });
 
     if (!userInfoRes.ok) {
-      return NextResponse.redirect(`${baseUrl}/login?error=userinfo_failed`);
+      return failTo('userinfo_failed');
     }
 
     const googleUser = await userInfoRes.json();
     const { email, name, picture } = googleUser;
 
     if (!email) {
-      return NextResponse.redirect(`${baseUrl}/login?error=no_email`);
+      return failTo('no_email');
     }
 
     // Find or create user
@@ -143,6 +148,13 @@ export async function GET(req: NextRequest) {
       avatar: user.avatar,
     };
 
+    if (fromMobileApp) {
+      const appRes = await mobileAuthSuccess(user.id);
+      appRes.cookies.delete('google_oauth_state');
+      appRes.cookies.delete('google_oauth_redirect');
+      return appRes;
+    }
+
     // Redirect to login page with token in hash (client-side picks it up)
     const redirectUrl = new URL('/login', baseUrl);
     const redirectTarget = safeRelativeRedirect(req.cookies.get('google_oauth_redirect')?.value);
@@ -163,6 +175,7 @@ export async function GET(req: NextRequest) {
     return res;
   } catch (e: unknown) {
     console.error('GOOGLE CALLBACK ERROR:', (e as Error).message);
+    if (req.cookies.get(MOBILE_AUTH_COOKIE)?.value === '1') return mobileAuthError('server_error');
     const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://eseller.mn';
     return NextResponse.redirect(`${baseUrl}/login?error=server_error`);
   }
