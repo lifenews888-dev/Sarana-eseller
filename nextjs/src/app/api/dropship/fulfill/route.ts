@@ -14,8 +14,20 @@ export async function POST(req: NextRequest) {
   if (!orderId) return errorJson('orderId шаардлагатай');
 
   // Get order
+  if (typeof orderId !== 'string' || !/^[a-f\d]{24}$/i.test(orderId)) return errorJson('Захиалга олдсонгүй', 404);
   const order = await prisma.order.findUnique({ where: { id: orderId } });
   if (!order) return errorJson('Захиалга олдсонгүй', 404);
+
+  // Аюулгүй байдал: зөвхөн захиалгын дэлгүүрийн эзэн эсвэл админ нийлүүлэгчид илгээнэ
+  const dbUser = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true } });
+  const isAdmin = ['admin', 'superadmin', 'super_admin'].includes(dbUser?.role || user.role);
+  const ownsShop = order.shopId
+    ? await prisma.shop.findFirst({ where: { id: order.shopId, userId: user.id }, select: { id: true } })
+    : null;
+  if (!isAdmin && !ownsShop) return errorJson('Захиалга олдсонгүй', 404);
+  if (order.status === 'pending' || order.status === 'cancelled') {
+    return errorJson('Төлбөр төлөгдөөгүй эсвэл цуцлагдсан захиалга');
+  }
 
   // Check order has dropship items
   const items = (order.items || []) as OrderLineItem[];

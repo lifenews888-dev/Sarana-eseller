@@ -1,4 +1,5 @@
 import { NextRequest } from "next/server";
+import { getAuthUser } from '@/lib/api-auth';
 import { prisma } from "@/lib/prisma";
 import { ok, fail } from "@/lib/api-envelope";
 
@@ -14,11 +15,18 @@ function getTier(lifetime: number) {
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ userId: string }> }
 ) {
   try {
     const { userId } = await params;
+    // Зөвхөн өөрийн (эсвэл админ) онооны мэдээллийг харна
+    const me = getAuthUser(req);
+    if (!me) return fail('Нэвтрэх шаардлагатай', 401);
+    if (me.id !== userId) {
+      const dbUser = await prisma.user.findUnique({ where: { id: me.id }, select: { role: true } });
+      if (!['admin', 'superadmin', 'super_admin'].includes(dbUser?.role || me.role)) return fail('Эрх байхгүй', 403);
+    }
 
     const account = await prisma.loyaltyAccount.upsert({
       where: { userId },

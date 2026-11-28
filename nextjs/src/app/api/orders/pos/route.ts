@@ -92,35 +92,8 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // Credit seller wallet + history entry (atomic via upsert)
-    const historyEntry = {
-      type: 'POS_SALE',
-      amount: sellerAmount,
-      orderId: order.id,
-      description: `POS борлуулалт #${order.id.slice(-6).toUpperCase()}`,
-      status: 'COMPLETED',
-      method: paymentMethod,
-      createdAt: new Date().toISOString(),
-    } as unknown as Prisma.InputJsonValue;
-
-    try {
-      await prisma.wallet.upsert({
-        where: { userId: authUser.id },
-        create: {
-          userId: authUser.id,
-          balance: sellerAmount,
-          pending: 0,
-          escrowHold: 0,
-          history: [historyEntry],
-        },
-        update: {
-          balance: { increment: sellerAmount },
-          history: { push: historyEntry },
-        },
-      });
-    } catch (e) {
-      console.error('POS wallet credit failed:', e);
-    }
+    // Аюулгүй байдал: кассын борлуулалтын мөнгийг дэлгүүр өөрөө (бэлэн/карт) хүлээн авсан тул платформын
+    // хэтэвчинд нэмэхгүй. Өмнө нь энд нэмдэг байсан нь хуурамч кассын гүйлгээгээр мөнгө гаргах боломж олгож байв.
 
     return ok(
       {

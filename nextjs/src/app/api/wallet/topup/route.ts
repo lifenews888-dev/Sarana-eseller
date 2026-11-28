@@ -1,70 +1,50 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, json, errorJson } from '@/lib/api-auth';
-import { getOrCreateWallet, WalletHistoryEntry } from '@/lib/wallet-escrow';
+import { getOrCreateWallet } from '@/lib/wallet-escrow';
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
-import { loyaltyService } from '@/lib/loyalty/LoyaltyService';
+import { createInvoice } from '@/lib/qpay';
 
-// POST /api/wallet/topup — top up wallet via QPay/SocialPay/Card
+const MIN_TOPUP = 1000;
+const MAX_TOPUP = 5_000_000;
+
+// POST /api/wallet/topup { amount } — хэтэвч цэнэглэх QPay нэхэмжлэл үүсгэнэ.
+// Аюулгүй байдал: үлдэгдлийг зөвхөн QPay төлбөр баталгаажсаны дараа (lib/payment/settle.ts, kind 'wallet_topup')
+// нэмнэ. Өмнө нь энэ endpoint төлбөргүйгээр шууд үлдэгдэл нэмдэг байв.
 export async function POST(req: NextRequest) {
   const user = requireAuth(req);
   if (user instanceof Response) return user;
 
+  const body = await req.json().catch(() => ({}));
+  const amount = Math.round(Number(body.amount));
+  if (!Number.isFinite(amount) || amount < MIN_TOPUP) return errorJson('Хамгийн бага 1,000₮ цэнэглэнэ', 400);
+  if (amount > MAX_TOPUP) return errorJson('Нэг удаад 5,000,000₮ хүртэл цэнэглэнэ', 400);
+
   try {
-    const { amount, method, reference } = await req.json();
-
-    if (!amount || typeof amount !== 'number' || amount < 1000) {
-      return errorJson('Хамгийн бага 1,000₮ цэнэглэнэ', 400);
-    }
-    const validMethods = ['qpay', 'socialpay', 'card'];
-    if (!validMethods.includes(method)) {
-      return errorJson('Буруу төлбөрийн арга', 400);
-    }
-
     const wallet = await getOrCreateWallet(user.id);
-
-    const entry: WalletHistoryEntry = {
-      type: 'TOPUP',
-      amount,
-      reference: reference || undefined,
-      description: `${method.toUpperCase()}-р цэнэглэлт`,
-      method,
-      status: 'COMPLETED',
-      createdAt: new Date().toISOString(),
-    };
-
-    const updated = await prisma.wallet.update({
-      where: { id: wallet.id },
+    const invoice = await createInvoice(wallet.id, amount, `eseller.mn хэтэвч цэнэглэлт`);
+    await prisma.paymentTransaction.create({
       data: {
-        balance: { increment: amount },
-        history: { push: entry as unknown as Prisma.InputJsonValue },
+        orderId: wallet.id,
+        method: 'qpay',
+        invoiceId: invoice.invoiceId,
+        amount,
+        status: 'PENDING',
+        qrImage: invoice.qrImage || null,
+        qrText: invoice.qrText,
+        metadata: { kind: 'wallet_topup', userId: user.id, amount, demo: invoice.demo } as object,
       },
     });
-
-    // Bonus loyalty points for large top-ups by active Gold members (200K+)
-    if (amount >= 200000) {
-      const hasGold = await loyaltyService.hasActiveGold(user.id);
-      if (hasGold) {
-        try {
-          await loyaltyService.earn(
-            user.id,
-            'EARN_BONUS',
-            500,
-            `Цэнэглэлтийн бонус (${amount.toLocaleString()}₮)`,
-            'topup',
-            reference,
-          );
-        } catch (e) {
-          console.error('Topup bonus points failed:', e);
-        }
-      }
-    }
-
     return json({
-      balance: updated.balance,
-      message: `${amount.toLocaleString()}₮ амжилттай цэнэглэгдлээ`,
+      invoiceId: invoice.invoiceId,
+      qrImage: invoice.qrImage,
+      qrText: invoice.qrText,
+      shortUrl: invoice.shortUrl,
+      urls: invoice.urls,
+      demo: invoice.demo,
+      amount,
     });
   } catch (e) {
-    return errorJson((e as Error).message, 500);
+    console.error('[wallet/topup] invoice failed:', e);
+    return errorJson('QPay нэхэмжлэл үүсгэж чадсангүй. Дахин оролдоно уу.', 502);
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { checkPayment, isDemoMode } from '@/lib/payment/qpay';
 
 // POST /api/quick-order/callback — QPay webhook
 export async function POST(req: NextRequest) {
@@ -18,11 +19,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    // Mark as paid
-    await prisma.quickOrder.update({
-      where: { id: quickOrder.id },
+    // Аюулгүй байдал: webhook-ийн биеэс итгэхгүй — QPay-ээс төлөгдсөн эсэхийг заавал шалгана
+    // (өмнө нь invoiceId мэдсэн хэн ч захиалгыг "төлсөн" болгох боломжтой байв)
+    if (isDemoMode() || String(invoiceId).startsWith('DEMO_')) return NextResponse.json({ ok: true });
+    const expected = (quickOrder.product.salePrice || quickOrder.product.price) * quickOrder.quantity;
+    let paid = false;
+    try {
+      const result = await checkPayment(String(invoiceId));
+      const paidRow = (result?.rows || []).find((r) => String(r.payment_status).toUpperCase() === 'PAID');
+      paid = !!paidRow && Number(result?.paid_amount || 0) + 1 >= expected;
+    } catch (e) {
+      console.error('[quick-order/callback] QPay check failed:', e);
+    }
+    if (!paid) return NextResponse.json({ ok: true, paid: false });
+
+    // Mark as paid — давхар callback ирсэн ч нэг л удаа боловсруулна
+    const marked = await prisma.quickOrder.updateMany({
+      where: { id: quickOrder.id, status: { not: 'PAID' } },
       data: { status: 'PAID' },
     });
+    if (marked.count === 0) return NextResponse.json({ ok: true });
 
     // Decrement stock
     if (quickOrder.product.stock !== null && quickOrder.product.stock !== undefined) {

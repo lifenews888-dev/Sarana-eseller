@@ -17,6 +17,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   if (!order) return errorJson('Захиалга олдсонгүй', 404);
   if (order.userId !== user.id) return errorJson('Зөвшөөрөлгүй', 403);
   if (order.confirmedByBuyer) return json({ message: 'Аль хэдийн баталгаажсан' });
+  if (['pending', 'cancelled', 'refunded'].includes(order.status)) return errorJson('Төлбөр төлөгдөөгүй эсвэл цуцлагдсан захиалга', 400);
 
   // Update order
   await prisma.order.update({
