@@ -22,6 +22,8 @@ const STATUS_MSG: Record<string, { title: string; body: string }> = {
 
 type Ctx = { params: Promise<{ id: string }> };
 
+const SELLER_STATUSES = ['confirmed', 'preparing', 'ready', 'handed_to_driver', 'delivering', 'delivered', 'cancelled'];
+
 // PATCH /api/seller/orders/[id]/status — update order status
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   const user = requireSeller(req);
@@ -31,8 +33,25 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   const body = await req.json();
   const { status, note } = body;
 
+  if (!/^[a-f\d]{24}$/i.test(id)) return errorJson('Захиалга олдсонгүй', 404);
   const order = await prisma.order.findUnique({ where: { id } });
   if (!order) return errorJson('Захиалга олдсонгүй', 404);
+
+  // Аюулгүй байдал: зөвхөн тухайн захиалгын дэлгүүрийн эзэн өөрчилнө (өмнө нь нэвтэрсэн хэн ч болдог байв)
+  const ownsShop = order.shopId
+    ? await prisma.shop.findFirst({ where: { id: order.shopId, userId: user.id }, select: { id: true } })
+    : null;
+  if (!ownsShop) return errorJson('Захиалга олдсонгүй', 404);
+
+  if (!SELLER_STATUSES.includes(status)) return errorJson('Төлөв буруу байна');
+  if (order.status === status) return NextResponse.json({ success: true, status });
+  if (['delivered', 'cancelled', 'refunded', 'completed'].includes(order.status)) {
+    return errorJson('Дууссан захиалгын төлвийг өөрчлөх боломжгүй');
+  }
+  // Төлбөр төлөгдөөгүй захиалгыг зөвхөн цуцлах боломжтой
+  if (order.status === 'pending' && status !== 'cancelled') {
+    return errorJson('Төлбөр төлөгдөөгүй захиалга байна');
+  }
 
   // Update order
   await prisma.order.update({

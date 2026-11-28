@@ -53,8 +53,14 @@ export async function POST(req: NextRequest) {
     });
 
     if (sendNow) {
+      // Аюулгүй байдал: дэлгүүр зөвхөн өөрөөс нь худалдан авалт хийсэн хэрэглэгчдэд илгээнэ
+      // (өмнө нь ямар ч дэлгүүр платформын бүх худалдан авагчид SMS/имэйл илгээх боломжтой байв)
+      const buyerGroups = await prisma.order.groupBy({
+        by: ['userId'],
+        where: { shopId: session.shopId, status: { notIn: ['pending', 'cancelled'] } },
+      });
       const users = await prisma.user.findMany({
-        where: { role: 'buyer', isActive: true },
+        where: { id: { in: buyerGroups.map((g) => g.userId) }, isActive: true },
         select: { email: true, phone: true, name: true },
         take: 1000,
       });

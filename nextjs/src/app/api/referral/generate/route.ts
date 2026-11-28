@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { getAuthUser } from "@/lib/api-auth";
 
 function generateCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -10,8 +11,10 @@ function generateCode() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await req.json();
-    if (!userId) return NextResponse.json({ error: "userId required" }, { status: 400 });
+    // Аюулгүй байдал: зөвхөн нэвтэрсэн хэрэглэгч өөртөө код үүсгэнэ (өмнө нь биеийн userId-д итгэдэг байв)
+    const auth = getAuthUser(req);
+    if (!auth) return NextResponse.json({ error: "Нэвтрэх шаардлагатай" }, { status: 401 });
+    const userId = auth.id;
 
     // Check for existing active referral code
     const existing = await prisma.referral.findFirst({

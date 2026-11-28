@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { json, errorJson, requireSeller } from '@/lib/api-auth';
+import { json, errorJson } from '@/lib/api-auth';
+import { requireProductOwner } from '@/lib/productOwnership';
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -17,9 +18,9 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 
 // POST /api/products/[id]/modifiers
 export async function POST(req: NextRequest, ctx: Ctx) {
-  const auth = requireSeller(req);
-  if (auth instanceof Response) return auth;
   const { id } = await ctx.params;
+  const owner = await requireProductOwner(req, id);
+  if ('error' in owner) return owner.error;
   const { name, required, multiple } = await req.json();
   if (!name) return errorJson('Нэр шаардлагатай');
 

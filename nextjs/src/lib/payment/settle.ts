@@ -10,6 +10,7 @@
  *   - 'order'    (анхдагч) → захиалгыг 'confirmed' болгож, борлуулагчийн комисс бичнэ
  *   - 'feed_vip'          → зарыг VIP болгож, tierExpiresAt тохируулна
  *   - 'banner'            → баннерыг төлөгдсөн болгож админы шалгалт руу (PENDING) шилжүүлнэ
+ *   - 'wallet_topup'      → хэрэглэгчийн хэтэвчийн үлдэгдлийг нэмнэ
  */
 import { prisma } from '@/lib/prisma';
 import { checkPayment, isDemoMode } from '@/lib/payment/qpay';
@@ -40,6 +41,33 @@ async function applyPaidEffects(tx: { orderId: string; metadata: unknown }) {
     await prisma.feedItem.update({
       where: { id: item.id },
       data: { tier: 'vip', tierExpiresAt: new Date(base.getTime() + days * 24 * 60 * 60 * 1000) },
+    });
+    return;
+  }
+
+  if (meta.kind === 'wallet_topup') {
+    // Хэтэвч цэнэглэлт — QPay баталгаажсаны дараа л үлдэгдэл нэмэгдэнэ
+    const amount = Math.round(Number(meta.amount) || 0);
+    const userId = typeof meta.userId === 'string' ? meta.userId : '';
+    if (!amount || !userId) return;
+    const entry = {
+      type: 'TOPUP',
+      amount,
+      description: 'QPay-р цэнэглэлт',
+      method: 'qpay',
+      reference: String(meta.qpayPaymentId || tx.orderId),
+      status: 'COMPLETED',
+      createdAt: new Date().toISOString(),
+    };
+    await prisma.wallet.update({
+      where: { userId },
+      data: { balance: { increment: amount }, history: { push: entry } },
+    });
+    await notifyUser(userId, {
+      type: 'wallet',
+      title: '💳 Хэтэвч цэнэглэгдлээ',
+      body: `${amount.toLocaleString()}₮ таны хэтэвчид орлоо`,
+      data: { screen: 'wallet' },
     });
     return;
   }

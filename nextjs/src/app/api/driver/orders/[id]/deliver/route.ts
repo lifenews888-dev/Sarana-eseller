@@ -17,20 +17,27 @@ export async function POST(
     where: { id, driverId: user.id },
   });
   if (!order) return errorJson('Захиалга олдсонгүй', 404);
+  if (order.status === 'delivered') return json({ success: true });
+  // Төлбөр төлөгдөөгүй/цуцлагдсан захиалгыг хүргэсэн болгож дэлгүүрт мөнгө шилжүүлэхгүй
+  if (['pending', 'cancelled', 'refunded'].includes(order.status)) {
+    return errorJson('Энэ захиалгыг хүргэсэн болгох боломжгүй');
+  }
 
-  await prisma.order.update({
-    where: { id },
+  // Нэг л удаа: давхар дарсан ч дэлгүүрт хоёр удаа мөнгө орохгүй
+  const marked = await prisma.order.updateMany({
+    where: { id, driverId: user.id, status: { not: 'delivered' } },
     data: { status: 'delivered' },
   });
+  if (marked.count === 0) return json({ success: true });
 
-  // Escrow release → seller wallet (minus 5% commission)
+  // Escrow release → seller wallet (платформын шимтгэлийг хассан дүн)
   if (order.shopId && order.total) {
     const shop = await prisma.shop.findUnique({
       where: { id: order.shopId },
       select: { userId: true, user: { select: { pushToken: true } } },
     });
     if (shop?.userId) {
-      const amount = order.total * 0.95;
+      const amount = Math.round(order.sellerAmount && order.sellerAmount > 0 ? order.sellerAmount : order.total * 0.98);
       await prisma.wallet.upsert({
         where: { userId: shop.userId },
         update: { balance: { increment: amount } },

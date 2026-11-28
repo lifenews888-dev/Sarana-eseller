@@ -56,7 +56,11 @@ export async function POST(req: NextRequest) {
 
     // Reverse wallet credit
     try {
-      await prisma.wallet.update({
+      // Зөвхөн хуучин (хэтэвчинд орсон) кассын борлуулалтын буцаалтад хэтэвчээс хасна
+      const sellerWallet = await prisma.wallet.findUnique({ where: { userId: authUser.id }, select: { history: true } });
+      const wasCredited = ((sellerWallet?.history || []) as Array<{ type?: string; orderId?: string }>)
+        .some((h) => h?.type === 'POS_SALE' && h?.orderId === orderId);
+      if (wasCredited) await prisma.wallet.update({
         where: { userId: authUser.id },
         data: {
           balance: { decrement: refundAmount },

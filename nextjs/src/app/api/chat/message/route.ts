@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getAiReply } from '@/lib/chat/aiChatEngine';
+import { getAuthUser } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
   try {
@@ -27,6 +28,17 @@ export async function POST(req: NextRequest) {
       }
 
       if (!conversation) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+
+      // Аюулгүй байдал: "seller" нэрээр зөвхөн дэлгүүрийн эзэн, бүртгэлтэй худалдан авагчийн чатад зөвхөн тэр өөрөө бичнэ
+      const authUser = getAuthUser(req);
+      if (role === 'seller') {
+        const owns = authUser
+          ? await prisma.shop.findFirst({ where: { id: conversation.shopId, userId: authUser.id }, select: { id: true } })
+          : null;
+        if (!owns) return NextResponse.json({ error: 'Эрх байхгүй' }, { status: 403 });
+      } else if (conversation.customerId !== 'anonymous' && conversation.customerId !== authUser?.id) {
+        return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+      }
 
       // Save user/seller message
       const savedMsg = await prisma.message.create({
