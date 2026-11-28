@@ -1,10 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { verifySvixSignature } from '@/lib/webhook-signature';
 
 // POST /api/webhooks/resend — handle Resend email events
 export async function POST(req: NextRequest) {
   try {
-    const { type, data } = await req.json();
+    const raw = await req.text();
+    // RESEND_WEBHOOK_SECRET тохируулсан бол зөвхөн Resend-ийн гарын үсэгтэй хүсэлтийг хүлээн авна
+    const secret = process.env.RESEND_WEBHOOK_SECRET;
+    if (secret) {
+      if (!verifySvixSignature(secret, req.headers, raw)) {
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+      }
+    } else {
+      console.warn('[webhooks/resend] RESEND_WEBHOOK_SECRET тохируулаагүй — гарын үсэг шалгагдахгүй байна');
+    }
+    const { type, data } = JSON.parse(raw || '{}');
 
     const campaignId = data?.tags?.campaignId;
     if (!campaignId) return NextResponse.json({ received: true });
